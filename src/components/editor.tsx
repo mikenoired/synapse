@@ -97,7 +97,7 @@ export function Editor({ data, onChange, placeholder = 'Начните писа�
   }, [data, isReady])
 
   return (
-    <div className="border rounded-lg p-6 min-h-[300px] focus-within:ring-2 focus-within:ring-ring">
+    <div className="min-h-[300px]">
       <div id={editorId} />
     </div>
   )

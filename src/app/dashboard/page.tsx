@@ -149,7 +149,7 @@ export default function DashboardPage() {
       </header>
 
       {/* Main content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search and filters */}
         <div className="space-y-6 mb-8">
           {/* Search and add button */}
@@ -174,7 +174,6 @@ export default function DashboardPage() {
           {/* Tags filter */}
           {allTags.length > 0 && (
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-muted-foreground">Фильтр по тегам:</h3>
               <div className="flex flex-wrap gap-2">
                 {allTags.map((tag: string) => (
                   <Badge
@@ -232,7 +231,7 @@ export default function DashboardPage() {
             columnClassName="masonry-grid_column"
           >
             {content.map((item, index) => (
-              <div key={item.id} className="mb-6">
+              <div key={item.id}>
                 <Item
                   item={item}
                   index={index}

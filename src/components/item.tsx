@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getSecureImageUrl } from "@/lib/image-utils";
 import { Content } from "@/lib/schemas";
 import { trpc } from "@/lib/trpc";
@@ -21,36 +20,21 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
   const router = useRouter()
 
   const deleteMutation = trpc.content.delete.useMutation({
-    onSuccess: () => {
-      onContentChanged?.()
-    }
+    onSuccess: () => onContentChanged?.()
   })
 
-  const handleDelete = () => {
-    deleteMutation.mutate({ id: item.id })
-  }
-
-  const handleView = () => {
-    if (onItemClick) {
-      onItemClick(item)
-    } else {
-      router.push(`/item/${item.id}`)
-    }
-  }
-
-  const handleEdit = () => {
-    router.push(`/edit/${item.id}`)
-  }
+  const handleDelete = () => deleteMutation.mutate({ id: item.id })
+  const handleEdit = () => router.push(`/edit/${item.id}`)
 
   return (
     <ContextMenu>
       <ContextMenuTrigger>
-        <div onClick={handleView} className="cursor-pointer">
+        <div onClick={() => onItemClick?.(item)} className="cursor-pointer">
           <ItemContent item={item} index={index} session={session} />
         </div>
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={handleView}>Открыть</ContextMenuItem>
+        <ContextMenuItem onClick={() => onItemClick?.(item)}>Открыть</ContextMenuItem>
         <ContextMenuItem onClick={handleEdit}>Редактировать</ContextMenuItem>
         <ContextMenuItem onClick={handleDelete}>Удалить</ContextMenuItem>
       </ContextMenuContent>
@@ -59,7 +43,6 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
 }
 
 function ItemContent({ item, index, session }: ItemProps) {
-  // Helper function to get text content for notes
   const getTextContent = () => {
     if (item.type !== 'note') return item.content;
 
@@ -81,13 +64,13 @@ function ItemContent({ item, index, session }: ItemProps) {
       transition={{ delay: index * 0.1 }}
       className="group"
     >
-      <Card className={`hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0`}>
-        {item.title && (<CardHeader className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
-          <CardTitle className="text-lg leading-tight">
+      <div className={`hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0`}>
+        {item.title && (<div className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
+          <span className="text-lg font-semibold leading-tight">
             {item.title}
-          </CardTitle>
-        </CardHeader>)}
-        <CardContent className={item.type === 'image' ? 'p-0' : item.type === 'note' ? 'p-3' : ''}>
+          </span>
+        </div>)}
+        <div className={item.type === 'image' ? 'p-0' : item.type === 'note' ? 'p-3' : ''}>
           {item.type === 'image' ? (
             <div className="relative">
               <img
@@ -144,8 +127,8 @@ function ItemContent({ item, index, session }: ItemProps) {
               </div>
             </>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   )
 }
