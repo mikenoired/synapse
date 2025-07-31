@@ -13,11 +13,8 @@ export default function HomePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
 
-  // Перенаправляем авторизованного пользователя на дашборд
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/dashboard')
-    }
+    if (!loading && user) router.push('/dashboard')
   }, [user, loading, router])
 
   const handleAuthClick = (mode: 'login' | 'register') => {
@@ -25,7 +22,6 @@ export default function HomePage() {
     setAuthDialogOpen(true)
   }
 
-  // Показываем загрузку пока проверяем аутентификацию
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -34,10 +30,7 @@ export default function HomePage() {
     )
   }
 
-  // Если пользователь авторизован, покажем заглушку (должно перенаправить)
-  if (user) {
-    return null
-  }
+  if (user) return null
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4">

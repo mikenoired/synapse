@@ -40,6 +40,13 @@ export async function uploadFile(
   return objectName
 }
 
+export function getPublicUrl(objectName: string): string {
+  // В реальном приложении здесь может быть более сложная логика, 
+  // например, генерация presigned URL или использование CDN.
+  // Сейчас мы просто формируем прямой URL к нашему локальному API-роуту.
+  return `/api/files/${objectName}`
+}
+
 export async function getFile(objectName: string): Promise<{ stream: NodeJS.ReadableStream, contentType?: string }> {
   const stream = await minioClient.getObject(bucketName, objectName)
 

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
 import { ThemeProvider } from 'next-themes'
 import { useMemo, useState } from 'react'
+import { Toaster } from 'react-hot-toast'
 
 function getBaseUrl() {
   if (typeof window !== 'undefined') return ''
@@ -55,6 +56,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange={false}
         >
           {children}
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: 'hsl(var(--background))',
+                color: 'hsl(var(--foreground))',
+                border: '1px solid hsl(var(--border))',
+              },
+            }}
+          />
         </ThemeProvider>
       </TRPCProvider>
     </AuthProvider>

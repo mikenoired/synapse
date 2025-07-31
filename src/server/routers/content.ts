@@ -62,6 +62,8 @@ export const contentRouter = router({
   create: protectedProcedure
     .input(createContentSchema)
     .mutation(async ({ input, ctx }) => {
+      console.log('Данные для создания контента:', input); // <-- ДОБАВЛЕНО ДЛЯ ДИАГНОСТИКИ
+
       const { data, error } = await ctx.supabase
         .from('content')
         .insert([{
@@ -72,6 +74,7 @@ export const contentRouter = router({
         .single()
 
       if (error) {
+        console.error('Ошибка при создании записи в Supabase:', JSON.stringify(error, null, 2))
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
           message: error.message,
@@ -142,5 +145,43 @@ export const contentRouter = router({
         .filter((tag, index, array) => array.indexOf(tag) === index)
 
       return allTags
+    }),
+
+  getTagsWithContent: protectedProcedure
+    .query(async ({ ctx }) => {
+      const { data: content, error } = await ctx.supabase
+        .from('content')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error.message,
+        });
+      }
+
+      if (!content) return [];
+
+      const tagsMap = new Map<string, typeof content>();
+
+      for (const item of content) {
+        if (item.tags) {
+          for (const tag of item.tags) {
+            if (!tagsMap.has(tag)) {
+              tagsMap.set(tag, []);
+            }
+            const items = tagsMap.get(tag)!;
+            if (items.length < 3) {
+              items.push(item);
+            }
+          }
+        }
+      }
+
+      return Array.from(tagsMap.entries()).map(([tag, items]) => ({
+        tag,
+        items,
+      }));
     }),
 }) 

@@ -16,6 +16,8 @@ export const contentSchema = z.object({
   reminder_at: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
+  url: z.string().optional(),
+  image_url: z.string().optional(),
 })
 
 export const tagSchema = z.object({
@@ -31,6 +33,8 @@ export const createContentSchema = z.object({
   content: z.string(),
   tags: z.array(z.string()).default([]),
   reminder_at: z.string().optional(),
+  url: z.string().optional(),
+  image_url: z.string().optional(),
 })
 
 export const updateContentSchema = createContentSchema.partial().extend({

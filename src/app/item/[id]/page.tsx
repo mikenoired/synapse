@@ -211,14 +211,57 @@ export default function ItemPage({ params }: ItemPageProps) {
             <Card>
               <CardContent className="pt-6">
                 {item.type === 'image' ? (
-                  <img
-                    src={getSecureImageUrl(item.content, session?.access_token)}
-                    alt={item.title || 'Изображение'}
-                    className="w-full max-w-2xl mx-auto rounded-lg shadow-sm"
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPHRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                    }}
-                  />
+                  (() => {
+                    // Пытаемся распарсить content как JSON массив
+                    let imageUrls: string[] = []
+                    try {
+                      const parsed = JSON.parse(item.content)
+                      if (Array.isArray(parsed)) {
+                        imageUrls = parsed
+                      } else {
+                        imageUrls = [item.content] // Обратная совместимость
+                      }
+                    } catch {
+                      imageUrls = [item.content] // Обратная совместимость для строк
+                    }
+
+                    const fallbackImage = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPHRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+
+                    if (imageUrls.length === 1) {
+                      return (
+                        <img
+                          src={getSecureImageUrl(imageUrls[0], session?.access_token)}
+                          alt={item.title || 'Изображение'}
+                          className="w-full max-w-2xl mx-auto rounded-lg shadow-sm"
+                          onError={(e) => {
+                            e.currentTarget.src = fallbackImage
+                          }}
+                        />
+                      )
+                    }
+
+                    // Множественные изображения - показываем сетку
+                    return (
+                      <div className="space-y-4">
+                        <p className="text-sm text-muted-foreground">
+                          {imageUrls.length} изображений
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {imageUrls.map((url, index) => (
+                            <img
+                              key={index}
+                              src={getSecureImageUrl(url, session?.access_token)}
+                              alt={`${item.title || 'Изображение'} ${index + 1}`}
+                              className="w-full rounded-lg shadow-sm"
+                              onError={(e) => {
+                                e.currentTarget.src = fallbackImage
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()
                 ) : item.type === 'link' ? (
                   <div className="space-y-4">
                     <div>

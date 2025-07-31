@@ -1,0 +1,127 @@
+'use client';
+
+import Item from '@/components/item';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Content } from '@/lib/schemas';
+import { Session } from '@supabase/supabase-js';
+import { FileText, Search } from 'lucide-react';
+import Masonry from 'react-masonry-css';
+
+interface ContentGridProps {
+  items: Content[];
+  isLoading: boolean;
+  session: Session | null;
+  onContentChanged: () => void;
+  onItemClick: (item: Content) => void;
+  // Для состояний "ничего не найдено"
+  searchQuery?: string;
+  selectedTags?: string[];
+  onClearFilters?: () => void;
+  // Для страницы тега
+  excludedTag?: string;
+}
+
+const breakpointColumnsObj = {
+  default: 4,
+  2560: 5,
+  1920: 4,
+  1280: 3,
+  1024: 2,
+  768: 2,
+  640: 1
+};
+
+export function ContentGrid({
+  items,
+  isLoading,
+  session,
+  onContentChanged,
+  onItemClick,
+  searchQuery,
+  selectedTags,
+  onClearFilters,
+  excludedTag,
+}: ContentGridProps) {
+
+  const hasContent = items.length > 0;
+  const showEmptyState = !isLoading && !hasContent && !searchQuery && (!selectedTags || selectedTags.length === 0);
+  const showNotFoundState = !isLoading && !hasContent && (searchQuery || (selectedTags && selectedTags.length > 0));
+
+  if (isLoading) {
+    return (
+      <Masonry
+        breakpointCols={breakpointColumnsObj}
+        className="masonry-grid"
+        columnClassName="masonry-grid_column"
+      >
+        {Array.from({ length: 12 }).map((_, i) => (
+          <div className="mb-4 bg-transparent" key={i}>
+            <Skeleton className="h-40 w-full rounded-lg" />
+          </div>
+        ))}
+      </Masonry>
+    );
+  }
+
+  if (showEmptyState) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center py-12">
+        <Card className="w-full max-w-md p-8">
+          <CardContent className="space-y-4">
+            <FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Ваш мозг пока пуст</h3>
+              <p className="text-muted-foreground mb-6">
+                Начните с добавления заметки, файла или ссылки.
+              </p>
+              {/* Кнопка добавления будет управляться со страницы */}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (showNotFoundState) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-muted-foreground">
+          <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p className="text-lg mb-2">Ничего не найдено</p>
+          <p className="text-sm">Попробуйте изменить параметры поиска</p>
+          {onClearFilters && (
+            <Button
+              variant="outline"
+              onClick={onClearFilters}
+              className="mt-4"
+            >
+              Сбросить фильтры
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <Masonry
+      breakpointCols={breakpointColumnsObj}
+      className="masonry-grid"
+      columnClassName="masonry-grid_column"
+    >
+      {items.map((item, index) => (
+        <Item
+          key={item.id}
+          item={item}
+          index={index}
+          session={session}
+          onContentChanged={onContentChanged}
+          onItemClick={onItemClick}
+          excludedTag={excludedTag}
+        />
+      ))}
+    </Masonry>
+  );
+} 

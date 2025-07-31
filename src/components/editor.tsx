@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 interface EditorProps {
   data?: any
@@ -10,98 +10,69 @@ interface EditorProps {
 }
 
 export function Editor({ data, onChange, placeholder = 'Начните писать...', readOnly = false }: EditorProps) {
-  const editorRef = useRef<any>(null)
-  const [isReady, setIsReady] = useState(false)
-  const isInitializedRef = useRef(false)
-  const dataRef = useRef(data)
+  const editorRef = useRef<any>(null); // This will hold the EditorJS instance
+  const holderId = useMemo(() => `editorjs-${Math.random().toString(36).substring(2, 15)}`, []);
 
-  // Generate unique ID for this editor instance
-  const editorId = useMemo(() => `editorjs-${Math.random().toString(36).substring(2, 15)}`, [])
-
-  // Update data ref when data changes
   useEffect(() => {
-    dataRef.current = data
-  }, [data])
+    let editor: any = null;
+    let isMounted = true;
 
-  const initEditor = useCallback(async () => {
-    if (typeof window === 'undefined' || isInitializedRef.current) return
+    const initializeEditor = async () => {
+      if (typeof window === 'undefined') return;
 
-    const EditorJS = (await import('@editorjs/editorjs')).default
-    const Header = (await import('@editorjs/header')).default
-    const List = (await import('@editorjs/list')).default
-    const Delimiter = (await import('@editorjs/delimiter')).default
-    const Quote = (await import('@editorjs/quote')).default
-    const Code = (await import('@editorjs/code')).default
+      const EditorJS = (await import('@editorjs/editorjs')).default
+      const Header = (await import('@editorjs/header')).default
+      const List = (await import('@editorjs/list')).default
+      const Delimiter = (await import('@editorjs/delimiter')).default
+      const Quote = (await import('@editorjs/quote')).default
+      const Code = (await import('@editorjs/code')).default
 
-    if (editorRef.current) {
-      await editorRef.current.destroy()
-    }
+      if (!isMounted) return;
 
-    editorRef.current = new EditorJS({
-      holder: editorId,
-      data: dataRef.current || {
-        time: Date.now(),
-        blocks: [],
-        version: '2.30.8'
-      },
-      readOnly,
-      placeholder,
-      tools: {
-        header: Header,
-        list: List,
-        delimiter: Delimiter,
-        quote: Quote,
-        code: Code
-      } as any,
-      onChange: async () => {
-        if (onChange && editorRef.current) {
-          try {
-            const savedData = await editorRef.current.save()
-            onChange(savedData)
-          } catch (error) {
-            console.error('Saving failed:', error)
+      editor = new EditorJS({
+        holder: holderId,
+        data: data || { blocks: [] },
+        readOnly,
+        placeholder,
+        tools: {
+          header: Header,
+          list: List,
+          delimiter: Delimiter,
+          quote: Quote,
+          code: Code
+        } as any,
+        async onChange(api) {
+          if (onChange) {
+            const savedData = await api.saver.save();
+            onChange(savedData);
           }
-        }
-      }
-    })
+        },
+      });
 
-    try {
-      await editorRef.current.isReady
-      setIsReady(true)
-      isInitializedRef.current = true
-    } catch (error) {
-      console.error('Editor failed to initialize:', error)
-    }
-  }, [editorId, readOnly, placeholder, onChange])
+      editorRef.current = editor; // Store instance in ref
+    };
 
-  useEffect(() => {
-    initEditor()
+    initializeEditor();
 
     return () => {
-      if (editorRef.current) {
-        editorRef.current.destroy()
-        editorRef.current = null
-        isInitializedRef.current = false
-        setIsReady(false)
+      isMounted = false;
+      // On cleanup, check if the editor instance exists on the ref and destroy it
+      if (editorRef.current && typeof editorRef.current.destroy === 'function') {
+        editorRef.current.destroy();
+        editorRef.current = null;
       }
-    }
-  }, [initEditor])
-
-  // Update editor content when data changes (but only if editor is ready and data is different)
-  useEffect(() => {
-    if (isReady && editorRef.current && data && data !== dataRef.current) {
-      editorRef.current.render(data).catch((error: any) => {
-        console.error('Failed to render data:', error)
-      })
-    }
-  }, [data, isReady])
+    };
+    // Re-run the effect if readOnly or holderId changes.
+    // Data/placeholder changes are handled inside the editor instance itself or don't require re-init.
+  }, [holderId, readOnly, onChange, placeholder, data]);
 
   return (
     <div className="min-h-[300px]">
-      <div id={editorId} />
+      <div id={holderId} />
     </div>
   )
 }
+
 
 // Утилита для конвертации EditorJS данных в обычный текст для превью
 export function editorDataToText(data: any): string {

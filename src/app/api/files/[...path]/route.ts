@@ -7,7 +7,6 @@ export async function GET(
   { params }: { params: { path: string[] } }
 ) {
   try {
-    // Проверяем аутентификацию
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
       request.nextUrl.searchParams.get('token')
 
@@ -32,26 +31,20 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Собираем путь к файлу
     const objectName = params.path.join('/')
 
-    // Получаем метаданные файла для проверки владельца
     const metadata = await getFileMetadata(objectName)
     if (!metadata) {
       return NextResponse.json({ error: 'File not found' }, { status: 404 })
     }
 
-    // Проверяем, что пользователь является владельцем файла
-    // Проверяем как по метаданным, так и по пути (для двойной защиты)
     const pathUserId = objectName.split('/')[1] // images/userId/filename
     if (metadata.userId !== user.id && pathUserId !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Получаем файл из MinIO
     const { stream, contentType } = await getFile(objectName)
 
-    // Создаем ReadableStream для Next.js Response
     const readableStream = new ReadableStream({
       start(controller) {
         stream.on('data', (chunk: Buffer) => {
@@ -68,12 +61,11 @@ export async function GET(
       }
     })
 
-    // Возвращаем файл с правильными заголовками
     return new Response(readableStream, {
       headers: {
         'Content-Type': contentType || 'application/octet-stream',
         'Content-Length': metadata.size.toString(),
-        'Cache-Control': 'private, max-age=3600', // Кешируем на час
+        'Cache-Control': 'private, max-age=3600',
         'X-Content-Type-Options': 'nosniff',
       },
     })

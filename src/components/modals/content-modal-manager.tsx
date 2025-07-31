@@ -2,9 +2,9 @@
 
 import { Content } from "@/lib/schemas"
 import { Session } from "@supabase/supabase-js"
-import { ImageGalleryModal } from "./image-gallery-modal"
 import { LinkViewerModal } from "./link-viewer-modal"
 import { NoteViewerModal } from "./note-viewer-modal"
+import { UnifiedImageModal } from "./unified-image-modal"
 
 interface ContentModalManagerProps {
   open: boolean
@@ -14,6 +14,7 @@ interface ContentModalManagerProps {
   session: Session | null
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
+  onContentChanged?: () => void
 }
 
 export function ContentModalManager({
@@ -23,24 +24,22 @@ export function ContentModalManager({
   allItems,
   session,
   onEdit,
-  onDelete
+  onDelete,
+  onContentChanged
 }: ContentModalManagerProps) {
   if (!item) return null
 
-  // For images, find all image items and current index for gallery functionality
+  // For images - use unified modal
   if (item.type === 'image') {
-    const imageItems = allItems.filter(i => i.type === 'image')
-    const currentIndex = imageItems.findIndex(i => i.id === item.id)
-
     return (
-      <ImageGalleryModal
+      <UnifiedImageModal
         open={open}
         onOpenChange={onOpenChange}
-        items={imageItems}
-        initialIndex={Math.max(0, currentIndex)}
+        item={item}
         session={session}
         onEdit={onEdit}
         onDelete={onDelete}
+        onContentChanged={onContentChanged}
       />
     )
   }
