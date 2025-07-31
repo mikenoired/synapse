@@ -1,5 +1,5 @@
 import { createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
-import { TRPCError } from '@trpc/server'
+import { handleSupabaseError, handleSupabaseNotFound } from '@/shared/lib/utils'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc'
 
@@ -20,22 +20,13 @@ export const contentRouter = router({
         query = query.or(`title.ilike.%${input.search}%,content.ilike.%${input.search}%`)
       }
 
-      if (input.tags && input.tags.length > 0) {
-        query = query.contains('tags', input.tags)
-      }
+      if (input.tags && input.tags.length) query = query.contains('tags', input.tags)
 
-      if (input.type) {
-        query = query.eq('type', input.type)
-      }
+      if (input.type) query = query.eq('type', input.type)
 
       const { data, error } = await query
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
+      if (error) handleSupabaseError(error)
 
       return data || []
     }),
@@ -49,12 +40,7 @@ export const contentRouter = router({
         .eq('id', input.id)
         .single()
 
-      if (error) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Content not found',
-        })
-      }
+      if (error) handleSupabaseNotFound(error, 'Контент не найден')
 
       return data
     }),
@@ -62,8 +48,6 @@ export const contentRouter = router({
   create: protectedProcedure
     .input(createContentSchema)
     .mutation(async ({ input, ctx }) => {
-      console.log('Данные для создания контента:', input); // <-- ДОБАВЛЕНО ДЛЯ ДИАГНОСТИКИ
-
       const { data, error } = await ctx.supabase
         .from('content')
         .insert([{
@@ -73,13 +57,7 @@ export const contentRouter = router({
         .select()
         .single()
 
-      if (error) {
-        console.error('Ошибка при создании записи в Supabase:', JSON.stringify(error, null, 2))
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
+      if (error) handleSupabaseError(error)
 
       return data
     }),
@@ -99,12 +77,7 @@ export const contentRouter = router({
         .select()
         .single()
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
+      if (error) handleSupabaseError(error)
 
       return data
     }),
@@ -117,12 +90,7 @@ export const contentRouter = router({
         .delete()
         .eq('id', input.id)
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
+      if (error) handleSupabaseError(error)
 
       return { success: true }
     }),
@@ -133,12 +101,7 @@ export const contentRouter = router({
         .from('content')
         .select('tags')
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
+      if (error) handleSupabaseError(error)
 
       const allTags = (data || [])
         .flatMap(item => item.tags || [])
@@ -154,12 +117,7 @@ export const contentRouter = router({
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        });
-      }
+      if (error) handleSupabaseError(error)
 
       if (!content) return [];
 

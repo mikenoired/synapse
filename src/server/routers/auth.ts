@@ -1,5 +1,5 @@
 import { authSchema } from '@/shared/lib/schemas'
-import { TRPCError } from '@trpc/server'
+import { handleAuthError, handleConflictError, handleSupabaseError } from '@/shared/lib/utils'
 import { publicProcedure, router } from '../trpc'
 
 export const authRouter = router({
@@ -13,10 +13,7 @@ export const authRouter = router({
         .single()
 
       if (existingUser) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'User already exists',
-        })
+        handleConflictError('Пользователь с таким email уже существует')
       }
 
       const { data, error } = await ctx.supabase.auth.signUp({
@@ -24,12 +21,7 @@ export const authRouter = router({
         password: input.password,
       })
 
-      if (error) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: error.message,
-        })
-      }
+      if (error) handleAuthError(error)
 
       return { user: data.user }
     }),
@@ -42,12 +34,7 @@ export const authRouter = router({
         password: input.password,
       })
 
-      if (error) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: error.message,
-        })
-      }
+      if (error) handleAuthError(error, 'UNAUTHORIZED')
 
       return { user: data.user, session: data.session }
     }),
@@ -56,12 +43,7 @@ export const authRouter = router({
     .mutation(async ({ ctx }) => {
       const { error } = await ctx.supabase.auth.signOut()
 
-      if (error) {
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message,
-        })
-      }
+      if (error) handleSupabaseError(error)
 
       return { success: true }
     }),
