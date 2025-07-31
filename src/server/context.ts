@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@/shared/api/supabase-client'
 import type { NextRequest } from 'next/server'
 
 export async function createContext({ req }: { req?: NextRequest }) {
@@ -6,17 +6,7 @@ export async function createContext({ req }: { req?: NextRequest }) {
   const token = req?.headers.get('authorization')?.replace('Bearer ', '')
 
   // Создаем клиент с anon key для RLS
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: token ? {
-          Authorization: `Bearer ${token}`
-        } : {}
-      }
-    }
-  )
+  const supabase = createSupabaseClient(token)
 
   let user = null
   if (token) {

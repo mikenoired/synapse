@@ -38,6 +38,7 @@ export const contentRouter = router({
         .from('content')
         .select('*')
         .eq('id', input.id)
+        .eq('user_id', ctx.user.id)
         .single()
 
       if (error) handleSupabaseNotFound(error, 'Контент не найден')
@@ -74,6 +75,7 @@ export const contentRouter = router({
           updated_at: new Date().toISOString(),
         })
         .eq('id', id)
+        .eq('user_id', ctx.user.id)
         .select()
         .single()
 
@@ -89,6 +91,7 @@ export const contentRouter = router({
         .from('content')
         .delete()
         .eq('id', input.id)
+        .eq('user_id', ctx.user.id)
 
       if (error) handleSupabaseError(error)
 
@@ -100,6 +103,7 @@ export const contentRouter = router({
       const { data, error } = await ctx.supabase
         .from('content')
         .select('tags')
+        .eq('user_id', ctx.user.id)
 
       if (error) handleSupabaseError(error)
 
@@ -115,6 +119,7 @@ export const contentRouter = router({
       const { data: content, error } = await ctx.supabase
         .from('content')
         .select('*')
+        .eq('user_id', ctx.user.id)
         .order('created_at', { ascending: false });
 
       if (error) handleSupabaseError(error)

@@ -1,5 +1,5 @@
 import { getPublicUrl, uploadFile } from '@/shared/api/minio'
-import { createClient } from '@supabase/supabase-js'
+import { createSupabaseClient } from '@/shared/api/supabase-client'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
@@ -9,17 +9,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      }
-    )
+    const supabase = createSupabaseClient(token)
 
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
     if (authError || !user) {

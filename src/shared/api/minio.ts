@@ -1,14 +1,28 @@
 import * as Minio from 'minio'
 
+const {
+  MINIO_ENDPOINT,
+  MINIO_ACCESS_KEY,
+  MINIO_SECRET_KEY,
+  MINIO_BUCKET_NAME = 'opi-files',
+  MINIO_USE_SSL = 'false',
+} = process.env
+
+if (!MINIO_ENDPOINT || !MINIO_ACCESS_KEY || !MINIO_SECRET_KEY) {
+  throw new Error('MinIO configuration is missing required environment variables')
+}
+
+const [host, portStr] = MINIO_ENDPOINT.split(':')
+
 const minioClient = new Minio.Client({
-  endPoint: process.env.MINIO_ENDPOINT?.split(':')[0] || 'localhost',
-  port: parseInt(process.env.MINIO_ENDPOINT?.split(':')[1] || '9000'),
-  useSSL: false,
-  accessKey: process.env.MINIO_ACCESS_KEY || 'minioadmin',
-  secretKey: process.env.MINIO_SECRET_KEY || 'minioadmin',
+  endPoint: host,
+  port: portStr ? parseInt(portStr, 10) : undefined,
+  useSSL: MINIO_USE_SSL === 'true',
+  accessKey: MINIO_ACCESS_KEY,
+  secretKey: MINIO_SECRET_KEY,
 })
 
-const bucketName = process.env.MINIO_BUCKET_NAME || 'opi-files'
+const bucketName = MINIO_BUCKET_NAME
 
 export async function ensureBucketExists() {
   try {

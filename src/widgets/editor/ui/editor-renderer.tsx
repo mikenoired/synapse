@@ -1,5 +1,9 @@
 'use client'
 
+import DOMPurify from 'dompurify'
+
+// Функция-обёртка для очистки пользовательского HTML
+const sanitize = (html: string) => DOMPurify.sanitize(html)
 
 interface EditorRendererProps {
   data: any
@@ -17,7 +21,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
           <p
             key={index}
             className="text-foreground leading-relaxed mb-4"
-            dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+            dangerouslySetInnerHTML={{ __html: sanitize(block.data.text || '') }}
           />
         )
 
@@ -34,7 +38,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
             <h2
               key={index}
               className={`text-foreground ${headerClasses[2]}`}
-              dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitize(block.data.text || '') }}
             />
           )
         } else if (level === 3) {
@@ -42,7 +46,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
             <h3
               key={index}
               className={`text-foreground ${headerClasses[3]}`}
-              dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitize(block.data.text || '') }}
             />
           )
         } else {
@@ -50,7 +54,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
             <h4
               key={index}
               className={`text-foreground ${headerClasses[4]}`}
-              dangerouslySetInnerHTML={{ __html: block.data.text || '' }}
+              dangerouslySetInnerHTML={{ __html: sanitize(block.data.text || '') }}
             />
           )
         }
@@ -75,7 +79,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
                 <li
                   key={itemIndex}
                   className="leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: content }}
+                  dangerouslySetInnerHTML={{ __html: sanitize(content) }}
                 />
               )
             })}
@@ -94,7 +98,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
                 <li
                   key={itemIndex}
                   className="leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: content }}
+                  dangerouslySetInnerHTML={{ __html: sanitize(content) }}
                 />
               )
             })}
@@ -104,7 +108,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
       case 'quote':
         return (
           <blockquote key={index} className="border-l-4 border-primary pl-4 italic text-muted-foreground mb-4">
-            <p dangerouslySetInnerHTML={{ __html: block.data.text || '' }} />
+            <p dangerouslySetInnerHTML={{ __html: sanitize(block.data.text || '') }} />
             {block.data.caption && (
               <cite className="block mt-2 text-sm not-italic">
                 — {block.data.caption}
