@@ -6,17 +6,10 @@ import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Editor } from '@/widgets/editor/ui/editor'
-import { FileText, Image, Link, Plus, Upload, X } from 'lucide-react'
+import { FileText, Image, Link, Maximize, Minimize, Plus, Upload, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -24,9 +17,10 @@ interface AddContentDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onContentAdded?: () => void
+  initialTags?: string[]
 }
 
-export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddContentDialogProps) {
+export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTags = [] }: AddContentDialogProps) {
   const { session } = useAuth()
   const { preloadedFiles, setPreloadedFiles } = useDashboard()
 
@@ -34,12 +28,26 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [editorData, setEditorData] = useState<any>(null)
-  const [tags, setTags] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>(initialTags)
   const [currentTag, setCurrentTag] = useState('')
   const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [previewUrls, setPreviewUrls] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
+  const [isFullScreen, setIsFullScreen] = useState(false)
+
+  useEffect(() => {
+    const handleEsc = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onOpenChange(false)
+      }
+    }
+    window.addEventListener('keydown', handleEsc)
+
+    return () => {
+      window.removeEventListener('keydown', handleEsc)
+    }
+  }, [onOpenChange])
 
   useEffect(() => {
     if (preloadedFiles.length > 0) {
@@ -50,10 +58,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
       // Очищаем предзагруженные файлы из контекста, чтобы они не использовались повторно
       setPreloadedFiles([])
     }
-    // Мы хотим, чтобы этот эффект запускался только при изменении preloadedFiles из контекста
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preloadedFiles, setPreloadedFiles])
-
+  }, [preloadedFiles])
 
   // Cleanup preview URLs when component unmounts or files change
   useEffect(() => {
@@ -68,12 +73,13 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
       setTitle('')
       setContent('')
       setEditorData(null)
-      setTags([])
+      setTags(initialTags)
       setCurrentTag('')
       setType('note')
       setSelectedFiles([])
       previewUrls.forEach(url => URL.revokeObjectURL(url))
       setPreviewUrls([])
+      setIsFullScreen(false)
 
       onOpenChange(false)
       onContentAdded?.()
@@ -83,32 +89,32 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
     },
   })
 
-  const uploadFile = async (file: File): Promise<{ objectName: string, url: string }> => {
-    const formData = new FormData()
-    formData.append('file', file)
+  // const uploadFile = async (file: File): Promise<{ objectName: string, url: string }> => {
+  //   const formData = new FormData()
+  //   formData.append('file', file)
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${session?.access_token}`,
-      },
-      body: formData,
-    })
+  //   const response = await fetch('/api/upload', {
+  //     method: 'POST',
+  //     headers: {
+  //       'Authorization': `Bearer ${session?.access_token}`,
+  //     },
+  //     body: formData,
+  //   })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || 'Upload failed')
-    }
+  //   if (!response.ok) {
+  //     const error = await response.json()
+  //     throw new Error(error.error || 'Upload failed')
+  //   }
 
-    const result = await response.json()
-    if (!result.success || !result.files || result.files.length === 0) {
-      throw new Error(result.error || 'Upload processing failed')
-    }
-    return {
-      objectName: result.files[0].objectName,
-      url: result.files[0].url
-    }
-  }
+  //   const result = await response.json()
+  //   if (!result.success || !result.files || result.files.length === 0) {
+  //     throw new Error(result.error || 'Upload processing failed')
+  //   }
+  //   return {
+  //     objectName: result.files[0].objectName,
+  //     url: result.files[0].url
+  //   }
+  // }
 
   const uploadMultipleFiles = async (files: File[]): Promise<{ objectName: string, url: string }[]> => {
     const formData = new FormData()
@@ -173,7 +179,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
         setTitle('')
         setContent('')
         setEditorData(null)
-        setTags([])
+        setTags(initialTags)
         setCurrentTag('')
         setType('note')
         setSelectedFiles([])
@@ -312,89 +318,157 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
 
   // Определяем размер диалога в зависимости от типа контента
   const getDialogSize = () => {
+    if (isFullScreen && type === 'note') {
+      return 'w-full h-full max-w-none rounded-none'
+    }
     switch (type) {
       case 'note':
-        return 'max-w-4xl w-[95vw] max-h-[90vh] h-auto'
+        return 'max-w-3xl w-[95vw] h-[90vh] rounded-lg'
       case 'image':
-        return 'max-w-3xl w-[95vw] max-h-[90vh] h-auto'
+        return 'max-w-3xl w-[95vw] max-h-[90vh] h-auto rounded-lg'
       case 'link':
-        return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto'
+        return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto rounded-lg'
       default:
-        return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto'
+        return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto rounded-lg'
     }
   }
 
+  const handleTypeChange = (newType: Content['type']) => {
+    if (type === 'note' && editorData && editorData.blocks && editorData.blocks.length > 0) {
+      if (confirm('У вас есть несохраненные изменения. Хотите сохранить их как заметку?')) {
+        handleSubmit(new Event('submit') as unknown as React.FormEvent) // Сохраняем и закрываем
+      } else {
+        // Сбрасываем изменения и переключаем тип
+        setEditorData(null)
+        setTitle('')
+        setTags(initialTags)
+        setType(newType)
+      }
+    } else {
+      setType(newType)
+      setSelectedFiles([])
+      setContent('')
+      setEditorData(null)
+      previewUrls.forEach(url => URL.revokeObjectURL(url))
+      setPreviewUrls([])
+    }
+  }
+
+  const renderNoteForm = () => (
+    <div className="flex flex-col h-full">
+      {/* Top section: Title and Tags */}
+      <div className="p-6 pb-4 border-b">
+        <div className="max-w-[700px] mx-auto w-full">
+          <Input
+            id="title"
+            placeholder="Заголовок (опционально)..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isLoading}
+            className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+          />
+          <div className="flex flex-wrap gap-2 mt-3">
+            {tags.map(tag => (
+              <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                  disabled={isLoading}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+            <Input
+              id="tags"
+              placeholder="+ Добавить тег"
+              value={currentTag}
+              onChange={(e) => setCurrentTag(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Main section: Editor */}
+      <div className="flex-1 p-6 pt-2 overflow-y-auto">
+        <div className="max-w-[700px] mx-auto w-full">
+          <Editor
+            data={editorData}
+            onChange={setEditorData}
+            placeholder="Начните писать..."
+            readOnly={isLoading}
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+
+  if (!open) return null
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${getDialogSize()} p-0 gap-0`}>
-        <div className="flex flex-col h-full max-h-[90vh]">
-          <DialogHeader className="p-6 pb-4 border-b">
-            <DialogTitle className="text-xl">Добавить контент</DialogTitle>
-            <DialogDescription>
-              Создайте заметку, добавьте ссылку или загрузите изображения
-            </DialogDescription>
-          </DialogHeader>
+    <div
+      className={`fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-300 ease-in-out ${isFullScreen && type === 'note' ? 'p-5' : ''
+        }`}
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        className={`bg-background shadow-lg relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 border-b flex flex-row items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant={type === 'note' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => handleTypeChange('note')}
+              className="flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Заметка
+            </Button>
+            <Button
+              type="button"
+              variant={type === 'image' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => handleTypeChange('image')}
+              className="flex items-center gap-2"
+            >
+              <Image className="w-4 h-4" />
+              Изображения
+            </Button>
+            <Button
+              type="button"
+              variant={type === 'link' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => handleTypeChange('link')}
+              className="flex items-center gap-2"
+            >
+              <Link className="w-4 h-4" />
+              Ссылка
+            </Button>
+          </div>
+          {type === 'note' && (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setIsFullScreen(!isFullScreen)}>
+                {isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+              </Button>
+            </div>
+          )}
+        </div>
 
-          <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+          {type === 'note' ? (
+            renderNoteForm()
+          ) : (
             <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-              {/* Type Selection */}
-              <div className="space-y-3">
-                <Label>Тип контента</Label>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    type="button"
-                    variant={type === 'note' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setType('note')
-                      setSelectedFiles([])
-                      setContent('')
-                      setEditorData(null)
-                      previewUrls.forEach(url => URL.revokeObjectURL(url))
-                      setPreviewUrls([])
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Заметка
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={type === 'image' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setType('image')
-                      setSelectedFiles([])
-                      setContent('')
-                      setEditorData(null)
-                      previewUrls.forEach(url => URL.revokeObjectURL(url))
-                      setPreviewUrls([])
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Image className="w-4 h-4" />
-                    Изображения
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={type === 'link' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setType('link')
-                      setSelectedFiles([])
-                      setContent('')
-                      setEditorData(null)
-                      previewUrls.forEach(url => URL.revokeObjectURL(url))
-                      setPreviewUrls([])
-                    }}
-                    className="flex items-center gap-2"
-                  >
-                    <Link className="w-4 h-4" />
-                    Ссылка
-                  </Button>
-                </div>
-              </div>
-
+              {/* Common fields for Image and Link */}
               {/* Title */}
               <div className="space-y-2">
                 <Label htmlFor="title">Заголовок (опционально)</Label>
@@ -409,21 +483,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
 
               {/* Content */}
               <div className="space-y-2">
-                <Label htmlFor="content">
-                  {type === 'note' ? 'Содержание' :
-                    type === 'link' ? 'URL' :
-                      'Изображения'}
-                </Label>
-                {type === 'note' ? (
-                  <div className="border rounded-lg overflow-hidden">
-                    <Editor
-                      data={editorData}
-                      onChange={setEditorData}
-                      placeholder="Начните писать..."
-                      readOnly={isLoading}
-                    />
-                  </div>
-                ) : type === 'link' ? (
+                <Label htmlFor="content">{type === 'link' ? 'URL' : 'Изображения'}</Label>
+                {type === 'link' ? (
                   <Input
                     id="content"
                     type="url"
@@ -578,37 +639,41 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded }: AddCont
                 )}
               </div>
             </div>
+          )}
 
-            {/* Submit */}
-            <div className="p-6 pt-4 border-t bg-background">
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onOpenChange(false)}
-                  disabled={isLoading}
-                >
-                  Отмена
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isLoading || (
-                    type === 'note'
-                      ? !editorData || !editorData.blocks || editorData.blocks.length === 0
-                      : type === 'image'
-                        ? selectedFiles.length === 0
-                        : !content.trim()
-                  )}
-                >
-                  {uploading ? `Загружается ${selectedFiles.length} файл${selectedFiles.length > 1 ? (selectedFiles.length > 4 ? 'ов' : 'а') : ''}...` :
-                    createContentMutation.isPending ? 'Сохранение...' :
-                      'Сохранить'}
-                </Button>
-              </div>
+          {/* Submit */}
+          <div className="p-6 pt-4 border-t bg-background mt-auto">
+            <div className="flex justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isLoading}
+              >
+                Отмена
+              </Button>
+              <Button
+                type="submit"
+                disabled={
+                  isLoading ||
+                  (type === 'note'
+                    ? !editorData || !editorData.blocks || editorData.blocks.length === 0
+                    : type === 'image'
+                      ? selectedFiles.length === 0
+                      : !content.trim())
+                }
+              >
+                {uploading
+                  ? `Загружается ${selectedFiles.length} файл${selectedFiles.length > 1 ? (selectedFiles.length > 4 ? 'ов' : 'а') : ''
+                  }...`
+                  : createContentMutation.isPending
+                    ? 'Сохранение...'
+                    : 'Сохранить'}
+              </Button>
             </div>
-          </form>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </div>
+        </form>
+      </div>
+    </div>
   )
 } 

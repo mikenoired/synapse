@@ -7,6 +7,7 @@ import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
+import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -31,6 +32,7 @@ export default function DashboardPage() {
   })
 
   useEffect(() => {
+    if (!searchParams) return
     const tagsFromUrl = searchParams.get('tags');
     if (tagsFromUrl) {
       setSelectedTags(tagsFromUrl.split(','));
@@ -125,6 +127,19 @@ export default function DashboardPage() {
         open={isAddDialogOpen}
         onOpenChange={setAddDialogOpen}
         onContentAdded={handleContentChanged}
+      />
+      <ContentModalManager
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        item={selectedItem}
+        allItems={content}
+        session={session}
+        onEdit={(id: string) => {
+          router.push(`/edit/${id}`)
+          setModalOpen(false)
+        }}
+        onDelete={handleModalDelete}
+        onContentChanged={handleContentChanged}
       />
       {/* Drag overlay и ModalManager остаются здесь */}
     </div>

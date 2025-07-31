@@ -1,8 +1,10 @@
 'use client'
 
+import { AddContentDialog } from '@/features/add-content/ui/add-content-dialog'
 import { ContentGrid } from '@/features/content-grid/content-grid'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
+import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
 import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { Tag } from 'lucide-react'
@@ -14,6 +16,7 @@ export default function TagPage({ params }: { params: { tag: string } }) {
   const decodedTag = decodeURIComponent(encodedTag)
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const { isAddDialogOpen, setAddDialogOpen } = useDashboard()
   const { user, loading, session } = useAuth()
   const router = useRouter()
 
@@ -84,6 +87,12 @@ export default function TagPage({ params }: { params: { tag: string } }) {
         }}
         onDelete={handleModalDelete}
         onContentChanged={handleContentChanged}
+      />
+      <AddContentDialog
+        open={isAddDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onContentAdded={handleContentChanged}
+        initialTags={[decodedTag]}
       />
     </div>
   )

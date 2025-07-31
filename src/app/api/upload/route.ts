@@ -1,4 +1,4 @@
-import { getPublicUrl, uploadFile } from '@/lib/minio'
+import { getPublicUrl, uploadFile } from '@/shared/api/minio'
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
