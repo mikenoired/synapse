@@ -1,23 +1,17 @@
 'use client'
 
-import { Editor } from '@/components/editor'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useAuth } from '@/lib/auth-context'
-import { trpc } from '@/lib/trpc'
+import { trpc } from '@/shared/api/trpc'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Editor } from '@/widgets/editor/ui/editor'
 import { ArrowLeft, X } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { use, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 
-interface EditPageProps {
-  params: Promise<{ id: string }>
-}
-
-export default function EditPage({ params }: EditPageProps) {
-  const { id } = use(params)
+export default function EditPage({ params }: { params: { id: string } }) {
+  const { id } = params
   const router = useRouter()
-  const { session } = useAuth()
   const [title, setTitle] = useState('')
   const [editorData, setEditorData] = useState<any>(null)
   const [tags, setTags] = useState<string[]>([])
@@ -34,19 +28,16 @@ export default function EditPage({ params }: EditPageProps) {
     },
   })
 
-  // Load data when item is fetched
   useEffect(() => {
     if (item) {
       setTitle(item.title || '')
       setTags(item.tags || [])
 
-      // Try to parse as EditorJS data, fallback to plain text
       try {
         const parsedData = JSON.parse(item.content)
         if (parsedData.blocks) {
           setEditorData(parsedData)
         } else {
-          // Convert plain text to EditorJS format
           setEditorData({
             time: Date.now(),
             blocks: [{
@@ -57,7 +48,6 @@ export default function EditPage({ params }: EditPageProps) {
           })
         }
       } catch {
-        // Convert plain text to EditorJS format
         setEditorData({
           time: Date.now(),
           blocks: [{
@@ -73,11 +63,9 @@ export default function EditPage({ params }: EditPageProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Проверяем наличие контента
     if (!editorData || !editorData.blocks || editorData.blocks.length === 0) return
 
     try {
-      // Для заметок сохраняем данные EditorJS как JSON
       const finalContent = JSON.stringify(editorData)
 
       updateContentMutation.mutate({
@@ -99,9 +87,7 @@ export default function EditPage({ params }: EditPageProps) {
     }
   }
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove))
-  }
+  const removeTag = (tagToRemove: string) => setTags(tags.filter(tag => tag !== tagToRemove))
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -139,7 +125,6 @@ export default function EditPage({ params }: EditPageProps) {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header with minimal navigation */}
       <div className="border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
@@ -177,10 +162,8 @@ export default function EditPage({ params }: EditPageProps) {
         </div>
       </div>
 
-      {/* Main content area */}
       <div className="max-w-4xl mx-auto px-6 py-12">
         <form id="editor-form" onSubmit={handleSubmit} className="space-y-4">
-          {/* Title - Notion style */}
           <div>
             <Input
               placeholder="Без названия"
@@ -191,7 +174,6 @@ export default function EditPage({ params }: EditPageProps) {
             />
           </div>
 
-          {/* Tags - inline style */}
           <div className="flex flex-wrap items-center gap-2 py-2">
             {tags.map(tag => (
               <Badge key={tag} variant="secondary" className="flex items-center gap-1 px-2 py-1 text-xs">
@@ -216,7 +198,6 @@ export default function EditPage({ params }: EditPageProps) {
             />
           </div>
 
-          {/* Editor - main content area */}
           <div className="min-h-[500px]">
             <Editor
               data={editorData}

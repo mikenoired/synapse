@@ -1,0 +1,14 @@
+---
+description: Architecture rules
+globs:
+alwaysApply: true
+---
+
+- You need to keep in mind that this is a monorepo project.
+- In all project we need to use Bun as a package manager and script runner.
+- If you're going to make some new components, pages, etc, you need to use FSD architecture.
+- Cause this is a Next.js project with optimization for SSR, you need to use SSR for all pages and make sure that components are optimized and I can use them for SSR.
+- Keep in mind that this project needs to be UI/UX friendly and easy to use for desktop and mobile users.
+- Don't use too many comments in the code. Better to use meaningful names for variables, functions, etc.
+- Make sure that we don't have any unused dependencies.
+- Important: Don't make any endpoints with some security problems. User need to be sure that all data is safe and secure.

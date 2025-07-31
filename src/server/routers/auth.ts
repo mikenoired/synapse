@@ -1,4 +1,4 @@
-import { authSchema } from '@/lib/schemas'
+import { authSchema } from '@/shared/lib/schemas'
 import { TRPCError } from '@trpc/server'
 import { publicProcedure, router } from '../trpc'
 

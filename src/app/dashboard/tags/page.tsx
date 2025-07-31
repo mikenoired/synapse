@@ -1,9 +1,9 @@
 'use client';
 
-import { TagStack } from '@/components/tag-stack';
-import { Skeleton } from '@/components/ui/skeleton';
-import { useAuth } from '@/lib/auth-context';
-import { trpc } from '@/lib/trpc';
+import { TagStack } from '@/entities/item/ui/tag-stack';
+import { trpc } from '@/shared/api/trpc';
+import { useAuth } from '@/shared/lib/auth-context';
+import { Skeleton } from '@/shared/ui/skeleton';
 import Link from 'next/link';
 
 export default function TagsPage() {

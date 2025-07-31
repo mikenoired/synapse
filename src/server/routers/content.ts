@@ -1,4 +1,4 @@
-import { createContentSchema, updateContentSchema } from '@/lib/schemas'
+import { createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
 import { TRPCError } from '@trpc/server'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc'

@@ -1,27 +1,21 @@
-'use client';
+'use client'
 
-import { ContentModalManager } from '@/components/modals/content-modal-manager';
-import { ContentGrid } from '@/features/content-grid/ui/content-grid';
-import { useAuth } from '@/lib/auth-context';
-import { Content } from '@/lib/schemas';
-import { trpc } from '@/lib/trpc';
-import { Tag } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { use, useEffect, useState } from 'react';
+import { ContentGrid } from '@/features/content-grid/content-grid'
+import { trpc } from '@/shared/api/trpc'
+import { useAuth } from '@/shared/lib/auth-context'
+import { Content } from '@/shared/lib/schemas'
+import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
+import { Tag } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
-interface TagPageProps {
-  params: Promise<{
-    tag: string;
-  }>;
-}
-
-export default function TagPage({ params }: TagPageProps) {
-  const resolvedParams = use(params);
-  const decodedTag = decodeURIComponent(resolvedParams.tag);
-  const [selectedItem, setSelectedItem] = useState<Content | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
-  const { user, loading, session } = useAuth();
-  const router = useRouter();
+export default function TagPage({ params }: { params: { tag: string } }) {
+  const { tag: encodedTag } = params
+  const decodedTag = decodeURIComponent(encodedTag)
+  const [selectedItem, setSelectedItem] = useState<Content | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const { user, loading, session } = useAuth()
+  const router = useRouter()
 
   const {
     data: content = [],
@@ -29,36 +23,36 @@ export default function TagPage({ params }: TagPageProps) {
     refetch: refetchContent,
   } = trpc.content.getAll.useQuery({
     tags: [decodedTag],
-  });
+  })
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/');
+      router.push('/')
     }
-  }, [user, loading, router]);
+  }, [user, loading, router])
 
-  const handleContentChanged = () => refetchContent();
+  const handleContentChanged = () => refetchContent()
 
   const handleItemClick = (item: Content) => {
-    setSelectedItem(item);
-    setModalOpen(true);
-  };
+    setSelectedItem(item)
+    setModalOpen(true)
+  }
 
   const handleModalDelete = (id: string) => {
     trpc.content.delete.useMutation().mutate({ id }, {
       onSuccess: () => {
-        handleContentChanged();
-        setModalOpen(false);
+        handleContentChanged()
+        setModalOpen(false)
       },
-    });
-  };
+    })
+  }
 
   if (loading || !user) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
-    );
+    )
   }
 
   return (
@@ -85,12 +79,12 @@ export default function TagPage({ params }: TagPageProps) {
         allItems={content}
         session={session}
         onEdit={(id: string) => {
-          router.push(`/edit/${id}`);
-          setModalOpen(false);
+          router.push(`/edit/${id}`)
+          setModalOpen(false)
         }}
         onDelete={handleModalDelete}
         onContentChanged={handleContentChanged}
       />
     </div>
-  );
+  )
 } 

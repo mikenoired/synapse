@@ -1,4 +1,4 @@
-import { getFile, getFileMetadata } from '@/lib/minio'
+import { getFile, getFileMetadata } from '@/shared/api/minio'
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 

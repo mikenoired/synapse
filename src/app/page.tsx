@@ -1,9 +1,9 @@
 'use client'
 
-import { AuthDialog } from '@/components/auth-dialog'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/lib/auth-context'
+import { AuthDialog } from '@/features/auth-dialog/ui/auth-dialog'
+import { ThemeToggle } from '@/features/theme-toggle/ui/theme-toggle'
+import { useAuth } from '@/shared/lib/auth-context'
+import { Button } from '@/shared/ui/button'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
