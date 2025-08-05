@@ -5,7 +5,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent } from '@/shared/ui/dialog'
 import { EditorRenderer } from '@/widgets/editor/ui/editor-renderer'
-import { Calendar, Clock, FileText, Pencil, Trash2, X } from 'lucide-react'
+import { Calendar, Clock, FileText, Pencil, Trash2 } from 'lucide-react'
 import { motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -65,7 +65,7 @@ export function NoteViewerModal({
     if (item.type === 'note') {
       try {
         const parsedData = JSON.parse(item.content)
-        if (parsedData.blocks) {
+        if (parsedData.type === 'doc') {
           return <EditorRenderer data={parsedData} />
         }
       } catch {
@@ -91,19 +91,7 @@ export function NoteViewerModal({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Close button */}
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: isHovered ? 1 : 0 }}
-            onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 z-50 p-2 bg-background/80 hover:bg-muted rounded-full transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </motion.button>
-
-          {/* Content container with max-width 750px */}
           <div className="max-w-[750px] mx-auto h-full flex flex-col">
-            {/* Header */}
             <div className="flex-shrink-0 p-6 pb-0">
               <div className="space-y-4">
                 {/* Type indicator */}

@@ -1,7 +1,9 @@
 'use client'
 
+import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog'
 import { Content } from "@/shared/lib/schemas"
 import { Session } from "@supabase/supabase-js"
+import { useState } from 'react'
 import { LinkViewerModal } from "./link-viewer-modal"
 import { NoteViewerModal } from "./note-viewer-modal"
 import { UnifiedImageModal } from "./unified-image-modal"
@@ -27,6 +29,9 @@ export function ContentModalManager({
   onDelete,
   onContentChanged
 }: ContentModalManagerProps) {
+  const [editOpen, setEditOpen] = useState(false)
+  const [editItem, setEditItem] = useState<Content | null>(null)
+
   if (!item) return null
 
   // For images - use unified modal
@@ -58,13 +63,38 @@ export function ContentModalManager({
   // For notes
   if (item.type === 'note') {
     return (
-      <NoteViewerModal
-        open={open}
-        onOpenChange={onOpenChange}
-        item={item}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
+      <>
+        <NoteViewerModal
+          open={open && !editOpen}
+          onOpenChange={onOpenChange}
+          item={item}
+          onEdit={() => {
+            setEditItem(item)
+            setEditOpen(true)
+            onOpenChange(false)
+          }}
+          onDelete={onDelete}
+        />
+        {editItem && (
+          <EditContentDialog
+            open={editOpen}
+            onOpenChange={(open) => {
+              setEditOpen(open)
+              if (!open) {
+                setEditItem(null)
+                onOpenChange(false)
+              }
+            }}
+            content={editItem}
+            onContentUpdated={() => {
+              setEditOpen(false)
+              setEditItem(null)
+              onContentChanged?.()
+              onOpenChange(false)
+            }}
+          />
+        )}
+      </>
     )
   }
 

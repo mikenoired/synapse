@@ -1,3 +1,4 @@
+import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog';
 import { trpc } from "@/shared/api/trpc";
 import { getSecureImageUrl } from "@/shared/lib/image-utils";
 import { Content } from "@/shared/lib/schemas";
@@ -8,10 +9,16 @@ import {
   ContextMenuItem,
   ContextMenuTrigger
 } from "@/shared/ui/context-menu";
-import { editorDataToShortText } from "@/widgets/editor/ui/editor";
 import { Session } from "@supabase/supabase-js";
+import { generateHTML } from "@tiptap/core";
+import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
+import Underline from "@tiptap/extension-underline";
+import StarterKit from "@tiptap/starter-kit";
+import DOMPurify from 'dompurify';
+import { common, createLowlight } from "lowlight";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import toast from 'react-hot-toast';
 
 interface ItemProps {
@@ -99,6 +106,7 @@ function renderImages(imageUrls: string[], title: string | null, session: Sessio
 
 export default function Item({ item, index, session, onContentChanged, onItemClick, excludedTag }: ItemProps) {
   const router = useRouter()
+  const [editOpen, setEditOpen] = useState(false)
 
   const deleteMutation = trpc.content.delete.useMutation({
     onSuccess: () => {
@@ -108,42 +116,49 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
   })
 
   const handleDelete = () => deleteMutation.mutate({ id: item.id })
-  const handleEdit = () => router.push(`/edit/${item.id}`)
+  const handleEdit = () => setEditOpen(true)
 
   const displayTags = excludedTag ? item.tags.filter(t => t !== excludedTag) : item.tags;
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <div onClick={() => onItemClick?.(item)} className="cursor-pointer">
-          <ItemContent item={{
-            ...item,
-            tags: displayTags
-          }} index={index} session={session} />
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        <ContextMenuItem onClick={() => onItemClick?.(item)}>Открыть</ContextMenuItem>
-        <ContextMenuItem onClick={handleEdit}>Редактировать</ContextMenuItem>
-        <ContextMenuItem onClick={handleDelete}>Удалить</ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger>
+          <div onClick={() => onItemClick?.(item)} className="cursor-pointer">
+            <ItemContent item={{
+              ...item,
+              tags: displayTags
+            }} index={index} session={session} />
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={() => onItemClick?.(item)}>Открыть</ContextMenuItem>
+          <ContextMenuItem onClick={handleEdit}>Редактировать</ContextMenuItem>
+          <ContextMenuItem onClick={handleDelete}>Удалить</ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+      {editOpen && item.type === 'note' && (
+        <EditContentDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          content={item}
+          onContentUpdated={onContentChanged}
+        />
+      )}
+    </>
   )
 }
 
 function ItemContent({ item, index, session }: ItemProps) {
-  const getTextContent = () => {
+  const getTextContent = useMemo(() => {
     if (item.type !== 'note') return item.content;
 
-    try {
-      const parsedData = JSON.parse(item.content);
-      if (parsedData.blocks) {
-        return editorDataToShortText(parsedData);
-      }
-    } catch {
+    const lowlight = createLowlight(common)
+    const data = JSON.parse(item.content)
+    if (data.type === 'doc') {
+      return generateHTML(data, [StarterKit, Underline, CodeBlockLowlight.configure({ lowlight })])
     }
-    return item.content;
-  };
+  }, [item.content])
 
   return (
     <motion.div
@@ -197,9 +212,7 @@ function ItemContent({ item, index, session }: ItemProps) {
             </>
           ) : (
             <>
-              <p className="text-sm text-muted-foreground line-clamp-3">
-                {getTextContent()}
-              </p>
+              <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
               <div className="flex flex-wrap gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent p-3">
                 {item.tags.map((tag: string) => (
                   <Badge key={tag} variant='secondary' className="text-xs">

@@ -44,7 +44,6 @@ export function UnifiedImageModal({
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const router = useRouter()
 
-  // build galleryUrls either from provided gallery or item content
   const imageUrls: string[] = (gallery.length > 0)
     ? gallery.map(g => g.url)
     : (() => {
@@ -57,7 +56,6 @@ export function UnifiedImageModal({
 
   const isMultiple = imageUrls.length > 1
 
-  // Mutations
   const updateContentMutation = trpc.content.update.useMutation({
     onSuccess: () => {
       onContentChanged?.()
@@ -77,7 +75,6 @@ export function UnifiedImageModal({
     }
   })
 
-  // Reset index when modal opens or item changes
   useEffect(() => {
     if (open) {
       const newIndex = (gallery.length > 0) ? gallery.findIndex(g => g.parentId === item.id) : 0
@@ -86,7 +83,6 @@ export function UnifiedImageModal({
     }
   }, [open, item.id])
 
-  // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!open) return
@@ -128,7 +124,6 @@ export function UnifiedImageModal({
     setCurrentIndex(i => (i > 0 ? i - 1 : i))
   }
 
-  // Touch handlers for mobile swipe
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
@@ -153,14 +148,12 @@ export function UnifiedImageModal({
     }
   }
 
-  // Разгруппировать изображения
   const handleUngroup = async () => {
     if (!isMultiple) return
 
     if (!confirm(`Разделить ${imageUrls.length} изображений на отдельные элементы?`)) return
 
     try {
-      // Создаем отдельные элементы для каждого изображения
       const createPromises = imageUrls.map((url, index) => {
         return createContentMutation.mutateAsync({
           type: 'image',
@@ -174,7 +167,6 @@ export function UnifiedImageModal({
 
       await Promise.all(createPromises)
 
-      // Удаляем исходный элемент
       await deleteContentMutation.mutateAsync({ id: item.id })
 
       onOpenChange(false)
@@ -183,21 +175,17 @@ export function UnifiedImageModal({
     }
   }
 
-  // Добавить тег к текущему изображению или ко всем
   const handleAddTag = async (toAll: boolean = false) => {
     if (!newTag.trim()) return
 
     try {
       if (toAll || !isMultiple) {
-        // Добавляем тег ко всему элементу
         const updatedTags = [...new Set([...(item.tags || []), newTag.trim()])]
         await updateContentMutation.mutateAsync({
           id: item.id,
           tags: updatedTags
         })
       } else {
-        // Для индивидуального тегирования создаем отдельный элемент
-        // Пока упростим - добавляем ко всему элементу
         const updatedTags = [...new Set([...(item.tags || []), newTag.trim()])]
         await updateContentMutation.mutateAsync({
           id: item.id,
@@ -247,7 +235,6 @@ export function UnifiedImageModal({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
-          {/* Header */}
           <div className={`absolute top-0 left-0 right-0 z-20 p-4 bg-gradient-to-b from-black/50 to-transparent transition-opacity duration-300 ${isHovered || showTags ? 'opacity-100' : 'opacity-0'}`}>
             <div className="flex items-center justify-between text-white">
               <div className="flex-1">
@@ -322,7 +309,6 @@ export function UnifiedImageModal({
             </div>
           </div>
 
-          {/* Tags Panel */}
           {showTags && (
             <div className="absolute top-16 left-2 right-2 md:left-4 md:right-4 z-20 bg-black/90 backdrop-blur rounded-lg p-3 md:p-4 text-white max-h-60 overflow-y-auto">
               <div className="space-y-3">
@@ -338,7 +324,6 @@ export function UnifiedImageModal({
                   </Button>
                 </div>
 
-                {/* Existing tags */}
                 {item.tags && item.tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {item.tags.map((tag: string) => (
@@ -349,7 +334,6 @@ export function UnifiedImageModal({
                   </div>
                 )}
 
-                {/* Add tag */}
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Input
                     placeholder="Добавить тег..."
@@ -385,7 +369,6 @@ export function UnifiedImageModal({
             </div>
           )}
 
-          {/* Main image area */}
           <div className="flex-1 flex items-center justify-center relative overflow-hidden">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.img
@@ -412,7 +395,6 @@ export function UnifiedImageModal({
               />
             </AnimatePresence>
 
-            {/* Navigation buttons */}
             {isMultiple && (
               <div className="hidden md:block">
                 <button
@@ -433,13 +415,12 @@ export function UnifiedImageModal({
             )}
           </div>
 
-          {/* Thumbnail navigation for multiple images */}
           {isMultiple && (
             <div className={`absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
               <div className="flex justify-center gap-2 max-w-full overflow-x-auto">
                 {imageUrls.map((url, index) => {
                   const distance = Math.abs(index - currentIndex)
-                  if (distance > 15) return null // window thumbnails for perf
+                  if (distance > 15) return null
                   return (
                     <button
                       key={index}

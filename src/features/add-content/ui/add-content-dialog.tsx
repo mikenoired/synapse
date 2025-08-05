@@ -174,7 +174,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
     // Проверяем наличие контента в зависимости от типа
     if (type === 'note') {
-      if (!editorData || !editorData.blocks || editorData.blocks.length === 0) return
+      if (!editorData || !editorData.content || editorData.content.length === 0) return
     } else if (type === 'image') {
       if (selectedFiles.length === 0) return
     } else {
@@ -221,7 +221,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         let finalContent = content
 
         if (type === 'note' && editorData) {
-          // Для заметок сохраняем данные EditorJS как JSON
           finalContent = JSON.stringify(editorData)
         }
 
@@ -423,13 +422,12 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         </div>
       </div>
 
-      {/* Main section: Editor */}
+
       <div className="flex-1 p-6 pt-2 overflow-y-auto">
         <div className="max-w-[700px] mx-auto w-full">
           <Editor
             data={editorData}
             onChange={setEditorData}
-            placeholder="Начните писать..."
             readOnly={isLoading}
           />
         </div>
@@ -688,7 +686,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                 disabled={
                   isLoading ||
                   (type === 'note'
-                    ? !editorData || !editorData.blocks || editorData.blocks.length === 0
+                    ? !editorData || !editorData.content || editorData.content.length === 0
                     : type === 'image'
                       ? selectedFiles.length === 0
                       : !content.trim())

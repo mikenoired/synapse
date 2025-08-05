@@ -1,205 +1,173 @@
-'use client'
+"use client"
 
-import { useEffect, useMemo, useRef } from 'react'
+import { Button } from '@/shared/ui/button'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import Placeholder from '@tiptap/extension-placeholder'
+import Underline from '@tiptap/extension-underline'
+import { EditorContent, JSONContent, useEditor } from '@tiptap/react'
+import { BubbleMenu } from '@tiptap/react/menus'
+import StarterKit from '@tiptap/starter-kit'
+import { common, createLowlight } from 'lowlight'
 
 interface EditorProps {
-  data?: any
-  onChange?: (data: any) => void
-  placeholder?: string
+  data?: JSONContent | null
+  onChange?: (data: JSONContent) => void
   readOnly?: boolean
 }
 
-export function Editor({ data, onChange, placeholder = 'Начните писать...', readOnly = false }: EditorProps) {
-  const editorRef = useRef<any>(null); // This will hold the EditorJS instance
-  const holderId = useMemo(() => `editorjs-${Math.random().toString(36).substring(2, 15)}`, []);
-
-  useEffect(() => {
-    let editor: any = null;
-    let isMounted = true;
-
-    const initializeEditor = async () => {
-      if (typeof window === 'undefined') return;
-
-      try {
-        // Загружаем EditorJS ядро и плагины только при реальном использовании
-        const [
-          { default: EditorJS },
-          { default: Header },
-          { default: List },
-          { default: Delimiter },
-          { default: Quote },
-          { default: Code }
-        ] = await Promise.all([
-          import('@editorjs/editorjs'),
-          import('@editorjs/header'),
-          import('@editorjs/list'),
-          import('@editorjs/delimiter'),
-          import('@editorjs/quote'),
-          import('@editorjs/code')
-        ]);
-
-        if (!isMounted) return;
-
-        editor = new EditorJS({
-          holder: holderId,
-          data: data || { blocks: [] },
-          readOnly,
-          placeholder,
-          tools: {
-            header: Header,
-            list: List,
-            delimiter: Delimiter,
-            quote: Quote,
-            code: Code
-          } as any,
-          async onChange(api) {
-            if (onChange) {
-              try {
-                const savedData = await api.saver.save();
-                onChange(savedData);
-              } catch (error) {
-                console.error('Editor save error:', error);
-              }
-            }
-          },
-        });
-
-        editorRef.current = editor;
-      } catch (error) {
-        console.error('Failed to initialize editor:', error);
+export function Editor({ data, onChange, readOnly = false }: EditorProps) {
+  const lowlight = createLowlight(common)
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [
+      StarterKit,
+      Underline,
+      CodeBlockLowlight.configure({ lowlight }),
+      Placeholder.configure({
+        placeholder: 'Начните писать...',
+      }),
+    ],
+    editorProps: {
+      attributes: {
+        class: 'min-h-[300px] border rounded-md p-2 bg-background relative',
+      },
+    },
+    content: data || '',
+    editable: !readOnly,
+    onUpdate({ editor }) {
+      if (onChange) {
+        console.log('onChange', editor.getJSON())
+        onChange(editor.getJSON())
       }
-    };
-
-    // Небольшая задержка для улучшения initial load time
-    const timeoutId = setTimeout(initializeEditor, 100);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-      // On cleanup, check if the editor instance exists on the ref and destroy it
-      if (editorRef.current && typeof editorRef.current.destroy === 'function') {
-        editorRef.current.destroy();
-        editorRef.current = null;
-      }
-    };
-    // Re-run the effect if readOnly or holderId changes.
-    // Data/placeholder changes are handled inside the editor instance itself or don't require re-init.
-  }, [holderId, readOnly, onChange, placeholder, data]);
+    },
+  })
 
   return (
-    <div className="min-h-[300px]">
-      <div id={holderId} />
+    <div>
+      {/* Floating BubbleMenu */}
+      {editor && (
+        <BubbleMenu editor={editor}>
+          <div className="flex gap-1 bg-popover border rounded shadow p-1">
+            <Button
+              size="icon"
+              variant={editor.isActive('bold') ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleBold().run()}
+              aria-label="Bold"
+            >
+              <b>B</b>
+            </Button>
+            <Button
+              size="icon"
+              variant={editor.isActive('italic') ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleItalic().run()}
+              aria-label="Italic"
+            >
+              <i>I</i>
+            </Button>
+            <Button
+              size="icon"
+              variant={editor.isActive('underline') ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}
+              aria-label="Underline"
+            >
+              <u>U</u>
+            </Button>
+            <Button
+              size="icon"
+              variant={editor.isActive('code') ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleCode().run()}
+              aria-label="Code"
+            >
+              {'</>'}
+            </Button>
+            <Button
+              size="icon"
+              variant={editor.isActive('heading', { level: 2 }) ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+              aria-label="H2"
+            >
+              H2
+            </Button>
+            <Button
+              size="icon"
+              variant={editor.isActive('bulletList') ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleBulletList().run()}
+              aria-label="Bullet List"
+            >
+              •
+            </Button>
+            <Button
+              size="icon"
+              variant={editor.isActive('orderedList') ? 'secondary' : 'ghost'}
+              onClick={() => editor.chain().focus().toggleOrderedList().run()}
+              aria-label="Ordered List"
+            >
+              1.
+            </Button>
+          </div>
+        </BubbleMenu>
+      )}
+      {/* Slash command trigger (заготовка, UI появится позже) */}
+      <EditorContent editor={editor} />
     </div>
   )
 }
 
+// Утилита для конвертации Tiptap JSON в обычный текст для превью
+export function editorDataToText(data: JSONContent): string {
+  if (!data || !data.content) return ''
 
-// Утилита для конвертации EditorJS данных в обычный текст для превью
-export function editorDataToText(data: any): string {
-  if (!data || !data.blocks) return ''
+  function extractText(nodes: any[]): string {
+    return nodes
+      .map((node) => {
+        if (node.type === 'text') return node.text || ''
+        if (node.content) return extractText(node.content)
+        return ''
+      })
+      .filter(Boolean)
+      .join(' ')
+  }
 
-  return data.blocks
-    .map((block: any) => {
-      switch (block.type) {
-        case 'paragraph':
-          return block.data?.text || ''
-        case 'header':
-          return block.data?.text || ''
-        case 'list':
-          if (Array.isArray(block.data?.items)) {
-            return block.data.items
-              .map((item: any) => {
-                // Поддержка как старого формата (строки), так и нового (объекты)
-                if (typeof item === 'string') {
-                  return item
-                } else if (item && typeof item === 'object' && item.content) {
-                  return item.content
-                }
-                return ''
-              })
-              .filter(Boolean)
-              .join(', ')
-          }
-          return ''
-        case 'quote':
-          const quoteText = block.data?.text || ''
-          const caption = block.data?.caption || ''
-          return caption ? `"${quoteText}" - ${caption}` : `"${quoteText}"`
-        case 'code':
-          return block.data?.code || ''
-        case 'delimiter':
-          return '* * *'
-        default:
-          return ''
-      }
-    })
-    .filter(Boolean)
-    .join(' ')
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .substring(0, 200) // Limit for preview
+  return extractText(data.content).replace(/<[^>]*>/g, '').substring(0, 200)
 }
 
-// Утилита для конвертации EditorJS данных в краткий текст для карточек
-export function editorDataToShortText(data: any, maxLength: number = 150): string {
-  if (!data || !data.blocks) return ''
+// Утилита для конвертации Tiptap JSON в краткий текст для карточек
+export function editorDataToShortText(data: JSONContent, maxLength: number = 150): string {
+  if (!data || !data.content) return ''
 
   let text = ''
   let currentLength = 0
 
-  for (const block of data.blocks) {
-    if (currentLength >= maxLength) break
-
-    let blockText = ''
-    switch (block.type) {
-      case 'paragraph':
-        blockText = block.data?.text || ''
-        break
-      case 'header':
-        blockText = block.data?.text || ''
-        break
-      case 'list':
-        if (Array.isArray(block.data?.items)) {
-          blockText = block.data.items
-            .slice(0, 3) // Показываем только первые 3 элемента списка
-            .map((item: any) => {
-              if (typeof item === 'string') {
-                return item
-              } else if (item && typeof item === 'object' && item.content) {
-                return item.content
-              }
-              return ''
-            })
-            .filter(Boolean)
-            .join(', ')
-
-          if (block.data.items.length > 3) {
-            blockText += '...'
-          }
-        }
-        break
-      case 'quote':
-        const quoteText = block.data?.text || ''
-        blockText = `"${quoteText}"`
-        break
-      case 'code':
-        blockText = `[код: ${(block.data?.code || '').substring(0, 30)}...]`
-        break
-      default:
-        continue
-    }
-
-    // Удаляем HTML теги и обрезаем до нужной длины
-    blockText = blockText.replace(/<[^>]*>/g, '')
-
-    if (currentLength + blockText.length > maxLength) {
-      blockText = blockText.substring(0, maxLength - currentLength - 3) + '...'
-    }
-
-    if (blockText) {
-      text += (text ? ' ' : '') + blockText
-      currentLength = text.length
+  function walk(nodes: any[]): void {
+    for (const node of nodes) {
+      if (currentLength >= maxLength) break
+      let nodeText = ''
+      if (node.type === 'text') {
+        nodeText = node.text || ''
+      } else if (node.content) {
+        nodeText = extractText(node.content)
+      }
+      if (currentLength + nodeText.length > maxLength) {
+        nodeText = nodeText.substring(0, maxLength - currentLength - 3) + '...'
+      }
+      if (nodeText) {
+        text += (text ? ' ' : '') + nodeText
+        currentLength = text.length
+      }
     }
   }
 
+  function extractText(nodes: any[]): string {
+    return nodes
+      .map((node) => {
+        if (node.type === 'text') return node.text || ''
+        if (node.content) return extractText(node.content)
+        return ''
+      })
+      .filter(Boolean)
+      .join(' ')
+  }
+
+  walk(data.content)
   return text
 } 

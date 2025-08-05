@@ -20,11 +20,9 @@ interface ContentGridProps {
   onContentChanged: () => void;
   onItemClick: (item: Content) => void;
   onItemHover?: () => void;
-  // Для состояний "ничего не найдено"
   searchQuery?: string;
   selectedTags?: string[];
   onClearFilters?: () => void;
-  // Для страницы тега
   excludedTag?: string;
 }
 
@@ -43,7 +41,6 @@ export function ContentGrid({
   isLoading,
   fetchNext,
   hasNext,
-  isFetchingNext,
   session,
   onContentChanged,
   onItemClick,
@@ -57,6 +54,23 @@ export function ContentGrid({
   const hasContent = items.length > 0;
   const showEmptyState = !isLoading && !hasContent && !searchQuery && (!selectedTags || selectedTags.length === 0);
   const showNotFoundState = !isLoading && !hasContent && (searchQuery || (selectedTags && selectedTags.length > 0));
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!fetchNext || !hasNext) return
+    const observer = new IntersectionObserver(entries => {
+      const first = entries[0]
+      if (first.isIntersecting) {
+        fetchNext()
+      }
+    })
+    const current = sentinelRef.current
+    if (current) observer.observe(current)
+    return () => {
+      if (current) observer.unobserve(current)
+    }
+  }, [fetchNext, hasNext])
 
   if (isLoading) {
     return (
@@ -85,7 +99,6 @@ export function ContentGrid({
               <p className="text-muted-foreground mb-6">
                 Начните с добавления заметки, файла или ссылки.
               </p>
-              {/* Кнопка добавления будет управляться со страницы */}
             </div>
           </CardContent>
         </Card>
@@ -114,24 +127,6 @@ export function ContentGrid({
     );
   }
 
-  const sentinelRef = useRef<HTMLDivElement | null>(null)
-
-  // observer
-  useEffect(() => {
-    if (!fetchNext || !hasNext) return
-    const observer = new IntersectionObserver(entries => {
-      const first = entries[0]
-      if (first.isIntersecting) {
-        fetchNext()
-      }
-    })
-    const current = sentinelRef.current
-    if (current) observer.observe(current)
-    return () => {
-      if (current) observer.unobserve(current)
-    }
-  }, [fetchNext, hasNext])
-
   return (
     <Masonry
       breakpointCols={breakpointColumnsObj}
@@ -154,10 +149,7 @@ export function ContentGrid({
           />
         </div>
       ))}
-      {/* Sentinel for infinite scroll */}
-      {hasNext && (
-        <div ref={sentinelRef} className="h-10 w-full"></div>
-      )}
+      {hasNext && <div ref={sentinelRef} className="h-10 w-full"></div>}
     </Masonry>
-  );
-} 
+  )
+}
