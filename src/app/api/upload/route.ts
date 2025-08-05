@@ -43,7 +43,17 @@ export async function POST(request: NextRequest) {
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
 
-        const objectName = await uploadFile(buffer, file.name, file.type, user.id)
+        const { objectName, validation } = await uploadFile(buffer, file.name, file.type, user.id)
+
+        if (!validation.isValid) {
+          errors.push(`File "${file.name}" is not valid: ${validation.errors.join(', ')}`)
+        }
+
+        if (!objectName) {
+          errors.push(`Failed to upload file "${file.name}"`)
+          continue
+        }
+
         const publicUrl = getPublicUrl(objectName)
 
         uploadResults.push({

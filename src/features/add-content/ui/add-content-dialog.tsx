@@ -115,33 +115,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     },
   })
 
-  // const uploadFile = async (file: File): Promise<{ objectName: string, url: string }> => {
-  //   const formData = new FormData()
-  //   formData.append('file', file)
-
-  //   const response = await fetch('/api/upload', {
-  //     method: 'POST',
-  //     headers: {
-  //       'Authorization': `Bearer ${session?.access_token}`,
-  //     },
-  //     body: formData,
-  //   })
-
-  //   if (!response.ok) {
-  //     const error = await response.json()
-  //     throw new Error(error.error || 'Upload failed')
-  //   }
-
-  //   const result = await response.json()
-  //   if (!result.success || !result.files || result.files.length === 0) {
-  //     throw new Error(result.error || 'Upload processing failed')
-  //   }
-  //   return {
-  //     objectName: result.files[0].objectName,
-  //     url: result.files[0].url
-  //   }
-  // }
-
   const uploadMultipleFiles = async (files: File[]): Promise<{ objectName: string, url: string }[]> => {
     const formData = new FormData()
     files.forEach(file => formData.append('file', file))

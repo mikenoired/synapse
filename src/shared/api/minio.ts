@@ -1,3 +1,5 @@
+import type { FileValidationConfig, ValidationResult } from '@/server/middleware/file-middleware'
+import { sanitizeFileName, validateFile } from '@/server/middleware/file-middleware'
 import * as Minio from 'minio'
 
 const {
@@ -40,18 +42,52 @@ export async function uploadFile(
   fileName: string,
   contentType: string,
   userId: string,
-  folder: string = 'images'
-): Promise<string> {
-  await ensureBucketExists()
+  folder: string = 'images',
+  validationConfig?: Partial<FileValidationConfig>
+): Promise<{ success: boolean; objectName?: string; validation: ValidationResult }> {
 
-  const objectName = `${folder}/${userId}/${Date.now()}-${fileName}`
+  const validation = await validateFile(file, fileName, contentType, userId, validationConfig)
 
-  await minioClient.putObject(bucketName, objectName, file, file.length, {
-    'Content-Type': contentType,
-    'x-amz-meta-user-id': userId,
-  })
+  if (!validation.isValid) {
+    return {
+      success: false,
+      validation
+    }
+  }
 
-  return objectName
+  if (validation.warnings.length > 0) console.warn('File upload warnings:', validation.warnings)
+
+  try {
+    const sanitizedFileName = sanitizeFileName(fileName)
+    const objectName = `${folder}/${userId}/${Date.now()}-${sanitizedFileName}`
+
+    await minioClient.putObject(
+      bucketName,
+      objectName,
+      file,
+      file.length,
+      {
+        'Content-Type': contentType,
+        'x-amz-meta-user-id': userId
+      }
+    )
+
+    console.log(`File uploaded successfully: ${objectName}, hash: ${validation.fileHash}`)
+
+    return {
+      success: true,
+      objectName,
+      validation
+    }
+  } catch (error) {
+    return {
+      success: false,
+      validation: {
+        ...validation,
+        errors: [...validation.errors, `Ошибка загрузки: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`]
+      }
+    }
+  }
 }
 
 export function getPublicUrl(objectName: string): string {
