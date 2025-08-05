@@ -31,12 +31,23 @@ export function ContentModalManager({
 
   // For images - use unified modal
   if (item.type === 'image') {
+    const imageGallery = allItems
+      .filter(i => i.type === 'image')
+      .flatMap(i => {
+        try {
+          const parsed = JSON.parse(i.content)
+          if (Array.isArray(parsed)) return parsed.map((url: string) => ({ url, parentId: i.id }))
+        } catch { }
+        return [{ url: i.content, parentId: i.id }]
+      })
+
     return (
       <UnifiedImageModal
         open={open}
         onOpenChange={onOpenChange}
         item={item}
         session={session}
+        gallery={imageGallery}
         onEdit={onEdit}
         onDelete={onDelete}
         onContentChanged={onContentChanged}

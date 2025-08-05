@@ -15,7 +15,7 @@ export default function ItemPage({ params }: { params: { id: string } }) {
   const router = useRouter()
   const { data: item, isLoading, error } = trpc.content.getById.useQuery(
     { id },
-    { enabled: !!id }
+    { enabled: !!id && !!user && !loading, retry: false }
   )
 
   useEffect(() => {

@@ -20,42 +20,62 @@ export function Editor({ data, onChange, placeholder = 'Начните писа�
     const initializeEditor = async () => {
       if (typeof window === 'undefined') return;
 
-      const EditorJS = (await import('@editorjs/editorjs')).default
-      const Header = (await import('@editorjs/header')).default
-      const List = (await import('@editorjs/list')).default
-      const Delimiter = (await import('@editorjs/delimiter')).default
-      const Quote = (await import('@editorjs/quote')).default
-      const Code = (await import('@editorjs/code')).default
+      try {
+        // Загружаем EditorJS ядро и плагины только при реальном использовании
+        const [
+          { default: EditorJS },
+          { default: Header },
+          { default: List },
+          { default: Delimiter },
+          { default: Quote },
+          { default: Code }
+        ] = await Promise.all([
+          import('@editorjs/editorjs'),
+          import('@editorjs/header'),
+          import('@editorjs/list'),
+          import('@editorjs/delimiter'),
+          import('@editorjs/quote'),
+          import('@editorjs/code')
+        ]);
 
-      if (!isMounted) return;
+        if (!isMounted) return;
 
-      editor = new EditorJS({
-        holder: holderId,
-        data: data || { blocks: [] },
-        readOnly,
-        placeholder,
-        tools: {
-          header: Header,
-          list: List,
-          delimiter: Delimiter,
-          quote: Quote,
-          code: Code
-        } as any,
-        async onChange(api) {
-          if (onChange) {
-            const savedData = await api.saver.save();
-            onChange(savedData);
-          }
-        },
-      });
+        editor = new EditorJS({
+          holder: holderId,
+          data: data || { blocks: [] },
+          readOnly,
+          placeholder,
+          tools: {
+            header: Header,
+            list: List,
+            delimiter: Delimiter,
+            quote: Quote,
+            code: Code
+          } as any,
+          async onChange(api) {
+            if (onChange) {
+              try {
+                const savedData = await api.saver.save();
+                onChange(savedData);
+              } catch (error) {
+                console.error('Editor save error:', error);
+              }
+            }
+          },
+        });
 
-      editorRef.current = editor; // Store instance in ref
+        editorRef.current = editor;
+      } catch (error) {
+        console.error('Failed to initialize editor:', error);
+      }
     };
 
-    initializeEditor();
+    // Небольшая задержка для улучшения initial load time
+    const timeoutId = setTimeout(initializeEditor, 100);
 
     return () => {
       isMounted = false;
+      clearTimeout(timeoutId);
       // On cleanup, check if the editor instance exists on the ref and destroy it
       if (editorRef.current && typeof editorRef.current.destroy === 'function') {
         editorRef.current.destroy();

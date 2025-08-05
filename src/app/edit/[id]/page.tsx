@@ -1,6 +1,7 @@
 'use client'
 
 import { trpc } from '@/shared/api/trpc'
+import { useAuth } from '@/shared/lib/auth-context'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
@@ -12,12 +13,16 @@ import { useEffect, useState } from 'react'
 export default function EditPage({ params }: { params: { id: string } }) {
   const { id } = params
   const router = useRouter()
+  const { user, loading } = useAuth()
   const [title, setTitle] = useState('')
   const [editorData, setEditorData] = useState<any>(null)
   const [tags, setTags] = useState<string[]>([])
   const [currentTag, setCurrentTag] = useState('')
 
-  const { data: item, isLoading } = trpc.content.getById.useQuery({ id })
+  const { data: item, isLoading } = trpc.content.getById.useQuery({ id }, {
+    enabled: !!id && !!user && !loading,
+    retry: false,
+  })
 
   const updateContentMutation = trpc.content.update.useMutation({
     onSuccess: () => {

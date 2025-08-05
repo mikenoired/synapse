@@ -20,16 +20,27 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useCallback } from 'react';
 
 export default function Sidebar() {
   const { signOut } = useAuth();
   const { setAddDialogOpen } = useDashboard();
   const pathname = usePathname();
 
+  // Предзагрузка AddContentDialog для лучшего UX  
+  const preloadAddContentDialog = useCallback(() => {
+    import('@/features/add-content/ui/add-content-dialog')
+  }, [])
+
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Главная' },
     { href: '/dashboard/tags', icon: Tag, label: 'Теги' },
-    { action: () => setAddDialogOpen(true), icon: Plus, label: 'Добавить' },
+    {
+      action: () => setAddDialogOpen(true),
+      icon: Plus,
+      label: 'Добавить',
+      onMouseEnter: preloadAddContentDialog
+    },
     { href: '#', icon: Settings, label: 'Настройки' }
   ];
 
@@ -52,10 +63,26 @@ export default function Sidebar() {
       );
     }
 
+    // Action button (Plus)
+    const isAddButton = item.label === 'Добавить';
+
     return (
-      <button key={item.label} onClick={item.action} className={cn(commonClasses, inactiveClasses, "w-16 text-center")}>
-        <item.icon className="size-6 mx-auto" />
-        {isMobile && <span className="text-xs truncate">{item.label}</span>}
+      <button
+        key={item.label}
+        onClick={item.action}
+        onMouseEnter={item.onMouseEnter}
+        aria-label={item.label}
+        className={cn(
+          commonClasses,
+          inactiveClasses,
+          isAddButton && isMobile
+            ? 'w-16 h-16 -mt-8 rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-ring'
+            : 'w-16 text-center',
+        )}
+        style={isAddButton && isMobile ? { position: 'relative', zIndex: 60 } : undefined}
+      >
+        <item.icon className={cn(isAddButton && isMobile ? 'size-7' : 'size-6', 'mx-auto')} />
+        {isMobile && !isAddButton && <span className="text-xs truncate">{item.label}</span>}
       </button>
     );
   };
@@ -91,7 +118,11 @@ export default function Sidebar() {
                             <item.icon className="size-5" />
                           </Link>
                         ) : (
-                          <button onClick={item.action} className="flex h-12 w-12 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted">
+                          <button
+                            onClick={item.action}
+                            onMouseEnter={item.onMouseEnter}
+                            className="flex h-12 w-12 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+                          >
                             <item.icon className="size-5" />
                           </button>
                         )}

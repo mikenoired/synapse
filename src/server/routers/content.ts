@@ -9,6 +9,8 @@ export const contentRouter = router({
       search: z.string().optional(),
       tags: z.array(z.string()).optional(),
       type: z.enum(['note', 'image', 'link']).optional(),
+      cursor: z.number().optional(), // offset based pagination
+      limit: z.number().min(1).max(100).optional().default(20),
     }))
     .query(async ({ input, ctx }) => {
       let query = ctx.supabase
@@ -24,11 +26,21 @@ export const contentRouter = router({
 
       if (input.type) query = query.eq('type', input.type)
 
-      const { data, error } = await query
+      // pagination
+      const from = input.cursor ?? 0
+      const to = from + (input.limit ?? 20) - 1
+
+      const { data, error } = await query.range(from, to)
 
       if (error) handleSupabaseError(error)
 
-      return data || []
+      // determine next cursor
+      const nextCursor = data && data.length === (input.limit ?? 20) ? to + 1 : undefined
+
+      return {
+        items: data || [],
+        nextCursor,
+      }
     }),
 
   getById: protectedProcedure

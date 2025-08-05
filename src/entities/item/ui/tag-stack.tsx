@@ -62,7 +62,7 @@ export function TagStack({ items, session }: TagStackProps) {
   }
 
   return (
-    <div className="relative h-48 w-full cursor-pointer">
+    <div className="relative h-32 sm:h-48 w-full cursor-pointer">
       {items.slice(0, 3).reverse().map((item, index) => (
         <Card
           key={item.id}

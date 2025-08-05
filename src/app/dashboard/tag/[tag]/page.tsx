@@ -21,12 +21,17 @@ export default function TagPage({ params }: { params: { tag: string } }) {
   const router = useRouter()
 
   const {
-    data: content = [],
+    data: queryData,
     isLoading: contentLoading,
     refetch: refetchContent,
   } = trpc.content.getAll.useQuery({
     tags: [decodedTag],
+  }, {
+    enabled: !!user && !loading,
+    retry: false,
   })
+
+  const content: Content[] = queryData?.items ?? []
 
   useEffect(() => {
     if (!loading && !user) {

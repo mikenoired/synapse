@@ -1,16 +1,16 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
+import { useAuth } from '@/shared/lib/auth-context'
+import { Button } from '@/shared/ui/button'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { useAuth } from '@/lib/auth-context'
+} from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { Label } from '@/shared/ui/label'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 

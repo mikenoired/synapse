@@ -16,7 +16,14 @@ function getBaseUrl() {
 
 function TRPCProvider({ children }: { children: React.ReactNode }) {
   const { session } = useAuth()
-  const [queryClient] = useState(() => new QueryClient())
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 5 * 60 * 1000, // 5 минут
+        gcTime: 10 * 60 * 1000, // 10 минут (ранее cacheTime)
+      },
+    },
+  }))
 
   const trpcClient = useMemo(
     () =>
@@ -25,7 +32,7 @@ function TRPCProvider({ children }: { children: React.ReactNode }) {
           httpBatchLink({
             url: `${getBaseUrl()}/api/trpc`,
             headers() {
-              console.log('Получаем headers, session:', session?.access_token ? 'есть' : 'нет')
+              // Мемоизируем headers для избежания пересоздания при каждом запросе
               return {
                 authorization: session?.access_token ? `Bearer ${session.access_token}` : '',
               }
@@ -33,7 +40,7 @@ function TRPCProvider({ children }: { children: React.ReactNode }) {
           }),
         ],
       }),
-    [session?.access_token] // Пересоздаем клиент при изменении токена
+    [session?.access_token] // Пересоздаем клиент только при изменении токена
   )
 
   return (
@@ -60,11 +67,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             position="bottom-right"
             toastOptions={{
               duration: 3000,
-              style: {
-                background: 'hsl(var(--background))',
-                color: 'hsl(var(--foreground))',
-                border: '1px solid hsl(var(--border))',
-              },
+              className: 'bg-background border border-border text-foreground shadow-lg',
             }}
           />
         </ThemeProvider>

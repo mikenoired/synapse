@@ -18,6 +18,7 @@ interface UnifiedImageModalProps {
   onOpenChange: (open: boolean) => void
   item: Content
   session: Session | null
+  gallery?: { url: string; parentId: string }[]
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   onContentChanged?: () => void
@@ -28,11 +29,13 @@ export function UnifiedImageModal({
   onOpenChange,
   item,
   session,
+  gallery = [],
   onEdit,
   onDelete,
   onContentChanged
 }: UnifiedImageModalProps) {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const initialIndex = (gallery.length > 0) ? gallery.findIndex(g => g.parentId === item.id) : 0
+  const [currentIndex, setCurrentIndex] = useState(initialIndex >= 0 ? initialIndex : 0)
   const [isHovered, setIsHovered] = useState(false)
   const [direction, setDirection] = useState(0)
   const [showTags, setShowTags] = useState(false)
@@ -41,19 +44,16 @@ export function UnifiedImageModal({
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const router = useRouter()
 
-  // Parse image URLs from content
-  const imageUrls = (() => {
-    try {
-      const parsed = JSON.parse(item.content)
-      if (Array.isArray(parsed)) {
-        return parsed
-      } else {
-        return [item.content]
-      }
-    } catch {
+  // build galleryUrls either from provided gallery or item content
+  const imageUrls: string[] = (gallery.length > 0)
+    ? gallery.map(g => g.url)
+    : (() => {
+      try {
+        const parsed = JSON.parse(item.content)
+        if (Array.isArray(parsed)) return parsed
+      } catch { }
       return [item.content]
-    }
-  })()
+    })()
 
   const isMultiple = imageUrls.length > 1
 
@@ -77,13 +77,14 @@ export function UnifiedImageModal({
     }
   })
 
-  // Reset index when modal opens
+  // Reset index when modal opens or item changes
   useEffect(() => {
     if (open) {
-      setCurrentIndex(0)
+      const newIndex = (gallery.length > 0) ? gallery.findIndex(g => g.parentId === item.id) : 0
+      setCurrentIndex(newIndex >= 0 ? newIndex : 0)
       setShowTags(false)
     }
-  }, [open])
+  }, [open, item.id])
 
   // Keyboard navigation
   useEffect(() => {
@@ -118,17 +119,13 @@ export function UnifiedImageModal({
   }, [open, showTags])
 
   const goToNext = () => {
-    if (currentIndex < imageUrls.length - 1) {
-      setDirection(1)
-      setCurrentIndex(currentIndex + 1)
-    }
+    setDirection(1)
+    setCurrentIndex(i => (i < imageUrls.length - 1 ? i + 1 : i))
   }
 
   const goToPrevious = () => {
-    if (currentIndex > 0) {
-      setDirection(-1)
-      setCurrentIndex(currentIndex - 1)
-    }
+    setDirection(-1)
+    setCurrentIndex(i => (i > 0 ? i - 1 : i))
   }
 
   // Touch handlers for mobile swipe
@@ -244,7 +241,7 @@ export function UnifiedImageModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-none w-screen h-screen p-0 m-0 bg-black/95 border-none">
+      <DialogContent showCloseButton={false} className="max-w-none w-screen h-screen p-0 m-0 bg-black/95 border-none">
         <div
           className="w-full h-full flex flex-col relative"
           onMouseEnter={() => setIsHovered(true)}
@@ -417,22 +414,22 @@ export function UnifiedImageModal({
 
             {/* Navigation buttons */}
             {isMultiple && (
-              <>
+              <div className="hidden md:block">
                 <button
                   onClick={goToPrevious}
                   disabled={currentIndex === 0}
-                  className={`absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${isHovered ? 'opacity-100' : 'md:opacity-0'} opacity-70 md:opacity-0`}
+                  className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-opacity duration-200 disabled:opacity-30 disabled:cursor-not-allowed z-30"
                 >
                   <ChevronLeft className="w-6 h-6 md:w-7 md:h-7" />
                 </button>
                 <button
                   onClick={goToNext}
                   disabled={currentIndex === imageUrls.length - 1}
-                  className={`absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed ${isHovered ? 'opacity-100' : 'md:opacity-0'} opacity-70 md:opacity-0`}
+                  className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-12 h-12 md:w-14 md:h-14 bg-black/60 hover:bg-black/80 text-white rounded-full flex items-center justify-center transition-opacity duration-200 disabled:opacity-30 disabled:cursor-not-allowed z-30"
                 >
                   <ChevronRight className="w-6 h-6 md:w-7 md:h-7" />
                 </button>
-              </>
+              </div>
             )}
           </div>
 
@@ -440,28 +437,32 @@ export function UnifiedImageModal({
           {isMultiple && (
             <div className={`absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
               <div className="flex justify-center gap-2 max-w-full overflow-x-auto">
-                {imageUrls.map((url, index) => (
-                  <button
-                    key={index}
-                    onClick={() => {
-                      setDirection(index > currentIndex ? 1 : -1)
-                      setCurrentIndex(index)
-                    }}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${index === currentIndex
-                      ? 'border-white scale-110'
-                      : 'border-white/30 hover:border-white/60'
-                      }`}
-                  >
-                    <img
-                      src={getSecureImageUrl(url, session?.access_token)}
-                      alt={`Превью ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                {imageUrls.map((url, index) => {
+                  const distance = Math.abs(index - currentIndex)
+                  if (distance > 15) return null // window thumbnails for perf
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => {
+                        setDirection(index > currentIndex ? 1 : -1)
+                        setCurrentIndex(index)
                       }}
-                    />
-                  </button>
-                ))}
+                      className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${index === currentIndex
+                        ? 'border-white scale-110'
+                        : 'border-white/30 hover:border-white/60'
+                        }`}
+                    >
+                      <img
+                        src={getSecureImageUrl(url, session?.access_token)}
+                        alt={`Превью ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                        }}
+                      />
+                    </button>
+                  )
+                })}
               </div>
             </div>
           )}

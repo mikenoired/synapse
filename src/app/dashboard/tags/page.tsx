@@ -7,8 +7,11 @@ import { Skeleton } from '@/shared/ui/skeleton';
 import Link from 'next/link';
 
 export default function TagsPage() {
-  const { data: tagsWithContent, isLoading } = trpc.content.getTagsWithContent.useQuery();
-  const { session } = useAuth();
+  const { session, user, loading } = useAuth();
+  const { data: tagsWithContent, isLoading } = trpc.content.getTagsWithContent.useQuery(undefined, {
+    enabled: !!user && !loading,
+    retry: false,
+  });
 
   if (isLoading) {
     return (

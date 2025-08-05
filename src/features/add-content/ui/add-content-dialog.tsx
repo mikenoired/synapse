@@ -36,6 +36,22 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const [dragActive, setDragActive] = useState(false)
   const [isFullScreen, setIsFullScreen] = useState(false)
 
+  // touch gesture support for mobile (swipe down to close)
+  const [startY, setStartY] = useState<number | null>(null)
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setStartY(e.touches[0].clientY)
+  }
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (startY !== null) {
+      const deltaY = e.touches[0].clientY - startY
+      if (deltaY > 120) {
+        onOpenChange(false)
+        setStartY(null)
+      }
+    }
+  }
+  const handleTouchEnd = () => setStartY(null)
+
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -67,6 +83,17 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
   }, [previewUrls])
 
+  // lock body scroll when dialog open
+  useEffect(() => {
+    if (open) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [open])
+
   const createContentMutation = trpc.content.create.useMutation({
     onSuccess: () => {
       // Reset form
@@ -79,7 +106,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       setSelectedFiles([])
       previewUrls.forEach(url => URL.revokeObjectURL(url))
       setPreviewUrls([])
-      setIsFullScreen(false)
 
       onOpenChange(false)
       onContentAdded?.()
@@ -186,6 +212,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         previewUrls.forEach(url => URL.revokeObjectURL(url))
         setPreviewUrls([])
 
+        toast.success('Сохранено')
         onOpenChange(false)
         onContentAdded?.()
 
@@ -205,6 +232,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
           tags,
           // Для ссылок сохраняем URL в оба поля
           url: type === 'link' ? content.trim() : undefined
+        }, {
+          onSuccess: () => toast.success('Сохранено')
         })
       }
     } catch (error) {
@@ -413,13 +442,15 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   return (
     <div
-      className={`fixed inset-0 z-50 bg-black/80 flex items-center justify-center animate-in fade-in-0 transition-all duration-300 ease-in-out ${isFullScreen && type === 'note' ? 'p-5' : ''
-        }`}
+      className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-center justify-center animate-in fade-in-0 transition-all duration-300 ease-in-out ${isFullScreen && type === 'note' ? 'p-5' : ''}`}
       onClick={() => onOpenChange(false)}
     >
       <div
         className={`bg-background shadow-lg relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
         onClick={(e) => e.stopPropagation()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="p-4 border-b flex flex-row items-center justify-between">
           <div className="flex items-center gap-2">
@@ -642,7 +673,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
           )}
 
           {/* Submit */}
-          <div className="p-6 pt-4 border-t bg-background mt-auto">
+          <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">
               <Button
                 type="button"

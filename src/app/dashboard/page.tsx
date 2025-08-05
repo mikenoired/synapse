@@ -1,15 +1,37 @@
 'use client'
 
-import { AddContentDialog } from '@/features/add-content/ui/add-content-dialog'
 import { ContentFilter } from '@/features/content-filter/content-filter'
 import { ContentGrid } from '@/features/content-grid/content-grid'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
-import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+
+// Ленивая загрузка тяжелых компонентов только когда они нужны
+const AddContentDialog = lazy(() =>
+  import('@/features/add-content/ui/add-content-dialog').then(module => ({
+    default: module.AddContentDialog
+  }))
+)
+
+const ContentModalManager = lazy(() =>
+  import('@/widgets/content-viewer/ui/content-modal-manager').then(module => ({
+    default: module.ContentModalManager
+  }))
+)
+
+// Предзагрузка компонентов для улучшения UX
+const preloadAddContentDialog = () => {
+  const componentImport = () => import('@/features/add-content/ui/add-content-dialog')
+  componentImport()
+}
+
+const preloadContentModalManager = () => {
+  const componentImport = () => import('@/widgets/content-viewer/ui/content-modal-manager')
+  componentImport()
+}
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -23,13 +45,23 @@ export default function DashboardPage() {
   const searchParams = useSearchParams()
 
   const {
-    data: content = [],
+    data: pages,
     isLoading: contentLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     refetch: refetchContent,
-  } = trpc.content.getAll.useQuery({
+  } = trpc.content.getAll.useInfiniteQuery({
     search: searchQuery || undefined,
     tags: selectedTags.length > 0 ? selectedTags : undefined,
+    limit: 20,
+  }, {
+    getNextPageParam: last => last.nextCursor,
+    enabled: !!user && !loading,
+    retry: false,
   })
+
+  const content: Content[] = pages?.pages.flatMap(p => p.items) ?? []
 
   useEffect(() => {
     if (!searchParams) return
@@ -117,30 +149,38 @@ export default function DashboardPage() {
           session={session}
           onContentChanged={handleContentChanged}
           onItemClick={handleItemClick}
+          onItemHover={preloadContentModalManager}
           searchQuery={searchQuery}
           selectedTags={selectedTags}
           onClearFilters={clearFilters}
+          fetchNext={hasNextPage ? fetchNextPage : undefined}
+          hasNext={hasNextPage}
+          isFetchingNext={isFetchingNextPage}
         />
       </main>
 
-      <AddContentDialog
-        open={isAddDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        onContentAdded={handleContentChanged}
-      />
-      <ContentModalManager
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        item={selectedItem}
-        allItems={content}
-        session={session}
-        onEdit={(id: string) => {
-          router.push(`/edit/${id}`)
-          setModalOpen(false)
-        }}
-        onDelete={handleModalDelete}
-        onContentChanged={handleContentChanged}
-      />
+      <Suspense fallback={null}>
+        <AddContentDialog
+          open={isAddDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          onContentAdded={handleContentChanged}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ContentModalManager
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          item={selectedItem}
+          allItems={content}
+          session={session}
+          onEdit={(id: string) => {
+            router.push(`/edit/${id}`)
+            setModalOpen(false)
+          }}
+          onDelete={handleModalDelete}
+          onContentChanged={handleContentChanged}
+        />
+      </Suspense>
       {/* Drag overlay и ModalManager остаются здесь */}
     </div>
   )

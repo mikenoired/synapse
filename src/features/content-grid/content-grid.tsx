@@ -7,14 +7,19 @@ import { Card, CardContent } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Session } from '@supabase/supabase-js';
 import { FileText, Search } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import Masonry from 'react-masonry-css';
 
 interface ContentGridProps {
   items: Content[];
   isLoading: boolean;
+  fetchNext?: () => void;
+  hasNext?: boolean;
+  isFetchingNext?: boolean;
   session: Session | null;
   onContentChanged: () => void;
   onItemClick: (item: Content) => void;
+  onItemHover?: () => void;
   // Для состояний "ничего не найдено"
   searchQuery?: string;
   selectedTags?: string[];
@@ -36,9 +41,13 @@ const breakpointColumnsObj = {
 export function ContentGrid({
   items,
   isLoading,
+  fetchNext,
+  hasNext,
+  isFetchingNext,
   session,
   onContentChanged,
   onItemClick,
+  onItemHover,
   searchQuery,
   selectedTags,
   onClearFilters,
@@ -105,6 +114,24 @@ export function ContentGrid({
     );
   }
 
+  const sentinelRef = useRef<HTMLDivElement | null>(null)
+
+  // observer
+  useEffect(() => {
+    if (!fetchNext || !hasNext) return
+    const observer = new IntersectionObserver(entries => {
+      const first = entries[0]
+      if (first.isIntersecting) {
+        fetchNext()
+      }
+    })
+    const current = sentinelRef.current
+    if (current) observer.observe(current)
+    return () => {
+      if (current) observer.unobserve(current)
+    }
+  }, [fetchNext, hasNext])
+
   return (
     <Masonry
       breakpointCols={breakpointColumnsObj}
@@ -112,16 +139,25 @@ export function ContentGrid({
       columnClassName="masonry-grid_column"
     >
       {items.map((item, index) => (
-        <Item
+        <div
           key={item.id}
-          item={item}
-          index={index}
-          session={session}
-          onContentChanged={onContentChanged}
-          onItemClick={onItemClick}
-          excludedTag={excludedTag}
-        />
+          className="animate-in fade-in-0 duration-300"
+          onMouseEnter={onItemHover}
+        >
+          <Item
+            item={item}
+            index={index}
+            session={session}
+            onContentChanged={onContentChanged}
+            onItemClick={onItemClick}
+            excludedTag={excludedTag}
+          />
+        </div>
       ))}
+      {/* Sentinel for infinite scroll */}
+      {hasNext && (
+        <div ref={sentinelRef} className="h-10 w-full"></div>
+      )}
     </Masonry>
   );
 } 
