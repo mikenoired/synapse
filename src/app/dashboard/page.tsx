@@ -9,17 +9,19 @@ import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
 import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const { isAddDialogOpen, setAddDialogOpen } = useDashboard()
+  const { isAddDialogOpen, setAddDialogOpen, setPreloadedFiles } = useDashboard()
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const { user, loading, session } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [dragActive, setDragActive] = useState(false)
+  const dragCounter = useRef(0)
 
   const {
     data: pages,
@@ -79,6 +81,35 @@ export default function DashboardPage() {
     router.push('/dashboard')
   }
 
+  // Drag & Drop handlers
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    setDragActive(true);
+  }
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) setDragActive(false);
+  }
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    dragCounter.current = 0;
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length > 0) {
+      setPreloadedFiles(files);
+      setAddDialogOpen(true);
+    }
+  }
+
   if (loading || !user) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -88,7 +119,20 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div
+      className="flex flex-col h-full relative"
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {dragActive && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
+          <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
+            Отпустите изображения для загрузки
+          </div>
+        </div>
+      )}
       <main className="flex-1 overflow-y-auto p-6">
         <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         <ContentGrid

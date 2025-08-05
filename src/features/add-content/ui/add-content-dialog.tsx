@@ -67,23 +67,18 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   useEffect(() => {
     if (preloadedFiles.length > 0) {
-      // Если есть предзагруженные файлы, переключаемся на тип 'image'
-      // и инициализируем состояние файлов
       setType('image')
       handleFileSelect(preloadedFiles)
-      // Очищаем предзагруженные файлы из контекста, чтобы они не использовались повторно
       setPreloadedFiles([])
     }
   }, [preloadedFiles])
 
-  // Cleanup preview URLs when component unmounts or files change
   useEffect(() => {
     return () => {
       previewUrls.forEach(url => URL.revokeObjectURL(url))
     }
   }, [previewUrls])
 
-  // lock body scroll when dialog open
   useEffect(() => {
     if (open) {
       const originalOverflow = document.body.style.overflow
@@ -96,7 +91,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   const createContentMutation = trpc.content.create.useMutation({
     onSuccess: () => {
-      // Reset form
       setTitle('')
       setContent('')
       setEditorData(null)
@@ -111,7 +105,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       onContentAdded?.()
     },
     onError: (error) => {
-      toast.error(`Ошибка создания контента: ${error.message}`)
+      toast.error(`Error creating content: ${error.message}`)
     },
   })
 
@@ -145,7 +139,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Проверяем наличие контента в зависимости от типа
     if (type === 'note') {
       if (!editorData || !editorData.content || editorData.content.length === 0) return
     } else if (type === 'image') {
@@ -160,21 +153,18 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
         const uploadedFiles = await uploadMultipleFiles(selectedFiles)
 
-        // Для каждой картинки создаем отдельный content item
         const createPromises = uploadedFiles.map((file, index) => {
           return createContentMutation.mutateAsync({
             type: 'image',
             title: title.trim() || undefined,
-            content: file.objectName, // Имя объекта для обратной совместимости или ID
-            image_url: file.url, // Публичный URL для отображения
+            content: file.objectName,
+            image_url: file.url,
             tags,
           })
         })
 
         await Promise.all(createPromises)
 
-        // Сбрасываем форму и закрываем диалог после успешного выполнения ВСЕХ мутаций
-        // (onSuccess в createContentMutation сработает для каждой, но мы хотим общие действия в конце)
         setTitle('')
         setContent('')
         setEditorData(null)
@@ -185,12 +175,11 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         previewUrls.forEach(url => URL.revokeObjectURL(url))
         setPreviewUrls([])
 
-        toast.success('Сохранено')
+        toast.success('Saved')
         onOpenChange(false)
         onContentAdded?.()
 
       } else {
-        // Обычная логика для заметок и ссылок
         let finalContent = content
 
         if (type === 'note' && editorData) {
@@ -202,14 +191,13 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
           title: title.trim() || undefined,
           content: finalContent,
           tags,
-          // Для ссылок сохраняем URL в оба поля
           url: type === 'link' ? content.trim() : undefined
         }, {
-          onSuccess: () => toast.success('Сохранено')
+          onSuccess: () => toast.success('Saved')
         })
       }
     } catch (error) {
-      toast.error(`Ошибка загрузки: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(`Error uploading: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
       setUploading(false)
     }
@@ -238,15 +226,13 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     const validFiles: File[] = []
 
     for (const file of fileArray) {
-      // Проверяем размер файла (максимум 10MB)
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(`Файл "${file.name}" слишком большой (максимум 10MB)`)
+        toast.error(`File "${file.name}" is too large (max 10MB)`)
         continue
       }
 
-      // Проверяем тип файла
       if (!file.type.startsWith('image/')) {
-        toast.error(`Файл "${file.name}" не является изображением`)
+        toast.error(`File "${file.name}" is not an image`)
         continue
       }
 
@@ -254,10 +240,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
 
     if (validFiles.length > 0) {
-      // Cleanup previous preview URLs
       previewUrls.forEach(url => URL.revokeObjectURL(url))
 
-      // Create new preview URLs
       const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file))
       setPreviewUrls(newPreviewUrls)
       setSelectedFiles(validFiles)
@@ -269,7 +253,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     const newFiles = selectedFiles.filter((_, i) => i !== index)
     const newUrls = previewUrls.filter((_, i) => i !== index)
 
-    // Cleanup removed preview URL
     URL.revokeObjectURL(previewUrls[index])
 
     setSelectedFiles(newFiles)
@@ -283,7 +266,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     const newFiles = [...selectedFiles]
     const newUrls = [...previewUrls]
 
-    // Перемещаем элементы
     const [movedFile] = newFiles.splice(fromIndex, 1)
     const [movedUrl] = newUrls.splice(fromIndex, 1)
 
@@ -317,7 +299,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   const isLoading = createContentMutation.isPending || uploading
 
-  // Определяем размер диалога в зависимости от типа контента
   const getDialogSize = () => {
     if (isFullScreen && type === 'note') {
       return 'w-full h-full max-w-none rounded-none'
@@ -336,10 +317,9 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   const handleTypeChange = (newType: Content['type']) => {
     if (type === 'note' && editorData && editorData.blocks && editorData.blocks.length > 0) {
-      if (confirm('У вас есть несохраненные изменения. Хотите сохранить их как заметку?')) {
-        handleSubmit(new Event('submit') as unknown as React.FormEvent) // Сохраняем и закрываем
+      if (confirm('You have unsaved changes. Do you want to save them as a note?')) {
+        handleSubmit(new Event('submit') as unknown as React.FormEvent)
       } else {
-        // Сбрасываем изменения и переключаем тип
         setEditorData(null)
         setTitle('')
         setTags(initialTags)
@@ -357,12 +337,11 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   const renderNoteForm = () => (
     <div className="flex flex-col h-full">
-      {/* Top section: Title and Tags */}
       <div className="p-6 pb-4 border-b">
         <div className="max-w-[700px] mx-auto w-full">
           <Input
             id="title"
-            placeholder="Заголовок (опционально)..."
+            placeholder="Title (optional)..."
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             disabled={isLoading}
@@ -384,7 +363,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
             ))}
             <Input
               id="tags"
-              placeholder="+ Добавить тег"
+              placeholder="+ Add tag"
               value={currentTag}
               onChange={(e) => setCurrentTag(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -443,7 +422,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
               className="flex items-center gap-2"
             >
               <Image className="w-4 h-4" />
-              Изображения
+              Images
             </Button>
             <Button
               type="button"
@@ -453,7 +432,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
               className="flex items-center gap-2"
             >
               <Link className="w-4 h-4" />
-              Ссылка
+              Link
             </Button>
           </div>
           {type === 'note' && (
@@ -470,22 +449,19 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
             renderNoteForm()
           ) : (
             <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-              {/* Common fields for Image and Link */}
-              {/* Title */}
               <div className="space-y-2">
-                <Label htmlFor="title">Заголовок (опционально)</Label>
+                <Label htmlFor="title">Title (optional)</Label>
                 <Input
                   id="title"
-                  placeholder="Введите заголовок..."
+                  placeholder="Enter title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   disabled={isLoading}
                 />
               </div>
 
-              {/* Content */}
               <div className="space-y-2">
-                <Label htmlFor="content">{type === 'link' ? 'URL' : 'Изображения'}</Label>
+                <Label htmlFor="content">{type === 'link' ? 'URL' : 'Images'}</Label>
                 {type === 'link' ? (
                   <Input
                     id="content"
@@ -511,10 +487,10 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                         <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">
-                            Перетащите изображения сюда или нажмите для выбора
+                            Drag and drop images here or click to select
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Максимум 10MB на файл, форматы: JPG, PNG, GIF, WebP
+                            Max 10MB per file, formats: JPG, PNG, GIF, WebP
                           </p>
                         </div>
                         <Input
@@ -534,12 +510,11 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                           onClick={() => document.getElementById('file-upload')?.click()}
                         >
                           <Plus className="w-4 h-4 mr-2" />
-                          Выбрать файлы
+                          Select files
                         </Button>
                       </div>
                     </div>
 
-                    {/* Image Previews */}
                     {selectedFiles.length > 0 && (
                       <div>
                         {selectedFiles.length > 1 && (
