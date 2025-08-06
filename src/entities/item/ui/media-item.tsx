@@ -88,7 +88,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
           <img
             src={thumbSrc || ''}
             alt={item.title || 'Видео'}
-            className="w-full object-cover aspect-video rounded-lg"
+            className="w-full object-cover rounded-lg"
           />
           <div className="absolute inset-0 flex items-center justify-center">
             <svg
