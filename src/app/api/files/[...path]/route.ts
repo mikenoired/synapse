@@ -1,4 +1,4 @@
-import { getFile, getFileMetadata } from '@/shared/api/minio'
+import { getFileMetadata, getPresignedUrl } from '@/shared/api/minio'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -33,32 +33,9 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { stream, contentType } = await getFile(objectName)
-
-    const readableStream = new ReadableStream({
-      start(controller) {
-        stream.on('data', (chunk: Buffer) => {
-          controller.enqueue(new Uint8Array(chunk))
-        })
-
-        stream.on('end', () => {
-          controller.close()
-        })
-
-        stream.on('error', (error) => {
-          controller.error(error)
-        })
-      }
-    })
-
-    return new Response(readableStream, {
-      headers: {
-        'Content-Type': contentType || 'application/octet-stream',
-        'Content-Length': metadata.size.toString(),
-        'Cache-Control': 'private, max-age=3600',
-        'X-Content-Type-Options': 'nosniff',
-      },
-    })
+    // Получаем presigned URL
+    const presignedUrl = await getPresignedUrl(objectName, 60 * 60) // 1 час
+    return NextResponse.json({ presignedUrl })
   } catch (error) {
     console.error('File access error:', error)
     return NextResponse.json(

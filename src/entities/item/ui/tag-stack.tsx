@@ -13,9 +13,9 @@ interface TagStackProps {
 }
 
 function getItemComponent(item: Content, session: Session | null) {
-  if (item.type === 'image' && item.image_url) {
+  if (item.type === 'media' && item.media_url) {
     return <img
-      src={getSecureImageUrl(item.image_url.replace('/api/files/', ''), session?.access_token)}
+      src={getSecureImageUrl(item.media_url.replace('/api/files/', ''), session?.access_token)}
       alt={item.title || 'Image'}
       className="object-cover"
       onError={(e) => {

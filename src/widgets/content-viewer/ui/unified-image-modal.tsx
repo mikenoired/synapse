@@ -1,7 +1,7 @@
 'use client'
 
 import { trpc } from "@/shared/api/trpc"
-import { getSecureImageUrl } from "@/shared/lib/image-utils"
+import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
 import { Content } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
@@ -13,18 +13,18 @@ import { AnimatePresence, motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
-interface UnifiedImageModalProps {
+interface UnifiedMediaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item: Content
   session: Session | null
-  gallery?: { url: string; parentId: string }[]
+  gallery?: { url: string; parentId: string; media_type?: string; thumbnail_url?: string }[]
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   onContentChanged?: () => void
 }
 
-export function UnifiedImageModal({
+export function UnifiedMediaModal({
   open,
   onOpenChange,
   item,
@@ -33,7 +33,7 @@ export function UnifiedImageModal({
   onEdit,
   onDelete,
   onContentChanged
-}: UnifiedImageModalProps) {
+}: UnifiedMediaModalProps) {
   const initialIndex = (gallery.length > 0) ? gallery.findIndex(g => g.parentId === item.id) : 0
   const [currentIndex, setCurrentIndex] = useState(initialIndex >= 0 ? initialIndex : 0)
   const [isHovered, setIsHovered] = useState(false)
@@ -156,7 +156,7 @@ export function UnifiedImageModal({
     try {
       const createPromises = imageUrls.map((url, index) => {
         return createContentMutation.mutateAsync({
-          type: 'image',
+          type: 'media',
           title: imageUrls.length > 1 && item.title
             ? `${item.title} (${index + 1})`
             : item.title,
@@ -226,6 +226,38 @@ export function UnifiedImageModal({
       deleteContentMutation.mutate({ id: item.id })
     }
   }
+
+  const currentMedia = gallery && gallery.length > 0
+    ? gallery[currentIndex]
+    : { url: item.media_url || imageUrls[currentIndex], media_type: item.media_type, thumbnail_url: item.thumbnail_url };
+
+  const [mediaSrc, setMediaSrc] = useState<string | null>(null)
+  const [thumbSrcs, setThumbSrcs] = useState<{ [key: number]: string }>({})
+
+  useEffect(() => {
+    let cancelled = false
+    setMediaSrc(null)
+    getPresignedMediaUrl(currentMedia.url, session?.access_token)
+      .then(url => { if (!cancelled) setMediaSrc(url) })
+      .catch(() => { if (!cancelled) setMediaSrc(null) })
+    return () => { cancelled = true }
+  }, [currentMedia.url, session?.access_token])
+
+  // Для превьюшек
+  useEffect(() => {
+    let cancelled = false
+    const loadThumbs = async () => {
+      const newThumbs: { [key: number]: string } = {}
+      await Promise.all(imageUrls.map(async (url, idx) => {
+        try {
+          newThumbs[idx] = await getPresignedMediaUrl(url, session?.access_token)
+        } catch { }
+      }))
+      if (!cancelled) setThumbSrcs(newThumbs)
+    }
+    loadThumbs()
+    return () => { cancelled = true }
+  }, [imageUrls, session?.access_token])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -371,28 +403,51 @@ export function UnifiedImageModal({
 
           <div className="flex-1 flex items-center justify-center relative overflow-hidden">
             <AnimatePresence mode="wait" custom={direction}>
-              <motion.img
-                key={currentIndex}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: "spring", stiffness: 300, damping: 30 },
-                  opacity: { duration: 0.2 }
-                }}
-                src={getSecureImageUrl(imageUrls[currentIndex], session?.access_token)}
-                alt={`${item.title || 'Изображение'} ${currentIndex + 1}`}
-                className="w-full h-full object-contain cursor-pointer"
-                draggable={false}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                }}
-              />
+              {currentMedia.media_type === 'video' ? (
+                <motion.video
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
+                  src={mediaSrc || undefined}
+                  controls
+                  playsInline
+                  autoPlay={true}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 12, background: '#000' }}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                />
+              ) : (
+                <motion.img
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: "spring", stiffness: 300, damping: 30 },
+                    opacity: { duration: 0.2 }
+                  }}
+                  src={mediaSrc || undefined}
+                  alt={`${item.title || 'Изображение'} ${currentIndex + 1}`}
+                  className="w-full h-full object-contain cursor-pointer"
+                  draggable={false}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                  }}
+                />
+              )}
             </AnimatePresence>
 
             {isMultiple && (
@@ -434,7 +489,7 @@ export function UnifiedImageModal({
                         }`}
                     >
                       <img
-                        src={getSecureImageUrl(url, session?.access_token)}
+                        src={thumbSrcs[index]}
                         alt={`Превью ${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -451,4 +506,4 @@ export function UnifiedImageModal({
       </DialogContent>
     </Dialog>
   )
-} 
+}

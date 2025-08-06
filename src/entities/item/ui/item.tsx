@@ -1,6 +1,6 @@
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog';
 import { trpc } from "@/shared/api/trpc";
-import { getSecureImageUrl } from "@/shared/lib/image-utils";
+import { getPresignedMediaUrl, getSecureImageUrl } from "@/shared/lib/image-utils";
 import { Content } from "@/shared/lib/schemas";
 import { Badge } from "@/shared/ui/badge";
 import {
@@ -16,9 +16,10 @@ import Underline from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import DOMPurify from 'dompurify';
 import { common, createLowlight } from "lowlight";
+import { Play } from 'lucide-react';
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import toast from 'react-hot-toast';
 
 interface ItemProps {
@@ -149,7 +150,19 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
   )
 }
 
-function ItemContent({ item, index, session }: ItemProps) {
+function ItemContent({ item, index, session, onItemClick }: ItemProps) {
+  const [thumbSrc, setThumbSrc] = useState<string | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    if (item.media_type === 'video' && item.thumbnail_url) {
+      setThumbSrc(null)
+      getPresignedMediaUrl(item.thumbnail_url, session?.access_token)
+        .then(url => { if (!cancelled) setThumbSrc(url) })
+        .catch(() => { if (!cancelled) setThumbSrc(null) })
+    }
+    return () => { cancelled = true }
+  }, [item.thumbnail_url, item.media_type, session?.access_token])
+
   const getTextContent = useMemo(() => {
     if (item.type !== 'note') return item.content;
 
@@ -173,11 +186,23 @@ function ItemContent({ item, index, session }: ItemProps) {
             {item.title}
           </span>
         </div>)}
-        <div className={item.type === 'image' ? 'p-0' : item.type === 'note' ? 'p-3' : ''}>
-          {item.type === 'image' ? (
+        <div className={item.type === 'media' ? 'p-0' : item.type === 'note' ? 'p-3' : ''}>
+          {item.type === 'media' ? (
             <div className="relative">
-              {renderImages(parseImageUrls(item.content), item.title || null, session)}
-
+              {item.media_type === 'video' && item.thumbnail_url ? (
+                <div className="relative" onClick={() => onItemClick?.(item)}>
+                  <img
+                    src={thumbSrc || ''}
+                    alt={item.title || 'Видео'}
+                    className="w-full object-cover aspect-video rounded-lg"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Play className="w-16 h-16 text-white/80 drop-shadow-lg" />
+                  </div>
+                </div>
+              ) : (
+                renderImages(parseImageUrls(item.content), item.title || null, session)
+              )}
               {item.tags.length > 0 && (
                 <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <div className="flex flex-wrap gap-1">

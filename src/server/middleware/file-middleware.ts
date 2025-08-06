@@ -22,7 +22,10 @@ export interface ValidationResult {
 
 const DEFAULT_CONFIG: FileValidationConfig = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
-  allowedExtensions: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.docx'],
+  allowedExtensions: [
+    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.docx',
+    '.mp4', '.mov', '.avi', '.mkv'
+  ],
   allowedMimeTypes: [
     'image/jpeg',
     'image/png',
@@ -31,6 +34,10 @@ const DEFAULT_CONFIG: FileValidationConfig = {
     'application/pdf',
     'text/plain',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'video/mp4',
+    'video/quicktime',
+    'video/x-msvideo',
+    'video/x-matroska'
   ],
   scanForMalware: true,
   checkMagicBytes: true,
@@ -49,7 +56,12 @@ const MAGIC_BYTES: Record<string, Buffer[]> = {
   'text/plain': [], // text files don't have strict magic bytes
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
     Buffer.from([0x50, 0x4B, 0x03, 0x04]) // ZIP signature (DOCX based on ZIP)
-  ]
+  ],
+  // Видео форматы
+  'video/mp4': [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6D, 0x70, 0x34, 0x32])], // mp4 ftyp
+  'video/quicktime': [Buffer.from([0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20])], // mov ftyp
+  'video/x-msvideo': [Buffer.from([0x52, 0x49, 0x46, 0x46])], // avi RIFF
+  'video/x-matroska': [Buffer.from([0x1A, 0x45, 0xDF, 0xA3])] // mkv EBML
 }
 
 const MALWARE_PATTERNS = [

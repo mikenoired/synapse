@@ -6,7 +6,7 @@ import { Session } from "@supabase/supabase-js"
 import { useState } from 'react'
 import { LinkViewerModal } from "./link-viewer-modal"
 import { NoteViewerModal } from "./note-viewer-modal"
-import { UnifiedImageModal } from "./unified-image-modal"
+import { UnifiedMediaModal } from "./unified-image-modal"
 
 interface ContentModalManagerProps {
   open: boolean
@@ -35,19 +35,19 @@ export function ContentModalManager({
   if (!item) return null
 
   // For images - use unified modal
-  if (item.type === 'image') {
+  if (item.type === 'media') {
     const imageGallery = allItems
-      .filter(i => i.type === 'image')
+      .filter(i => i.type === 'media')
       .flatMap(i => {
         try {
           const parsed = JSON.parse(i.content)
-          if (Array.isArray(parsed)) return parsed.map((url: string) => ({ url, parentId: i.id }))
+          if (Array.isArray(parsed)) return parsed.map((url: string) => ({ url, parentId: i.id, media_type: i.media_type, thumbnail_url: i.thumbnail_url }))
         } catch { }
-        return [{ url: i.content, parentId: i.id }]
+        return [{ url: i.media_url || i.content, parentId: i.id, media_type: i.media_type, thumbnail_url: i.thumbnail_url }]
       })
 
     return (
-      <UnifiedImageModal
+      <UnifiedMediaModal
         open={open}
         onOpenChange={onOpenChange}
         item={item}

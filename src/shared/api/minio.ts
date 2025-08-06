@@ -130,5 +130,9 @@ export async function deleteFile(objectName: string): Promise<void> {
   }
 }
 
+export async function getPresignedUrl(objectName: string, expirySeconds: number = 3600): Promise<string> {
+  return await minioClient.presignedGetObject(bucketName, objectName, expirySeconds)
+}
+
 export { bucketName, minioClient }
 

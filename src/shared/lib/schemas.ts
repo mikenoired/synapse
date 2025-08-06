@@ -9,7 +9,7 @@ export const userSchema = z.object({
 export const contentSchema = z.object({
   id: z.string(),
   user_id: z.string(),
-  type: z.enum(['note', 'image', 'link']),
+  type: z.enum(['note', 'media', 'link']),
   title: z.string().optional(),
   content: z.string(),
   tags: z.array(z.string()).default([]),
@@ -17,7 +17,9 @@ export const contentSchema = z.object({
   created_at: z.string(),
   updated_at: z.string(),
   url: z.string().optional(),
-  image_url: z.string().optional(),
+  media_url: z.string().optional(),
+  media_type: z.enum(['image', 'video']).optional(),
+  thumbnail_url: z.string().optional(),
 })
 
 export const tagSchema = z.object({
@@ -28,13 +30,15 @@ export const tagSchema = z.object({
 })
 
 export const createContentSchema = z.object({
-  type: z.enum(['note', 'image', 'link']),
+  type: z.enum(['note', 'media', 'link']),
   title: z.string().optional(),
   content: z.string(),
   tags: z.array(z.string()).default([]),
   reminder_at: z.string().optional(),
   url: z.string().optional(),
-  image_url: z.string().optional(),
+  media_url: z.string().optional(),
+  media_type: z.enum(['image', 'video']).optional(),
+  thumbnail_url: z.string().optional(),
 })
 
 export const updateContentSchema = createContentSchema.partial().extend({

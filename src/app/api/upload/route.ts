@@ -1,6 +1,11 @@
 import { getPublicUrl, uploadFile } from '@/shared/api/minio'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
+import { spawn } from 'child_process'
+import { randomUUID } from 'crypto'
+import { unlink, writeFile } from 'fs/promises'
 import { NextRequest, NextResponse } from 'next/server'
+import { tmpdir } from 'os'
+import { join } from 'path'
 
 export async function POST(request: NextRequest) {
   try {
@@ -30,39 +35,93 @@ export async function POST(request: NextRequest) {
       const file = files[i]
 
       try {
-        if (!file.type.startsWith('image/')) {
-          errors.push(`File "${file.name}" is not an image`)
+        if (file.type.startsWith('image/')) {
+          if (!file.type.startsWith('image/')) {
+            errors.push(`File "${file.name}" is not an image`)
+            continue
+          }
+
+          if (file.size > 10 * 1024 * 1024) {
+            errors.push(`File "${file.name}" is too large (max 10MB)`)
+            continue
+          }
+
+          const bytes = await file.arrayBuffer()
+          const buffer = Buffer.from(bytes)
+
+          const { objectName, validation } = await uploadFile(buffer, file.name, file.type, user.id)
+
+          if (!validation.isValid) {
+            errors.push(`File "${file.name}" is not valid: ${validation.errors.join(', ')}`)
+          }
+
+          if (!objectName) {
+            errors.push(`Failed to upload file "${file.name}"`)
+            continue
+          }
+
+          const publicUrl = getPublicUrl(objectName)
+
+          uploadResults.push({
+            objectName,
+            url: publicUrl,
+            fileName: file.name,
+            size: file.size,
+            type: file.type
+          })
+        } else if (file.type.startsWith('video/')) {
+          // --- Новый код для видео ---
+          // Сохраняем видео во временный файл
+          const tempVideoPath = join(tmpdir(), `${randomUUID()}-${file.name}`)
+          const tempThumbPath = join(tmpdir(), `${randomUUID()}.jpg`)
+          const bytes = await file.arrayBuffer()
+          await writeFile(tempVideoPath, Buffer.from(bytes))
+          // ffmpeg: компрессия без потерь (копируем кодеки)
+          const compressedPath = join(tmpdir(), `${randomUUID()}-compressed.mp4`)
+          await new Promise((resolve, reject) => {
+            const ffmpeg = spawn('ffmpeg', [
+              '-i', tempVideoPath,
+              '-c:v', 'copy',
+              '-c:a', 'copy',
+              compressedPath
+            ])
+            ffmpeg.on('close', code => code === 0 ? resolve(0) : reject(new Error('ffmpeg compress error')))
+          })
+          // ffmpeg: миниатюра (берём кадр с 1-й секунды)
+          await new Promise((resolve, reject) => {
+            const ffmpeg = spawn('ffmpeg', [
+              '-i', tempVideoPath,
+              '-ss', '00:00:01.000',
+              '-vframes', '1',
+              tempThumbPath
+            ])
+            ffmpeg.on('close', code => code === 0 ? resolve(0) : reject(new Error('ffmpeg thumbnail error')))
+          })
+          // Загружаем видео и миниатюру в Minio
+          const compressedBuffer = await import('fs').then(fs => fs.readFileSync(compressedPath))
+          const thumbBuffer = await import('fs').then(fs => fs.readFileSync(tempThumbPath))
+          const { objectName: videoObject, validation: videoValidation } = await uploadFile(compressedBuffer, file.name.replace(/\.[^.]+$/, '.mp4'), 'video/mp4', user.id, 'media')
+          const { objectName: thumbObject, validation: thumbValidation } = await uploadFile(thumbBuffer, file.name.replace(/\.[^.]+$/, '.jpg'), 'image/jpeg', user.id, 'media-thumbs')
+          // Удаляем временные файлы
+          await unlink(tempVideoPath)
+          await unlink(compressedPath)
+          await unlink(tempThumbPath)
+          if (!videoObject || !thumbObject) {
+            errors.push(`Failed to upload video or thumbnail for "${file.name}"`)
+            continue
+          }
+          uploadResults.push({
+            objectName: videoObject,
+            url: getPublicUrl(videoObject),
+            thumbnail: getPublicUrl(thumbObject),
+            fileName: file.name,
+            size: file.size,
+            type: file.type
+          })
+        } else {
+          errors.push(`File "${file.name}" is not an image or video`)
           continue
         }
-
-        if (file.size > 10 * 1024 * 1024) {
-          errors.push(`File "${file.name}" is too large (max 10MB)`)
-          continue
-        }
-
-        const bytes = await file.arrayBuffer()
-        const buffer = Buffer.from(bytes)
-
-        const { objectName, validation } = await uploadFile(buffer, file.name, file.type, user.id)
-
-        if (!validation.isValid) {
-          errors.push(`File "${file.name}" is not valid: ${validation.errors.join(', ')}`)
-        }
-
-        if (!objectName) {
-          errors.push(`Failed to upload file "${file.name}"`)
-          continue
-        }
-
-        const publicUrl = getPublicUrl(objectName)
-
-        uploadResults.push({
-          objectName,
-          url: publicUrl,
-          fileName: file.name,
-          size: file.size,
-          type: file.type
-        })
       } catch (error) {
         errors.push(`Failed to upload "${file.name}": ${error instanceof Error ? error.message : 'Unknown error'}`)
       }

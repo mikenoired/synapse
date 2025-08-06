@@ -67,7 +67,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
   useEffect(() => {
     if (preloadedFiles.length > 0) {
-      setType('image')
+      setType('media')
       handleFileSelect(preloadedFiles)
       setPreloadedFiles([])
     }
@@ -109,7 +109,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     },
   })
 
-  const uploadMultipleFiles = async (files: File[]): Promise<{ objectName: string, url: string }[]> => {
+  const uploadMultipleFiles = async (files: File[]): Promise<{ objectName: string, url: string, thumbnail?: string }[]> => {
     const formData = new FormData()
     files.forEach(file => formData.append('file', file))
 
@@ -132,7 +132,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
     return result.files.map((file: any) => ({
       objectName: file.objectName,
-      url: file.url
+      url: file.url,
+      thumbnail: file.thumbnail
     }))
   }
 
@@ -141,25 +142,27 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
     if (type === 'note') {
       if (!editorData || !editorData.content || editorData.content.length === 0) return
-    } else if (type === 'image') {
+    } else if (type === 'media') {
       if (selectedFiles.length === 0) return
     } else {
       if (!content.trim()) return
     }
 
     try {
-      if (type === 'image' && selectedFiles.length > 0) {
+      if (type === 'media' && selectedFiles.length > 0) {
         setUploading(true)
 
         const uploadedFiles = await uploadMultipleFiles(selectedFiles)
 
         const createPromises = uploadedFiles.map((file, index) => {
           return createContentMutation.mutateAsync({
-            type: 'image',
+            type: 'media',
             title: title.trim() || undefined,
             content: file.objectName,
-            image_url: file.url,
+            media_url: file.url,
+            media_type: selectedFiles[index].type.startsWith('image/') ? 'image' : 'video',
             tags,
+            thumbnail_url: file.thumbnail
           })
         })
 
@@ -227,15 +230,13 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
     for (const file of fileArray) {
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(`File "${file.name}" is too large (max 10MB)`)
+        toast.error(`Файл "${file.name}" слишком большой (максимум 10MB)`)
         continue
       }
-
-      if (!file.type.startsWith('image/')) {
-        toast.error(`File "${file.name}" is not an image`)
+      if (!(file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+        toast.error(`Файл "${file.name}" не является поддерживаемым медиа (картинка или видео)`)
         continue
       }
-
       validFiles.push(file)
     }
 
@@ -306,7 +307,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     switch (type) {
       case 'note':
         return 'max-w-3xl w-[95vw] h-[90vh] rounded-lg'
-      case 'image':
+      case 'media':
         return 'max-w-3xl w-[95vw] max-h-[90vh] h-auto rounded-lg'
       case 'link':
         return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto rounded-lg'
@@ -416,9 +417,9 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
             </Button>
             <Button
               type="button"
-              variant={type === 'image' ? 'secondary' : 'ghost'}
+              variant={type === 'media' ? 'secondary' : 'ghost'}
               size="sm"
-              onClick={() => handleTypeChange('image')}
+              onClick={() => handleTypeChange('media')}
               className="flex items-center gap-2"
             >
               <Image className="w-4 h-4" />
@@ -461,7 +462,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="content">{type === 'link' ? 'URL' : 'Images'}</Label>
+                <Label htmlFor="content">{type === 'link' ? 'URL' : 'Медиа (картинки и видео)'}</Label>
                 {type === 'link' ? (
                   <Input
                     id="content"
@@ -487,15 +488,15 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                         <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
                         <div>
                           <p className="text-sm text-muted-foreground mb-1">
-                            Drag and drop images here or click to select
+                            Перетащите сюда картинки или видео, или выберите файлы
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Max 10MB per file, formats: JPG, PNG, GIF, WebP
+                            Максимум 10MB на файл, форматы: JPG, PNG, GIF, WebP, MP4, MOV, AVI
                           </p>
                         </div>
                         <Input
                           type="file"
-                          accept="image/*"
+                          accept="image/*,video/*"
                           multiple
                           className="hidden"
                           id="file-upload"
@@ -635,7 +636,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                   isLoading ||
                   (type === 'note'
                     ? !editorData || !editorData.content || editorData.content.length === 0
-                    : type === 'image'
+                    : type === 'media'
                       ? selectedFiles.length === 0
                       : !content.trim())
                 }
