@@ -20,6 +20,41 @@ interface AddContentDialogProps {
   initialTags?: string[]
 }
 
+// Вспомогательная функция для генерации превью первого кадра видео
+async function getVideoThumbnail(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file)
+    const video = document.createElement('video')
+    video.src = url
+    video.crossOrigin = 'anonymous'
+    video.muted = true
+    video.playsInline = true
+    video.currentTime = 0
+    video.addEventListener('loadeddata', () => {
+      // Ждем, пока появится хотя бы один кадр
+      video.currentTime = 0
+    })
+    video.addEventListener('seeked', () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
+      const ctx = canvas.getContext('2d')
+      if (ctx) {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/png')
+        resolve(dataUrl)
+      } else {
+        reject(new Error('Canvas context is null'))
+      }
+      URL.revokeObjectURL(url)
+    })
+    video.addEventListener('error', (e) => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Ошибка загрузки видео'))
+    })
+  })
+}
+
 export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTags = [] }: AddContentDialogProps) {
   const { session } = useAuth()
   const { preloadedFiles, setPreloadedFiles } = useDashboard()
@@ -224,9 +259,10 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
   }
 
-  const handleFileSelect = useCallback((files: FileList | File[]) => {
+  const handleFileSelect = useCallback(async (files: FileList | File[]) => {
     const fileArray = Array.from(files)
     const validFiles: File[] = []
+    const previewPromises: Promise<string>[] = []
 
     for (const file of fileArray) {
       if (file.size > 10 * 1024 * 1024) {
@@ -238,12 +274,16 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         continue
       }
       validFiles.push(file)
+      if (file.type.startsWith('image/')) {
+        previewPromises.push(Promise.resolve(URL.createObjectURL(file)))
+      } else if (file.type.startsWith('video/')) {
+        previewPromises.push(getVideoThumbnail(file))
+      }
     }
 
     if (validFiles.length > 0) {
       previewUrls.forEach(url => URL.revokeObjectURL(url))
-
-      const newPreviewUrls = validFiles.map(file => URL.createObjectURL(file))
+      const newPreviewUrls = await Promise.all(previewPromises)
       setPreviewUrls(newPreviewUrls)
       setSelectedFiles(validFiles)
       setContent(validFiles.map(f => f.name).join(', '))

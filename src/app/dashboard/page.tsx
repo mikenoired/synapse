@@ -103,7 +103,7 @@ export default function DashboardPage() {
     e.stopPropagation();
     setDragActive(false);
     dragCounter.current = 0;
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
     if (files.length > 0) {
       setPreloadedFiles(files);
       setAddDialogOpen(true);
