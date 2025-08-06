@@ -41,7 +41,7 @@ export default function Sidebar() {
       label: 'Добавить',
       onMouseEnter: preloadAddContentDialog
     },
-    { href: '#', icon: Settings, label: 'Настройки' }
+    { href: '/dashboard/settings', icon: Settings, label: 'Настройки' }
   ];
 
   const renderNavItem = (item: typeof navItems[number], isMobile = false) => {

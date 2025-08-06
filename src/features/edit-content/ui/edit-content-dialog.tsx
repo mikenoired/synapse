@@ -1,5 +1,4 @@
 import { trpc } from '@/shared/api/trpc'
-import { useAuth } from '@/shared/lib/auth-context'
 import { Content } from '@/shared/lib/schemas'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -18,13 +17,11 @@ interface EditContentDialogProps {
 }
 
 export function EditContentDialog({ open, onOpenChange, content, onContentUpdated }: EditContentDialogProps) {
-  const { session } = useAuth()
   const [title, setTitle] = useState(content.title || '')
   const [editorData, setEditorData] = useState<JSONContent>(content.content ? JSON.parse(content.content) : { type: 'doc', content: [] })
   const [tags, setTags] = useState<string[]>(content.tags || [])
   const [currentTag, setCurrentTag] = useState('')
   const [isFullScreen, setIsFullScreen] = useState(false)
-  // touch gesture support for mobile (swipe down to close)
   const [startY, setStartY] = useState<number | null>(null)
   const handleTouchStart = (e: React.TouchEvent) => {
     setStartY(e.touches[0].clientY)
