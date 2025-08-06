@@ -1,8 +1,6 @@
 import * as crypto from 'crypto'
 import * as path from 'path'
 
-// TODO: add video validation
-
 export interface FileValidationConfig {
   maxFileSize: number // in bytes
   allowedExtensions: string[]

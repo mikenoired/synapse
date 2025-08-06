@@ -7,11 +7,13 @@ import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent } from "@/shared/ui/dialog"
 import { Input } from "@/shared/ui/input"
+import { PreviewImage } from "@/shared/ui/preview-image"
 import { Session } from "@supabase/supabase-js"
-import { ChevronLeft, ChevronRight, Edit2, Layers, Plus, Tag, Trash2, Ungroup, X } from "lucide-react"
+import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, Ungroup, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { CustomVideoPlayer } from "./custom-video-player"
 
 interface UnifiedMediaModalProps {
   open: boolean
@@ -232,7 +234,6 @@ export function UnifiedMediaModal({
     : { url: item.media_url || imageUrls[currentIndex], media_type: item.media_type, thumbnail_url: item.thumbnail_url };
 
   const [mediaSrc, setMediaSrc] = useState<string | null>(null)
-  const [thumbSrcs, setThumbSrcs] = useState<{ [key: number]: string }>({})
 
   useEffect(() => {
     let cancelled = false
@@ -243,27 +244,11 @@ export function UnifiedMediaModal({
     return () => { cancelled = true }
   }, [currentMedia.url, session?.access_token])
 
-  // Для превьюшек
-  useEffect(() => {
-    let cancelled = false
-    const loadThumbs = async () => {
-      const newThumbs: { [key: number]: string } = {}
-      await Promise.all(imageUrls.map(async (url, idx) => {
-        try {
-          newThumbs[idx] = await getPresignedMediaUrl(url, session?.access_token)
-        } catch { }
-      }))
-      if (!cancelled) setThumbSrcs(newThumbs)
-    }
-    loadThumbs()
-    return () => { cancelled = true }
-  }, [imageUrls, session?.access_token])
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="max-w-none w-screen h-screen p-0 m-0 bg-black/95 border-none">
+      <DialogContent showCloseButton={false} className="max-w-none w-screen h-screen min-h-0 p-0 m-0 bg-black/95 border-none flex flex-col">
         <div
-          className="w-full h-full flex flex-col relative"
+          className="w-full h-full min-h-0 flex flex-col flex-1 relative"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -401,10 +386,10 @@ export function UnifiedMediaModal({
             </div>
           )}
 
-          <div className="flex-1 flex items-center justify-center relative overflow-hidden">
+          <div className="flex-1 min-h-0 flex items-center justify-center relative overflow-hidden">
             <AnimatePresence mode="wait" custom={direction}>
               {currentMedia.media_type === 'video' ? (
-                <motion.video
+                <motion.div
                   key={currentIndex}
                   custom={direction}
                   variants={slideVariants}
@@ -415,15 +400,15 @@ export function UnifiedMediaModal({
                     x: { type: "spring", stiffness: 300, damping: 30 },
                     opacity: { duration: 0.2 }
                   }}
-                  src={mediaSrc || undefined}
-                  controls
-                  playsInline
-                  autoPlay={true}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 12, background: '#000' }}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                />
+                  style={{ width: '100%', height: '100%', borderRadius: 12, background: '#000' }}
+                >
+                  <CustomVideoPlayer
+                    src={mediaSrc || ''}
+                    poster={currentMedia.thumbnail_url}
+                    autoPlay={true}
+                    className="w-full h-full"
+                  />
+                </motion.div>
               ) : (
                 <motion.img
                   key={currentIndex}
@@ -471,35 +456,39 @@ export function UnifiedMediaModal({
           </div>
 
           {isMultiple && (
-            <div className={`absolute bottom-0 left-0 right-0 z-20 p-4 bg-gradient-to-t from-black/50 to-transparent transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-              <div className="flex justify-center gap-2 max-w-full overflow-x-auto">
-                {imageUrls.map((url, index) => {
-                  const distance = Math.abs(index - currentIndex)
-                  if (distance > 15) return null
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => {
-                        setDirection(index > currentIndex ? 1 : -1)
-                        setCurrentIndex(index)
-                      }}
-                      className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${index === currentIndex
-                        ? 'border-white scale-110'
-                        : 'border-white/30 hover:border-white/60'
-                        }`}
-                    >
-                      <img
-                        src={thumbSrcs[index]}
-                        alt={`Превью ${index + 1}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                        }}
-                      />
-                    </button>
-                  )
-                })}
-              </div>
+            <div className="w-full p-4 bg-gradient-to-t from-black/50 to-transparent flex justify-center gap-2 max-w-full overflow-x-auto">
+              {gallery.map((media, index) => {
+                const isVideo = media.media_type?.startsWith('video')
+                const previewSrc = isVideo ? media.thumbnail_url || media.url : media.url
+                const distance = Math.abs(index - currentIndex)
+                if (distance > 15) return null
+                return (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setDirection(index > currentIndex ? 1 : -1)
+                      setCurrentIndex(index)
+                    }}
+                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all relative ${index === currentIndex
+                      ? 'border-white scale-110'
+                      : 'border-white/30 hover:border-white/60'
+                      }`}
+                  >
+                    <PreviewImage
+                      src={previewSrc}
+                      token={session?.access_token}
+                      alt={`Превью ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      skeletonClassName="w-full h-full bg-white/10 animate-pulse rounded"
+                    />
+                    {isVideo && (
+                      <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <Play className="w-8 h-8 text-white/80 drop-shadow" />
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
           )}
         </div>
