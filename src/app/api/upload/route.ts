@@ -6,6 +6,7 @@ import { unlink, writeFile } from 'fs/promises'
 import { NextRequest, NextResponse } from 'next/server'
 import { tmpdir } from 'os'
 import { join } from 'path'
+import { generateThumbnail } from '../../../server/lib/generate-thumbnail'
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,22 +63,42 @@ export async function POST(request: NextRequest) {
 
           const publicUrl = getPublicUrl(objectName)
 
+          // Генерируем миниатюру (base64-blur)
+          let thumbnailBase64: string | undefined = undefined
+          try {
+            thumbnailBase64 = await generateThumbnail(buffer, file.type)
+          } catch { }
+
+          // Сохраняем в таблицу content
+          await supabase.from('content').insert([{
+            user_id: user.id,
+            type: 'media',
+            content: objectName,
+            media_url: publicUrl,
+            media_type: 'image',
+            thumbnail_base64: thumbnailBase64,
+            // можно добавить другие поля
+          }])
+
           uploadResults.push({
             objectName,
             url: publicUrl,
             fileName: file.name,
             size: file.size,
-            type: file.type
+            type: file.type,
+            thumbnailBase64
           })
         } else if (file.type.startsWith('video/')) {
-          // --- Новый код для видео ---
+          console.log('Start processing video:', file.name)
           // Сохраняем видео во временный файл
           const tempVideoPath = join(tmpdir(), `${randomUUID()}-${file.name}`)
           const tempThumbPath = join(tmpdir(), `${randomUUID()}.jpg`)
           const bytes = await file.arrayBuffer()
           await writeFile(tempVideoPath, Buffer.from(bytes))
+          console.log('Video written to temp:', tempVideoPath)
           // ffmpeg: компрессия без потерь (копируем кодеки)
           const compressedPath = join(tmpdir(), `${randomUUID()}-compressed.mp4`)
+          console.log('Start ffmpeg compress:', compressedPath)
           await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', [
               '-i', tempVideoPath,
@@ -85,9 +106,13 @@ export async function POST(request: NextRequest) {
               '-c:a', 'copy',
               compressedPath
             ])
-            ffmpeg.on('close', code => code === 0 ? resolve(0) : reject(new Error('ffmpeg compress error')))
+            ffmpeg.on('close', code => {
+              console.log('ffmpeg compress close:', code)
+              code === 0 ? resolve(0) : reject(new Error('ffmpeg compress error'))
+            })
           })
           // ffmpeg: миниатюра (берём кадр с 1-й секунды)
+          console.log('Start ffmpeg thumbnail:', tempThumbPath)
           await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', [
               '-i', tempVideoPath,
@@ -95,7 +120,10 @@ export async function POST(request: NextRequest) {
               '-vframes', '1',
               tempThumbPath
             ])
-            ffmpeg.on('close', code => code === 0 ? resolve(0) : reject(new Error('ffmpeg thumbnail error')))
+            ffmpeg.on('close', code => {
+              console.log('ffmpeg thumbnail close:', code)
+              code === 0 ? resolve(0) : reject(new Error('ffmpeg thumbnail error'))
+            })
           })
           // Загружаем видео и миниатюру в Minio
           const compressedBuffer = await import('fs').then(fs => fs.readFileSync(compressedPath))
@@ -110,19 +138,40 @@ export async function POST(request: NextRequest) {
             errors.push(`Failed to upload video or thumbnail for "${file.name}"`)
             continue
           }
+          // Генерируем миниатюру (base64-blur) для видео
+          let thumbnailBase64: string | undefined = undefined
+          try {
+            thumbnailBase64 = await generateThumbnail(compressedBuffer, 'video/mp4')
+          } catch (err) {
+            console.error('Error generating video blur thumbnail:', err)
+          }
+          // Сохраняем в таблицу content
+          console.log('Insert video to content:', videoObject)
+          await supabase.from('content').insert([{
+            user_id: user.id,
+            type: 'media',
+            content: videoObject,
+            media_url: getPublicUrl(videoObject),
+            media_type: 'video',
+            thumbnail_url: getPublicUrl(thumbObject),
+            thumbnail_base64: thumbnailBase64,
+          }])
+          console.log('Inserted video to content:', videoObject)
           uploadResults.push({
             objectName: videoObject,
             url: getPublicUrl(videoObject),
             thumbnail: getPublicUrl(thumbObject),
             fileName: file.name,
             size: file.size,
-            type: file.type
+            type: file.type,
+            thumbnailBase64
           })
         } else {
           errors.push(`File "${file.name}" is not an image or video`)
           continue
         }
       } catch (error) {
+        console.error('Upload error for file:', file.name, error)
         errors.push(`Failed to upload "${file.name}": ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }

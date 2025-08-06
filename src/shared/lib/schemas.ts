@@ -20,6 +20,7 @@ export const contentSchema = z.object({
   media_url: z.string().optional(),
   media_type: z.enum(['image', 'video']).optional(),
   thumbnail_url: z.string().optional(),
+  thumbnail_base64: z.string().optional(),
 })
 
 export const tagSchema = z.object({
@@ -39,6 +40,7 @@ export const createContentSchema = z.object({
   media_url: z.string().optional(),
   media_type: z.enum(['image', 'video']).optional(),
   thumbnail_url: z.string().optional(),
+  thumbnail_base64: z.string().optional(),
 })
 
 export const updateContentSchema = createContentSchema.partial().extend({

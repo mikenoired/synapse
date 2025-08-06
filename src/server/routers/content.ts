@@ -80,6 +80,7 @@ export const contentRouter = router({
         .insert([{
           ...input,
           user_id: ctx.user.id,
+          thumbnail_base64: input.thumbnail_base64,
         }])
         .select()
         .single()
@@ -99,6 +100,7 @@ export const contentRouter = router({
         .update({
           ...updateData,
           updated_at: new Date().toISOString(),
+          thumbnail_base64: updateData.thumbnail_base64,
         })
         .eq('id', id)
         .eq('user_id', ctx.user.id)

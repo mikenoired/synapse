@@ -189,20 +189,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
         const uploadedFiles = await uploadMultipleFiles(selectedFiles)
 
-        const createPromises = uploadedFiles.map((file, index) => {
-          return createContentMutation.mutateAsync({
-            type: 'media',
-            title: title.trim() || undefined,
-            content: file.objectName,
-            media_url: file.url,
-            media_type: selectedFiles[index].type.startsWith('image/') ? 'image' : 'video',
-            tags,
-            thumbnail_url: file.thumbnail
-          })
-        })
-
-        await Promise.all(createPromises)
-
+        // Удаляем дублирующий insert: не вызываем createContentMutation для media
         setTitle('')
         setContent('')
         setEditorData(null)
