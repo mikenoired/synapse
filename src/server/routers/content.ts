@@ -13,28 +13,42 @@ export const contentRouter = router({
       limit: z.number().min(1).max(100).optional().default(20),
     }))
     .query(async ({ input, ctx }) => {
+      const from = input.cursor ?? 0
+      const to = from + (input.limit ?? 20) - 1
+
+      if (input.search) {
+        const { data, error } = await ctx.supabase.rpc('search_content_with_tags', {
+          search: input.search,
+          user_id: ctx.user.id,
+          type: input.type,
+          tags: input.tags,
+          offset_val: from,
+          limit_val: (to - from + 1)
+        })
+
+        if (error) handleSupabaseError(error)
+
+        const nextCursor = data && data.length === (input.limit ?? 20) ? to + 1 : undefined
+
+        return {
+          items: data || [],
+          nextCursor,
+        }
+      }
+
       let query = ctx.supabase
         .from('content')
         .select('*')
         .order('created_at', { ascending: false })
-
-      if (input.search) {
-        query = query.or(`title.ilike.%${input.search}%,content.ilike.%${input.search}%`)
-      }
+        .eq('user_id', ctx.user.id)
 
       if (input.tags && input.tags.length) query = query.contains('tags', input.tags)
-
       if (input.type) query = query.eq('type', input.type)
-
-      // pagination
-      const from = input.cursor ?? 0
-      const to = from + (input.limit ?? 20) - 1
 
       const { data, error } = await query.range(from, to)
 
       if (error) handleSupabaseError(error)
 
-      // determine next cursor
       const nextCursor = data && data.length === (input.limit ?? 20) ? to + 1 : undefined
 
       return {
