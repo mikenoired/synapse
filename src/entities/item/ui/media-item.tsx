@@ -2,7 +2,6 @@ import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
 import { Content } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
 import { Session } from "@supabase/supabase-js"
-import { Play } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface MediaItemProps {
@@ -92,7 +91,20 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
             className="w-full object-cover aspect-video rounded-lg"
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <Play className="w-16 h-16 text-white/80 drop-shadow-lg" />
+            <svg
+              width="64"
+              height="64"
+              viewBox="0 0 64 64"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-16 h-16 drop-shadow-lg"
+            >
+              <path
+                d="M20 16C20 13.7909 22.2386 12.5532 24.0711 13.7574L50.1421 31.7574C51.8579 32.8921 51.8579 35.1079 50.1421 36.2426L24.0711 54.2426C22.2386 55.4468 20 54.2091 20 52V16Z"
+                fill="white"
+                fillOpacity="0.8"
+              />
+            </svg>
           </div>
         </div>
       ) : (
