@@ -2,9 +2,28 @@
 
 import { trpc } from '@/shared/api/trpc';
 import { Card } from '@/shared/ui/card';
+import { Skeleton } from '@/shared/ui/skeleton';
 
 export default function GeneralTab() {
-  const { data: user } = trpc.user.getUser.useQuery();
+  const { data: user, isLoading } = trpc.user.getUser.useQuery();
+
+  if (isLoading) {
+    return (
+      <Card className="p-6 space-y-6">
+        <h2 className="text-2xl font-semibold mb-4">Основная информация</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block mb-1 font-medium">Email</label>
+            <Skeleton className="h-5 w-1/2" />
+          </div>
+          <div>
+            <label className='block mb-1 font-medium'>Мозгует с</label>
+            <Skeleton className="h-5 w-1/3 mt-1" />
+          </div>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6 space-y-6">

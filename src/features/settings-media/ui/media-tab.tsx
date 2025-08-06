@@ -1,5 +1,8 @@
+'use client'
+
 import { cn } from '@/shared/lib/utils';
 import { Card } from '@/shared/ui/card';
+import { useEffect, useState } from 'react';
 
 export default function MediaTab() {
   const totalSpace = 1000; // GB
@@ -7,6 +10,45 @@ export default function MediaTab() {
   const freeSpace = totalSpace - usedSpace;
   const totalFiles = 45672;
   const usagePercentage = (usedSpace / totalSpace) * 100;
+
+  const [loading, setLoading] = useState(true);
+  const [animatedPercent, setAnimatedPercent] = useState(0);
+
+  useEffect(() => {
+    setTimeout(() => setLoading(false), 500);
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      const duration = 700;
+      const startValue = 0;
+      const endValue = usagePercentage;
+      const startTime = performance.now();
+      function animate(now: number) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeInOutCubic(progress);
+        const current = startValue + (endValue - startValue) * eased;
+        setAnimatedPercent(current);
+        if (progress < 1) requestAnimationFrame(animate);
+      }
+      requestAnimationFrame(animate);
+    } else {
+      setAnimatedPercent(0);
+    }
+  }, [loading, usagePercentage]);
+
+  function getRingColor(percent: number) {
+    if (percent < 60) return '#22c55e';
+    if (percent < 85) return '#eab308';
+    return '#ef4444';
+  }
+
+  function easeInOutCubic(t: number) {
+    return t < 0.5
+      ? 4 * t * t * t
+      : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
 
   const formatSize = (sizeInGB: number) => {
     if (sizeInGB >= 1000) {
@@ -29,82 +71,50 @@ export default function MediaTab() {
       </div>
       <div className='flex flex-row items-center justify-between gap-4'>
         <div className="flex justify-center w-full max-w-[220px] mx-auto">
-          <svg
-            viewBox="0 0 140 180"
-            width="100%"
-            height="auto"
-            style={{ maxWidth: 220, display: 'block' }}
-          >
-            <defs>
-              {/* Drop shadow for cylinder */}
-              <filter id="cylinderShadow" x="-20%" y="80%" width="140%" height="30%">
-                <feDropShadow dx="0" dy="8" stdDeviation="10" floodColor="var(--muted-foreground)" floodOpacity="0.25" />
-              </filter>
-              {/* Cylinder body gradient */}
-              <linearGradient id="cylinderBody" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="var(--muted)" />
-                <stop offset="100%" stopColor="var(--background)" />
-              </linearGradient>
-              {/* Fill gradient (liquid) */}
-              <linearGradient id="cylinderFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.85" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.55" />
-              </linearGradient>
-              {/* Top ellipse gradient */}
-              <radialGradient id="cylinderTop" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#fff" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="var(--muted)" stopOpacity="1" />
-              </radialGradient>
-              {/* Bottom ellipse gradient for fill */}
-              <radialGradient id="cylinderBottomFill" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.7" />
-                <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.3" />
-              </radialGradient>
-              {/* Highlight for top ellipse */}
-              <radialGradient id="topHighlight" cx="50%" cy="40%" r="60%">
-                <stop offset="0%" stopColor="#fff" stopOpacity="0.7" />
-                <stop offset="80%" stopColor="#fff" stopOpacity="0" />
-              </radialGradient>
-              {/* Inner shadow for body */}
-              <linearGradient id="innerShadow" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#000" stopOpacity="0.10" />
-                <stop offset="100%" stopColor="#000" stopOpacity="0.18" />
-              </linearGradient>
-            </defs>
-
-            {/* Drop shadow */}
-            <ellipse
-              cx="70"
-              cy="172"
-              rx="56"
-              ry="14"
-              fill="var(--muted-foreground)"
-              opacity="0.18"
-              filter="url(#cylinderShadow)"
-            />
-
-            {/* Cylinder body */}
-            <rect x="18" y="24" width="104" height="132" rx="28" ry="28" fill="url(#cylinderBody)" />
-            {/* Inner shadow (simulate with semi-transparent overlay) */}
-            <rect x="18" y="24" width="104" height="132" rx="28" ry="28" fill="url(#innerShadow)" style={{ pointerEvents: 'none' }} />
-
-            {/* Usage fill (liquid) */}
-            <g style={{ transition: 'all 0.7s cubic-bezier(.4,0,.2,1)' }}>
-              <clipPath id="cylinderClip">
-                <rect x="18" y="24" width="104" height="132" rx="28" ry="28" />
-              </clipPath>
-              <rect
-                x="18"
-                y={156 - (132 * usagePercentage / 100)}
-                width="104"
-                height={132 * usagePercentage / 100}
-                fill="url(#cylinderFill)"
-                clipPath="url(#cylinderClip)"
-                style={{ transition: 'all 0.7s cubic-bezier(.4,0,.2,1)' }}
+          {loading ? (
+            <div className="animate-pulse w-[180px] h-[180px] rounded-full bg-muted/60" />
+          ) : (
+            <svg
+              width="180"
+              height="180"
+              viewBox="0 0 180 180"
+              style={{ maxWidth: 220, display: 'block' }}
+            >
+              <circle
+                cx="90"
+                cy="90"
+                r="80"
+                fill="none"
+                stroke="var(--muted)"
+                strokeWidth="18"
               />
-            </g>
-            <rect x="18" y="24" width="104" height="132" rx="28" ry="28" fill="none" stroke="var(--border)" strokeWidth="2" />
-          </svg>
+              <circle
+                cx="90"
+                cy="90"
+                r="80"
+                fill="none"
+                stroke={getRingColor(animatedPercent)}
+                strokeWidth="18"
+                strokeDasharray={2 * Math.PI * 80}
+                strokeDashoffset={2 * Math.PI * 80 * (1 - animatedPercent / 100)}
+                strokeLinecap="round"
+                style={{
+                  filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))',
+                }}
+              />
+              <text
+                x="50%"
+                y="50%"
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize="2.2rem"
+                fontWeight="bold"
+                fill="var(--foreground)"
+              >
+                {Math.round(animatedPercent)}%
+              </text>
+            </svg>
+          )}
         </div>
 
         <div className="space-y-4 flex-1">
