@@ -50,7 +50,9 @@ export function ContentModalManager({
         try {
           const parsed = JSON.parse(i.content)
           if (Array.isArray(parsed)) return parsed.map((url: string) => ({ url, parentId: i.id, media_type: i.media_type, thumbnail_url: i.thumbnail_url }))
-        } catch { }
+        } catch (error) {
+          console.error('Error parsing content:', error)
+        }
         return [{ url: i.media_url || i.content, parentId: i.id, media_type: i.media_type, thumbnail_url: i.thumbnail_url }]
       })
 

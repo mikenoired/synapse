@@ -9,10 +9,10 @@ import { Content } from '@/shared/lib/schemas'
 import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { Tag } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { DragEvent, use, useEffect, useRef, useState } from 'react'
 
-export default function TagPage({ params }: { params: { tag: string } }) {
-  const { tag: encodedTag } = params
+export default function TagPage({ params }: { params: Promise<{ tag: string }> }) {
+  const { tag: encodedTag } = use(params)
   const decodedTag = decodeURIComponent(encodedTag)
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
@@ -58,23 +58,23 @@ export default function TagPage({ params }: { params: { tag: string } }) {
   }
 
   // Drag & Drop handlers
-  const handleDragEnter = (e: React.DragEvent) => {
+  const handleDragEnter = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current++;
     setDragActive(true);
   }
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragLeave = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current--;
     if (dragCounter.current === 0) setDragActive(false);
   }
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
   }
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = (e: DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);

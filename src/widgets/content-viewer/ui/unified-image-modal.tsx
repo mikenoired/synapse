@@ -12,7 +12,7 @@ import { Session } from "@supabase/supabase-js"
 import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, Ungroup, X } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { TouchEvent, useEffect, useState } from "react"
 import { CustomVideoPlayer } from "./custom-video-player"
 
 interface UnifiedMediaModalProps {
@@ -50,9 +50,11 @@ export function UnifiedMediaModal({
     ? gallery.map(g => g.url)
     : (() => {
       try {
-        const parsed = JSON.parse(item.content)
+        const parsed = JSON.parse(item.content) as string[]
         if (Array.isArray(parsed)) return parsed
-      } catch { }
+      } catch (error) {
+        console.error('Error parsing content:', error)
+      }
       return [item.content]
     })()
 
@@ -126,12 +128,12 @@ export function UnifiedMediaModal({
     setCurrentIndex(i => (i > 0 ? i - 1 : i))
   }
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: TouchEvent) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
   }
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: TouchEvent) => {
     setTouchEnd(e.targetTouches[0].clientX)
   }
 
@@ -172,7 +174,7 @@ export function UnifiedMediaModal({
       await deleteContentMutation.mutateAsync({ id: item.id })
 
       onOpenChange(false)
-    } catch (error) {
+    } catch {
       alert('Ошибка при разгруппировке')
     }
   }
@@ -196,7 +198,7 @@ export function UnifiedMediaModal({
       }
 
       setNewTag('')
-    } catch (error) {
+    } catch {
       alert('Ошибка при добавлении тега')
     }
   }

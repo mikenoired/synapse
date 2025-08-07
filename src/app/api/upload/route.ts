@@ -67,7 +67,9 @@ export async function POST(request: NextRequest) {
           let thumbnailBase64: string | undefined = undefined
           try {
             thumbnailBase64 = await generateThumbnail(buffer, file.type)
-          } catch { }
+          } catch (error) {
+            console.error('Error generating thumbnail:', error)
+          }
 
           // Сохраняем в таблицу content
           await supabase.from('content').insert([{
@@ -128,8 +130,8 @@ export async function POST(request: NextRequest) {
           // Загружаем видео и миниатюру в Minio
           const compressedBuffer = await import('fs').then(fs => fs.readFileSync(compressedPath))
           const thumbBuffer = await import('fs').then(fs => fs.readFileSync(tempThumbPath))
-          const { objectName: videoObject, validation: videoValidation } = await uploadFile(compressedBuffer, file.name.replace(/\.[^.]+$/, '.mp4'), 'video/mp4', user.id, 'media')
-          const { objectName: thumbObject, validation: thumbValidation } = await uploadFile(thumbBuffer, file.name.replace(/\.[^.]+$/, '.jpg'), 'image/jpeg', user.id, 'media-thumbs')
+          const { objectName: videoObject } = await uploadFile(compressedBuffer, file.name.replace(/\.[^.]+$/, '.mp4'), 'video/mp4', user.id, 'media')
+          const { objectName: thumbObject } = await uploadFile(thumbBuffer, file.name.replace(/\.[^.]+$/, '.jpg'), 'image/jpeg', user.id, 'media-thumbs')
           // Удаляем временные файлы
           await unlink(tempVideoPath)
           await unlink(compressedPath)
@@ -142,8 +144,8 @@ export async function POST(request: NextRequest) {
           let thumbnailBase64: string | undefined = undefined
           try {
             thumbnailBase64 = await generateThumbnail(compressedBuffer, 'video/mp4')
-          } catch (err) {
-            console.error('Error generating video blur thumbnail:', err)
+          } catch (error) {
+            console.error('Error generating video blur thumbnail:', error)
           }
           // Сохраняем в таблицу content
           console.log('Insert video to content:', videoObject)

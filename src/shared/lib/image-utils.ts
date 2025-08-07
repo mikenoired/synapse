@@ -26,7 +26,7 @@ export async function getPresignedMediaUrl(apiPath: string, token?: string): Pro
     headers
   });
 
-  if (!res.ok) throw new Error('Не удалось получить ссылку на файл');
+  if (!res.ok) throw new Error('Failed to get file link');
   const data = await res.json();
   return data.presignedUrl;
 } 

@@ -12,7 +12,7 @@ const tabs = [
 ];
 
 export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
-  const searchParams = useSearchParams() as URLSearchParams;
+  const searchParams = useSearchParams();
   const tab = searchParams.get('tab') || activeTab || 'general';
 
   return (

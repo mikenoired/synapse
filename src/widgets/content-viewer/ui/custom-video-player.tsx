@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { ChangeEvent, TouchEvent, useEffect, useRef, useState } from "react"
 
 interface CustomVideoPlayerProps {
   src: string
@@ -94,7 +94,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
     }
   }, [])
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSeek = (e: ChangeEvent<HTMLInputElement>) => {
     const video = videoRef.current
     if (!video) return
     const time = parseFloat(e.target.value)
@@ -104,10 +104,10 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 
   let touchStartX = 0
   let touchCurrentX = 0
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: TouchEvent) => {
     touchStartX = e.touches[0].clientX
   }
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: TouchEvent) => {
     touchCurrentX = e.touches[0].clientX
   }
   const handleTouchEnd = () => {

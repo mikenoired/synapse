@@ -1,6 +1,5 @@
 'use client'
 
-import { cn } from '@/shared/lib/utils';
 import { Card } from '@/shared/ui/card';
 import { useEffect, useState } from 'react';
 
@@ -145,12 +144,4 @@ export default function MediaTab() {
       </div>
     </Card>
   );
-}
-
-function Progress({ value, className }: { value: number, className?: string }) {
-  return (
-    <div className={cn('relative w-full bg-gray-200 rounded-full h-2', className)}>
-      <div className="absolute inset-0 bg-blue-500 rounded-full" style={{ width: `${value}%` }} />
-    </div>
-  )
 }

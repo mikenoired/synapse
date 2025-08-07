@@ -1,6 +1,7 @@
 import type { FileValidationConfig, ValidationResult } from '@/server/middleware/file-middleware'
 import { sanitizeFileName, validateFile } from '@/server/middleware/file-middleware'
 import * as Minio from 'minio'
+import Stream from 'stream'
 
 const {
   MINIO_ENDPOINT,
@@ -33,7 +34,7 @@ export async function ensureBucketExists() {
       await minioClient.makeBucket(bucketName, 'us-east-1')
     }
   } catch (error) {
-    console.error('Ошибка создания bucket:', error)
+    console.error('Error creating bucket:', error)
   }
 }
 
@@ -97,7 +98,7 @@ export function getPublicUrl(objectName: string): string {
   return `/api/files/${objectName}`
 }
 
-export async function getFile(objectName: string): Promise<{ stream: NodeJS.ReadableStream, contentType?: string }> {
+export async function getFile(objectName: string): Promise<{ stream: Stream.Readable, contentType?: string }> {
   const stream = await minioClient.getObject(bucketName, objectName)
 
   const stat = await minioClient.statObject(bucketName, objectName)
@@ -118,6 +119,7 @@ export async function getFileMetadata(objectName: string) {
       lastModified: stat.lastModified
     }
   } catch (error) {
+    console.error('Error getting file metadata:', error)
     return null
   }
 }
@@ -126,7 +128,7 @@ export async function deleteFile(objectName: string): Promise<void> {
   try {
     await minioClient.removeObject(bucketName, objectName)
   } catch (error) {
-    console.error('Ошибка удаления файла:', error)
+    console.error('Error deleting file:', error)
   }
 }
 

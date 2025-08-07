@@ -1,4 +1,5 @@
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
+import Image from "next/image"
 import { useEffect, useState } from "react"
 
 interface PreviewImageProps {
@@ -40,5 +41,5 @@ export function PreviewImage({ src, token, alt, className, skeletonClassName }: 
   if (error || !url) {
     return <div className={skeletonClassName || "bg-destructive/20 w-full h-full rounded flex items-center justify-center text-xs text-destructive"}>Ошибка</div>
   }
-  return <img src={url} alt={alt} className={className} draggable={false} />
+  return <Image src={url} alt={alt || ''} className={className} draggable={false} />
 }

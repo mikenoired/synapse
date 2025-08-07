@@ -4,10 +4,10 @@ import MediaTab from '@/features/settings-media/ui/media-tab';
 import ThemingTab from '@/features/settings-theming/ui/theming-tab';
 import SettingsSidebar from '@/widgets/settings/ui/settings-sidebar';
 import { notFound } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, use } from 'react';
 
-export default function SettingsPage({ searchParams }: { searchParams?: { tab?: string } }) {
-  const tab = searchParams?.tab || 'general';
+export default function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = use(searchParams)
 
   let content;
   switch (tab) {

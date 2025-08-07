@@ -102,7 +102,9 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     let todos: { text: string; marked: boolean }[] = []
     try {
       todos = JSON.parse(item.content)
-    } catch { }
+    } catch {
+      console.error('Failed to parse todos', item.content)
+    }
     const done = todos.filter(t => t.marked).length
     return (
       <div className="flex flex-col gap-2">

@@ -75,6 +75,94 @@ const MALWARE_PATTERNS = [
   Buffer.from('<html', 'utf8')
 ]
 
+export function sanitizeFileName(fileName: string): string {
+  // Remove dangerous characters and sequences
+  return fileName
+    .replace(/[<>:"|*?\\\/\x00-\x1f]/g, '_')
+    .replace(/\u202e/g, '') // Right-to-Left Override
+    .replace(/\.+$/, '') // Remove dots at the end
+    .replace(/^\.+/, '') // Remove dots at the beginning
+    .substring(0, 255) // Limit length
+}
+
+function detectMimeTypeByMagicBytes(file: Buffer): string | undefined {
+  for (const [mimeType, signatures] of Object.entries(MAGIC_BYTES)) {
+    if (signatures.length === 0) continue // Skip types without magic bytes
+
+    for (const signature of signatures) {
+      if (file.subarray(0, signature.length).equals(signature)) {
+        return mimeType
+      }
+    }
+  }
+
+  return undefined
+}
+
+function scanForMalwarePatterns(file: Buffer): string[] {
+  const foundPatterns: string[] = []
+
+  for (const pattern of MALWARE_PATTERNS) {
+    if (file.includes(pattern)) {
+      foundPatterns.push(pattern.toString('utf8').substring(0, 20) + '...')
+    }
+  }
+
+  return foundPatterns
+}
+
+function isPolyglotFile(file: Buffer): boolean {
+  // Check if the file is of multiple types
+  const detectedTypes: string[] = []
+
+  for (const [mimeType, signatures] of Object.entries(MAGIC_BYTES)) {
+    if (signatures.length === 0) continue
+
+    for (const signature of signatures) {
+      if (file.subarray(0, signature.length).equals(signature)) {
+        detectedTypes.push(mimeType)
+        break
+      }
+    }
+  }
+
+  return detectedTypes.length > 1
+}
+
+function hasEmbeddedExecutable(file: Buffer): boolean {
+  // Check for embedded PE headers or other executable formats
+  const peSignature = Buffer.from([0x4D, 0x5A]) // MZ
+  const elfSignature = Buffer.from([0x7F, 0x45, 0x4C, 0x46]) // ELF
+
+  // Search for signatures not only at the beginning of the file
+  for (let i = 0; i < file.length - 4; i += 1024) { // Check every 1024 bytes
+    const chunk = file.subarray(i, i + 4)
+    if (chunk.subarray(0, 2).equals(peSignature) || chunk.equals(elfSignature)) {
+      return true
+    }
+  }
+
+  return false
+}
+
+function hasExcessiveMetadata(file: Buffer, contentType: string): boolean {
+  // Simple heuristic for detecting excessive metadata
+  if (contentType.startsWith('image/')) {
+    // For images metadata usually makes up a small part
+    const potentialMetadataSize = Math.min(file.length, 65536) // First 64KB
+    const metadataRatio = potentialMetadataSize / file.length
+
+    return metadataRatio > 0.3 // If metadata makes up >30% of the file
+  }
+
+  return false
+}
+
+function isValidUserId(userId: string): boolean {
+  const userIdRegex = /^[a-zA-Z0-9_-]{1,36}$/
+  return userIdRegex.test(userId)
+}
+
 export async function validateFile(
   file: Buffer,
   fileName: string,
@@ -191,92 +279,4 @@ export async function validateFile(
       fileHash
     }
   }
-}
-
-export function sanitizeFileName(fileName: string): string {
-  // Remove dangerous characters and sequences
-  return fileName
-    .replace(/[<>:"|*?\\\/\x00-\x1f]/g, '_')
-    .replace(/\u202e/g, '') // Right-to-Left Override
-    .replace(/\.+$/, '') // Remove dots at the end
-    .replace(/^\.+/, '') // Remove dots at the beginning
-    .substring(0, 255) // Limit length
-}
-
-function detectMimeTypeByMagicBytes(file: Buffer): string | undefined {
-  for (const [mimeType, signatures] of Object.entries(MAGIC_BYTES)) {
-    if (signatures.length === 0) continue // Skip types without magic bytes
-
-    for (const signature of signatures) {
-      if (file.subarray(0, signature.length).equals(signature)) {
-        return mimeType
-      }
-    }
-  }
-
-  return undefined
-}
-
-function scanForMalwarePatterns(file: Buffer): string[] {
-  const foundPatterns: string[] = []
-
-  for (const pattern of MALWARE_PATTERNS) {
-    if (file.includes(pattern)) {
-      foundPatterns.push(pattern.toString('utf8').substring(0, 20) + '...')
-    }
-  }
-
-  return foundPatterns
-}
-
-function isPolyglotFile(file: Buffer): boolean {
-  // Check if the file is of multiple types
-  const detectedTypes: string[] = []
-
-  for (const [mimeType, signatures] of Object.entries(MAGIC_BYTES)) {
-    if (signatures.length === 0) continue
-
-    for (const signature of signatures) {
-      if (file.subarray(0, signature.length).equals(signature)) {
-        detectedTypes.push(mimeType)
-        break
-      }
-    }
-  }
-
-  return detectedTypes.length > 1
-}
-
-function hasEmbeddedExecutable(file: Buffer): boolean {
-  // Check for embedded PE headers or other executable formats
-  const peSignature = Buffer.from([0x4D, 0x5A]) // MZ
-  const elfSignature = Buffer.from([0x7F, 0x45, 0x4C, 0x46]) // ELF
-
-  // Search for signatures not only at the beginning of the file
-  for (let i = 0; i < file.length - 4; i += 1024) { // Check every 1024 bytes
-    const chunk = file.subarray(i, i + 4)
-    if (chunk.subarray(0, 2).equals(peSignature) || chunk.equals(elfSignature)) {
-      return true
-    }
-  }
-
-  return false
-}
-
-function hasExcessiveMetadata(file: Buffer, contentType: string): boolean {
-  // Simple heuristic for detecting excessive metadata
-  if (contentType.startsWith('image/')) {
-    // For images metadata usually makes up a small part
-    const potentialMetadataSize = Math.min(file.length, 65536) // First 64KB
-    const metadataRatio = potentialMetadataSize / file.length
-
-    return metadataRatio > 0.3 // If metadata makes up >30% of the file
-  }
-
-  return false
-}
-
-function isValidUserId(userId: string): boolean {
-  const userIdRegex = /^[a-zA-Z0-9_-]{1,36}$/
-  return userIdRegex.test(userId)
 }

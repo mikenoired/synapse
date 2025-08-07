@@ -5,7 +5,7 @@ import { AuthProvider, useAuth } from '@/shared/lib/auth-context'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { httpBatchLink } from '@trpc/client'
 import { ThemeProvider } from 'next-themes'
-import { useMemo, useState } from 'react'
+import { ReactNode, useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 
 function getBaseUrl() {
@@ -14,7 +14,7 @@ function getBaseUrl() {
   return `http://localhost:${process.env.PORT ?? 3000}`
 }
 
-function TRPCProvider({ children }: { children: React.ReactNode }) {
+function TRPCProvider({ children }: { children: ReactNode }) {
   const { session } = useAuth()
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
@@ -32,7 +32,6 @@ function TRPCProvider({ children }: { children: React.ReactNode }) {
           httpBatchLink({
             url: `${getBaseUrl()}/api/trpc`,
             headers() {
-              // Мемоизируем headers для избежания пересоздания при каждом запросе
               return {
                 authorization: session?.access_token ? `Bearer ${session.access_token}` : '',
               }
@@ -40,7 +39,7 @@ function TRPCProvider({ children }: { children: React.ReactNode }) {
           }),
         ],
       }),
-    [session?.access_token] // Пересоздаем клиент только при изменении токена
+    [session?.access_token]
   )
 
   return (
@@ -52,7 +51,7 @@ function TRPCProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <TRPCProvider>

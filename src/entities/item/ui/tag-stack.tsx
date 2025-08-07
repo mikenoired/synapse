@@ -1,21 +1,23 @@
 'use client';
 
-import { getSecureImageUrl } from '@/shared/lib/image-utils';
+import { getPresignedMediaUrl } from '@/shared/lib/image-utils';
 import { Content } from '@/shared/lib/schemas';
 import { cn } from '@/shared/lib/utils';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Session } from '@supabase/supabase-js';
 import { FileText, LinkIcon } from 'lucide-react';
+import Image from 'next/image';
 
 interface TagStackProps {
   items: Content[];
   session: Session | null;
 }
 
-function getItemComponent(item: Content, session: Session | null) {
+async function getItemComponent(item: Content, session: Session | null) {
   if (item.type === 'media' && item.media_url) {
-    return <img
-      src={getSecureImageUrl(item.media_url.replace('/api/files/', ''), session?.access_token)}
+    const url = await getPresignedMediaUrl(item.media_url.replace('/api/files/', ''), session?.access_token)
+    return <Image
+      src={url}
       alt={item.title || 'Image'}
       className="object-cover"
       onError={(e) => {

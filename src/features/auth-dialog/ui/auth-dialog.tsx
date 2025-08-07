@@ -33,12 +33,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
     setIsLoading(true)
 
     try {
-      let result
-      if (mode === 'login') {
-        result = await signIn(email, password)
-      } else {
-        result = await signUp(email, password)
-      }
+      const result = mode === 'login' ? await signIn(email, password) : await signUp(email, password)
 
       if (result.error) {
         alert(result.error.message)

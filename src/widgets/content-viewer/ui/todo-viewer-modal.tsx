@@ -19,7 +19,7 @@ interface TodoViewerModalProps {
 export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, onDelete }: TodoViewerModalProps) {
   const [todos, setTodos] = useState<{ text: string; marked: boolean }[]>([])
   const [changed, setChanged] = useState(false)
-  const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isHovered, setIsHovered] = useState(false)
 
   useEffect(() => {

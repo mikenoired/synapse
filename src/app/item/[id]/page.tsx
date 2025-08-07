@@ -7,10 +7,10 @@ import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { ArrowLeft } from 'lucide-react'
 import { notFound, useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { use, useEffect } from 'react'
 
-export default function ItemPage({ params }: { params: { id: string } }) {
-  const { id } = params
+export default function ItemPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params)
   const { user, loading, session } = useAuth()
   const router = useRouter()
   const { data: item, isLoading, error } = trpc.content.getById.useQuery(
@@ -33,18 +33,7 @@ export default function ItemPage({ params }: { params: { id: string } }) {
     )
   }
 
-  if (!item) {
-    return notFound()
-  }
-
-  const handleDelete = async () => {
-    // Implement deletion logic here
-    console.log("Delete item:", item.id);
-  };
-
-  const handleEdit = () => {
-    router.push(`/edit/${item.id}`);
-  };
+  if (!item) return notFound()
 
   return (
     <div className="container mx-auto p-4">

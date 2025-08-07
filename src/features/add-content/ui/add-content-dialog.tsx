@@ -20,7 +20,6 @@ interface AddContentDialogProps {
   initialTags?: string[]
 }
 
-// Вспомогательная функция для генерации превью первого кадра видео
 async function getVideoThumbnail(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file)
@@ -31,7 +30,6 @@ async function getVideoThumbnail(file: File): Promise<string> {
     video.playsInline = true
     video.currentTime = 0
     video.addEventListener('loadeddata', () => {
-      // Ждем, пока появится хотя бы один кадр
       video.currentTime = 0
     })
     video.addEventListener('seeked', () => {
@@ -73,7 +71,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const [todoItems, setTodoItems] = useState<{ text: string; marked: boolean }[]>([])
   const [todoInput, setTodoInput] = useState('')
 
-  // touch gesture support for mobile (swipe down to close)
   const [startY, setStartY] = useState<number | null>(null)
   const handleTouchStart = (e: React.TouchEvent) => {
     setStartY(e.touches[0].clientY)
@@ -193,9 +190,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       if (type === 'media' && selectedFiles.length > 0) {
         setUploading(true)
 
-        const uploadedFiles = await uploadMultipleFiles(selectedFiles)
-
-        // Удаляем дублирующий insert: не вызываем createContentMutation для media
         setTitle('')
         setContent('')
         setEditorData(null)
@@ -735,7 +729,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                 )}
               </div>
 
-              {/* Tags */}
               <div className="space-y-3">
                 <Label htmlFor="tags">Теги</Label>
                 <div className="flex gap-2">
@@ -778,7 +771,6 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
             </div>
           )}
 
-          {/* Submit */}
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">
               <Button

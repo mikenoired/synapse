@@ -12,14 +12,18 @@ import sharp from 'sharp'
  * @returns base64-string of the thumbnail
  */
 export async function generateThumbnail(buffer: Buffer, type: string): Promise<string> {
-  if (type.startsWith('image/')) {
+  const fileType = type.split('/')[0]
+
+  const generateImageThumb = async () => {
     const thumb = await sharp(buffer)
       .resize(20, 20, { fit: 'inside' })
       .blur()
       .toFormat('jpeg', { quality: 40 })
       .toBuffer()
     return `data:image/jpeg;base64,${thumb.toString('base64')}`
-  } else if (type.startsWith('video/')) {
+  }
+
+  const generateVideoThumb = async () => {
     const tempVideoPath = join(tmpdir(), `${randomUUID()}.mp4`)
     const tempFramePath = join(tmpdir(), `${randomUUID()}.jpg`)
     try {
@@ -44,7 +48,14 @@ export async function generateThumbnail(buffer: Buffer, type: string): Promise<s
       await unlink(tempVideoPath).catch(() => { })
       await unlink(tempFramePath).catch(() => { })
     }
-  } else {
-    throw new Error('Unsupported file type for thumbnail generation')
+  }
+
+  switch (fileType) {
+    case 'image':
+      return await generateImageThumb()
+    case 'video':
+      return await generateVideoThumb()
+    default:
+      throw new Error('Unsupported file type for thumbnail generation')
   }
 }
