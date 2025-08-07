@@ -9,7 +9,7 @@ export const userSchema = z.object({
 export const contentSchema = z.object({
   id: z.string(),
   user_id: z.string(),
-  type: z.enum(['note', 'media', 'link']),
+  type: z.enum(['note', 'media', 'link', 'todo']),
   title: z.string().optional(),
   content: z.string(),
   tags: z.array(z.string()).default([]),
@@ -31,7 +31,7 @@ export const tagSchema = z.object({
 })
 
 export const createContentSchema = z.object({
-  type: z.enum(['note', 'media', 'link']),
+  type: z.enum(['note', 'media', 'link', 'todo']),
   title: z.string().optional(),
   content: z.string(),
   tags: z.array(z.string()).default([]),

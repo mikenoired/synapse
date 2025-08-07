@@ -16,6 +16,7 @@ import Underline from "@tiptap/extension-underline";
 import StarterKit from "@tiptap/starter-kit";
 import DOMPurify from 'dompurify';
 import { common, createLowlight } from "lowlight";
+import { ListChecks } from 'lucide-react';
 import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import toast from 'react-hot-toast';
@@ -97,6 +98,29 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     }
   }, [item.content])
 
+  const renderTodoPreview = () => {
+    let todos: { text: string; marked: boolean }[] = []
+    try {
+      todos = JSON.parse(item.content)
+    } catch { }
+    const done = todos.filter(t => t.marked).length
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
+          <ListChecks className="w-4 h-4" />
+          {done} / {todos.length} выполнено
+        </div>
+        {todos.slice(0, 3).map((todo, idx) => (
+          <div key={idx} className="flex items-center gap-2">
+            <input type="checkbox" checked={todo.marked} readOnly disabled className="w-4 h-4" />
+            <span className={todo.marked ? 'line-through opacity-60' : ''}>{todo.text}</span>
+          </div>
+        ))}
+        {todos.length > 3 && <div className="text-xs text-muted-foreground">+ ещё {todos.length - 3}...</div>}
+      </div>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -110,7 +134,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
             {item.title}
           </span>
         </div>)}
-        <div className={item.type === 'media' ? 'p-0' : item.type === 'note' ? 'p-3' : ''}>
+        <div className={item.type === 'media' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : ''}>
           {item.type === 'media' ? (
             <MediaItem item={item} session={session} onItemClick={onItemClick} thumbSrc={thumbSrc} />
           ) : item.type === 'link' ? (
@@ -133,6 +157,8 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
                 ))}
               </div>
             </>
+          ) : item.type === 'todo' ? (
+            renderTodoPreview()
           ) : (
             <>
               <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />

@@ -68,13 +68,15 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
               draggable={false}
             />
           )}
-          <img
-            src={mainSrc}
-            alt={item.title || 'Видео'}
-            className="w-full h-full object-cover rounded-lg relative z-10 transition-opacity duration-300"
-            style={{ opacity: thumbSrc ? 1 : 0 }}
-            draggable={false}
-          />
+          {mainSrc && (
+            <img
+              src={mainSrc}
+              alt={item.title || 'Видео'}
+              className="w-full h-full object-cover rounded-lg relative z-10 transition-opacity duration-300"
+              style={{ opacity: thumbSrc ? 1 : 0 }}
+              draggable={false}
+            />
+          )}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
             <svg
               width="64"
@@ -93,7 +95,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
           </div>
         </div>
       ) : (
-        renderImage(item.media_url || '', item.title || null, session, blurThumb)
+        mainSrc ? renderImage(item.media_url || '', item.title || null, session, blurThumb) : null
       )}
       {item.tags.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">

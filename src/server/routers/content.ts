@@ -8,7 +8,7 @@ export const contentRouter = router({
     .input(z.object({
       search: z.string().optional(),
       tags: z.array(z.string()).optional(),
-      type: z.enum(['note', 'media', 'link']).optional(),
+      type: z.enum(['note', 'media', 'link', 'todo']).optional(), // добавлен 'todo'
       cursor: z.number().optional(), // offset based pagination
       limit: z.number().min(1).max(100).optional().default(20),
     }))

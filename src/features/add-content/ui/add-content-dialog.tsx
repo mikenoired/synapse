@@ -9,7 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Editor } from '@/widgets/editor/ui/editor'
-import { FileText, Image, Link, Maximize, Minimize, Plus, Upload, X } from 'lucide-react'
+import { FileText, Image, Link, ListChecks, Maximize, Minimize, Plus, Upload, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
@@ -70,6 +70,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const [uploading, setUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
   const [isFullScreen, setIsFullScreen] = useState(false)
+  const [todoItems, setTodoItems] = useState<{ text: string; marked: boolean }[]>([])
+  const [todoInput, setTodoInput] = useState('')
 
   // touch gesture support for mobile (swipe down to close)
   const [startY, setStartY] = useState<number | null>(null)
@@ -135,6 +137,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       setSelectedFiles([])
       previewUrls.forEach(url => URL.revokeObjectURL(url))
       setPreviewUrls([])
+      setTodoItems([])
+      setTodoInput('')
 
       onOpenChange(false)
       onContentAdded?.()
@@ -179,6 +183,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       if (!editorData || !editorData.content || editorData.content.length === 0) return
     } else if (type === 'media') {
       if (selectedFiles.length === 0) return
+    } else if (type === 'todo') {
+      if (todoItems.length === 0 || todoItems.some(item => !item.text.trim())) return
     } else {
       if (!content.trim()) return
     }
@@ -209,6 +215,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
 
         if (type === 'note' && editorData) {
           finalContent = JSON.stringify(editorData)
+        } else if (type === 'todo') {
+          finalContent = JSON.stringify(todoItems)
         }
 
         createContentMutation.mutate({
@@ -325,6 +333,23 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
   }, [handleFileSelect])
 
+  const handleAddTodo = () => {
+    const value = todoInput.trim()
+    if (value) {
+      setTodoItems([...todoItems, { text: value, marked: false }])
+      setTodoInput('')
+    }
+  }
+  const handleRemoveTodo = (idx: number) => {
+    setTodoItems(todoItems.filter((_, i) => i !== idx))
+  }
+  const handleToggleTodo = (idx: number) => {
+    setTodoItems(todoItems.map((item, i) => i === idx ? { ...item, marked: !item.marked } : item))
+  }
+  const handleEditTodo = (idx: number, value: string) => {
+    setTodoItems(todoItems.map((item, i) => i === idx ? { ...item, text: value } : item))
+  }
+
   const isLoading = createContentMutation.isPending || uploading
 
   const getDialogSize = () => {
@@ -338,6 +363,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         return 'max-w-3xl w-[95vw] max-h-[90vh] h-auto rounded-lg'
       case 'link':
         return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto rounded-lg'
+      case 'todo':
+        return 'max-w-3xl w-[95vw] max-h-[90vh] h-auto rounded-lg'
       default:
         return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto rounded-lg'
     }
@@ -353,13 +380,24 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         setTags(initialTags)
         setType(newType)
       }
-    } else {
+    } else if (type === 'todo' && todoItems.length > 0) {
+      if (confirm('You have unsaved changes. Do you want to save them as a todo?')) {
+        handleSubmit(new Event('submit') as unknown as React.FormEvent)
+      } else {
+        setTodoItems([])
+        setTodoInput('')
+        setType(newType)
+      }
+    }
+    else {
       setType(newType)
       setSelectedFiles([])
       setContent('')
       setEditorData(null)
       previewUrls.forEach(url => URL.revokeObjectURL(url))
       setPreviewUrls([])
+      setTodoItems([])
+      setTodoInput('')
     }
   }
 
@@ -415,6 +453,88 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     </div>
   )
 
+  const renderTodoForm = () => (
+    <div className="flex flex-col h-full">
+      <div className="p-6 pb-4 border-b">
+        <div className="max-w-[700px] mx-auto w-full">
+          <Input
+            id="title"
+            placeholder="Title (optional)..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            disabled={isLoading}
+            className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+          />
+          <div className="flex flex-wrap gap-2 mt-3">
+            {tags.map(tag => (
+              <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                {tag}
+                <button
+                  type="button"
+                  onClick={() => removeTag(tag)}
+                  className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                  disabled={isLoading}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </Badge>
+            ))}
+            <Input
+              id="tags"
+              placeholder="+ Add tag"
+              value={currentTag}
+              onChange={(e) => setCurrentTag(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+              disabled={isLoading}
+            />
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 p-6 pt-2 overflow-y-auto">
+        <div className="max-w-[700px] mx-auto w-full flex flex-col gap-4">
+          <div className="flex gap-2">
+            <Input
+              placeholder="Добавить пункт..."
+              value={todoInput}
+              onChange={e => setTodoInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleAddTodo() }}
+              disabled={isLoading}
+              className="flex-1"
+            />
+            <Button type="button" onClick={handleAddTodo} disabled={!todoInput.trim() || isLoading} size="sm">
+              <Plus className="w-4 h-4 mr-1" />
+              Добавить
+            </Button>
+          </div>
+          <div className="flex flex-col gap-2">
+            {todoItems.length === 0 && <div className="text-muted-foreground text-sm">Нет пунктов</div>}
+            {todoItems.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 group">
+                <Input
+                  type="checkbox"
+                  checked={item.marked}
+                  onChange={() => handleToggleTodo(idx)}
+                  className="w-5 h-5 cursor-pointer"
+                  disabled={isLoading}
+                />
+                <Input
+                  value={item.text}
+                  onChange={e => handleEditTodo(idx, e.target.value)}
+                  className="flex-1 px-2 py-1"
+                  disabled={isLoading}
+                />
+                <button type="button" onClick={() => handleRemoveTodo(idx)} disabled={isLoading} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <X className="w-4 h-4 text-destructive" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
 
   if (!open) return null
 
@@ -462,6 +582,16 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
               <Link className="w-4 h-4" />
               Link
             </Button>
+            <Button
+              type="button"
+              variant={type === 'todo' ? 'secondary' : 'ghost'}
+              size="sm"
+              onClick={() => handleTypeChange('todo')}
+              className="flex items-center gap-2"
+            >
+              <ListChecks className="w-4 h-4" />
+              Список
+            </Button>
           </div>
           {type === 'note' && (
             <div className="flex items-center gap-2">
@@ -475,6 +605,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
           {type === 'note' ? (
             renderNoteForm()
+          ) : type === 'todo' ? (
+            renderTodoForm()
           ) : (
             <div className="flex-1 p-6 space-y-4 overflow-y-auto">
               <div className="space-y-2">
@@ -665,7 +797,9 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                     ? !editorData || !editorData.content || editorData.content.length === 0
                     : type === 'media'
                       ? selectedFiles.length === 0
-                      : !content.trim())
+                      : type === 'todo'
+                        ? todoItems.length === 0 || todoItems.some(item => !item.text.trim())
+                        : !content.trim())
                 }
               >
                 {uploading
