@@ -15,7 +15,7 @@ interface TagStackProps {
 
 async function getItemComponent(item: Content, session: Session | null) {
   if (item.type === 'media' && item.media_url) {
-    const url = await getPresignedMediaUrl(item.media_url.replace('/api/files/', ''), session?.access_token)
+    const url = await getPresignedMediaUrl(item.media_url, session?.access_token)
     return <Image
       src={url}
       alt={item.title || 'Image'}
