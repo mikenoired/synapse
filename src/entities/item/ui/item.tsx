@@ -27,7 +27,8 @@ interface ItemProps {
   index: number
   session: Session | null,
   onContentChanged?: () => void
-  onItemClick?: (item: Content) => void
+  // eslint-disable-next-line no-unused-vars
+  onItemClick?: (content: Content) => void
   excludedTag?: string
 }
 
@@ -96,7 +97,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     if (data.type === 'doc') {
       return generateHTML(data, [StarterKit, Underline, CodeBlockLowlight.configure({ lowlight })])
     }
-  }, [item.content])
+  }, [item.content, item.type])
 
   const renderTodoPreview = () => {
     let todos: { text: string; marked: boolean }[] = []

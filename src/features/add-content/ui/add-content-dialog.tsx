@@ -148,6 +148,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const uploadMultipleFiles = async (files: File[]): Promise<{ objectName: string, url: string, thumbnail?: string }[]> => {
     const formData = new FormData()
     files.forEach(file => formData.append('file', file))
+    if (title.trim()) formData.append('title', title.trim())
+    if (tags.length > 0) formData.append('tags', JSON.stringify(tags))
 
     const response = await fetch('/api/upload', {
       method: 'POST',

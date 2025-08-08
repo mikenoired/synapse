@@ -24,6 +24,19 @@ export async function POST(request: NextRequest) {
 
     const formData = await request.formData()
     const files = formData.getAll('file') as File[]
+    const titleRaw = formData.get('title')?.toString()?.trim()
+    const tagsRaw = formData.get('tags')?.toString()
+    let tags: string[] = []
+    if (tagsRaw) {
+      try {
+        const parsed = JSON.parse(tagsRaw)
+        if (Array.isArray(parsed)) {
+          tags = parsed.filter((t) => typeof t === 'string')
+        }
+      } catch {
+        // ignore malformed tags
+      }
+    }
 
     if (!files || !files.length) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 })
@@ -79,6 +92,8 @@ export async function POST(request: NextRequest) {
             media_url: publicUrl,
             media_type: 'image',
             thumbnail_base64: thumbnailBase64,
+            title: titleRaw || undefined,
+            tags,
             // можно добавить другие поля
           }])
 
@@ -157,6 +172,8 @@ export async function POST(request: NextRequest) {
             media_type: 'video',
             thumbnail_url: getPublicUrl(thumbObject),
             thumbnail_base64: thumbnailBase64,
+            title: titleRaw || undefined,
+            tags,
           }])
           console.log('Inserted video to content:', videoObject)
           uploadResults.push({

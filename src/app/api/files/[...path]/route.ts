@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: { params: Promise<{ path: string[] }> }
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
@@ -20,8 +20,8 @@ export async function GET(
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    const objectName = params.path.join('/')
+    const { path } = await context.params
+    const objectName = path.join('/')
 
     const metadata = await getFileMetadata(objectName)
     if (!metadata) {

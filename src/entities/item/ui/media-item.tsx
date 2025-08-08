@@ -1,13 +1,15 @@
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
 import { Content } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
+import { FileText } from "lucide-react"
 import { Session } from "@supabase/supabase-js"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 
 interface MediaItemProps {
   item: Content
-  onItemClick?: (item: Content) => void
+  // eslint-disable-next-line no-unused-vars
+  onItemClick?: (content: Content) => void
   session: Session | null
   thumbSrc: string | null
 }
@@ -22,18 +24,42 @@ interface RenderImageProps {
 function RenderImage({ imageUrl, title, session, blurThumb }: RenderImageProps) {
   const [image, setImage] = useState<string>()
   const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
 
   useEffect(() => {
+    let cancelled = false
     const loadImages = async () => {
+      setLoaded(false)
+      setErrored(false)
       const url = await getPresignedMediaUrl(imageUrl, session?.access_token)
+      if (cancelled) return
       setImage(url ? url : '')
+      if (url) {
+        const probe = new window.Image()
+        probe.src = url
+        probe.onload = () => {
+          if (!cancelled) {
+            setNaturalSize({ width: probe.naturalWidth, height: probe.naturalHeight })
+          }
+        }
+        probe.onerror = () => {
+          if (!cancelled) setNaturalSize(null)
+        }
+      }
     }
     loadImages()
+    return () => {
+      cancelled = true
+    }
   }, [imageUrl, session?.access_token])
 
   return (
-    <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg">
-      {blurThumb && !loaded && (
+    <div
+      className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg"
+      style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : '1 / 1' }}
+    >
+      {blurThumb && !loaded && !errored && (
         <Image
           src={blurThumb}
           alt="blur preview"
@@ -41,19 +67,26 @@ function RenderImage({ imageUrl, title, session, blurThumb }: RenderImageProps) 
           style={{ opacity: loaded ? 0 : 1 }}
           draggable={false}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
         />
       )}
-      {image && (
+      {image && !errored && (
         <Image
           src={image}
           alt={title || 'Изображение'}
           className="w-full h-full object-cover rounded-lg relative z-10 transition-opacity duration-300"
           style={{ opacity: loaded ? 1 : 0 }}
           onLoad={() => setLoaded(true)}
-          onError={() => setLoaded(true)}
+          onError={() => { setErrored(true); setLoaded(true) }}
           draggable={false}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
         />
+      )}
+      {(!image || errored) && (
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+          <FileText className="w-8 h-8 opacity-60" />
+        </div>
       )}
     </div>
   )
@@ -63,11 +96,31 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
   const blurThumb = item.thumbnail_base64 || ''
   const isVideo = item.media_type === 'video' && item.thumbnail_url
   const mainSrc = isVideo ? (thumbSrc || '') : (item.media_url || '')
+  const [thumbSize, setThumbSize] = useState<{ width: number; height: number } | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    if (!mainSrc) return
+    const probe = new window.Image()
+    probe.src = mainSrc
+    probe.onload = () => {
+      if (!cancelled) setThumbSize({ width: probe.naturalWidth, height: probe.naturalHeight })
+    }
+    probe.onerror = () => {
+      if (!cancelled) setThumbSize(null)
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [mainSrc])
 
   return (
     <div className="relative" onClick={() => onItemClick?.(item)}>
       {isVideo ? (
-        <div className="relative w-full aspect-video bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg">
+        <div
+          className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg"
+          style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : '16 / 9' }}
+        >
           {blurThumb && !thumbSrc && (
             <Image
               src={blurThumb}
@@ -76,6 +129,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
               style={{ opacity: thumbSrc ? 0 : 1 }}
               draggable={false}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
             />
           )}
           {mainSrc && (
@@ -86,6 +140,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
               style={{ opacity: thumbSrc ? 1 : 0 }}
               draggable={false}
               fill
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
             />
           )}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
