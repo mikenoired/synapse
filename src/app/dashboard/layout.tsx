@@ -1,10 +1,11 @@
 import { DashboardProvider } from '@/shared/lib/dashboard-context';
 import Sidebar from '@/widgets/sidebar/ui/sidebar';
+import { ReactNode } from 'react';
 
 export default function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <DashboardProvider>

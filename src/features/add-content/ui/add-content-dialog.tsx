@@ -1,7 +1,6 @@
 'use client'
 
 import { trpc } from '@/shared/api/trpc'
-import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
 import { Badge } from '@/shared/ui/badge'
@@ -9,9 +8,11 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Editor } from '@/widgets/editor/ui/editor'
-import { FileText, Image, Link, ListChecks, Maximize, Minimize, Plus, Upload, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Plus, Upload, X } from 'lucide-react'
+import React, { useCallback, useEffect, useState, TouchEvent, FormEvent, DragEvent } from 'react'
 import toast from 'react-hot-toast'
+import Image from 'next/image'
+import { useAuth } from '@/shared/lib/auth-context'
 
 interface AddContentDialogProps {
   open: boolean
@@ -54,9 +55,8 @@ async function getVideoThumbnail(file: File): Promise<string> {
 }
 
 export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTags = [] }: AddContentDialogProps) {
-  const { session } = useAuth()
   const { preloadedFiles, setPreloadedFiles } = useDashboard()
-
+  const { session } = useAuth()
   const [type, setType] = useState<Content['type']>('note')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
@@ -72,10 +72,10 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const [todoInput, setTodoInput] = useState('')
 
   const [startY, setStartY] = useState<number | null>(null)
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = (e: TouchEvent) => {
     setStartY(e.touches[0].clientY)
   }
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = (e: TouchEvent) => {
     if (startY !== null) {
       const deltaY = e.touches[0].clientY - startY
       if (deltaY > 120) {
@@ -173,7 +173,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
     if (type === 'note') {
@@ -189,6 +189,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     try {
       if (type === 'media' && selectedFiles.length > 0) {
         setUploading(true)
+
+        await uploadMultipleFiles(selectedFiles)
 
         setTitle('')
         setContent('')
@@ -241,7 +243,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     setTags(tags.filter(tag => tag !== tagToRemove))
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       addTag()
@@ -307,7 +309,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     setContent(newFiles.map(f => f.name).join(', '))
   }
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
+  const handleDrag = useCallback((e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -317,7 +319,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback((e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
@@ -367,7 +369,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const handleTypeChange = (newType: Content['type']) => {
     if (type === 'note' && editorData && editorData.blocks && editorData.blocks.length > 0) {
       if (confirm('You have unsaved changes. Do you want to save them as a note?')) {
-        handleSubmit(new Event('submit') as unknown as React.FormEvent)
+        handleSubmit(new Event('submit') as unknown as FormEvent)
       } else {
         setEditorData(null)
         setTitle('')
@@ -376,7 +378,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       }
     } else if (type === 'todo' && todoItems.length > 0) {
       if (confirm('You have unsaved changes. Do you want to save them as a todo?')) {
-        handleSubmit(new Event('submit') as unknown as React.FormEvent)
+        handleSubmit(new Event('submit') as unknown as FormEvent)
       } else {
         setTodoItems([])
         setTodoInput('')
@@ -563,7 +565,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
               onClick={() => handleTypeChange('media')}
               className="flex items-center gap-2"
             >
-              <Image className="w-4 h-4" />
+              <ImageIcon className="w-4 h-4" />
               Images
             </Button>
             <Button
@@ -697,10 +699,12 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                                 moveFile(fromIndex, toIndex)
                               }}
                             >
-                              <img
+                              <Image
                                 src={url}
                                 alt={`Превью ${index + 1}`}
                                 className="w-full aspect-square object-cover rounded-lg border"
+                                width={200}
+                                height={200}
                               />
                               {selectedFiles.length > 1 && (
                                 <div className="absolute top-1 left-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-xs font-medium">

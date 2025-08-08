@@ -5,7 +5,7 @@ import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
 import { Content } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent } from "@/shared/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog"
 import { Input } from "@/shared/ui/input"
 import { PreviewImage } from "@/shared/ui/preview-image"
 import { Session } from "@supabase/supabase-js"
@@ -248,6 +248,7 @@ export function UnifiedMediaModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogTitle className="hidden"></DialogTitle>
       <DialogContent showCloseButton={false} className="max-w-none w-screen h-screen min-h-0 p-0 m-0 bg-black/95 border-none flex flex-col">
         <div
           className="w-full h-full min-h-0 flex flex-col flex-1 relative"

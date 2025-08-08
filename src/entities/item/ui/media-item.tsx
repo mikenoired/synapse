@@ -40,6 +40,7 @@ function RenderImage({ imageUrl, title, session, blurThumb }: RenderImageProps) 
           className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-300 z-0"
           style={{ opacity: loaded ? 0 : 1 }}
           draggable={false}
+          fill
         />
       )}
       {image && (
@@ -51,6 +52,7 @@ function RenderImage({ imageUrl, title, session, blurThumb }: RenderImageProps) 
           onLoad={() => setLoaded(true)}
           onError={() => setLoaded(true)}
           draggable={false}
+          fill
         />
       )}
     </div>
@@ -73,6 +75,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
               className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-300 z-0"
               style={{ opacity: thumbSrc ? 0 : 1 }}
               draggable={false}
+              fill
             />
           )}
           {mainSrc && (
@@ -82,6 +85,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
               className="w-full h-full object-cover rounded-lg relative z-10 transition-opacity duration-300"
               style={{ opacity: thumbSrc ? 1 : 0 }}
               draggable={false}
+              fill
             />
           )}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">

@@ -48,12 +48,32 @@ export function ContentModalManager({
       .filter(i => i.type === 'media')
       .flatMap(i => {
         try {
-          const parsed = JSON.parse(i.content)
-          if (Array.isArray(parsed)) return parsed.map((url: string) => ({ url, parentId: i.id, media_type: i.media_type, thumbnail_url: i.thumbnail_url }))
+          const parsed = JSON.parse(i.content);
+          if (Array.isArray(parsed)) {
+            return parsed.map((url: string) => ({
+              url,
+              parentId: i.id,
+              media_type: i.media_type,
+              thumbnail_url: i.thumbnail_url,
+            }));
+          }
+          if (typeof parsed === "string") {
+            return [{
+              url: parsed,
+              parentId: i.id,
+              media_type: i.media_type,
+              thumbnail_url: i.thumbnail_url,
+            }];
+          }
+          return [];
         } catch (error) {
-          console.error('Error parsing content:', error)
+          return [{
+            url: i.content,
+            parentId: i.id,
+            media_type: i.media_type,
+            thumbnail_url: i.thumbnail_url,
+          }];
         }
-        return [{ url: i.media_url || i.content, parentId: i.id, media_type: i.media_type, thumbnail_url: i.thumbnail_url }]
       })
 
     return (

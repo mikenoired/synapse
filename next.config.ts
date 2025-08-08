@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { URL } from "url";
 
 const nextConfig: NextConfig = {
   // Оптимизация для production
@@ -39,6 +40,16 @@ const nextConfig: NextConfig = {
     }
     return config
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '9000',
+        pathname: '/**',
+      },
+    ],
+  }
 };
 
 export default nextConfig;

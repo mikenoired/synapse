@@ -9,7 +9,7 @@ import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
 import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { DragEvent, useEffect, useRef, useState } from 'react'
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
@@ -59,6 +59,50 @@ export default function DashboardPage() {
     }
   }, [user, loading, router])
 
+  useEffect(() => {
+    const handleWindowDragEnter = (e: Event) => {
+      const event = e as unknown as DragEvent;
+      event.preventDefault();
+      event.stopPropagation();
+      dragCounter.current++;
+      setDragActive(true);
+    };
+    const handleWindowDragLeave = (e: Event) => {
+      const event = e as unknown as DragEvent;
+      event.preventDefault();
+      event.stopPropagation();
+      dragCounter.current--;
+      if (dragCounter.current === 0) setDragActive(false);
+    };
+    const handleWindowDragOver = (e: Event) => {
+      const event = e as unknown as DragEvent;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    const handleWindowDrop = (e: Event) => {
+      const event = e as unknown as DragEvent;
+      event.preventDefault();
+      event.stopPropagation();
+      setDragActive(false);
+      dragCounter.current = 0;
+      const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
+      if (files.length > 0) {
+        setPreloadedFiles(files);
+        setAddDialogOpen(true);
+      }
+    };
+    window.addEventListener('dragenter', handleWindowDragEnter);
+    window.addEventListener('dragleave', handleWindowDragLeave);
+    window.addEventListener('dragover', handleWindowDragOver);
+    window.addEventListener('drop', handleWindowDrop);
+    return () => {
+      window.removeEventListener('dragenter', handleWindowDragEnter);
+      window.removeEventListener('dragleave', handleWindowDragLeave);
+      window.removeEventListener('dragover', handleWindowDragOver);
+      window.removeEventListener('drop', handleWindowDrop);
+    };
+  }, [setAddDialogOpen, setPreloadedFiles]);
+
   const handleContentChanged = () => refetchContent()
 
   const handleItemClick = (item: Content) => {
@@ -81,35 +125,6 @@ export default function DashboardPage() {
     router.push('/dashboard')
   }
 
-  // Drag & Drop handlers
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current++;
-    setDragActive(true);
-  }
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current--;
-    if (dragCounter.current === 0) setDragActive(false);
-  }
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    dragCounter.current = 0;
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'));
-    if (files.length > 0) {
-      setPreloadedFiles(files);
-      setAddDialogOpen(true);
-    }
-  }
-
   if (loading || !user) {
     return (
       <div className="flex h-full items-center justify-center p-6">
@@ -121,15 +136,18 @@ export default function DashboardPage() {
   return (
     <div
       className="flex flex-col h-full relative"
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
       {dragActive && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
-          <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-            Отпустите изображения для загрузки
+        <div className="fixed inset-0 z-[100] bg-black/60 flex flex-col items-center justify-center pointer-events-auto select-none transition-all animate-in fade-in-0"
+          style={{ backdropFilter: 'blur(2px)' }}>
+          <div className="flex flex-col items-center gap-4">
+            <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="text-primary animate-bounce">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19V6m0 0l-5 5m5-5l5 5" />
+            </svg>
+            <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0 text-center">
+              Отпустите файлы для загрузки
+              <div className="text-base font-normal mt-2 text-muted-foreground">Поддерживаются изображения и видео</div>
+            </div>
           </div>
         </div>
       )}
