@@ -115,14 +115,14 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
 export function TagStack({ items, session }: TagStackProps) {
   if (!items || items.length === 0) {
     return (
-      <Card className="h-48 flex items-center justify-center text-muted-foreground">
+      <Card className="aspect-square flex items-center justify-center text-muted-foreground">
         Нет элементов
       </Card>
     );
   }
 
   return (
-    <div className="relative h-32 sm:h-48 w-full cursor-pointer">
+    <div className="relative aspect-square w-full cursor-pointer">
       {items.slice(0, 3).reverse().map((item, index) => (
         <Card
           key={item.id}
