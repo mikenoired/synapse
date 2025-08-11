@@ -6,6 +6,22 @@ import { Session } from "@supabase/supabase-js"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 
+async function getAspectRatioFromBase64(base64: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new window.Image()
+
+    img.onload = () => {
+      resolve(`${img.naturalWidth} / ${img.naturalHeight}`)
+    }
+
+    img.onerror = () => {
+      reject(new Error('Failed to load image'))
+    }
+
+    img.src = base64
+  })
+}
+
 interface MediaItemProps {
   item: Content
   // eslint-disable-next-line no-unused-vars
@@ -19,13 +35,28 @@ interface RenderImageProps {
   title: string | null
   session: Session | null
   blurThumb?: string
+  savedWidth?: number
+  savedHeight?: number
 }
 
-function RenderImage({ imageUrl, title, session, blurThumb }: RenderImageProps) {
+function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHeight }: RenderImageProps) {
   const [image, setImage] = useState<string>()
   const [loaded, setLoaded] = useState(false)
   const [errored, setErrored] = useState(false)
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null)
+  const [blurAspectRatio, setBlurAspectRatio] = useState<string>('1 / 1')
+
+  useEffect(() => {
+    if (savedWidth && savedHeight) {
+      setBlurAspectRatio(`${savedWidth} / ${savedHeight}`)
+    } else if (naturalSize?.width && naturalSize?.height) {
+      setBlurAspectRatio(`${naturalSize.width} / ${naturalSize.height}`)
+    } else if (blurThumb) {
+      getAspectRatioFromBase64(blurThumb)
+        .then(setBlurAspectRatio)
+        .catch(() => setBlurAspectRatio('1 / 1'))
+    }
+  }, [blurThumb, naturalSize, savedWidth, savedHeight])
 
   useEffect(() => {
     let cancelled = false
@@ -57,7 +88,7 @@ function RenderImage({ imageUrl, title, session, blurThumb }: RenderImageProps) 
   return (
     <div
       className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg"
-      style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : '1 / 1' }}
+      style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : blurAspectRatio }}
     >
       {blurThumb && !loaded && !errored && (
         <Image
@@ -97,6 +128,17 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
   const isVideo = item.media_type === 'video' && item.thumbnail_url
   const mainSrc = isVideo ? (thumbSrc || '') : (item.media_url || '')
   const [thumbSize, setThumbSize] = useState<{ width: number; height: number } | null>(null)
+  const [blurAspectRatio, setBlurAspectRatio] = useState<string>('16 / 9')
+
+  useEffect(() => {
+    if (item.media_width && item.media_height) {
+      setBlurAspectRatio(`${item.media_width} / ${item.media_height}`)
+    } else if (blurThumb) {
+      getAspectRatioFromBase64(blurThumb)
+        .then(setBlurAspectRatio)
+        .catch(() => setBlurAspectRatio('16 / 9'))
+    }
+  }, [blurThumb, item.media_width, item.media_height])
 
   useEffect(() => {
     let cancelled = false
@@ -119,7 +161,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
       {isVideo ? (
         <div
           className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg"
-          style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : '16 / 9' }}
+          style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : blurAspectRatio }}
         >
           {blurThumb && !thumbSrc && (
             <Image
@@ -161,7 +203,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
           </div>
         </div>
       ) : (
-        mainSrc ? <RenderImage imageUrl={item.media_url || ''} title={item.title || null} session={session} blurThumb={blurThumb} /> : null
+        mainSrc ? <RenderImage imageUrl={item.media_url || ''} title={item.title || null} session={session} blurThumb={blurThumb} savedWidth={item.media_width} savedHeight={item.media_height} /> : null
       )}
       {item.tags.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">

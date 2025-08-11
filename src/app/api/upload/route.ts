@@ -6,7 +6,7 @@ import { unlink, writeFile } from 'fs/promises'
 import { NextRequest, NextResponse } from 'next/server'
 import { tmpdir } from 'os'
 import { join } from 'path'
-import { generateThumbnail } from '../../../server/lib/generate-thumbnail'
+import { generateThumbnail, getImageDimensions } from '../../../server/lib/generate-thumbnail'
 
 export async function POST(request: NextRequest) {
   try {
@@ -76,7 +76,6 @@ export async function POST(request: NextRequest) {
 
           const publicUrl = getPublicUrl(objectName)
 
-          // Генерируем миниатюру (base64-blur)
           let thumbnailBase64: string | undefined = undefined
           try {
             thumbnailBase64 = await generateThumbnail(buffer, file.type)
@@ -84,7 +83,13 @@ export async function POST(request: NextRequest) {
             console.error('Error generating thumbnail:', error)
           }
 
-          // Сохраняем в таблицу content
+          let imageDimensions: { width: number; height: number } | undefined = undefined
+          try {
+            imageDimensions = await getImageDimensions(buffer)
+          } catch (error) {
+            console.error('Error getting image dimensions:', error)
+          }
+
           await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
@@ -92,9 +97,10 @@ export async function POST(request: NextRequest) {
             media_url: publicUrl,
             media_type: 'image',
             thumbnail_base64: thumbnailBase64,
+            media_width: imageDimensions?.width,
+            media_height: imageDimensions?.height,
             title: titleRaw || undefined,
             tags,
-            // можно добавить другие поля
           }])
 
           uploadResults.push({
@@ -107,13 +113,11 @@ export async function POST(request: NextRequest) {
           })
         } else if (file.type.startsWith('video/')) {
           console.log('Start processing video:', file.name)
-          // Сохраняем видео во временный файл
           const tempVideoPath = join(tmpdir(), `${randomUUID()}-${file.name}`)
           const tempThumbPath = join(tmpdir(), `${randomUUID()}.jpg`)
           const bytes = await file.arrayBuffer()
           await writeFile(tempVideoPath, Buffer.from(bytes))
           console.log('Video written to temp:', tempVideoPath)
-          // ffmpeg: компрессия без потерь (копируем кодеки)
           const compressedPath = join(tmpdir(), `${randomUUID()}-compressed.mp4`)
           console.log('Start ffmpeg compress:', compressedPath)
           await new Promise((resolve, reject) => {
@@ -128,7 +132,6 @@ export async function POST(request: NextRequest) {
               code === 0 ? resolve(0) : reject(new Error('ffmpeg compress error'))
             })
           })
-          // ffmpeg: миниатюра (берём кадр с 1-й секунды)
           console.log('Start ffmpeg thumbnail:', tempThumbPath)
           await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', [
@@ -142,12 +145,10 @@ export async function POST(request: NextRequest) {
               code === 0 ? resolve(0) : reject(new Error('ffmpeg thumbnail error'))
             })
           })
-          // Загружаем видео и миниатюру в Minio
           const compressedBuffer = await import('fs').then(fs => fs.readFileSync(compressedPath))
           const thumbBuffer = await import('fs').then(fs => fs.readFileSync(tempThumbPath))
           const { objectName: videoObject } = await uploadFile(compressedBuffer, file.name.replace(/\.[^.]+$/, '.mp4'), 'video/mp4', user.id, 'media')
           const { objectName: thumbObject } = await uploadFile(thumbBuffer, file.name.replace(/\.[^.]+$/, '.jpg'), 'image/jpeg', user.id, 'media-thumbs')
-          // Удаляем временные файлы
           await unlink(tempVideoPath)
           await unlink(compressedPath)
           await unlink(tempThumbPath)
@@ -155,14 +156,20 @@ export async function POST(request: NextRequest) {
             errors.push(`Failed to upload video or thumbnail for "${file.name}"`)
             continue
           }
-          // Генерируем миниатюру (base64-blur) для видео
           let thumbnailBase64: string | undefined = undefined
           try {
             thumbnailBase64 = await generateThumbnail(compressedBuffer, 'video/mp4')
           } catch (error) {
             console.error('Error generating video blur thumbnail:', error)
           }
-          // Сохраняем в таблицу content
+
+          let videoDimensions: { width: number; height: number } | undefined = undefined
+          try {
+            videoDimensions = await getImageDimensions(thumbBuffer)
+          } catch (error) {
+            console.error('Error getting video dimensions:', error)
+          }
+
           console.log('Insert video to content:', videoObject)
           await supabase.from('content').insert([{
             user_id: user.id,
@@ -172,6 +179,8 @@ export async function POST(request: NextRequest) {
             media_type: 'video',
             thumbnail_url: getPublicUrl(thumbObject),
             thumbnail_base64: thumbnailBase64,
+            media_width: videoDimensions?.width,
+            media_height: videoDimensions?.height,
             title: titleRaw || undefined,
             tags,
           }])

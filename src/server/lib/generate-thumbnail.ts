@@ -6,6 +6,19 @@ import { join } from 'path'
 import sharp from 'sharp'
 
 /**
+ * Get image dimensions from buffer
+ * @param buffer - image buffer
+ * @returns object with width and height
+ */
+export async function getImageDimensions(buffer: Buffer): Promise<{ width: number; height: number }> {
+  const metadata = await sharp(buffer).metadata()
+  return {
+    width: metadata.width || 0,
+    height: metadata.height || 0
+  }
+}
+
+/**
  * Generate thumbnail (base64-blur) for image or video.
  * @param buffer - original file (Buffer)
  * @param type - MIME type of the file (image/* or video/*)
@@ -16,7 +29,7 @@ export async function generateThumbnail(buffer: Buffer, type: string): Promise<s
 
   const generateImageThumb = async () => {
     const thumb = await sharp(buffer)
-      .resize(20, 20, { fit: 'inside' })
+      .resize(20, null, { fit: 'inside' })
       .blur()
       .toFormat('jpeg', { quality: 40 })
       .toBuffer()
@@ -39,7 +52,7 @@ export async function generateThumbnail(buffer: Buffer, type: string): Promise<s
       })
       const frameBuffer = await import('fs').then(fs => fs.readFileSync(tempFramePath))
       const thumb = await sharp(frameBuffer)
-        .resize(20, 20, { fit: 'inside' })
+        .resize(20, null, { fit: 'inside' })
         .blur()
         .toFormat('jpeg', { quality: 40 })
         .toBuffer()
