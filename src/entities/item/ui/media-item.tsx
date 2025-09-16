@@ -1,7 +1,6 @@
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
 import { Content } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
-import { FileText } from "lucide-react"
 import { Session } from "@supabase/supabase-js"
 import Image from "next/image"
 import { useEffect, useState } from "react"
@@ -9,15 +8,8 @@ import { useEffect, useState } from "react"
 async function getAspectRatioFromBase64(base64: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image()
-
-    img.onload = () => {
-      resolve(`${img.naturalWidth} / ${img.naturalHeight}`)
-    }
-
-    img.onerror = () => {
-      reject(new Error('Failed to load image'))
-    }
-
+    img.onload = () => resolve(`${img.naturalWidth} / ${img.naturalHeight}`)
+    img.onerror = () => reject(new Error('Failed to load image'))
     img.src = base64
   })
 }
@@ -90,12 +82,12 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
       className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
       style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : blurAspectRatio }}
     >
-      {blurThumb && !loaded && !errored && (
+      {blurThumb && (
         <Image
           src={blurThumb}
           alt="blur preview"
-          className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-300 z-0"
-          style={{ opacity: loaded ? 0 : 1 }}
+          className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-200 ease-in-out z-0"
+          style={{ opacity: loaded && !errored ? 0 : 1 }}
           draggable={false}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
@@ -105,7 +97,7 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
         <Image
           src={image}
           alt={title || 'Изображение'}
-          className="w-full h-full object-cover relative z-10 transition-opacity duration-300"
+          className="w-full h-full object-cover relative z-10 transition-opacity duration-200 ease-in-out"
           style={{ opacity: loaded ? 1 : 0 }}
           onLoad={() => setLoaded(true)}
           onError={() => { setErrored(true); setLoaded(true) }}
@@ -113,11 +105,6 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
         />
-      )}
-      {(!image || errored) && (
-        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-          <FileText className="w-8 h-8 opacity-60" />
-        </div>
       )}
     </div>
   )
@@ -163,11 +150,11 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
           className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
           style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : blurAspectRatio }}
         >
-          {blurThumb && !thumbSrc && (
+          {blurThumb && (
             <Image
               src={blurThumb}
               alt="blur preview"
-              className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-300 z-0"
+              className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-500 ease-in-out z-0"
               style={{ opacity: thumbSrc ? 0 : 1 }}
               draggable={false}
               fill
@@ -178,7 +165,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
             <Image
               src={mainSrc}
               alt={item.title || 'Видео'}
-              className="w-full h-full object-cover relative z-10 transition-opacity duration-300"
+              className="w-full h-full object-cover relative z-10 transition-opacity duration-500 ease-in-out"
               style={{ opacity: thumbSrc ? 1 : 0 }}
               draggable={false}
               fill
