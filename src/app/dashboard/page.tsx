@@ -1,5 +1,5 @@
 import { createContext } from '@/server/context'
-import { getServerCaller } from '@/server/trpc'
+import { getServerCaller } from '@/server/getServerCaller'
 import DashboardClient from './page.client'
 
 export default async function DashboardPage() {
