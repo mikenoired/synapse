@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { DragEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
-  initial: { items: Content[]; nextCursor?: number }
+  initial: { items: Content[]; nextCursor: number | undefined }
 }
 
 export default function DashboardClient({ initial }: Props) {
@@ -42,6 +42,10 @@ export default function DashboardClient({ initial }: Props) {
     getNextPageParam: last => last.nextCursor,
     enabled: !!user || initial.items.length > 0,
     retry: false,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnReconnect: true,
+    refetchOnWindowFocus: false,
     // seed with SSR data
     initialData: {
       pageParams: [undefined],

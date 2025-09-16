@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
       name: COOKIE_NAME,
       value: token,
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       // Set short TTL; Supabase access tokens are short-lived, cookie mirrors it
       // Max-Age ~ 1 hour

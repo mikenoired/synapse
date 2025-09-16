@@ -12,7 +12,7 @@ import { DragEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
   tag: string
-  initial: { items: Content[]; nextCursor?: number }
+  initial: { items: Content[]; nextCursor: number | undefined }
 }
 
 export default function TagClient({ tag, initial }: Props) {

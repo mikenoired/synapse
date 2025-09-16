@@ -3,7 +3,9 @@
 import { trpc } from '@/shared/api/trpc'
 import { AuthProvider, useAuth } from '@/shared/lib/auth-context'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { httpBatchLink } from '@trpc/client'
+import { createTRPCClient, httpBatchLink } from '@trpc/client'
+import type { AppRouter } from '@/server/routers/_app'
+import superjson from 'superjson'
 import { ThemeProvider } from 'next-themes'
 import { ReactNode, useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
@@ -27,10 +29,11 @@ function TRPCProvider({ children }: { children: ReactNode }) {
 
   const trpcClient = useMemo(
     () =>
-      trpc.createClient({
+      createTRPCClient<AppRouter>({
         links: [
           httpBatchLink({
             url: `${getBaseUrl()}/api/trpc`,
+            transformer: superjson,
             headers() {
               return {
                 authorization: session?.access_token ? `Bearer ${session.access_token}` : '',

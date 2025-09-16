@@ -2,7 +2,6 @@
 
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { Label } from '@/shared/ui/label'
 import { X, Globe, Clock, ExternalLink } from 'lucide-react'
 import type { ParsedLinkData } from '../../model/types'
 
@@ -27,7 +26,6 @@ export function LinkPreview({
 }: LinkPreviewProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor="content">URL</Label>
       <div className="space-y-4">
         <div className="flex gap-2">
           <Input
@@ -58,7 +56,7 @@ export function LinkPreview({
         </div>
 
         {parsedLinkData && (
-          <div className="border rounded-lg p-4 bg-muted/20 space-y-3">
+          <div className="border p-4 bg-muted/20 space-y-3">
             <div className="flex items-start gap-3">
               {parsedLinkData.metadata.favicon && (
                 <img
