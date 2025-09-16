@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { TagState } from './types'
+import type { KeyboardEvent } from 'react'
 
 export function useTagManager(initialTags: string[] = []) {
   const [state, setState] = useState<TagState>({
@@ -35,12 +36,16 @@ export function useTagManager(initialTags: string[] = []) {
     })
   }, [initialTags])
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       addTag()
     }
-  }, [addTag])
+    if (e.key === 'Backspace' && state.currentTag === '') {
+      e.preventDefault()
+      removeTag(state.tags[state.tags.length - 1])
+    }
+  }, [addTag, removeTag, state.currentTag, state.tags])
 
   return {
     tags: state.tags,
