@@ -1,7 +1,7 @@
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog';
 import { trpc } from "@/shared/api/trpc";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
-import { Content } from "@/shared/lib/schemas";
+import { Content, LinkContent, parseLinkContent, extractTextFromStructuredContent } from "@/shared/lib/schemas";
 import { Badge } from "@/shared/ui/badge";
 import {
   ContextMenu,
@@ -124,6 +124,55 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     )
   }
 
+  const renderLinkPreview = () => {
+    const linkContent: LinkContent | null = parseLinkContent(item.content)
+
+    if (!linkContent) {
+      // Если это старый формат ссылки, показываем как раньше
+      return (
+        <>
+          <div className="mb-4">
+            <a
+              href={item.content}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
+            >
+              {item.content}
+            </a>
+          </div>
+        </>
+      )
+    }
+
+    // Получаем текст из структурированного контента
+    const fullText = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
+    const previewText = fullText.length > 200
+      ? fullText.substring(0, 200) + '...'
+      : fullText
+
+    return (
+      <div className="space-y-3">
+        {/* Заголовок */}
+        <h3 className="font-semibold text-base leading-tight line-clamp-2">
+          {linkContent.title || item.title || 'Без названия'}
+        </h3>
+
+        {/* Превью текста */}
+        {previewText && (
+          <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+            {previewText}
+          </p>
+        )}
+
+        {/* URL */}
+        <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
+          {linkContent.url}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -132,34 +181,27 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       className="group pb-4"
     >
       <div className={`hover:shadow-lg rounded-md transition-shadow cursor-pointer overflow-hidden relative p-0`}>
-        {item.title && (<div className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
+        {item.title && item.type !== 'link' && (<div className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
           <span className="text-lg font-semibold leading-tight">
             {item.title}
           </span>
         </div>)}
-        <div className={item.type === 'media' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : ''}>
+        <div className={item.type === 'media' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
           {item.type === 'media' ? (
             <MediaItem item={item} session={session} onItemClick={onItemClick} thumbSrc={thumbSrc} />
           ) : item.type === 'link' ? (
-            <>
-              <div className="mb-4">
-                <a
-                  href={item.content}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all"
-                >
-                  {item.content}
-                </a>
-              </div>
-              <div className="flex flex-wrap gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                {item.tags.map((tag: string) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </>
+            <div>
+              {renderLinkPreview()}
+              {item.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-3">
+                  {item.tags.map((tag: string) => (
+                    <Badge key={tag} variant="outline" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
           ) : item.type === 'todo' ? (
             renderTodoPreview()
           ) : (

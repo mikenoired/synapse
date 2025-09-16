@@ -6,18 +6,60 @@ export const userSchema = z.object({
   created_at: z.string(),
 })
 
+// Схема для структурированного контента (как в editor)
+export const contentBlockSchema = z.object({
+  type: z.enum(['paragraph', 'heading', 'image', 'list', 'quote', 'code', 'divider']),
+  content: z.string().optional(),
+  attrs: z.record(z.any()).optional(),
+  marks: z.array(z.object({
+    type: z.string(),
+    attrs: z.record(z.any()).optional()
+  })).optional()
+})
+
+export const structuredContentSchema = z.object({
+  type: z.literal('doc'),
+  content: z.array(contentBlockSchema)
+})
+
+// Схема для контента ссылок в JSON формате
+export const linkContentSchema = z.object({
+  url: z.string().url(),
+  title: z.string(),
+  description: z.string(),
+  content: structuredContentSchema, // Теперь структурированный контент!
+  rawText: z.string(), // Для поиска - текстовая версия
+  metadata: z.object({
+    image: z.string().optional(),
+    favicon: z.string().optional(),
+    siteName: z.string().optional(),
+    author: z.string().optional(),
+    publishedTime: z.string().optional(),
+    extractedAt: z.string(),
+    contentBlocks: z.number(), // Количество блоков контента
+    images: z.array(z.string()).optional(), // Все изображения в статье
+  }),
+  parsing: z.object({
+    method: z.string(),
+    userAgent: z.string(),
+    success: z.boolean(),
+    warnings: z.array(z.string()).optional(),
+    extractedImages: z.number().optional(), // Количество извлеченных изображений
+  })
+})
+
 export const contentSchema = z.object({
   id: z.string(),
   user_id: z.string(),
   type: z.enum(['note', 'media', 'link', 'todo']),
   title: z.string().optional(),
-  content: z.string(),
+  content: z.string(), // Для link: JSON с linkContentSchema, для остальных: оригинальный формат
   tags: z.array(z.string()).default([]),
   reminder_at: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
-  url: z.string().optional(),
   media_url: z.string().optional(),
+  url: z.string().optional(),
   media_type: z.enum(['image', 'video']).optional(),
   thumbnail_url: z.string().optional(),
   thumbnail_base64: z.string().optional(),
@@ -35,7 +77,7 @@ export const tagSchema = z.object({
 export const createContentSchema = z.object({
   type: z.enum(['note', 'media', 'link', 'todo']),
   title: z.string().optional(),
-  content: z.string(),
+  content: z.string(), // Для link: JSON строка с linkContentSchema
   tags: z.array(z.string()).default([]),
   reminder_at: z.string().optional(),
   url: z.string().optional(),
@@ -58,7 +100,76 @@ export const authSchema = z.object({
 
 export type User = z.infer<typeof userSchema>
 export type Content = z.infer<typeof contentSchema>
+export type LinkContent = z.infer<typeof linkContentSchema>
 export type Tag = z.infer<typeof tagSchema>
 export type CreateContent = z.infer<typeof createContentSchema>
 export type UpdateContent = z.infer<typeof updateContentSchema>
-export type Auth = z.infer<typeof authSchema> 
+export type Auth = z.infer<typeof authSchema>
+
+// Хелпер функции для работы с link content
+export const parseLinkContent = (content: string): LinkContent | null => {
+  try {
+    const parsed = JSON.parse(content)
+    return linkContentSchema.parse(parsed)
+  } catch {
+    return null
+  }
+}
+
+export const stringifyLinkContent = (linkContent: LinkContent): string => {
+  return JSON.stringify(linkContent)
+}
+
+// Функция для извлечения текста из структурированного контента (для поиска)
+export const extractTextFromStructuredContent = (structuredContent: any): string => {
+  if (!structuredContent?.content) return ''
+
+  const extractFromBlock = (block: any): string => {
+    if (block.type === 'text') return block.text || ''
+    if (block.content) {
+      if (Array.isArray(block.content)) {
+        return block.content.map(extractFromBlock).join('')
+      }
+      return extractFromBlock(block.content)
+    }
+    return ''
+  }
+
+  return structuredContent.content
+    .map(extractFromBlock)
+    .join(' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// Функция для расчета времени чтения статьи
+export const calculateReadingTime = (text: string): string => {
+  if (!text || text.trim().length === 0) return '0 мин'
+
+  // Средняя скорость чтения: 200-250 слов в минуту (берем 225 как среднее)
+  const wordsPerMinute = 225
+
+  // Подсчет слов (разбиваем по пробелам и фильтруем пустые строки)
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0).length
+
+  // Расчет времени в минутах
+  const minutes = Math.ceil(words / wordsPerMinute)
+
+  if (minutes < 1) return 'меньше минуты'
+  if (minutes === 1) return '1 мин'
+  if (minutes < 60) return `${minutes} мин`
+
+  // Для времени больше часа
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+
+  if (remainingMinutes === 0) return `${hours} ч`
+  return `${hours} ч ${remainingMinutes} мин`
+}
+
+// Функция для расчета времени чтения из LinkContent
+export const calculateReadingTimeFromLinkContent = (linkContent: LinkContent): string => {
+  // Используем rawText если доступен, иначе извлекаем из структурированного контента
+  const text = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
+  return calculateReadingTime(text)
+} 

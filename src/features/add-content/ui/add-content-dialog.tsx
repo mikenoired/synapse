@@ -8,7 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import { Editor } from '@/widgets/editor/ui/editor'
-import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Plus, Upload, X } from 'lucide-react'
+import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Plus, Upload, X, ExternalLink, Globe, Clock } from 'lucide-react'
 import React, { useCallback, useEffect, useState, TouchEvent, FormEvent, DragEvent } from 'react'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
@@ -19,6 +19,20 @@ interface AddContentDialogProps {
   onOpenChange: (open: boolean) => void
   onContentAdded?: () => void
   initialTags?: string[]
+}
+
+import type { LinkContent } from '@/shared/lib/schemas'
+
+// Временная совместимость - старый интерфейс для UI
+interface ParsedLinkData {
+  title: string
+  description: string
+  content: string
+  image?: string
+  favicon?: string
+  siteName?: string
+  author?: string
+  publishedTime?: string
 }
 
 async function getVideoThumbnail(file: File): Promise<string> {
@@ -47,7 +61,7 @@ async function getVideoThumbnail(file: File): Promise<string> {
       }
       URL.revokeObjectURL(url)
     })
-    video.addEventListener('error', (e) => {
+    video.addEventListener('error', () => {
       URL.revokeObjectURL(url)
       reject(new Error('Ошибка загрузки видео'))
     })
@@ -70,6 +84,8 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [todoItems, setTodoItems] = useState<{ text: string; marked: boolean }[]>([])
   const [todoInput, setTodoInput] = useState('')
+  const [parsedLinkData, setParsedLinkData] = useState<LinkContent | null>(null)
+  const [linkParsing, setLinkParsing] = useState(false)
 
   const [startY, setStartY] = useState<number | null>(null)
   const handleTouchStart = (e: TouchEvent) => {
@@ -123,6 +139,42 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
     }
   }, [open])
 
+  const parseLink = async (url: string) => {
+    if (!url || !url.trim()) return
+
+    try {
+      setLinkParsing(true)
+      const response = await fetch('/api/parse-link', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.access_token}`,
+        },
+        body: JSON.stringify({ url: url.trim() }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        toast.error(result.error || 'Failed to parse link')
+        return
+      }
+
+      if (result.success && result.data) {
+        setParsedLinkData(result.data)
+        if (result.data.title && !title.trim()) {
+          setTitle(result.data.title)
+        }
+        toast.success('Link parsed successfully!')
+      }
+    } catch (error) {
+      console.error('Error parsing link:', error)
+      toast.error('Failed to parse the link')
+    } finally {
+      setLinkParsing(false)
+    }
+  }
+
   const createContentMutation = trpc.content.create.useMutation({
     onSuccess: () => {
       setTitle('')
@@ -136,6 +188,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       setPreviewUrls([])
       setTodoItems([])
       setTodoInput('')
+      setParsedLinkData(null)
 
       onOpenChange(false)
       onContentAdded?.()
@@ -217,12 +270,17 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
           finalContent = JSON.stringify(todoItems)
         }
 
+        // Теперь сохраняем полную структуру в JSON
+        const finalContentForLink = type === 'link' && parsedLinkData
+          ? JSON.stringify(parsedLinkData)
+          : finalContent
+
         createContentMutation.mutate({
           type,
           title: title.trim() || undefined,
-          content: finalContent,
+          content: finalContentForLink,
           tags,
-          url: type === 'link' ? content.trim() : undefined
+          url: type === 'link' ? parsedLinkData?.url || content.trim() : undefined,
         }, {
           onSuccess: () => toast.success('Saved')
         })
@@ -396,6 +454,7 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
       setPreviewUrls([])
       setTodoItems([])
       setTodoInput('')
+      setParsedLinkData(null)
     }
   }
 
@@ -621,15 +680,116 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
               <div className="space-y-2">
                 <Label htmlFor="content">{type === 'link' ? 'URL' : 'Медиа (картинки и видео)'}</Label>
                 {type === 'link' ? (
-                  <Input
-                    id="content"
-                    type="url"
-                    placeholder="https://example.com"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
+                  <div className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input
+                        id="content"
+                        type="url"
+                        placeholder="https://example.com"
+                        value={content}
+                        onChange={(e) => {
+                          setContent(e.target.value)
+                        }}
+                        required
+                        disabled={isLoading || linkParsing}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => parseLink(content)}
+                        disabled={!content.trim() || linkParsing || isLoading}
+                        size="sm"
+                        className="min-w-24"
+                      >
+                        {linkParsing ? (
+                          <Clock className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Globe className="w-4 h-4 mr-1" />
+                            Parse
+                          </>
+                        )}
+                      </Button>
+                    </div>
+
+                    {parsedLinkData && (
+                      <div className="border rounded-lg p-4 bg-muted/20 space-y-3">
+                        <div className="flex items-start gap-3">
+                          {parsedLinkData.metadata.favicon && (
+                            <img
+                              src={parsedLinkData.metadata.favicon}
+                              alt=""
+                              className="w-4 h-4 mt-1 flex-shrink-0"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm leading-tight mb-1">
+                              {parsedLinkData.title}
+                            </h3>
+                            {parsedLinkData.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {parsedLinkData.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                              {parsedLinkData.metadata.siteName && (
+                                <span>{parsedLinkData.metadata.siteName}</span>
+                              )}
+                              {parsedLinkData.metadata.author && (
+                                <span>• by {parsedLinkData.metadata.author}</span>
+                              )}
+                              {parsedLinkData.metadata.publishedTime && (
+                                <span>• {new Date(parsedLinkData.metadata.publishedTime).toLocaleDateString()}</span>
+                              )}
+                              <span>• {parsedLinkData.metadata.contentBlocks} блоков</span>
+                            </div>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setParsedLinkData(null)}
+                            className="p-1 h-auto"
+                          >
+                            <X className="w-3 h-3" />
+                          </Button>
+                        </div>
+
+                        {parsedLinkData.metadata.image && (
+                          <div className="relative">
+                            <img
+                              src={parsedLinkData.metadata.image}
+                              alt=""
+                              className="w-full h-32 object-cover rounded border"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        {/* Показываем краткий превью контента */}
+                        {parsedLinkData.rawText && (
+                          <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded border">
+                            <div className="font-medium mb-1">Извлеченный контент:</div>
+                            <p className="line-clamp-3">
+                              {parsedLinkData.rawText.substring(0, 200)}
+                              {parsedLinkData.rawText.length > 200 ? '...' : ''}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2 pt-2 border-t">
+                          <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground font-mono truncate">
+                            {content}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <div className="space-y-4">
                     {/* Drop Zone */}
@@ -791,13 +951,16 @@ export function AddContentDialog({ open, onOpenChange, onContentAdded, initialTa
                 type="submit"
                 disabled={
                   isLoading ||
+                  linkParsing ||
                   (type === 'note'
                     ? !editorData || !editorData.content || editorData.content.length === 0
                     : type === 'media'
                       ? selectedFiles.length === 0
                       : type === 'todo'
                         ? todoItems.length === 0 || todoItems.some(item => !item.text.trim())
-                        : !content.trim())
+                        : type === 'link'
+                          ? !content.trim() || !parsedLinkData
+                          : !content.trim())
                 }
               >
                 {uploading
