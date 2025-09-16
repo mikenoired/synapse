@@ -2,6 +2,8 @@ import { handleAuthError } from '@/shared/lib/utils'
 import { initTRPC, TRPCError } from '@trpc/server'
 import type { Context } from './context'
 import superjson from 'superjson'
+import { createContext } from './context'
+import { appRouter } from './routers/_app'
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -78,3 +80,8 @@ const isAuthed = t.middleware(({ ctx, next }) => {
 })
 
 export const protectedProcedure = t.procedure.use(rateLimiter).use(slowLogger).use(isAuthed)
+
+export async function getServerCaller() {
+  const ctx = await createContext({})
+  return appRouter.createCaller(ctx)
+}

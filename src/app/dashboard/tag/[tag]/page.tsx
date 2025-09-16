@@ -1,5 +1,5 @@
 import { createContext } from '@/server/context'
-import { appRouter } from '@/server/routers/_app'
+import { getServerCaller } from '@/server/trpc'
 import TagClient from './page.client'
 
 export default async function TagPage({ params }: { params: Promise<{ tag: string }> }) {
@@ -13,7 +13,7 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
     )
   }
 
-  const caller = appRouter.createCaller(ctx)
+  const caller = await getServerCaller()
   const initial = await caller.content.getAll({ tags: [decodedTag], limit: 20 })
 
   return <TagClient tag={decodedTag} initial={initial} />

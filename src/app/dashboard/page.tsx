@@ -1,5 +1,5 @@
 import { createContext } from '@/server/context'
-import { appRouter } from '@/server/routers/_app'
+import { getServerCaller } from '@/server/trpc'
 import DashboardClient from './page.client'
 
 export default async function DashboardPage() {
@@ -10,7 +10,7 @@ export default async function DashboardPage() {
     )
   }
 
-  const caller = appRouter.createCaller(ctx)
+  const caller = await getServerCaller()
   const initial = await caller.content.getAll({ limit: 20 })
 
   return (
