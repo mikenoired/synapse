@@ -15,7 +15,6 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
   return (
     <aside className="fixed top-0 left-0 z-40 h-screen w-20 hidden flex-col sm:flex">
       <div className="flex h-full flex-col items-center">
-        {/* Icons at Bottom */}
         <div className="mt-auto flex flex-col items-center gap-2 py-5">
           <TooltipProvider delayDuration={0}>
             <nav className="flex flex-col items-center gap-2">
@@ -27,7 +26,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                       {item.href ? (
                         <Link
                           href={item.href}
-                          className={cn("flex h-12 w-12 items-center justify-center rounded-lg transition-colors",
+                          className={cn("flex h-12 w-12 items-center justify-center transition-colors",
                             isActive ? "bg-primary/10 text-primary pointer-events-none" : "text-muted-foreground hover:text-foreground hover:bg-muted"
                           )}
                         >
@@ -37,7 +36,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                         <button
                           onClick={item.action}
                           onMouseEnter={item.onMouseEnter}
-                          className="flex h-12 w-12 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
+                          className="flex h-12 w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground hover:bg-muted"
                         >
                           <item.icon className="size-5" />
                         </button>
@@ -49,7 +48,6 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
               })}
             </nav>
 
-            {/* Separator Margin */}
             <div className="pt-4"></div>
 
             <div className="flex flex-col items-center gap-2">
