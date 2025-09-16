@@ -52,15 +52,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
+    if (!error && data.session?.access_token) {
+      await fetch('/api/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: data.session.access_token }),
+      })
+    }
     return { error }
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    await fetch('/api/session', { method: 'DELETE' })
   }
 
   return (

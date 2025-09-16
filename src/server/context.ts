@@ -1,11 +1,15 @@
 import { createSupabaseClient } from '@/shared/api/supabase-client'
+import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
 
 export async function createContext({ req }: { req?: NextRequest }) {
-  // Получаем токен из заголовков
-  const token = req?.headers.get('authorization')?.replace('Bearer ', '')
+  const headerToken = req?.headers.get('authorization')?.replace('Bearer ', '')
+  const cookieStore = await cookies().catch(() => undefined)
+  const cookieToken = cookieStore?.get('opi_token')?.value
+  const token = headerToken || cookieToken
 
-  // Создаем клиент с anon key для RLS
+  console.log('token', token)
+
   const supabase = createSupabaseClient(token)
 
   let user = null

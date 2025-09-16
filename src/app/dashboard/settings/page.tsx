@@ -4,11 +4,14 @@ import MediaTab from '@/features/settings-media/ui/media-tab';
 import ThemingTab from '@/features/settings-theming/ui/theming-tab';
 import SettingsSidebar from '@/widgets/settings/ui/settings-sidebar';
 import { notFound } from 'next/navigation';
-import { Suspense, use } from 'react';
 import type { ReactElement } from 'react';
+import { createContext } from '@/server/context'
 
-export default function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
-  const { tab } = use(searchParams);
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+  const { tab } = await searchParams
+
+  const ctx = await createContext({})
+  if (!ctx.user) return null
 
   const tabComponents: Record<string, ReactElement> = {
     general: <GeneralTab />,
@@ -20,15 +23,13 @@ export default function SettingsPage({ searchParams }: { searchParams: Promise<{
   const resolvedTab = tab || 'general';
   const content = tabComponents[resolvedTab];
 
-  if (!content) {
-    notFound();
-  }
+  if (!content) notFound()
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen w-full bg-background">
       <SettingsSidebar activeTab={resolvedTab} />
       <main className="flex-1 p-4 md:p-8 max-w-3xl mx-auto w-full">
-        <Suspense fallback={<div className="animate-pulse h-32" />}>{content}</Suspense>
+        {content}
       </main>
     </div>
   );
