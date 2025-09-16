@@ -174,7 +174,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="group pb-4"
+      className="group"
     >
       <div className={`hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0 bg-muted/50`}>
         {item.title && item.type !== 'link' && (<div className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
