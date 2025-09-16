@@ -6,22 +6,17 @@ export const authRouter = router({
   register: publicProcedure
     .input(authSchema)
     .mutation(async ({ input, ctx }) => {
-      const { data: existingUser } = await ctx.supabase
-        .from('users')
-        .select('id')
-        .eq('email', input.email)
-        .single()
-
-      if (existingUser) {
-        handleConflictError('Пользователь с таким email уже существует')
-      }
-
       const { data, error } = await ctx.supabase.auth.signUp({
         email: input.email,
         password: input.password,
       })
 
-      if (error) handleAuthError(error)
+      if (error) {
+        if (typeof error.message === 'string' && error.message.toLowerCase().includes('already')) {
+          handleConflictError('Пользователь с таким email уже существует')
+        }
+        handleAuthError(error)
+      }
 
       return { user: data.user }
     }),

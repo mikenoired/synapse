@@ -35,16 +35,12 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
     content: data || '',
     editable: !readOnly,
     onUpdate({ editor }) {
-      if (onChange) {
-        console.log('onChange', editor.getJSON())
-        onChange(editor.getJSON())
-      }
+      if (onChange) onChange(editor.getJSON())
     },
   })
 
   return (
     <div>
-      {/* Floating BubbleMenu */}
       {editor && (
         <BubbleMenu editor={editor}>
           <div className="flex gap-1 bg-popover border rounded shadow p-1">
@@ -107,13 +103,11 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
           </div>
         </BubbleMenu>
       )}
-      {/* Slash command trigger (заготовка, UI появится позже) */}
       <EditorContent editor={editor} />
     </div>
   )
 }
 
-// Утилита для конвертации Tiptap JSON в обычный текст для превью
 export function editorDataToText(data: JSONContent): string {
   if (!data || !data.content) return ''
 
@@ -131,7 +125,6 @@ export function editorDataToText(data: JSONContent): string {
   return extractText(data.content).replace(/<[^>]*>/g, '').substring(0, 200)
 }
 
-// Утилита для конвертации Tiptap JSON в краткий текст для карточек
 export function editorDataToShortText(data: JSONContent, maxLength: number = 150): string {
   if (!data || !data.content) return ''
 
