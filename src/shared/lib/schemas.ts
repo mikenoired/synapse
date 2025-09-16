@@ -67,6 +67,29 @@ export const contentSchema = z.object({
   media_height: z.number().optional(),
 })
 
+// Thin list item for collections (avoid heavy fields later if needed)
+export const contentListItemSchema = contentSchema.pick({
+  id: true,
+  user_id: true,
+  type: true,
+  title: true,
+  content: true,
+  tags: true,
+  reminder_at: true,
+  created_at: true,
+  updated_at: true,
+  media_url: true,
+  url: true,
+  media_type: true,
+  thumbnail_url: true,
+  thumbnail_base64: true,
+  media_width: true,
+  media_height: true,
+})
+
+// Detailed view (same as contentSchema for now; reserved for future extra fields)
+export const contentDetailSchema = contentSchema
+
 export const tagSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -100,6 +123,8 @@ export const authSchema = z.object({
 
 export type User = z.infer<typeof userSchema>
 export type Content = z.infer<typeof contentSchema>
+export type ContentListItem = z.infer<typeof contentListItemSchema>
+export type ContentDetail = z.infer<typeof contentDetailSchema>
 export type LinkContent = z.infer<typeof linkContentSchema>
 export type Tag = z.infer<typeof tagSchema>
 export type CreateContent = z.infer<typeof createContentSchema>

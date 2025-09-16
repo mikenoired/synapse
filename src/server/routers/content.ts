@@ -1,4 +1,4 @@
-import { createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
+import { createContentSchema, updateContentSchema, contentListItemSchema, contentDetailSchema } from '@/shared/lib/schemas'
 import type { Content } from '@/shared/lib/schemas'
 import type { Tables } from '@/shared/types/database'
 import { handleSupabaseError, handleSupabaseNotFound } from '@/shared/lib/utils'
@@ -34,7 +34,7 @@ export const contentRouter = router({
         const items: Content[] = (data || []).map(d => mapContentRow(d as Tables<'content'>, ctx.user.id))
 
         return {
-          items,
+          items: items.map(i => contentListItemSchema.parse(i)),
           nextCursor,
         }
       }
@@ -56,7 +56,7 @@ export const contentRouter = router({
       const items: Content[] = (data || []).map(d => mapContentRow(d as Tables<'content'>, ctx.user.id))
 
       return {
-        items,
+        items: items.map(i => contentListItemSchema.parse(i)),
         nextCursor,
       }
     }),
@@ -73,7 +73,7 @@ export const contentRouter = router({
 
       if (error) handleSupabaseNotFound(error, 'Контент не найден')
 
-      return mapContentRow(data as Tables<'content'>, ctx.user.id)
+      return contentDetailSchema.parse(mapContentRow(data as Tables<'content'>, ctx.user.id))
     }),
 
   create: protectedProcedure
@@ -91,7 +91,7 @@ export const contentRouter = router({
 
       if (error) handleSupabaseError(error)
 
-      return mapContentRow(data as Tables<'content'>, ctx.user.id)
+      return contentDetailSchema.parse(mapContentRow(data as Tables<'content'>, ctx.user.id))
     }),
 
   update: protectedProcedure
@@ -113,7 +113,7 @@ export const contentRouter = router({
 
       if (error) handleSupabaseError(error)
 
-      return mapContentRow(data as Tables<'content'>, ctx.user.id)
+      return contentDetailSchema.parse(mapContentRow(data as Tables<'content'>, ctx.user.id))
     }),
 
   delete: protectedProcedure
