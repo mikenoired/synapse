@@ -22,12 +22,6 @@ const nextConfig: NextConfig = {
           ...config.optimization.splitChunks,
           cacheGroups: {
             ...config.optimization.splitChunks.cacheGroups,
-            editorjs: {
-              test: /[\\/]node_modules[\\/]@editorjs[\\/]/,
-              name: 'editorjs',
-              chunks: 'async',
-              priority: 30,
-            },
             vendor: {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
