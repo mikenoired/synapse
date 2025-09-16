@@ -472,7 +472,7 @@ export function UnifiedMediaModal({
                       setDirection(index > currentIndex ? 1 : -1)
                       setCurrentIndex(index)
                     }}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all relative ${index === currentIndex
+                    className={`flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-all relative ${index === currentIndex
                       ? 'border-white scale-110'
                       : 'border-white/30 hover:border-white/60'
                       }`}

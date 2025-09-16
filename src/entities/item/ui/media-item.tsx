@@ -87,7 +87,7 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
 
   return (
     <div
-      className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg"
+      className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
       style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : blurAspectRatio }}
     >
       {blurThumb && !loaded && !errored && (
@@ -105,7 +105,7 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
         <Image
           src={image}
           alt={title || 'Изображение'}
-          className="w-full h-full object-cover rounded-lg relative z-10 transition-opacity duration-300"
+          className="w-full h-full object-cover relative z-10 transition-opacity duration-300"
           style={{ opacity: loaded ? 1 : 0 }}
           onLoad={() => setLoaded(true)}
           onError={() => { setErrored(true); setLoaded(true) }}
@@ -160,7 +160,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
     <div className="relative" onClick={() => onItemClick?.(item)}>
       {isVideo ? (
         <div
-          className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-lg"
+          className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
           style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : blurAspectRatio }}
         >
           {blurThumb && !thumbSrc && (
@@ -178,7 +178,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
             <Image
               src={mainSrc}
               alt={item.title || 'Видео'}
-              className="w-full h-full object-cover rounded-lg relative z-10 transition-opacity duration-300"
+              className="w-full h-full object-cover relative z-10 transition-opacity duration-300"
               style={{ opacity: thumbSrc ? 1 : 0 }}
               draggable={false}
               fill

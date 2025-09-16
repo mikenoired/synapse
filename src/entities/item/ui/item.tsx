@@ -128,7 +128,6 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     const linkContent: LinkContent | null = parseLinkContent(item.content)
 
     if (!linkContent) {
-      // Если это старый формат ссылки, показываем как раньше
       return (
         <>
           <div className="mb-4">
@@ -145,7 +144,6 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       )
     }
 
-    // Получаем текст из структурированного контента
     const fullText = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
     const previewText = fullText.length > 200
       ? fullText.substring(0, 200) + '...'
@@ -153,19 +151,16 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
 
     return (
       <div className="space-y-3">
-        {/* Заголовок */}
         <h3 className="font-semibold text-base leading-tight line-clamp-2">
           {linkContent.title || item.title || 'Без названия'}
         </h3>
 
-        {/* Превью текста */}
         {previewText && (
           <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
             {previewText}
           </p>
         )}
 
-        {/* URL */}
         <div className="text-xs text-blue-600 dark:text-blue-400 truncate">
           {linkContent.url}
         </div>
@@ -180,7 +175,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       transition={{ delay: index * 0.1 }}
       className="group pb-4"
     >
-      <div className={`hover:shadow-lg rounded-md transition-shadow cursor-pointer overflow-hidden relative p-0`}>
+      <div className={`hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0`}>
         {item.title && item.type !== 'link' && (<div className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
           <span className="text-lg font-semibold leading-tight">
             {item.title}
