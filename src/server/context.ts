@@ -8,14 +8,12 @@ export async function createContext({ req }: { req?: NextRequest }) {
   const cookieToken = cookieStore?.get('opi_token')?.value
   const token = headerToken || cookieToken
 
-  console.log('token', token)
 
   const supabase = createSupabaseClient(token)
 
   let user = null
   if (token) {
     try {
-      // Проверяем токен и получаем пользователя
       const { data: { user: authUser }, error } = await supabase.auth.getUser(token)
       if (!error && authUser) {
         user = authUser
@@ -30,6 +28,9 @@ export async function createContext({ req }: { req?: NextRequest }) {
     req,
     user,
     token,
+    requestId: req?.headers.get('x-request-id') || crypto.randomUUID?.() || undefined,
+    ip: req?.headers.get('x-forwarded-for') || undefined,
+    userAgent: req?.headers.get('user-agent') || undefined,
   }
 }
 
