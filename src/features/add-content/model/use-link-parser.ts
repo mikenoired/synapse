@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/shared/lib/auth-context'
-import type { LinkState, ParsedLinkData } from './types'
+import type { LinkState } from './types'
 
 export function useLinkParser() {
   const { session } = useAuth()

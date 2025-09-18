@@ -8,6 +8,25 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { generateThumbnail, getImageDimensions } from '../../../server/lib/generate-thumbnail'
 
+async function resolveTagTitlesToIds(supabase: ReturnType<typeof createSupabaseClient>, titles: string[]): Promise<string[]> {
+  const unique = Array.from(new Set((titles || []).filter(Boolean)))
+  if (unique.length === 0) return []
+  const { data: existing } = await supabase.from('tags').select('id, title').in('title', unique)
+  const byTitle = new Map((existing || []).map(t => [t.title, t.id]))
+  const missing = unique.filter(t => !byTitle.has(t))
+  if (missing.length) {
+    const { data: inserted } = await supabase.from('tags').insert(missing.map(title => ({ title }))).select('id, title')
+    for (const t of inserted || []) byTitle.set(t.title, t.id)
+  }
+  const ids = unique.map(t => byTitle.get(t))
+  return ids.filter((v): v is string => typeof v === 'string' && v.length > 0)
+}
+
+async function upsertContentTags(supabase: ReturnType<typeof createSupabaseClient>, contentId: string, tagIds: string[]) {
+  if (!tagIds.length) return
+  await supabase.from('content_tags').insert(tagIds.map(id => ({ content_id: contentId, tag_id: id })))
+}
+
 export async function POST(request: NextRequest) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -90,7 +109,7 @@ export async function POST(request: NextRequest) {
             console.error('Error getting image dimensions:', error)
           }
 
-          await supabase.from('content').insert([{
+          const { data: inserted } = await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
             content: objectName,
@@ -100,8 +119,12 @@ export async function POST(request: NextRequest) {
             media_width: imageDimensions?.width,
             media_height: imageDimensions?.height,
             title: titleRaw || undefined,
-            tags,
-          }])
+          }]).select('id').single()
+
+          if (inserted?.id && tags.length) {
+            const ids = await resolveTagTitlesToIds(supabase, tags)
+            await upsertContentTags(supabase, inserted.id, ids)
+          }
 
           uploadResults.push({
             objectName,
@@ -171,7 +194,7 @@ export async function POST(request: NextRequest) {
           }
 
           console.log('Insert video to content:', videoObject)
-          await supabase.from('content').insert([{
+          const { data: insertedVideo } = await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
             content: videoObject,
@@ -182,8 +205,11 @@ export async function POST(request: NextRequest) {
             media_width: videoDimensions?.width,
             media_height: videoDimensions?.height,
             title: titleRaw || undefined,
-            tags,
-          }])
+          }]).select('id').single()
+          if (insertedVideo?.id && tags.length) {
+            const ids = await resolveTagTitlesToIds(supabase, tags)
+            await upsertContentTags(supabase, insertedVideo.id, ids)
+          }
           console.log('Inserted video to content:', videoObject)
           uploadResults.push({
             objectName: videoObject,

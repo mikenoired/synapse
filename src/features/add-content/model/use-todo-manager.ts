@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react'
-import type { TodoItem, TodoState } from './types'
+import type { TodoState } from './types'
 
 export function useTodoManager() {
   const [state, setState] = useState<TodoState>({

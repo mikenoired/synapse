@@ -54,7 +54,10 @@ export const contentSchema = z.object({
   type: z.enum(['note', 'media', 'link', 'todo']),
   title: z.string().optional(),
   content: z.string(), // Для link: JSON с linkContentSchema, для остальных: оригинальный формат
+  // View-only tag titles derived from relations
   tags: z.array(z.string()).default([]),
+  // New normalized tag ids (content_tags)
+  tag_ids: z.array(z.string()).default([]),
   reminder_at: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -75,6 +78,7 @@ export const contentListItemSchema = contentSchema.pick({
   title: true,
   content: true,
   tags: true,
+  tag_ids: true,
   reminder_at: true,
   created_at: true,
   updated_at: true,
@@ -101,7 +105,10 @@ export const createContentSchema = z.object({
   type: z.enum(['note', 'media', 'link', 'todo']),
   title: z.string().optional(),
   content: z.string(), // Для link: JSON строка с linkContentSchema
-  tags: z.array(z.string()).default([]),
+  // New API: tag ids
+  tag_ids: z.array(z.string()).optional(),
+  // Back-compat: titles (deprecated)
+  tags: z.array(z.string()).optional(),
   reminder_at: z.string().optional(),
   url: z.string().optional(),
   media_url: z.string().optional(),

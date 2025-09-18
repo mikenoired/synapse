@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react'
 import { Content } from '@/shared/lib/schemas'
 import type { ContentFormState } from './types'
 
-export function useContentForm(initialTags: string[] = []) {
+export function useContentForm() {
   const [state, setState] = useState<ContentFormState>({
     type: 'note',
     title: '',
