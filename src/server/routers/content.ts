@@ -47,7 +47,7 @@ export const contentRouter = router({
     .input(z.object({
       search: z.string().optional(),
       tagIds: z.array(z.string()).optional(),
-      type: z.enum(['note', 'media', 'link', 'todo']).optional(),
+      type: z.enum(['note', 'media', 'link', 'todo', 'audio']).optional(),
       cursor: z.string().optional(), // keyset: `${created_at}|${id}`
       limit: z.number().min(1).max(100).optional().default(20),
     }))
@@ -238,6 +238,16 @@ export const contentRouter = router({
         const thumbObject = extractObjectNameFromApiUrl(mediaJson?.media?.thumbnailUrl)
         try { if (mainObject) await deleteFile(mainObject) } catch { /* ignore */ }
         try { if (thumbObject) await deleteFile(thumbObject) } catch { /* ignore */ }
+      } else if ((contentRow as any)?.type === 'audio') {
+        try {
+          const parsed = JSON.parse((contentRow as any).content)
+          const audioObj = parsed?.audio?.object || extractObjectNameFromApiUrl(parsed?.audio?.url)
+          const coverObj = parsed?.cover?.object || extractObjectNameFromApiUrl(parsed?.cover?.url)
+          if (audioObj) await deleteFile(audioObj)
+          if (coverObj) await deleteFile(coverObj)
+        } catch {
+          // ignore
+        }
       }
 
       invalidateUserTags(ctx.user.id)
@@ -250,17 +260,9 @@ export const contentRouter = router({
       const cached = getFromCache(tagsCache, cacheKey)
       if (cached) return cached
 
-      const { data: contents, error: cErr } = await ctx.supabase
-        .from('content')
-        .select('id')
-        .eq('user_id', ctx.user.id)
-      if (cErr) handleSupabaseError(cErr)
-      const ids = (contents || []).map(c => c.id)
-      if (ids.length === 0) return []
       const { data: ctRows, error: ctErr } = await ctx.supabase
         .from('content_tags')
         .select('tag_id, content_id')
-        .in('content_id', ids)
       if (ctErr) handleSupabaseError(ctErr)
       const tagIds = Array.from(new Set((ctRows || []).map((r: any) => r.tag_id)))
       if (tagIds.length === 0) return []

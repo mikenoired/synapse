@@ -9,6 +9,7 @@ import { LinkViewerModal } from "./link-viewer-modal"
 import { NoteViewerModal } from "./note-viewer-modal"
 import { TodoViewerModal } from './todo-viewer-modal'
 import { UnifiedMediaModal } from "./unified-image-modal"
+import { AudioViewerModal } from './audio-viewer-modal'
 
 interface ContentModalManagerProps {
   open: boolean
@@ -34,7 +35,6 @@ export function ContentModalManager({
   const [editOpen, setEditOpen] = useState(false)
   const [editItem, setEditItem] = useState<Content | null>(null)
 
-  // Вынесено вне условий
   const utils = trpc.useUtils()
   const updateMutation = trpc.content.update.useMutation({
     onSuccess: () => item && utils.content.getById.invalidate({ id: item.id })
@@ -42,7 +42,6 @@ export function ContentModalManager({
 
   if (!item) return null
 
-  // For images - use unified modal
   if (item.type === 'media') {
     const imageGallery = allItems
       .filter(i => i.type === 'media')
@@ -66,7 +65,17 @@ export function ContentModalManager({
     )
   }
 
-  // For notes
+  if (item.type === 'audio') {
+    return (
+      <AudioViewerModal
+        open={open}
+        onOpenChange={onOpenChange}
+        item={item}
+        session={session}
+      />
+    )
+  }
+
   if (item.type === 'note') {
     return (
       <>
@@ -104,7 +113,6 @@ export function ContentModalManager({
     )
   }
 
-  // For links
   if (item.type === 'link') {
     return (
       <LinkViewerModal
@@ -117,7 +125,6 @@ export function ContentModalManager({
     )
   }
 
-  // For todos
   if (item.type === 'todo') {
     return (
       <>

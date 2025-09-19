@@ -51,7 +51,7 @@ export const linkContentSchema = z.object({
 export const contentSchema = z.object({
   id: z.string(),
   user_id: z.string(),
-  type: z.enum(['note', 'media', 'link', 'todo']),
+  type: z.enum(['note', 'media', 'link', 'todo', 'audio']),
   title: z.string().optional(),
   content: z.string(), // Для link: JSON с linkContentSchema, для остальных: оригинальный формат
   // View-only tag titles derived from relations
@@ -100,7 +100,7 @@ export const tagSchema = z.object({
 })
 
 export const createContentSchema = z.object({
-  type: z.enum(['note', 'media', 'link', 'todo']),
+  type: z.enum(['note', 'media', 'link', 'todo', 'audio']),
   title: z.string().optional(),
   content: z.string(), // Для link: JSON строка с linkContentSchema
   // New API: tag ids
@@ -166,6 +166,48 @@ export const parseMediaJson = (content: string): MediaJson | null => {
   try {
     const parsed = JSON.parse(content)
     if (parsed && parsed.media && typeof parsed.media.type === 'string') return parsed as MediaJson
+    return null
+  } catch {
+    return null
+  }
+}
+
+// ---- Audio content helpers ----
+export type AudioJson = {
+  audio: {
+    object?: string
+    url?: string
+    mimeType?: string
+    durationSec?: number
+    bitrateKbps?: number
+    sampleRateHz?: number
+    channels?: number
+    sizeBytes?: number
+  }
+  track?: {
+    isTrack: boolean
+    title?: string
+    artist?: string
+    album?: string
+    year?: number
+    genre?: string[]
+    trackNumber?: number
+    diskNumber?: number
+    lyrics?: string
+  }
+  cover?: {
+    object?: string
+    url?: string
+    width?: number
+    height?: number
+    thumbnailBase64?: string
+  }
+}
+
+export const parseAudioJson = (content: string): AudioJson | null => {
+  try {
+    const parsed = JSON.parse(content)
+    if (parsed && parsed.audio) return parsed as AudioJson
     return null
   } catch {
     return null

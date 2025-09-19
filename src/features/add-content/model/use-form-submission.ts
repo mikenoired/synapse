@@ -26,12 +26,17 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
   const uploadMultipleFiles = useCallback(async (
     files: File[],
     title?: string,
-    tags?: string[]
+    tags?: string[],
+    extraFields?: Record<string, string | boolean>
   ): Promise<{ objectName: string, url: string, thumbnail?: string }[]> => {
+    console.debug('[uploadMultipleFiles] start', { files: files.map(f => ({ name: f.name, type: f.type, size: f.size })), title, tags, extraFields })
     const formData = new FormData()
     files.forEach(file => formData.append('file', file))
     if (title?.trim()) formData.append('title', title.trim())
     if (tags && tags.length > 0) formData.append('tags', JSON.stringify(tags))
+    if (extraFields) {
+      Object.entries(extraFields).forEach(([k, v]) => formData.append(k, typeof v === 'boolean' ? String(v) : v))
+    }
 
     const response = await fetch('/api/upload', {
       method: 'POST',
@@ -40,13 +45,16 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
       },
       body: formData,
     })
+    console.debug('[uploadMultipleFiles] response', { ok: response.ok, status: response.status })
 
     if (!response.ok) {
       const error = await response.json()
+      console.error('[uploadMultipleFiles] server error', error)
       throw new Error(error.error || 'Upload failed')
     }
 
     const result = await response.json()
+    console.debug('[uploadMultipleFiles] result', result)
     if (result.errors && result.errors.length > 0) {
       console.warn('Some files failed to upload:', result.errors)
     }
@@ -85,7 +93,7 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
     }
 
     try {
-      if (type === 'media' && selectedFiles && selectedFiles.length > 0) {
+      if ((type === 'media' || type === 'audio') && selectedFiles && selectedFiles.length > 0) {
         await uploadMultipleFiles(selectedFiles, title, tags)
         toast.success('Saved')
         onSuccess()
@@ -122,5 +130,6 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
   return {
     submitContent,
     isLoading: createContentMutation.isPending,
+    uploadFiles: uploadMultipleFiles,
   }
 }

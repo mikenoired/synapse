@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
 import React, { useEffect, useState, TouchEvent, FormEvent } from 'react'
+import toast from 'react-hot-toast'
 import { AddContentProvider, useAddContent } from '../model/add-content-context'
 import {
   ContentTypeSelector,
@@ -17,13 +18,13 @@ import AddTodoView from './todo'
 
 interface AddContentDialogProps {
   open: boolean // Used by parent component for conditional rendering
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: any) => void
   onContentAdded?: () => void
   initialTags?: string[]
 }
 
 interface AddContentDialogContentProps {
-  onOpenChange: (open: boolean) => void
+  onOpenChange: (_open: any) => void
   onContentAdded?: () => void
 }
 
@@ -57,11 +58,13 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
     parseLink,
     clearParsedData,
     submitContent,
+    uploadFiles,
     isSubmitting,
     resetForm,
   } = useAddContent()
 
   const { type, title, content, isFullScreen } = formState
+  const [makeTrack, setMakeTrack] = useState(false)
 
   const handleTouchStart = (e: TouchEvent) => {
     setStartY(e.touches[0].clientY)
@@ -95,13 +98,29 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    console.debug('[AddContentDialog] submit start', { type, files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })), makeTrack })
 
     if (type === 'media' && selectedFiles.length > 0) {
       setUploading(true)
     }
 
     try {
-      const success = await submitContent()
+      let success = false
+      if (type === 'audio' && selectedFiles.length > 0) {
+        setUploading(true)
+        const files = await uploadFiles(selectedFiles, title, tags, { makeTrack: makeTrack })
+        console.debug('[AddContentDialog] uploadFiles returned', files)
+        if (files && files.length > 0) {
+          toast.success('Saved')
+          success = true
+        } else {
+          toast.error('Не удалось загрузить файл')
+          success = false
+        }
+      } else {
+        success = await submitContent()
+      }
+      console.debug('[AddContentDialog] submit done', { success })
       if (success) {
         resetForm()
         onOpenChange(false)
@@ -156,6 +175,8 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
         return false
       case 'media':
         return selectedFiles.length === 0
+      case 'audio':
+        return selectedFiles.length === 0
       case 'todo':
         return false
       case 'link':
@@ -204,7 +225,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 
               <div className="space-y-2">
                 <Label htmlFor="content">
-                  {type === 'link' ? 'URL' : 'Медиа (картинки и видео)'}
+                  {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
                 </Label>
                 {type === 'link' ? (
                   <LinkPreview
@@ -230,6 +251,16 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
                   />
                 )}
               </div>
+
+              {type === 'audio' && (
+                <div className="space-y-2">
+                  <Label htmlFor="makeTrack">Сделать треком</Label>
+                  <div className="flex items-center gap-2">
+                    <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={(e) => setMakeTrack(e.target.checked)} />
+                    <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
+                  </div>
+                </div>
+              )}
 
               <TagInput
                 tags={tags}
@@ -268,20 +299,20 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 }
 
 export function AddContentDialog(props: AddContentDialogProps) {
-  const { open, onOpenChange, onContentAdded, initialTags } = props
+  const { open: isOpen, onOpenChange, onContentAdded, initialTags } = props
 
 
   React.useEffect(() => {
-    if (open) {
+    if (isOpen) {
       const originalOverflow = document.body.style.overflow
       document.body.style.overflow = 'hidden'
       return () => {
         document.body.style.overflow = originalOverflow
       }
     }
-  }, [open])
+  }, [isOpen])
 
-  if (!open) return null
+  if (!isOpen) return null
 
   return (
     <AddContentProvider

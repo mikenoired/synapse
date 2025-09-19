@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/shared/ui/button'
-import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize } from 'lucide-react'
+import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Music2 } from 'lucide-react'
 import { Content } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
 
@@ -21,6 +21,7 @@ export function ContentTypeSelector({
   const contentTypes = [
     { key: 'note', icon: FileText, label: 'Заметка' },
     { key: 'media', icon: ImageIcon, label: 'Медиа' },
+    { key: 'audio', icon: Music2, label: 'Аудио' },
     { key: 'link', icon: Link, label: 'Ссылка' },
     { key: 'todo', icon: ListChecks, label: 'Список' },
   ] as const

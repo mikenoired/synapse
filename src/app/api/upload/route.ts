@@ -7,6 +7,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { tmpdir } from 'os'
 import { join } from 'path'
 import { generateThumbnail, getImageDimensions } from '../../../server/lib/generate-thumbnail'
+import * as mm from 'music-metadata'
+import sharp from 'sharp'
 
 async function resolveTagTitlesToIds(supabase: ReturnType<typeof createSupabaseClient>, titles: string[]): Promise<string[]> {
   const unique = Array.from(new Set((titles || []).filter(Boolean)))
@@ -90,6 +92,7 @@ async function upsertContentTags(
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('[UPLOAD] start')
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -106,6 +109,9 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('file') as File[]
     const titleRaw = formData.get('title')?.toString()?.trim()
     const tagsRaw = formData.get('tags')?.toString()
+    const makeTrackRaw = formData.get('makeTrack')?.toString()
+    const makeTrack = makeTrackRaw === 'true'
+    console.log('[UPLOAD] form data', { files: files.length, title: titleRaw, tagsRaw, makeTrack })
     let tags: string[] = []
     if (tagsRaw) {
       try {
@@ -129,6 +135,7 @@ export async function POST(request: NextRequest) {
       const file = files[i]
 
       try {
+        console.log('[UPLOAD] processing', { name: file.name, type: file.type, size: file.size })
         if (file.type.startsWith('image/')) {
           if (!file.type.startsWith('image/')) {
             errors.push(`File "${file.name}" is not an image`)
@@ -180,12 +187,13 @@ export async function POST(request: NextRequest) {
               thumbnailBase64,
             }
           }
-          const { data: inserted } = await supabase.from('content').insert([{
+          const { data: inserted, error: insertErr } = await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
             content: JSON.stringify(mediaJson),
             title: titleRaw || undefined,
           }]).select('id').single()
+          if (insertErr) console.error('[UPLOAD] insert image error', insertErr)
 
           if (inserted?.id) {
             const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: inserted.id, title: titleRaw || undefined, type: 'media' })
@@ -275,12 +283,13 @@ export async function POST(request: NextRequest) {
               thumbnailBase64,
             }
           }
-          const { data: insertedVideo } = await supabase.from('content').insert([{
+          const { data: insertedVideo, error: insertVideoErr } = await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
             content: JSON.stringify(mediaJsonVideo),
             title: titleRaw || undefined,
           }]).select('id').single()
+          if (insertVideoErr) console.error('[UPLOAD] insert video error', insertVideoErr)
           if (insertedVideo?.id) {
             const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: insertedVideo.id, title: titleRaw || undefined, type: 'media' })
             if (tags.length) {
@@ -299,8 +308,123 @@ export async function POST(request: NextRequest) {
             type: file.type,
             thumbnailBase64
           })
+        } else if (file.type.startsWith('audio/')) {
+          if (file.size > 50 * 1024 * 1024) {
+            errors.push(`File "${file.name}" is too large (max 50MB)`)
+            continue
+          }
+
+          const bytes = await file.arrayBuffer()
+          const buffer = Buffer.from(bytes)
+
+          let metadata: mm.IAudioMetadata | null = null
+          try {
+            metadata = await mm.parseBuffer(buffer, { mimeType: file.type, size: buffer.length })
+            console.log('[UPLOAD] metadata parsed', {
+              title: metadata?.common.title,
+              artist: metadata?.common.artist,
+              album: metadata?.common.album,
+              duration: metadata?.format.duration,
+            })
+          } catch (e) {
+            console.warn('Failed to parse audio metadata:', e)
+          }
+
+          const { objectName: audioObject, validation } = await uploadFile(buffer, file.name, file.type, user.id, 'audio', { maxFileSize: 50 * 1024 * 1024 })
+          if (!validation.isValid) {
+            errors.push(`File "${file.name}" is not valid: ${validation.errors.join(', ')}`)
+          }
+          if (!audioObject) {
+            errors.push(`Failed to upload file "${file.name}"`)
+            continue
+          }
+
+          const audioUrl = getPublicUrl(audioObject)
+
+          let coverUrl: string | undefined
+          let coverObject: string | undefined
+          let coverThumbBase64: string | undefined
+          let coverDims: { width: number; height: number } | undefined
+          const pic = metadata?.common.picture?.[0]
+          if (pic && pic.data && pic.data.length > 0) {
+            try {
+              const jpeg = await sharp(pic.data).jpeg({ quality: 85 }).toBuffer()
+              const { objectName: covObj } = await uploadFile(jpeg, file.name.replace(/\.[^.]+$/, '.jpg'), 'image/jpeg', user.id, 'audio-covers')
+              if (covObj) {
+                coverObject = covObj
+                coverUrl = getPublicUrl(covObj)
+                coverThumbBase64 = await generateThumbnail(jpeg, 'image/jpeg')
+                try {
+                  coverDims = await getImageDimensions(jpeg)
+                } catch (err) {
+                  console.warn('[UPLOAD] getImageDimensions error', err)
+                }
+              }
+            } catch (e) {
+              console.warn('Failed to process cover:', e)
+            }
+          }
+
+          const audioJson = {
+            audio: {
+              object: audioObject,
+              url: audioUrl,
+              mimeType: file.type,
+              durationSec: metadata?.format.duration ? Math.round(metadata!.format.duration) : undefined,
+              bitrateKbps: metadata?.format.bitrate ? Math.round((metadata!.format.bitrate || 0) / 1000) : undefined,
+              sampleRateHz: metadata?.format.sampleRate || undefined,
+              channels: metadata?.format.numberOfChannels || undefined,
+              sizeBytes: buffer.length,
+            },
+            track: {
+              isTrack: makeTrack || Boolean(
+                metadata?.common.artist || metadata?.common.album || metadata?.common.title || metadata?.common.genre?.length
+              ),
+              title: metadata?.common.title || titleRaw || undefined,
+              artist: metadata?.common.artist || undefined,
+              album: metadata?.common.album || undefined,
+              year: metadata?.common.year || undefined,
+              genre: metadata?.common.genre || undefined,
+              trackNumber: metadata?.common.track?.no || undefined,
+              diskNumber: metadata?.common.disk?.no || undefined,
+              lyrics: metadata?.common.lyrics?.join('\n') || undefined,
+            },
+            cover: coverUrl ? {
+              object: coverObject,
+              url: coverUrl,
+              width: coverDims?.width,
+              height: coverDims?.height,
+              thumbnailBase64: coverThumbBase64,
+            } : undefined,
+          }
+
+          const { data: insertedAudio, error: insertAudioErr } = await supabase.from('content').insert([{
+            user_id: user.id,
+            type: 'audio',
+            content: JSON.stringify(audioJson),
+            title: titleRaw || metadata?.common.title || undefined,
+          }]).select('id').single()
+          if (insertAudioErr) console.error('[UPLOAD] insert audio error', insertAudioErr)
+
+          if (insertedAudio?.id) {
+            const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: insertedAudio.id, title: titleRaw || metadata?.common.title || undefined, type: 'audio' })
+            if (tags.length) {
+              const ids = await resolveTagTitlesToIds(supabase, tags)
+              const tagNodeIds = await getOrCreateTagNodeIds(supabase, user.id, ids)
+              await upsertContentTags(supabase, user.id, insertedAudio.id, ids, contentNodeId, tagNodeIds)
+            }
+          }
+
+          uploadResults.push({
+            objectName: audioObject,
+            url: audioUrl,
+            fileName: file.name,
+            size: file.size,
+            type: file.type,
+            cover: coverUrl,
+          })
         } else {
-          errors.push(`File "${file.name}" is not an image or video`)
+          errors.push(`File "${file.name}" is not an image, video, or audio`)
           continue
         }
       } catch (error) {
@@ -316,6 +440,7 @@ export async function POST(request: NextRequest) {
         errors: errors.length > 0 ? errors : undefined
       })
     } else {
+      console.warn('[UPLOAD] no files saved', { errors })
       return NextResponse.json({
         error: 'No files uploaded successfully',
         details: errors

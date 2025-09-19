@@ -1,8 +1,10 @@
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
+import { parseAudioJson } from '@/shared/lib/schemas'
 import { Content, parseMediaJson } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
 import { Session } from "@supabase/supabase-js"
 import Image from "next/image"
+import { Music2 } from 'lucide-react'
 import { useEffect, useState } from "react"
 
 async function getAspectRatioFromBase64(base64: string): Promise<string> {
@@ -113,6 +115,9 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
 
 export default function MediaItem({ item, onItemClick, session, thumbSrc }: MediaItemProps) {
   const media = parseMediaJson(item.content)?.media
+  const audioData = item.type === 'audio' ? parseAudioJson(item.content) : null
+  const audio = audioData?.audio
+  const isAudio = item.type === 'audio'
   const blurThumb = media?.thumbnailBase64 || ''
   const isVideo = media?.type === 'video'
   const mainSrc = isVideo ? (thumbSrc || (media?.thumbnailUrl || '')) : (media?.url || '')
@@ -144,6 +149,37 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
       cancelled = true
     }
   }, [mainSrc])
+
+  // Audio tiles do not preload the audio; playback happens in the modal
+
+  if (isAudio) {
+    const isTrack = Boolean(audioData?.track?.isTrack)
+    const coverUrl = audioData?.cover?.url
+    const fileName = (audio?.object || audio?.url || '').split('/').pop() || 'audio'
+
+    if (isTrack && coverUrl) {
+      return (
+        <div className="relative" onClick={() => onItemClick?.(item)}>
+          <RenderImage imageUrl={coverUrl} title={item.title || null} session={session} />
+          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white">
+            <div className="text-sm font-medium truncate">{audioData?.track?.title || item.title || fileName}</div>
+            {(audioData?.track?.artist || audioData?.track?.album) && (
+              <div className="text-xs opacity-80 truncate">{[audioData?.track?.artist, audioData?.track?.album].filter(Boolean).join(' • ')}</div>
+            )}
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex flex-col" onClick={() => onItemClick?.(item)}>
+        <div className="w-full aspect-square rounded-lg border flex items-center justify-center bg-muted/40">
+          <Music2 className="w-10 h-10 text-muted-foreground" />
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground truncate">{fileName}</div>
+      </div>
+    )
+  }
 
   return (
     <div className="relative" onClick={() => onItemClick?.(item)}>

@@ -26,8 +26,8 @@ export function useMediaUpload() {
         toast.error(`Файл "${file.name}" слишком большой (максимум 10MB)`)
         continue
       }
-      if (!(file.type.startsWith('image/') || file.type.startsWith('video/'))) {
-        toast.error(`Файл "${file.name}" не является поддерживаемым медиа (картинка или видео)`)
+      if (!(file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/'))) {
+        toast.error(`Файл "${file.name}" не является поддерживаемым медиа (картинка, видео или аудио)`)
         continue
       }
       validFiles.push(file)
@@ -35,6 +35,8 @@ export function useMediaUpload() {
         previewPromises.push(Promise.resolve(URL.createObjectURL(file)))
       } else if (file.type.startsWith('video/')) {
         previewPromises.push(getVideoThumbnail(file))
+      } else if (file.type.startsWith('audio/')) {
+        previewPromises.push(Promise.resolve(''))
       }
     }
 

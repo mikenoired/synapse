@@ -54,6 +54,7 @@ interface AddContentContextType {
   // Form submission
   submitContent: () => Promise<boolean>
   isSubmitting: boolean
+  uploadFiles: (files: File[], title?: string, tags?: string[], extra?: Record<string, string | boolean>) => Promise<{ objectName: string; url: string; thumbnail?: string }[]>
 
   // Utils
   resetForm: () => void
@@ -147,6 +148,7 @@ export function AddContentProvider({
     // Form submission
     submitContent,
     isSubmitting: submission.isLoading,
+    uploadFiles: submission.uploadFiles,
 
     // Utils
     resetForm,

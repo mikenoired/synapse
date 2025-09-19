@@ -188,8 +188,8 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
             {item.title}
           </span>
         </div>)}
-        <div className={item.type === 'media' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
-          {item.type === 'media' ? (
+        <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
+          {item.type === 'media' || item.type === 'audio' ? (
             <MediaItem item={item} session={session} onItemClick={onItemClick} thumbSrc={thumbSrc} />
           ) : item.type === 'link' ? (
             <div>

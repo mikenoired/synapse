@@ -34,8 +34,8 @@ export function MediaDropZone({
       {/* Drop Zone */}
       <div
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
-            ? 'border-primary bg-primary/10 scale-[1.02]'
-            : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20'
+          ? 'border-primary bg-primary/10 scale-[1.02]'
+          : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20'
           }`}
         onDragEnter={onDrag}
         onDragLeave={onDrag}
@@ -54,12 +54,12 @@ export function MediaDropZone({
               или нажмите кнопку ниже для выбора
             </p>
             <p className="text-xs text-muted-foreground/70">
-              Максимум 10MB • JPG, PNG, GIF, WebP, MP4, MOV, AVI
+              Максимум 10MB • JPG, PNG, GIF, WebP, MP4, MOV, AVI, MP3, M4A, FLAC, WAV, OGG
             </p>
           </div>
           <Input
             type="file"
-            accept="image/*,video/*"
+            accept="image/*,video/*,audio/*"
             multiple
             className="hidden"
             id="file-upload"
@@ -108,13 +108,19 @@ export function MediaDropZone({
                   onMoveFile(fromIndex, toIndex)
                 }}
               >
-                <Image
-                  src={url}
-                  alt={`Превью ${index + 1}`}
-                  className="w-full aspect-square object-cover rounded-lg border"
-                  width={200}
-                  height={200}
-                />
+                {selectedFiles[index].type.startsWith('audio/') ? (
+                  <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
+                    {selectedFiles[index].name}
+                  </div>
+                ) : (
+                  <Image
+                    src={url}
+                    alt={`Превью ${index + 1}`}
+                    className="w-full aspect-square object-cover rounded-lg border"
+                    width={200}
+                    height={200}
+                  />
+                )}
                 {selectedFiles.length > 1 && (
                   <div className="absolute top-1 left-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-xs font-medium">
                     {index + 1}

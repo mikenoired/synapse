@@ -22,7 +22,8 @@ const DEFAULT_CONFIG: FileValidationConfig = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
   allowedExtensions: [
     '.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.docx',
-    '.mp4', '.mov', '.avi', '.mkv'
+    '.mp4', '.mov', '.avi', '.mkv',
+    '.mp3', '.m4a', '.aac', '.flac', '.wav', '.ogg', '.opus'
   ],
   allowedMimeTypes: [
     'image/jpeg',
@@ -35,7 +36,15 @@ const DEFAULT_CONFIG: FileValidationConfig = {
     'video/mp4',
     'video/quicktime',
     'video/x-msvideo',
-    'video/x-matroska'
+    'video/x-matroska',
+    'audio/mpeg',
+    'audio/mp4',
+    'audio/x-m4a',
+    'audio/aac',
+    'audio/flac',
+    'audio/wav',
+    'audio/ogg',
+    'audio/opus'
   ],
   scanForMalware: true,
   checkMagicBytes: true,
@@ -55,11 +64,18 @@ const MAGIC_BYTES: Record<string, Buffer[]> = {
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
     Buffer.from([0x50, 0x4B, 0x03, 0x04]) // ZIP signature (DOCX based on ZIP)
   ],
-  // Видео форматы
   'video/mp4': [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6D, 0x70, 0x34, 0x32])], // mp4 ftyp
   'video/quicktime': [Buffer.from([0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20])], // mov ftyp
   'video/x-msvideo': [Buffer.from([0x52, 0x49, 0x46, 0x46])], // avi RIFF
-  'video/x-matroska': [Buffer.from([0x1A, 0x45, 0xDF, 0xA3])] // mkv EBML
+  'video/x-matroska': [Buffer.from([0x1A, 0x45, 0xDF, 0xA3])], // mkv EBML
+  'audio/mpeg': [Buffer.from([0x49, 0x44, 0x33]), Buffer.from([0xFF, 0xFB])], // ID3 or MP3 frame
+  'audio/mp4': [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70])], // mp4 ftyp
+  'audio/x-m4a': [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70])],
+  'audio/aac': [Buffer.from([0xFF, 0xF1]), Buffer.from([0xFF, 0xF9])], // ADTS
+  'audio/flac': [Buffer.from([0x66, 0x4C, 0x61, 0x43])], // fLaC
+  'audio/wav': [Buffer.from([0x52, 0x49, 0x46, 0x46])], // RIFF (WAVE)
+  'audio/ogg': [Buffer.from([0x4F, 0x67, 0x67, 0x53])], // OggS
+  'audio/opus': [Buffer.from([0x4F, 0x67, 0x67, 0x53])] // OggS (Opus in Ogg)
 }
 
 const MALWARE_PATTERNS = [
