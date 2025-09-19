@@ -8,7 +8,8 @@ export async function GET(
 ) {
   try {
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-      request.nextUrl.searchParams.get('token')
+      request.nextUrl.searchParams.get('token') ||
+      request.cookies.get('opi_token')?.value
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

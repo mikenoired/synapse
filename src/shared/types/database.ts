@@ -107,18 +107,21 @@ export type Database = {
           id: string
           relation_type: string
           to_node: string | null
+          user_id: string | null
         }
         Insert: {
           from_node?: string | null
           id?: string
           relation_type: string
           to_node?: string | null
+          user_id?: string | null
         }
         Update: {
           from_node?: string | null
           id?: string
           relation_type?: string
           to_node?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -143,18 +146,21 @@ export type Database = {
           id: string
           metadata: Json | null
           type: string
+          user_id: string | null
         }
         Insert: {
           content?: string | null
           id?: string
           metadata?: Json | null
           type: string
+          user_id?: string | null
         }
         Update: {
           content?: string | null
           id?: string
           metadata?: Json | null
           type?: string
+          user_id?: string | null
         }
         Relationships: []
       }

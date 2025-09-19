@@ -120,6 +120,11 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
           </div>
         ))}
         {todos.length > 3 && <div className="text-xs text-muted-foreground">+ ещё {todos.length - 3}...</div>}
+        {item.tags && <div className='flex flex-wrap gap-1 mt-3'>{item.tags.map((tag: string) => (
+          <Badge key={tag} variant='outline' className="text-xs">
+            {tag}
+          </Badge>
+        ))}</div>}
       </div>
     )
   }
@@ -144,7 +149,6 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       )
     }
 
-    // Получаем текст из структурированного контента
     const fullText = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
     const previewText = fullText.length > 200
       ? fullText.substring(0, 200) + '...'
@@ -203,9 +207,9 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
           ) : (
             <>
               <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
-              <div className="flex flex-wrap gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background to-transparent p-3">
+              <div className="flex flex-wrap mt-3">
                 {item.tags.map((tag: string) => (
-                  <Badge key={tag} variant='secondary' className="text-xs">
+                  <Badge key={tag} variant='outline' className="text-xs">
                     {tag}
                   </Badge>
                 ))}

@@ -6,7 +6,8 @@ import {
   LucideProps,
   Plus,
   Settings,
-  Tag
+  Tag,
+  Network
 } from 'lucide-react';
 import { ForwardRefExoticComponent, RefAttributes, useCallback } from 'react';
 import DesktopSidebar from './desktop-sidebar';
@@ -36,6 +37,7 @@ export default function Sidebar() {
   const navItems: NavItem[] = [
     { href: '/dashboard', icon: Home, label: 'Главная' },
     { href: '/dashboard/tags', icon: Tag, label: 'Теги' },
+    { href: '/dashboard/graph', icon: Network, label: 'Граф' },
     {
       action: () => setAddDialogOpen(true),
       icon: Plus,

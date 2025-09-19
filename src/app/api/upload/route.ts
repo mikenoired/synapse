@@ -22,9 +22,69 @@ async function resolveTagTitlesToIds(supabase: ReturnType<typeof createSupabaseC
   return ids.filter((v): v is string => typeof v === 'string' && v.length > 0)
 }
 
-async function upsertContentTags(supabase: ReturnType<typeof createSupabaseClient>, contentId: string, tagIds: string[]) {
+async function getOrCreateContentNode(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  userId: string,
+  params: { contentId: string; title?: string; type: string }
+) {
+  const { data: existing } = await supabase
+    .from('nodes')
+    .select('id')
+    .eq('user_id', userId)
+    .contains('metadata', { content_id: params.contentId })
+    .maybeSingle()
+  if (existing?.id) return existing.id as string
+  const { data, error } = await supabase
+    .from('nodes')
+    .insert([{ content: params.title ?? '', type: params.type, user_id: userId, metadata: { content_id: params.contentId } }])
+    .select('id')
+    .single()
+  if (error) throw error
+  return (data as { id: string }).id
+}
+
+async function getOrCreateTagNodeIds(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  userId: string,
+  tagIds: string[]
+): Promise<Record<string, string>> {
+  const out: Record<string, string> = {}
+  for (const tagId of Array.from(new Set(tagIds))) {
+    const { data: existing } = await supabase
+      .from('nodes')
+      .select('id')
+      .eq('user_id', userId)
+      .contains('metadata', { tag_id: tagId })
+      .maybeSingle()
+    if (existing?.id) {
+      out[tagId] = existing.id as string
+      continue
+    }
+    const { data: tag } = await supabase.from('tags').select('title').eq('id', tagId).single()
+    const { data: created, error } = await supabase
+      .from('nodes')
+      .insert([{ content: tag?.title ?? '', type: 'tag', user_id: userId, metadata: { tag_id: tagId } }])
+      .select('id')
+      .single()
+    if (error) throw error
+    out[tagId] = (created as { id: string }).id
+  }
+  return out
+}
+
+async function upsertContentTags(
+  supabase: ReturnType<typeof createSupabaseClient>,
+  contentId: string,
+  tagIds: string[],
+  contentNodeId: string,
+  tagNodeIdByTagId: Record<string, string>
+) {
   if (!tagIds.length) return
   await supabase.from('content_tags').insert(tagIds.map(id => ({ content_id: contentId, tag_id: id })))
+  const edgeRows = tagIds
+    .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag' }))
+    .filter(r => !!r.to_node)
+  if (edgeRows.length) await supabase.from('edges').insert(edgeRows)
 }
 
 export async function POST(request: NextRequest) {
@@ -121,9 +181,13 @@ export async function POST(request: NextRequest) {
             title: titleRaw || undefined,
           }]).select('id').single()
 
-          if (inserted?.id && tags.length) {
-            const ids = await resolveTagTitlesToIds(supabase, tags)
-            await upsertContentTags(supabase, inserted.id, ids)
+          if (inserted?.id) {
+            const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: inserted.id, title: titleRaw || undefined, type: 'media' })
+            if (tags.length) {
+              const ids = await resolveTagTitlesToIds(supabase, tags)
+              const tagNodeIds = await getOrCreateTagNodeIds(supabase, user.id, ids)
+              await upsertContentTags(supabase, inserted.id, ids, contentNodeId, tagNodeIds)
+            }
           }
 
           uploadResults.push({
@@ -206,9 +270,13 @@ export async function POST(request: NextRequest) {
             media_height: videoDimensions?.height,
             title: titleRaw || undefined,
           }]).select('id').single()
-          if (insertedVideo?.id && tags.length) {
-            const ids = await resolveTagTitlesToIds(supabase, tags)
-            await upsertContentTags(supabase, insertedVideo.id, ids)
+          if (insertedVideo?.id) {
+            const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: insertedVideo.id, title: titleRaw || undefined, type: 'media' })
+            if (tags.length) {
+              const ids = await resolveTagTitlesToIds(supabase, tags)
+              const tagNodeIds = await getOrCreateTagNodeIds(supabase, user.id, ids)
+              await upsertContentTags(supabase, insertedVideo.id, ids, contentNodeId, tagNodeIds)
+            }
           }
           console.log('Inserted video to content:', videoObject)
           uploadResults.push({

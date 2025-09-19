@@ -89,14 +89,24 @@ export const contentRouter = router({
       if (error) handleSupabaseError(error)
 
       const contentId = (data as Tables<'content'>).id
-      // Manage tag relations
+
+      const contentNodeId = await getOrCreateContentNode(ctx, {
+        content_id: contentId,
+        title: contentData.title,
+        type: contentData.type,
+      })
+
       const tagIds = inputTagIds as string[] | undefined
       const tagTitles = legacyTagTitles as string[] | undefined
       if (tagIds && tagIds.length) {
-        await upsertContentTags(ctx, contentId, tagIds)
+        const tagNodeIds = await getOrCreateTagNodeIds(ctx, tagIds)
+        await upsertContentTags(ctx, contentId, tagIds, contentNodeId, tagNodeIds, ctx.user.id)
       } else if (tagTitles && tagTitles.length) {
         const ids = await resolveTagTitlesToIds(ctx, tagTitles)
-        if (ids.length) await upsertContentTags(ctx, contentId, ids)
+        if (ids.length) {
+          const tagNodeIds = await getOrCreateTagNodeIds(ctx, ids)
+          await upsertContentTags(ctx, contentId, ids, contentNodeId, tagNodeIds, ctx.user.id)
+        }
       }
 
       const [withTags] = await attachTagsToContent(ctx, [data as Tables<'content'>])
@@ -125,11 +135,14 @@ export const contentRouter = router({
       // Update tag relations if provided
       const tagIds = inputTagIds as string[] | undefined
       const tagTitles = legacyTagTitles as string[] | undefined
+      const contentNodeId = await getOrCreateContentNode(ctx, { content_id: id, title: updateData.title, type: updateData.type })
       if (tagIds) {
-        await replaceContentTags(ctx, id, tagIds)
+        const tagNodeIds = await getOrCreateTagNodeIds(ctx, tagIds)
+        await replaceContentTags(ctx, id, tagIds, contentNodeId, tagNodeIds, ctx.user.id)
       } else if (tagTitles) {
         const ids = await resolveTagTitlesToIds(ctx, tagTitles)
-        await replaceContentTags(ctx, id, ids)
+        const tagNodeIds = await getOrCreateTagNodeIds(ctx, ids)
+        await replaceContentTags(ctx, id, ids, contentNodeId, tagNodeIds, ctx.user.id)
       }
 
       const [withTags] = await attachTagsToContent(ctx, [data as Tables<'content'>])
@@ -249,20 +262,74 @@ async function resolveTagTitlesToIds(ctx: any, titles: string[]): Promise<string
       .from('tags')
       .insert(missing.map(title => ({ title })))
       .select('id, title')
-    for (const t of inserted || []) existingMap.set(t.title, t.id)
+    for (const t of inserted || []) {
+      await ctx.supabase.from('nodes').insert([{
+        content: t.title,
+        type: 'tag',
+        user_id: ctx.user.id,
+      }]).select().single()
+      existingMap.set(t.title, t.id)
+    }
   }
   const ids = titles.map(t => existingMap.get(t))
   return ids.filter((v): v is string => typeof v === 'string' && v.length > 0)
 }
 
-async function upsertContentTags(ctx: any, contentId: string, tagIds: string[]) {
+async function upsertContentTags(ctx: any, contentId: string, tagIds: string[], contentNodeId: string, tagNodeIdByTagId: Record<string, string>, user_id: string) {
   if (!tagIds.length) return
   await ctx.supabase.from('content_tags').insert(tagIds.map(id => ({ content_id: contentId, tag_id: id })))
+  const edgeRows = tagIds
+    .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag', user_id }))
+    .filter(r => !!r.to_node)
+  if (edgeRows.length) await ctx.supabase.from('edges').insert(edgeRows)
 }
 
-async function replaceContentTags(ctx: any, contentId: string, tagIds: string[]) {
+async function replaceContentTags(ctx: any, contentId: string, tagIds: string[], contentNodeId: string, tagNodeIdByTagId: Record<string, string>, user_id: string) {
   await ctx.supabase.from('content_tags').delete().eq('content_id', contentId)
-  await upsertContentTags(ctx, contentId, tagIds)
+  await ctx.supabase.from('edges').delete().eq('from_node', contentNodeId).eq('relation_type', 'content_tag').eq('user_id', user_id)
+  await upsertContentTags(ctx, contentId, tagIds, contentNodeId, tagNodeIdByTagId, user_id)
+}
+
+async function getOrCreateContentNode(ctx: any, params: { content_id: string; title?: string; type: string }) {
+  const { data: existing } = await ctx.supabase
+    .from('nodes')
+    .select('id')
+    .eq('user_id', ctx.user.id)
+    .contains('metadata', { content_id: params.content_id })
+    .maybeSingle()
+  if (existing?.id) return existing.id as string
+  const { data, error } = await ctx.supabase
+    .from('nodes')
+    .insert([{ content: params.title ?? '', type: params.type, user_id: ctx.user.id, metadata: { content_id: params.content_id } }])
+    .select('id')
+    .single()
+  if (error) handleSupabaseError(error)
+  return (data as { id: string }).id
+}
+
+async function getOrCreateTagNodeIds(ctx: any, tagIds: string[]): Promise<Record<string, string>> {
+  const out: Record<string, string> = {}
+  for (const tagId of Array.from(new Set(tagIds))) {
+    const { data: existing } = await ctx.supabase
+      .from('nodes')
+      .select('id')
+      .eq('user_id', ctx.user.id)
+      .contains('metadata', { tag_id: tagId })
+      .maybeSingle()
+    if (existing?.id) {
+      out[tagId] = existing.id as string
+      continue
+    }
+    const { data: tag } = await ctx.supabase.from('tags').select('title').eq('id', tagId).single()
+    const { data: created, error } = await ctx.supabase
+      .from('nodes')
+      .insert([{ content: tag?.title ?? '', type: 'tag', user_id: ctx.user.id, metadata: { tag_id: tagId } }])
+      .select('id')
+      .single()
+    if (error) handleSupabaseError(error)
+    out[tagId] = (created as { id: string }).id
+  }
+  return out
 }
 
 function mapContentRow(row: Tables<'content'>, fallbackUserId: string): Content {
