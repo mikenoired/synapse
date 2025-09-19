@@ -1,27 +1,45 @@
-import { createContentSchema, updateContentSchema, contentListItemSchema, contentDetailSchema } from '@/shared/lib/schemas'
+import { createContentSchema, updateContentSchema, contentListItemSchema, contentDetailSchema, parseMediaJson } from '@/shared/lib/schemas'
 import type { Content } from '@/shared/lib/schemas'
 import type { Tables } from '@/shared/types/database'
 import { handleSupabaseError, handleSupabaseNotFound } from '@/shared/lib/utils'
 import { z } from 'zod'
 import { protectedProcedure, router } from '../trpc'
+import { deleteFile } from '@/shared/api/minio'
 
-// --- Lightweight in-memory cache for per-user tags (30s by default) ---
 const TAGS_CACHE_TTL_MS = Number(process.env.TAGS_CACHE_TTL_MS ?? 30000)
+
 type CacheEntry<T> = { data: T; expires: number }
+
 const tagsCache = new Map<string, CacheEntry<Array<{ id: string; title: string }>>>()
 const tagsWithContentCache = new Map<string, CacheEntry<Array<{ id: string; title: string; items: Content[] }>>>()
+
 function getFromCache<T>(map: Map<string, CacheEntry<T>>, key: string): T | undefined {
   const hit = map.get(key)
   if (!hit) return undefined
   if (Date.now() > hit.expires) { map.delete(key); return undefined }
   return hit.data
 }
+
 function setCache<T>(map: Map<string, CacheEntry<T>>, key: string, data: T) {
   map.set(key, { data, expires: Date.now() + TAGS_CACHE_TTL_MS })
 }
+
 function invalidateUserTags(userId: string) {
   tagsCache.delete(userId)
   tagsWithContentCache.delete(userId)
+}
+
+function extractObjectNameFromApiUrl(url?: string | null): string | null {
+  if (!url) return null
+  try {
+    const prefix = '/api/files/'
+    if (url.startsWith(prefix)) return url.slice(prefix.length)
+    const idx = url.indexOf('/api/files/')
+    if (idx >= 0) return url.slice(idx + '/api/files/'.length)
+  } catch {
+    // ignore
+  }
+  return null
 }
 
 export const contentRouter = router({
@@ -157,7 +175,6 @@ export const contentRouter = router({
 
       if (error) handleSupabaseError(error)
 
-      // Update tag relations if provided
       const tagIds = inputTagIds as string[] | undefined
       const tagTitles = legacyTagTitles as string[] | undefined
       const contentNodeId = await getOrCreateContentNode(ctx, { content_id: id, title: updateData.title, type: updateData.type })
@@ -178,13 +195,50 @@ export const contentRouter = router({
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ input, ctx }) => {
-      const { error } = await ctx.supabase
+      const { data: contentRow, error: loadErr } = await ctx.supabase
+        .from('content')
+        .select('*')
+        .eq('id', input.id)
+        .eq('user_id', ctx.user.id)
+        .single()
+      if (loadErr) handleSupabaseNotFound(loadErr, 'Контент не найден')
+
+      const { data: nodeRow } = await ctx.supabase
+        .from('nodes')
+        .select('id')
+        .eq('user_id', ctx.user.id)
+        .contains('metadata', { content_id: input.id })
+        .maybeSingle()
+
+      const contentNodeId = (nodeRow as { id: string } | null)?.id
+
+      await ctx.supabase.from('content_tags').delete().eq('content_id', input.id)
+      if (contentNodeId) {
+        await ctx.supabase
+          .from('edges')
+          .delete()
+          .or(`from_node.eq.${contentNodeId},to_node.eq.${contentNodeId}`)
+        await ctx.supabase
+          .from('nodes')
+          .delete()
+          .eq('id', contentNodeId)
+          .eq('user_id', ctx.user.id)
+      }
+
+      const { error: delErr } = await ctx.supabase
         .from('content')
         .delete()
         .eq('id', input.id)
         .eq('user_id', ctx.user.id)
+      if (delErr) handleSupabaseError(delErr)
 
-      if (error) handleSupabaseError(error)
+      if ((contentRow as any)?.type === 'media') {
+        const mediaJson = parseMediaJson((contentRow as any).content)
+        const mainObject = mediaJson?.media?.object || extractObjectNameFromApiUrl(mediaJson?.media?.url)
+        const thumbObject = extractObjectNameFromApiUrl(mediaJson?.media?.thumbnailUrl)
+        try { if (mainObject) await deleteFile(mainObject) } catch { /* ignore */ }
+        try { if (thumbObject) await deleteFile(thumbObject) } catch { /* ignore */ }
+      }
 
       invalidateUserTags(ctx.user.id)
       return { success: true }
@@ -195,7 +249,7 @@ export const contentRouter = router({
       const cacheKey = ctx.user.id
       const cached = getFromCache(tagsCache, cacheKey)
       if (cached) return cached
-      // Get all content ids for user
+
       const { data: contents, error: cErr } = await ctx.supabase
         .from('content')
         .select('id')
