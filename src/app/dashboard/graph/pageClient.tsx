@@ -1,12 +1,21 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { Json } from '@/shared/types/database';
 
-type Node = { id: string; content: string | null; type: string; created_at?: string | null; updated_at?: string | null }
+type NodeMetadata = {
+  content_id: string;
+} | {
+  tag_id: string;
+}
+
+type Node = { id: string; content: string | null; type: string; created_at?: string | null; updated_at?: string | null, metadata?: Json | null }
 type Edge = { id?: string; from_node: string | null; to_node: string | null; relation_type: string }
 
 export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const router = useRouter()
 
   const data = useMemo(() => {
     const links = edges
@@ -17,7 +26,7 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
       degree[l.source] = (degree[l.source] || 0) + 1
       degree[l.target] = (degree[l.target] || 0) + 1
     })
-    return { nodes: nodes.map(n => ({ id: n.id, label: n.content || "", type: n.type })), links, degree }
+    return { nodes: nodes.map(n => ({ id: n.id, label: n.content || "", type: n.type, metadata: n.metadata })), links, degree }
   }, [nodes, edges])
 
   useEffect(() => {
@@ -38,8 +47,8 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
       pos[n.id] = { x: (i / N) * canvas.width, y: (i % N) * (canvas.height / N), vx: 0, vy: 0 }
     })
 
-    // Dragging support
-    let dragging: { id: string; ox: number; oy: number } | null = null
+    let dragging: { id: string; ox: number; oy: number; moved: boolean } | null = null
+    let hovering: string | null = null
     const getPointer = (evt: PointerEvent) => {
       const rect = canvas.getBoundingClientRect()
       const x = (evt.clientX - rect.left) * DPR
@@ -63,20 +72,71 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
       const id = findNearest(x, y)
       if (!id) return
       const p = pos[id]
-      dragging = { id, ox: p.x - x, oy: p.y - y }
+      dragging = { id, ox: p.x - x, oy: p.y - y, moved: false }
+      canvas.style.cursor = 'grabbing'
       canvas.setPointerCapture(e.pointerId)
     }
     const onPointerMove = (e: PointerEvent) => {
-      if (!dragging) return
       const { x, y } = getPointer(e)
+      const id = findNearest(x, y)
+
+      if (id !== hovering) {
+        hovering = id
+        if (id) {
+          const node = data.nodes.find(n => n.id === id)
+          if (node?.type === 'tag') {
+            canvas.style.cursor = 'pointer'
+          } else {
+            canvas.style.cursor = dragging ? 'grabbing' : 'grab'
+          }
+        } else {
+          canvas.style.cursor = 'default'
+        }
+      }
+
+      if (!dragging) return
       const p = pos[dragging.id]
-      p.x = x + dragging.ox
-      p.y = y + dragging.oy
+      const newX = x + dragging.ox
+      const newY = y + dragging.oy
+      const dx = Math.abs(newX - p.x)
+      const dy = Math.abs(newY - p.y)
+      if (dx > 2 || dy > 2) dragging.moved = true
+      p.x = newX
+      p.y = newY
       p.vx = 0; p.vy = 0
     }
     const onPointerUp = (e: PointerEvent) => {
+      const wasClick = dragging && !dragging.moved
+      const draggedNodeId = dragging?.id
       dragging = null
-      try { canvas.releasePointerCapture(e.pointerId) } catch { }
+
+      const { x, y } = getPointer(e)
+      const id = findNearest(x, y)
+      if (id) {
+        const node = data.nodes.find(n => n.id === id)
+        if (node?.type === 'tag') {
+          canvas.style.cursor = 'pointer'
+        } else {
+          canvas.style.cursor = 'grab'
+        }
+      } else {
+        canvas.style.cursor = 'default'
+      }
+
+      try { canvas.releasePointerCapture(e.pointerId) } catch {
+        // ignore
+      }
+
+      if (wasClick && draggedNodeId) {
+        const node = data.nodes.find(n => n.id === draggedNodeId)
+        if (node?.type === 'tag' && node.metadata) {
+          console.log(node.metadata);
+          const metadata = node.metadata as NodeMetadata
+          if ('tag_id' in metadata) {
+            router.push(`/dashboard/tag/${metadata.tag_id}`)
+          }
+        }
+      }
     }
     canvas.addEventListener('pointerdown', onPointerDown)
     canvas.addEventListener('pointermove', onPointerMove)
@@ -179,7 +239,7 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
       canvas.removeEventListener('pointerup', onPointerUp)
       canvas.removeEventListener('pointercancel', onPointerUp)
     }
-  }, [data])
+  }, [data, router])
 
   return (
     <div className="flex h-full w-full p-4">

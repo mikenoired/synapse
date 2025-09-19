@@ -5,7 +5,7 @@ export const graphRouter = router({
   getGraph: protectedProcedure.query(async ({ ctx }) => {
     const { data: nodes, error: nodesError } = await ctx.supabase
       .from('nodes')
-      .select('id, content, type')
+      .select('id, content, type, metadata')
       .eq('user_id', ctx.user.id)
     if (nodesError) handleSupabaseError(nodesError)
     const { data: edges, error: edgesError } = await ctx.supabase
