@@ -74,6 +74,7 @@ async function getOrCreateTagNodeIds(
 
 async function upsertContentTags(
   supabase: ReturnType<typeof createSupabaseClient>,
+  userId: string,
   contentId: string,
   tagIds: string[],
   contentNodeId: string,
@@ -82,7 +83,7 @@ async function upsertContentTags(
   if (!tagIds.length) return
   await supabase.from('content_tags').insert(tagIds.map(id => ({ content_id: contentId, tag_id: id })))
   const edgeRows = tagIds
-    .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag' }))
+    .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag', user_id: userId }))
     .filter(r => !!r.to_node)
   if (edgeRows.length) await supabase.from('edges').insert(edgeRows)
 }
@@ -191,7 +192,7 @@ export async function POST(request: NextRequest) {
             if (tags.length) {
               const ids = await resolveTagTitlesToIds(supabase, tags)
               const tagNodeIds = await getOrCreateTagNodeIds(supabase, user.id, ids)
-              await upsertContentTags(supabase, inserted.id, ids, contentNodeId, tagNodeIds)
+              await upsertContentTags(supabase, user.id, inserted.id, ids, contentNodeId, tagNodeIds)
             }
           }
 
@@ -285,7 +286,7 @@ export async function POST(request: NextRequest) {
             if (tags.length) {
               const ids = await resolveTagTitlesToIds(supabase, tags)
               const tagNodeIds = await getOrCreateTagNodeIds(supabase, user.id, ids)
-              await upsertContentTags(supabase, insertedVideo.id, ids, contentNodeId, tagNodeIds)
+              await upsertContentTags(supabase, user.id, insertedVideo.id, ids, contentNodeId, tagNodeIds)
             }
           }
           console.log('Inserted video to content:', videoObject)
