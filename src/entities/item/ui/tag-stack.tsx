@@ -21,59 +21,84 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
 
   useEffect(() => {
     let cancelled = false;
-    setErrored(false);
-    setImgSrc(null);
-    setLoaded(false);
-    const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null
-    if (media?.url) {
-      getPresignedMediaUrl(media.url, session?.access_token)
-        .then((url) => {
-          if (!cancelled) setImgSrc(url || null);
-        })
-        .catch(() => {
-          if (!cancelled) setImgSrc(null);
-        });
-    }
+
+    const loadImages = async () => {
+      setLoaded(false);
+      setErrored(false);
+      setImgSrc(null);
+
+      const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null;
+      if (media?.url) {
+        const url = await getPresignedMediaUrl(media.url, session?.access_token);
+        if (cancelled) return;
+
+        setImgSrc(url || null);
+
+      }
+    };
+
+    loadImages();
+
     return () => {
       cancelled = true;
     };
   }, [item.type, item.content, session?.access_token]);
 
   if (item.type === 'media') {
-    const media = parseMediaJson(item.content)?.media
+    const media = parseMediaJson(item.content)?.media;
     const blurThumb = media?.thumbnailBase64 || '';
+    const isVideo = media?.type === 'video';
 
     return (
-      <div className="relative w-full h-full">
-        {blurThumb && !loaded && !errored && (
+      <div
+        className="relative w-full h-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
+        style={{ aspectRatio: '1 / 1' }}
+      >
+        {blurThumb && (
           <Image
             src={blurThumb}
             alt="blur preview"
-            className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-300 z-0"
-            style={{ opacity: loaded ? 0 : 1 }}
+            className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-200 ease-in-out z-0"
+            style={{ opacity: loaded && !errored ? 0 : 1 }}
             draggable={false}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+            sizes="200px"
           />
         )}
-        {imgSrc && !errored ? (
+        {imgSrc && !errored && (
           <Image
             src={imgSrc}
-            alt={item.title || 'Image'}
-            className="object-cover relative z-10 transition-opacity duration-300"
+            alt={item.title || (isVideo ? 'Видео' : 'Изображение')}
+            className="w-full h-full object-cover relative z-10 transition-opacity duration-200 ease-in-out"
             style={{ opacity: loaded ? 1 : 0 }}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             onLoad={() => setLoaded(true)}
             onError={() => { setErrored(true); setLoaded(true); }}
+            draggable={false}
+            fill
+            unoptimized
+            sizes="200px"
           />
-        ) : (
-          <div className="flex items-center justify-center w-full h-full bg-muted">
-            <FileText className="size-8 text-muted-foreground" />
+        )}
+        {isVideo && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 64 64"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="w-8 h-8 drop-shadow-lg"
+            >
+              <path
+                d="M20 16C20 13.7909 22.2386 12.5532 24.0711 13.7574L50.1421 31.7574C51.8579 32.8921 51.8579 35.1079 50.1421 36.2426L24.0711 54.2426C22.2386 55.4468 20 54.2091 20 52V16Z"
+                fill="white"
+                fillOpacity="0.8"
+              />
+            </svg>
           </div>
         )}
-        {(!imgSrc || errored) && !blurThumb && (
-          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+        {(!imgSrc || errored) && (
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground bg-muted/50">
             <FileText className="w-8 h-8 opacity-60" />
           </div>
         )}

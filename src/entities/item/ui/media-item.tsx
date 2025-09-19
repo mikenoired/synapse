@@ -195,7 +195,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
         mainSrc ? <RenderImage imageUrl={media?.url || ''} title={item.title || null} session={session} blurThumb={blurThumb} savedWidth={media?.width} savedHeight={media?.height} /> : null
       )}
       {item.tags.length > 0 && (
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
           <div className="flex flex-wrap gap-1">
             {item.tags.map((tag: string) => (
               <Badge key={tag} variant="outline" className="text-xs bg-white/20 border-white/30 text-white">
