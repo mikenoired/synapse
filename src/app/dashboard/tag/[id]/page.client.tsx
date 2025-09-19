@@ -11,12 +11,12 @@ import { useRouter } from 'next/navigation'
 import { DragEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
-  tag: string
+  tagId: string
+  tagTitle: string
   initial: { items: Content[]; nextCursor: string | undefined }
 }
 
-export default function TagClient({ tag, initial }: Props) {
-  const decodedTag = tag
+export default function TagClient({ tagId, tagTitle, initial }: Props) {
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const { isAddDialogOpen, setAddDialogOpen, setPreloadedFiles } = useDashboard()
@@ -30,7 +30,7 @@ export default function TagClient({ tag, initial }: Props) {
     isLoading: contentLoading,
     refetch: refetchContent,
   } = trpc.content.getAll.useQuery({
-    tagIds: [decodedTag],
+    tagIds: [tagId],
     limit: 20,
   }, {
     enabled: !!user || initial.items.length > 0,
@@ -115,7 +115,7 @@ export default function TagClient({ tag, initial }: Props) {
         </div>
       )}
       <header className="flex items-center gap-2 px-6 py-4">
-        <h1 className="text-2xl font-semibold capitalize">{decodedTag}</h1>
+        <h1 className="text-2xl font-semibold capitalize">{tagTitle}</h1>
       </header>
       <main className="flex-1 overflow-y-auto p-6">
         <ContentGrid
@@ -124,7 +124,7 @@ export default function TagClient({ tag, initial }: Props) {
           session={session}
           onContentChanged={handleContentChanged}
           onItemClick={handleItemClick}
-          excludedTag={decodedTag}
+          excludedTag={tagTitle}
         />
       </main>
 
@@ -145,7 +145,7 @@ export default function TagClient({ tag, initial }: Props) {
         open={isAddDialogOpen}
         onOpenChange={setAddDialogOpen}
         onContentAdded={handleContentChanged}
-        initialTags={[decodedTag]}
+        initialTags={[tagTitle]}
       />
     </div>
   )

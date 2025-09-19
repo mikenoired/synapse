@@ -45,7 +45,7 @@ export default function TagsClient({ initial }: Props) {
       <h1 className="text-2xl font-semibold mb-8">Теги</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-12">
         {tagsWithContent.map(({ id, title, items }) => (
-          <Link key={id} href={`/dashboard/tag/${encodeURIComponent(title)}`} className="group">
+          <Link key={id} href={`/dashboard/tag/${id}`} className="group">
             <h2 className="text-lg font-medium mb-3 capitalize group-hover:text-primary transition-colors">{title}</h2>
             <TagStack items={items} session={session} />
           </Link>

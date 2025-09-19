@@ -274,6 +274,19 @@ export const contentRouter = router({
       return result
     }),
 
+  getTagById: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const { data: tag, error } = await ctx.supabase
+        .from('tags')
+        .select('id, title')
+        .eq('id', input.id)
+        .single()
+
+      if (error) handleSupabaseError(error)
+      return tag
+    }),
+
   getTagsWithContent: protectedProcedure
     .query(async ({ ctx }) => {
       const cacheKey = ctx.user.id
