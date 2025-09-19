@@ -14,7 +14,8 @@ export default async function TagPage({ params }: { params: Promise<{ tag: strin
   }
 
   const caller = await getServerCaller()
-  const initial = await caller.content.getAll({ tags: [decodedTag], limit: 20 })
+  // NOTE: expecting tag to be an id now for fast filtering
+  const initial = await caller.content.getAll({ tagIds: [decodedTag], limit: 20 })
 
   return <TagClient tag={decodedTag} initial={initial} />
 }

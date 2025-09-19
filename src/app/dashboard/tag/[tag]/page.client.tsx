@@ -12,7 +12,7 @@ import { DragEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
   tag: string
-  initial: { items: Content[]; nextCursor: number | undefined }
+  initial: { items: Content[]; nextCursor: string | undefined }
 }
 
 export default function TagClient({ tag, initial }: Props) {
@@ -30,7 +30,7 @@ export default function TagClient({ tag, initial }: Props) {
     isLoading: contentLoading,
     refetch: refetchContent,
   } = trpc.content.getAll.useQuery({
-    tags: [decodedTag],
+    tagIds: [decodedTag],
     limit: 20,
   }, {
     enabled: !!user || initial.items.length > 0,

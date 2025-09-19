@@ -2,7 +2,7 @@
 
 import { trpc } from "@/shared/api/trpc"
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
-import { Content } from "@/shared/lib/schemas"
+import { Content, parseMediaJson } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
 import { Button } from "@/shared/ui/button"
 import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog"
@@ -49,13 +49,8 @@ export function UnifiedMediaModal({
   const imageUrls: string[] = (gallery.length > 0)
     ? gallery.map(g => g.url)
     : (() => {
-      try {
-        const parsed = JSON.parse(item.content) as string[]
-        if (Array.isArray(parsed)) return parsed
-      } catch (error) {
-        console.error('Error parsing content:', error)
-      }
-      return [item.content]
+      const media = parseMediaJson(item.content)?.media
+      return media?.url ? [media.url] : [item.content]
     })()
 
   const isMultiple = imageUrls.length > 1

@@ -74,7 +74,7 @@ export function AddContentProvider({
   onSuccess,
   onContentAdded
 }: AddContentProviderProps) {
-  const form = useContentForm(initialTags)
+  const form = useContentForm()
   const tags = useTagManager(initialTags)
   const media = useMediaUpload()
   const todos = useTodoManager()

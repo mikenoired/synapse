@@ -1,7 +1,7 @@
 'use client';
 
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils';
-import { Content } from '@/shared/lib/schemas';
+import { Content, parseMediaJson } from '@/shared/lib/schemas';
 import { cn } from '@/shared/lib/utils';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Session } from '@supabase/supabase-js';
@@ -24,8 +24,9 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
     setErrored(false);
     setImgSrc(null);
     setLoaded(false);
-    if (item.type === 'media' && item.media_url) {
-      getPresignedMediaUrl(item.media_url, session?.access_token)
+    const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null
+    if (media?.url) {
+      getPresignedMediaUrl(media.url, session?.access_token)
         .then((url) => {
           if (!cancelled) setImgSrc(url || null);
         })
@@ -36,10 +37,11 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
     return () => {
       cancelled = true;
     };
-  }, [item.type, item.media_url, session?.access_token]);
+  }, [item.type, item.content, session?.access_token]);
 
-  if (item.type === 'media' && item.media_url) {
-    const blurThumb = item.thumbnail_base64 || '';
+  if (item.type === 'media') {
+    const media = parseMediaJson(item.content)?.media
+    const blurThumb = media?.thumbnailBase64 || '';
 
     return (
       <div className="relative w-full h-full">

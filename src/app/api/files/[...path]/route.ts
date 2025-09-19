@@ -7,9 +7,10 @@ export async function GET(
   context: { params: Promise<{ path: string[] }> }
 ) {
   try {
-    const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
-      request.nextUrl.searchParams.get('token') ||
-      request.cookies.get('opi_token')?.value
+    const headerToken = request.headers.get('authorization')?.replace('Bearer ', '')
+    const cookieToken = request.cookies.get('opi_token')?.value
+    const queryToken = request.nextUrl.searchParams.get('token')
+    const token = headerToken || cookieToken || queryToken
 
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -34,9 +35,12 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Получаем presigned URL
+    // Получаем presigned URL и сразу делаем redirect, чтобы убрать лишний RTT
     const presignedUrl = await getPresignedUrl(objectName, 60 * 60) // 1 час
-    return NextResponse.json({ presignedUrl })
+    const res = NextResponse.redirect(presignedUrl, { status: 302 })
+    // Частный кеш для браузера на короткий срок
+    res.headers.set('Cache-Control', 'private, max-age=60')
+    return res
   } catch (error) {
     console.error('File access error:', error)
     return NextResponse.json(

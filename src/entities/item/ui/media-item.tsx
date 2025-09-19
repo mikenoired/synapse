@@ -1,5 +1,5 @@
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
-import { Content } from "@/shared/lib/schemas"
+import { Content, parseMediaJson } from "@/shared/lib/schemas"
 import { Badge } from "@/shared/ui/badge"
 import { Session } from "@supabase/supabase-js"
 import Image from "next/image"
@@ -103,6 +103,7 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
           onError={() => { setErrored(true); setLoaded(true) }}
           draggable={false}
           fill
+          unoptimized
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
         />
       )}
@@ -111,21 +112,22 @@ function RenderImage({ imageUrl, title, session, blurThumb, savedWidth, savedHei
 }
 
 export default function MediaItem({ item, onItemClick, session, thumbSrc }: MediaItemProps) {
-  const blurThumb = item.thumbnail_base64 || ''
-  const isVideo = item.media_type === 'video' && item.thumbnail_url
-  const mainSrc = isVideo ? (thumbSrc || '') : (item.media_url || '')
+  const media = parseMediaJson(item.content)?.media
+  const blurThumb = media?.thumbnailBase64 || ''
+  const isVideo = media?.type === 'video'
+  const mainSrc = isVideo ? (thumbSrc || (media?.thumbnailUrl || '')) : (media?.url || '')
   const [thumbSize, setThumbSize] = useState<{ width: number; height: number } | null>(null)
   const [blurAspectRatio, setBlurAspectRatio] = useState<string>('16 / 9')
 
   useEffect(() => {
-    if (item.media_width && item.media_height) {
-      setBlurAspectRatio(`${item.media_width} / ${item.media_height}`)
+    if (media?.width && media?.height) {
+      setBlurAspectRatio(`${media.width} / ${media.height}`)
     } else if (blurThumb) {
       getAspectRatioFromBase64(blurThumb)
         .then(setBlurAspectRatio)
         .catch(() => setBlurAspectRatio('16 / 9'))
     }
-  }, [blurThumb, item.media_width, item.media_height])
+  }, [blurThumb, media?.width, media?.height])
 
   useEffect(() => {
     let cancelled = false
@@ -190,7 +192,7 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
           </div>
         </div>
       ) : (
-        mainSrc ? <RenderImage imageUrl={item.media_url || ''} title={item.title || null} session={session} blurThumb={blurThumb} savedWidth={item.media_width} savedHeight={item.media_height} /> : null
+        mainSrc ? <RenderImage imageUrl={media?.url || ''} title={item.title || null} session={session} blurThumb={blurThumb} savedWidth={media?.width} savedHeight={media?.height} /> : null
       )}
       {item.tags.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200">

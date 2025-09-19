@@ -2,7 +2,7 @@
 
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog'
 import { trpc } from '@/shared/api/trpc'
-import { Content } from "@/shared/lib/schemas"
+import { Content, parseMediaJson } from "@/shared/lib/schemas"
 import { Session } from "@supabase/supabase-js"
 import { useState } from 'react'
 import { LinkViewerModal } from "./link-viewer-modal"
@@ -47,33 +47,9 @@ export function ContentModalManager({
     const imageGallery = allItems
       .filter(i => i.type === 'media')
       .flatMap(i => {
-        try {
-          const parsed = JSON.parse(i.content);
-          if (Array.isArray(parsed)) {
-            return parsed.map((url: string) => ({
-              url,
-              parentId: i.id,
-              media_type: i.media_type,
-              thumbnail_url: i.thumbnail_url,
-            }));
-          }
-          if (typeof parsed === "string") {
-            return [{
-              url: parsed,
-              parentId: i.id,
-              media_type: i.media_type,
-              thumbnail_url: i.thumbnail_url,
-            }];
-          }
-          return [];
-        } catch (error) {
-          return [{
-            url: i.content,
-            parentId: i.id,
-            media_type: i.media_type,
-            thumbnail_url: i.thumbnail_url,
-          }];
-        }
+        const media = parseMediaJson(i.content)?.media
+        if (media?.url) return [{ url: media.url, parentId: i.id, media_type: media.type, thumbnail_url: media.thumbnailUrl }]
+        return []
       })
 
     return (

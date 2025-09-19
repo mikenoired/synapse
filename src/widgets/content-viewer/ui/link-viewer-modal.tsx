@@ -360,28 +360,6 @@ export function LinkViewerModal({
           </div>
 
           <div className="flex-shrink-0">
-            {item.reminder_at && (
-              <div className="border-t border-border">
-                <div className="p-4">
-                  <div className="bg-primary/10 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-primary" />
-                      <span className="font-medium text-primary">Напоминание:</span>
-                      <span className="text-foreground/80">
-                        {new Date(item.reminder_at).toLocaleDateString('ru-RU', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="border-t border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
               <motion.div
                 initial={{ opacity: 0 }}

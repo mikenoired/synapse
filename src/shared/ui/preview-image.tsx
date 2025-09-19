@@ -41,5 +41,5 @@ export function PreviewImage({ src, token, alt, className, skeletonClassName }: 
   if (error || !url) {
     return <div className={skeletonClassName || "bg-destructive/20 w-full h-full rounded flex items-center justify-center text-xs text-destructive"}>Ошибка</div>
   }
-  return <Image src={url} alt={alt || ''} className={className} draggable={false} fill />
+  return <Image src={url} alt={alt || ''} className={className} draggable={false} fill unoptimized />
 }

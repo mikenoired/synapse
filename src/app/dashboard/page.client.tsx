@@ -12,7 +12,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { DragEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
-  initial: { items: Content[]; nextCursor: number | undefined }
+  initial: { items: Content[]; nextCursor: string | undefined }
 }
 
 export default function DashboardClient({ initial }: Props) {
@@ -36,7 +36,7 @@ export default function DashboardClient({ initial }: Props) {
     refetch: refetchContent,
   } = trpc.content.getAll.useInfiniteQuery({
     search: searchQuery || undefined,
-    tags: selectedTags.length > 0 ? selectedTags : undefined,
+    tagIds: selectedTags.length > 0 ? selectedTags : undefined,
     limit: 20,
   }, {
     getNextPageParam: last => last.nextCursor,

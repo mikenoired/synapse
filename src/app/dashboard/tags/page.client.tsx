@@ -6,7 +6,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 import Link from 'next/link'
 
 interface Props {
-  initial: { tag: string; items: any[] }[]
+  initial: { id: string; title: string; items: any[] }[]
 }
 
 export default function TagsClient({ initial }: Props) {
@@ -44,9 +44,9 @@ export default function TagsClient({ initial }: Props) {
     <div className="p-6">
       <h1 className="text-2xl font-semibold mb-8">Теги</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-12">
-        {tagsWithContent.map(({ tag, items }) => (
-          <Link key={tag} href={`/dashboard/tag/${encodeURIComponent(tag)}`} className="group">
-            <h2 className="text-lg font-medium mb-3 capitalize group-hover:text-primary transition-colors">{tag}</h2>
+        {tagsWithContent.map(({ id, title, items }) => (
+          <Link key={id} href={`/dashboard/tag/${encodeURIComponent(title)}`} className="group">
+            <h2 className="text-lg font-medium mb-3 capitalize group-hover:text-primary transition-colors">{title}</h2>
             <TagStack items={items} session={session} />
           </Link>
         ))}

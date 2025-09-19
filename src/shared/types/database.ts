@@ -23,10 +23,7 @@ export type Database = {
           media_type: string | null
           media_url: string | null
           media_width: number | null
-          preview_blob: string | null
-          reminder_at: string | null
           thumbnail_base64: string | null
-          thumbnail_url: string | null
           title: string | null
           type: string
           updated_at: string | null
@@ -41,10 +38,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           media_width?: number | null
-          preview_blob?: string | null
-          reminder_at?: string | null
           thumbnail_base64?: string | null
-          thumbnail_url?: string | null
           title?: string | null
           type: string
           updated_at?: string | null
@@ -59,10 +53,7 @@ export type Database = {
           media_type?: string | null
           media_url?: string | null
           media_width?: number | null
-          preview_blob?: string | null
-          reminder_at?: string | null
           thumbnail_base64?: string | null
-          thumbnail_url?: string | null
           title?: string | null
           type?: string
           updated_at?: string | null

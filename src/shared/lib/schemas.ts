@@ -58,7 +58,6 @@ export const contentSchema = z.object({
   tags: z.array(z.string()).default([]),
   // New normalized tag ids (content_tags)
   tag_ids: z.array(z.string()).default([]),
-  reminder_at: z.string().optional(),
   created_at: z.string(),
   updated_at: z.string(),
   media_url: z.string().optional(),
@@ -79,7 +78,6 @@ export const contentListItemSchema = contentSchema.pick({
   content: true,
   tags: true,
   tag_ids: true,
-  reminder_at: true,
   created_at: true,
   updated_at: true,
   media_url: true,
@@ -109,7 +107,6 @@ export const createContentSchema = z.object({
   tag_ids: z.array(z.string()).optional(),
   // Back-compat: titles (deprecated)
   tags: z.array(z.string()).optional(),
-  reminder_at: z.string().optional(),
   url: z.string().optional(),
   media_url: z.string().optional(),
   media_type: z.enum(['image', 'video']).optional(),
@@ -150,6 +147,29 @@ export const parseLinkContent = (content: string): LinkContent | null => {
 
 export const stringifyLinkContent = (linkContent: LinkContent): string => {
   return JSON.stringify(linkContent)
+}
+
+// ---- Media content helpers (for DB model with JSON in content) ----
+export type MediaJson = {
+  media: {
+    object?: string
+    url?: string
+    type: 'image' | 'video'
+    width?: number
+    height?: number
+    thumbnailUrl?: string
+    thumbnailBase64?: string
+  }
+}
+
+export const parseMediaJson = (content: string): MediaJson | null => {
+  try {
+    const parsed = JSON.parse(content)
+    if (parsed && parsed.media && typeof parsed.media.type === 'string') return parsed as MediaJson
+    return null
+  } catch {
+    return null
+  }
 }
 
 // Функция для извлечения текста из структурированного контента (для поиска)

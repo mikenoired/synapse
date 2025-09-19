@@ -26,17 +26,7 @@ export async function getPresignedMediaUrl(apiPath: string, token?: string): Pro
     ? apiPath
     : `/api/files/${apiPath.replace(/^\/+/, '')}`
 
-  const headers: Record<string, string> = {}
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`
-  }
-
-  const res = await fetch(normalizedApiPath, {
-    credentials: 'include',
-    headers
-  })
-
-  if (!res.ok) throw new Error('Failed to get file link')
-  const data = await res.json()
-  return data.presignedUrl
+  // We now return the proxy path directly; the route performs a 302 redirect
+  // to the presigned URL. Auth is via HttpOnly cookie (opi_token). Never append tokens to URL.
+  return normalizedApiPath
 } 

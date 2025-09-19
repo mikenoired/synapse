@@ -169,15 +169,20 @@ export async function POST(request: NextRequest) {
             console.error('Error getting image dimensions:', error)
           }
 
+          const mediaJson = {
+            media: {
+              object: objectName,
+              url: publicUrl,
+              type: 'image' as const,
+              width: imageDimensions?.width,
+              height: imageDimensions?.height,
+              thumbnailBase64,
+            }
+          }
           const { data: inserted } = await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
-            content: objectName,
-            media_url: publicUrl,
-            media_type: 'image',
-            thumbnail_base64: thumbnailBase64,
-            media_width: imageDimensions?.width,
-            media_height: imageDimensions?.height,
+            content: JSON.stringify(mediaJson),
             title: titleRaw || undefined,
           }]).select('id').single()
 
@@ -258,16 +263,21 @@ export async function POST(request: NextRequest) {
           }
 
           console.log('Insert video to content:', videoObject)
+          const mediaJsonVideo = {
+            media: {
+              object: videoObject,
+              url: getPublicUrl(videoObject),
+              type: 'video' as const,
+              width: videoDimensions?.width,
+              height: videoDimensions?.height,
+              thumbnailUrl: getPublicUrl(thumbObject),
+              thumbnailBase64,
+            }
+          }
           const { data: insertedVideo } = await supabase.from('content').insert([{
             user_id: user.id,
             type: 'media',
-            content: videoObject,
-            media_url: getPublicUrl(videoObject),
-            media_type: 'video',
-            thumbnail_url: getPublicUrl(thumbObject),
-            thumbnail_base64: thumbnailBase64,
-            media_width: videoDimensions?.width,
-            media_height: videoDimensions?.height,
+            content: JSON.stringify(mediaJsonVideo),
             title: titleRaw || undefined,
           }]).select('id').single()
           if (insertedVideo?.id) {

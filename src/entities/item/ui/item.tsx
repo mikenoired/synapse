@@ -1,7 +1,7 @@
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog';
 import { trpc } from "@/shared/api/trpc";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
-import { Content, LinkContent, parseLinkContent, extractTextFromStructuredContent } from "@/shared/lib/schemas";
+import { Content, LinkContent, parseLinkContent, extractTextFromStructuredContent, parseMediaJson } from "@/shared/lib/schemas";
 import { Badge } from "@/shared/ui/badge";
 import {
   ContextMenu,
@@ -80,14 +80,16 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
   const [thumbSrc, setThumbSrc] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
-    if (item.media_type === 'video' && item.thumbnail_url) {
+    const media = item.type === 'media' ? parseMediaJson(item.content)?.media : undefined
+    const thumb = media?.thumbnailUrl
+    if (media?.type === 'video' && thumb) {
       setThumbSrc(null)
-      getPresignedMediaUrl(item.thumbnail_url, session?.access_token)
+      getPresignedMediaUrl(thumb, session?.access_token)
         .then(url => { if (!cancelled) setThumbSrc(url) })
         .catch(() => { if (!cancelled) setThumbSrc(null) })
     }
     return () => { cancelled = true }
-  }, [item.thumbnail_url, item.media_type, session?.access_token])
+  }, [item.content, item.type, session?.access_token])
 
   const getTextContent = useMemo(() => {
     if (item.type !== 'note') return item.content;
