@@ -159,9 +159,9 @@ export default function MediaItem({ item, onItemClick, session, thumbSrc }: Medi
 
     if (isTrack && coverUrl) {
       return (
-        <div className="relative" onClick={() => onItemClick?.(item)}>
+        <div className="relative group" onClick={() => onItemClick?.(item)}>
           <RenderImage imageUrl={coverUrl} title={item.title || null} session={session} />
-          <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white">
+          <div className="absolute bottom-0 left-0 right-0 p-2 pt-3 bg-gradient-to-t from-black/70 to-transparent text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
             <div className="text-sm font-medium truncate">{audioData?.track?.title || item.title || fileName}</div>
             {(audioData?.track?.artist || audioData?.track?.album) && (
               <div className="text-xs opacity-80 truncate">{[audioData?.track?.artist, audioData?.track?.album].filter(Boolean).join(' • ')}</div>
