@@ -261,8 +261,10 @@ export function AudioViewerModal({ open: _open, onOpenChange, item, session }: A
         <audio ref={audioRef} src={audioSrc} className="hidden" />
         <div className="mx-auto w-full max-w-xl flex flex-col gap-4">
           {isTrack && coverSrc ? (
-            <div className="relative w-full bg-muted overflow-hidden rounded-lg" style={{ aspectRatio: '1 / 1' }}>
-              <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover" />
+            <div className="relative w-full bg-muted rounded-lg" style={{ aspectRatio: '1 / 1' }}>
+              <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover z-10" />
+              {/** TODO: Make glow effect by main color of cover */}
+              <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover absolute inset-0 blur-2xl scale-110 opacity-50" />
             </div>
           ) : (
             <div className="w-full aspect-square rounded-lg border bg-muted/40" />
