@@ -117,8 +117,40 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    font-display: swap;
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeSpeed;
+  }
+
+  img {
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 200px;
+  }
+
+  .loading-placeholder {
+    background: linear-gradient(90deg,
+        rgb(var(--color-muted) / 0.5) 25%,
+        transparent 50%,
+        rgb(var(--color-muted) / 0.5) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+
+    100% {
+      background-position: 200% 0;
+    }
   }
 }
 
@@ -148,19 +180,45 @@
   }
 }
 
-/* Masonry Grid Styles */
 .masonry-grid {
   display: flex;
   margin-left: -1rem;
   width: auto;
+  will-change: transform;
+  contain: layout style paint;
 }
 
 .masonry-grid_column {
   padding-left: 1rem;
   background-clip: padding-box;
+  contain: layout style;
 }
 
 .masonry-grid_column>div {
   margin-bottom: 1rem;
   break-inside: avoid;
+  will-change: transform;
+  contain: layout style paint;
+}
+
+.animate-in {
+  animation-fill-mode: both;
+  animation-duration: 0.15s;
+  animation-timing-function: ease-out;
+}
+
+.fade-in-0 {
+  animation-name: fadeIn;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -1,15 +1,17 @@
 'use client'
 
-import { AddContentDialog } from '@/features/add-content/ui/add-content-dialog'
-import { ContentFilter } from '@/features/content-filter/content-filter'
-import { ContentGrid } from '@/features/content-grid/content-grid'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Content } from '@/shared/lib/schemas'
-import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { DragEvent, useEffect, useRef, useState } from 'react'
+import { DragEvent, useEffect, useRef, useState, lazy, Suspense } from 'react'
+import { Skeleton } from '@/shared/ui/skeleton'
+
+const AddContentDialog = lazy(() => import('@/features/add-content/ui/add-content-dialog').then(mod => ({ default: mod.AddContentDialog })))
+const ContentFilter = lazy(() => import('@/features/content-filter/content-filter').then(mod => ({ default: mod.ContentFilter })))
+const ContentGrid = lazy(() => import('@/features/content-grid/content-grid').then(mod => ({ default: mod.ContentGrid })))
+const ContentModalManager = lazy(() => import('@/widgets/content-viewer/ui/content-modal-manager').then(mod => ({ default: mod.ContentModalManager })))
 
 interface Props {
   initial: { items: Content[]; nextCursor: string | undefined }
@@ -37,16 +39,16 @@ export default function DashboardClient({ initial }: Props) {
   } = trpc.content.getAll.useInfiniteQuery({
     search: searchQuery || undefined,
     tagIds: selectedTags.length > 0 ? selectedTags : undefined,
-    limit: 20,
+    limit: 12,
   }, {
     getNextPageParam: last => last.nextCursor,
     enabled: !!user || initial.items.length > 0,
-    retry: false,
-    staleTime: 0,
-    refetchOnMount: 'always',
+    retry: 1,
+    staleTime: 60000,
+    gcTime: 300000,
+    refetchOnMount: false,
     refetchOnReconnect: true,
     refetchOnWindowFocus: false,
-    // seed with SSR data
     initialData: {
       pageParams: [undefined],
       pages: [initial],
@@ -140,7 +142,7 @@ export default function DashboardClient({ initial }: Props) {
   if (loading && initial.items.length === 0) {
     return (
       <div className="flex h-full items-center justify-center p-6">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="loading-placeholder h-8 w-8 rounded-full"></div>
       </div>
     )
   }
@@ -164,40 +166,54 @@ export default function DashboardClient({ initial }: Props) {
         </div>
       )}
       <main className="flex-1 overflow-y-auto p-6">
-        <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        <ContentGrid
-          items={content}
-          isLoading={contentLoading && content.length === 0}
-          session={session}
-          onContentChanged={handleContentChanged}
-          onItemClick={handleItemClick}
-          searchQuery={searchQuery}
-          selectedTags={selectedTags}
-          onClearFilters={clearFilters}
-          fetchNext={hasNextPage ? fetchNextPage : undefined}
-          hasNext={hasNextPage}
-          isFetchingNext={isFetchingNextPage}
-        />
+        <Suspense fallback={<Skeleton className="h-10 w-full max-w-md mb-6" />}>
+          <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        </Suspense>
+        <Suspense fallback={
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {Array.from({ length: 8 }).map((_, i) => (
+              <Skeleton key={i} className="h-48 w-full rounded-lg" />
+            ))}
+          </div>
+        }>
+          <ContentGrid
+            items={content}
+            isLoading={contentLoading && content.length === 0}
+            session={session}
+            onContentChanged={handleContentChanged}
+            onItemClick={handleItemClick}
+            searchQuery={searchQuery}
+            selectedTags={selectedTags}
+            onClearFilters={clearFilters}
+            fetchNext={hasNextPage ? fetchNextPage : undefined}
+            hasNext={hasNextPage}
+            isFetchingNext={isFetchingNextPage}
+          />
+        </Suspense>
       </main>
 
-      <AddContentDialog
-        open={isAddDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        onContentAdded={handleContentChanged}
-      />
-      <ContentModalManager
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        item={selectedItem}
-        allItems={content}
-        session={session}
-        onEdit={(id: string) => {
-          router.push(`/edit/${id}`)
-          setModalOpen(false)
-        }}
-        onDelete={handleModalDelete}
-        onContentChanged={handleContentChanged}
-      />
+      <Suspense fallback={null}>
+        <AddContentDialog
+          open={isAddDialogOpen}
+          onOpenChange={setAddDialogOpen}
+          onContentAdded={handleContentChanged}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <ContentModalManager
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          item={selectedItem}
+          allItems={content}
+          session={session}
+          onEdit={(id: string) => {
+            router.push(`/edit/${id}`)
+            setModalOpen(false)
+          }}
+          onDelete={handleModalDelete}
+          onContentChanged={handleContentChanged}
+        />
+      </Suspense>
     </div>
   )
 }

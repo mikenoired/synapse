@@ -1,14 +1,15 @@
 'use client';
 
-import Item from '@/entities/item/ui/item';
 import { Content } from '@/shared/lib/schemas';
 import { Button } from '@/shared/ui/button';
 import { Card, CardContent } from '@/shared/ui/card';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Session } from '@supabase/supabase-js';
 import { FileText, Search } from 'lucide-react';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, memo, lazy, Suspense } from 'react';
 import Masonry from 'react-masonry-css';
+
+const Item = lazy(() => import('@/entities/item/ui/item'));
 
 interface ContentGridProps {
   items: Content[];
@@ -36,7 +37,7 @@ const breakpointColumnsObj = {
   640: 1
 };
 
-export function ContentGrid({
+export const ContentGrid = memo(function ContentGrid({
   items,
   isLoading,
   fetchNext,
@@ -64,6 +65,9 @@ export function ContentGrid({
       if (first.isIntersecting) {
         fetchNext()
       }
+    }, {
+      rootMargin: '100px',
+      threshold: 0.1
     })
     const current = sentinelRef.current
     if (current) observer.observe(current)
@@ -139,17 +143,19 @@ export function ContentGrid({
           className="animate-in fade-in-0 duration-300"
           onMouseEnter={onItemHover}
         >
-          <Item
-            item={item}
-            index={index}
-            session={session}
-            onContentChanged={onContentChanged}
-            onItemClick={onItemClick}
-            excludedTag={excludedTag}
-          />
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
+            <Item
+              item={item}
+              index={index}
+              session={session}
+              onContentChanged={onContentChanged}
+              onItemClick={onItemClick}
+              excludedTag={excludedTag}
+            />
+          </Suspense>
         </div>
       ))}
       {hasNext && <div ref={sentinelRef} className="h-10 w-full"></div>}
     </Masonry>
   )
-}
+})

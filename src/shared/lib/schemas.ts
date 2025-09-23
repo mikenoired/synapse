@@ -10,10 +10,10 @@ export const userSchema = z.object({
 export const contentBlockSchema = z.object({
   type: z.enum(['paragraph', 'heading', 'image', 'list', 'quote', 'code', 'divider']),
   content: z.string().optional(),
-  attrs: z.record(z.any()).optional(),
+  attrs: z.record(z.any(), z.any()).optional(),
   marks: z.array(z.object({
     type: z.string(),
-    attrs: z.record(z.any()).optional()
+    attrs: z.record(z.any(), z.any()).optional()
   })).optional()
 })
 

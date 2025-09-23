@@ -21,8 +21,14 @@ function TRPCProvider({ children }: { children: ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 5 * 60 * 1000, // 5 минут
-        gcTime: 10 * 60 * 1000, // 10 минут (ранее cacheTime)
+        staleTime: 60 * 1000, // 1 minute for better performance
+        gcTime: 5 * 60 * 1000, // 5 minutes garbage collection
+        retry: 1, // Reduce retries for faster failure
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+      },
+      mutations: {
+        retry: 1,
       },
     },
   }))

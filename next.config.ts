@@ -1,24 +1,35 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Оптимизация для production
   experimental: {
-    // Включаем оптимизированные компонентные бандлы
     optimizePackageImports: [
       '@radix-ui/react-dialog',
       '@radix-ui/react-context-menu',
       '@radix-ui/react-tooltip',
-      'lucide-react'
+      '@radix-ui/react-label',
+      '@radix-ui/react-slot',
+      'lucide-react',
+      '@tanstack/react-query',
+      '@tiptap/react',
+      '@tiptap/core'
     ],
+    turbo: {},
+    optimizeCss: true,
   },
 
-  // Настройка webpack для лучшего code splitting
-  webpack: (config, { dev, isServer }) => {
-    if (!dev && !isServer) {
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn']
+    } : false,
+  },
+
+  webpack: (config, { dev }) => {
+    if (!dev) {
       config.optimization = {
         ...config.optimization,
         splitChunks: {
           ...config.optimization.splitChunks,
+          chunks: 'all',
           cacheGroups: {
             ...config.optimization.splitChunks.cacheGroups,
             vendor: {
@@ -26,6 +37,28 @@ const nextConfig: NextConfig = {
               name: 'vendors',
               chunks: 'initial',
               priority: 10,
+              enforce: true,
+            },
+            framework: {
+              chunks: 'all',
+              name: 'framework',
+              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+              priority: 40,
+              enforce: true,
+            },
+            ui: {
+              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react)[\\/]/,
+              name: 'ui-lib',
+              chunks: 'all',
+              priority: 30,
+              enforce: true,
+            },
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'async',
+              priority: 20,
+              reuseExistingChunk: true,
             },
           },
         },
@@ -33,6 +66,7 @@ const nextConfig: NextConfig = {
     }
     return config
   },
+
   images: {
     remotePatterns: [
       {
@@ -42,6 +76,46 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+  },
+
+  compress: true,
+
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+        ],
+      },
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, s-maxage=300'
+          }
+        ]
+      }
+    ]
   }
 };
 

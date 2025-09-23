@@ -49,11 +49,11 @@ export const contentRouter = router({
       tagIds: z.array(z.string()).optional(),
       type: z.enum(['note', 'media', 'link', 'todo', 'audio']).optional(),
       cursor: z.string().optional(), // keyset: `${created_at}|${id}`
-      limit: z.number().min(1).max(100).optional().default(20),
+      limit: z.number().min(1).max(50).optional().default(12),
       includeTags: z.boolean().optional().default(true),
     }))
     .query(async ({ input, ctx }) => {
-      const limit = input.limit ?? 20
+      const limit = input.limit ?? 12
 
       if (input.tagIds && input.tagIds.length) {
         return await getContentWithTagFilter(ctx, input, limit)
