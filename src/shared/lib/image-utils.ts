@@ -27,6 +27,6 @@ export async function getPresignedMediaUrl(apiPath: string, token?: string): Pro
     : `/api/files/${apiPath.replace(/^\/+/, '')}`
 
   // We now return the proxy path directly; the route performs a 302 redirect
-  // to the presigned URL. Auth is via HttpOnly cookie (opi_token). Never append tokens to URL.
+  // to the presigned URL. Auth is via HttpOnly cookie (synapse_token). Never append tokens to URL.
   return normalizedApiPath
 } 

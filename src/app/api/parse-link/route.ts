@@ -292,7 +292,7 @@ export async function POST(request: NextRequest) {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; Opi-LinkParser/1.0)',
+          'User-Agent': 'Mozilla/5.0 (compatible; Synapse-LinkParser/1.0)',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate',
@@ -354,7 +354,7 @@ export async function POST(request: NextRequest) {
         },
         parsing: {
           method: 'jsdom',
-          userAgent: 'Mozilla/5.0 (compatible; Opi-LinkParser/1.0)',
+          userAgent: 'Mozilla/5.0 (compatible; Synapse-LinkParser/1.0)',
           success: true,
           extractedImages: images.length
         }

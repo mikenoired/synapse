@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
 
-const COOKIE_NAME = 'opi_token'
+const COOKIE_NAME = 'synapse_token'
 
 export async function POST(req: NextRequest) {
   try {

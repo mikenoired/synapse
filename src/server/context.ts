@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server'
 export async function createContext({ req }: { req?: NextRequest }) {
   const headerToken = req?.headers.get('authorization')?.replace('Bearer ', '')
   const cookieStore = await cookies().catch(() => undefined)
-  const cookieToken = cookieStore?.get('opi_token')?.value
+  const cookieToken = cookieStore?.get('synapse_token')?.value
   const token = headerToken || cookieToken
 
 

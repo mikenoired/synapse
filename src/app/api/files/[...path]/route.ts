@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const headerToken = request.headers.get('authorization')?.replace('Bearer ', '')
-    const cookieToken = request.cookies.get('opi_token')?.value
+    const cookieToken = request.cookies.get('synapse_token')?.value
     const queryToken = request.nextUrl.searchParams.get('token')
     const token = headerToken || cookieToken || queryToken
 

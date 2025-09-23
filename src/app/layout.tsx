@@ -7,7 +7,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "OPI - Ваш интерактивный мозг",
+  title: "Synapse - Ваш интерактивный мозг",
   description: "Современное приложение для хранения заметок, файлов и идей",
 };
 

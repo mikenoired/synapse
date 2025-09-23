@@ -3,7 +3,7 @@ version: "3.8"
 services:
   minio:
     image: quay.io/minio/minio:latest
-    container_name: opi-minio
+    container_name: synapse-minio
     ports:
       - "${MINIO_PORT:-9000}:9000"
       - "${MINIO_CONSOLE_PORT:-9001}:9001"
@@ -21,7 +21,7 @@ services:
       retries: 3
     restart: unless-stopped
     networks:
-      - opi-network
+      - synapse-network
 
 volumes:
   minio_data:
@@ -30,5 +30,5 @@ volumes:
     driver: local
 
 networks:
-  opi-network:
+  synapse-network:
     driver: bridge
