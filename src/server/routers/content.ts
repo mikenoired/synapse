@@ -50,8 +50,15 @@ export const contentRouter = router({
       type: z.enum(['note', 'media', 'link', 'todo', 'audio']).optional(),
       cursor: z.string().optional(), // keyset: `${created_at}|${id}`
       limit: z.number().min(1).max(100).optional().default(20),
+      includeTags: z.boolean().optional().default(true),
     }))
     .query(async ({ input, ctx }) => {
+      const limit = input.limit ?? 20
+
+      if (input.tagIds && input.tagIds.length) {
+        return await getContentWithTagFilter(ctx, input, limit)
+      }
+
       let query = ctx.supabase
         .from('content')
         .select('*')
@@ -63,18 +70,6 @@ export const contentRouter = router({
         query = query.or(`title.ilike.${term},content.ilike.${term}`)
       }
 
-      if (input.tagIds && input.tagIds.length) {
-        const { data: ctRows, error: ctError } = await ctx.supabase
-          .from('content_tags')
-          .select('content_id, tag_id')
-          .in('tag_id', input.tagIds)
-        if (ctError) handleSupabaseError(ctError)
-        const allowedIds = Array.from(new Set((ctRows || []).map((r: any) => r.content_id)))
-        if (allowedIds.length === 0) {
-          return { items: [], nextCursor: undefined }
-        }
-        query = query.in('id', allowedIds)
-      }
       if (input.type) query = query.eq('type', input.type)
 
       if (input.cursor) {
@@ -84,13 +79,17 @@ export const contentRouter = router({
         }
       }
 
-      const { data, error } = await query.limit(input.limit ?? 20)
+      const { data, error } = await query.limit(limit)
 
       if (error) handleSupabaseError(error)
 
-      const last = (data || [])[data!.length - 1]
+      const contentRows = (data || []) as Tables<'content'>[]
+      const last = contentRows[contentRows.length - 1]
       const nextCursor = last ? `${last.created_at}|${last.id}` : undefined
-      const items = await attachTagsToContent(ctx, (data || []) as Tables<'content'>[])
+
+      const items = input.includeTags
+        ? await attachTagsToContent(ctx, contentRows)
+        : contentRows.map(r => mapContentRow(r, ctx.user.id))
 
       return {
         items: items.map(i => contentListItemSchema.parse(i)),
@@ -324,35 +323,83 @@ export const contentRouter = router({
 async function attachTagsToContent(ctx: any, rows: Tables<'content'>[]): Promise<Content[]> {
   const items = rows.map(r => mapContentRow(r, ctx.user.id))
   if (items.length === 0) return items
+
   const ids = rows.map(r => r.id)
-  const { data: ctRows, error: ctErr } = await ctx.supabase
+
+  const { data: contentTagsWithTitles, error } = await ctx.supabase
     .from('content_tags')
-    .select('content_id, tag_id')
+    .select('content_id, tag_id, tags!inner(id, title)')
     .in('content_id', ids)
-  if (ctErr) handleSupabaseError(ctErr)
-  const tagIds = Array.from(new Set((ctRows || []).map((r: any) => r.tag_id)))
-  const { data: tags, error: tErr } = await ctx.supabase
-    .from('tags')
-    .select('id, title')
-    .in('id', tagIds)
-  if (tErr) handleSupabaseError(tErr)
-  const idToTitle: Map<string, string> = new Map(
-    ((tags || []) as Array<{ id: string; title: string }>).map(t => [t.id, t.title])
-  )
-  const byContent = new Map<string, string[]>()
-  for (const r of ctRows || []) {
-    const arr = byContent.get(r.content_id) || []
-    arr.push(r.tag_id)
-    byContent.set(r.content_id, arr)
+
+  if (error) handleSupabaseError(error)
+
+  const byContent = new Map<string, { ids: string[], titles: string[] }>()
+
+  for (const r of contentTagsWithTitles || []) {
+    const existing = byContent.get(r.content_id) || { ids: [], titles: [] }
+    existing.ids.push(r.tag_id)
+    existing.titles.push((r.tags as any).title)
+    byContent.set(r.content_id, existing)
   }
+
   return items.map(i => {
-    const tids = byContent.get(i.id) || []
+    const tags = byContent.get(i.id)
     return {
       ...i,
-      tag_ids: tids,
-      tags: tids.map(id => idToTitle.get(id) ?? ''),
+      tag_ids: tags?.ids || [],
+      tags: tags?.titles || [],
     }
   })
+}
+
+async function getContentWithTagFilter(ctx: any, input: any, limit: number) {
+  let query = ctx.supabase
+    .from('content')
+    .select(`
+      *,
+      content_tags!inner(tag_id)
+    `)
+    .order('created_at', { ascending: false, nullsFirst: false })
+    .eq('user_id', ctx.user.id)
+    .in('content_tags.tag_id', input.tagIds)
+
+  if (input.search && input.search.trim().length > 0) {
+    const term = `%${input.search.trim()}%`
+    query = query.or(`title.ilike.${term},content.ilike.${term}`)
+  }
+
+  if (input.type) query = query.eq('type', input.type)
+
+  if (input.cursor) {
+    const [ts, id] = input.cursor.split('|')
+    if (ts && id) {
+      query = query.lt('created_at', ts).or(`created_at.eq.${ts},id.lt.${id}`)
+    }
+  }
+
+  const { data, error } = await query.limit(limit)
+
+  if (error) handleSupabaseError(error)
+
+  const contentMap = new Map<string, Tables<'content'>>()
+  for (const row of data || []) {
+    if (!contentMap.has(row.id)) {
+      contentMap.set(row.id, row)
+    }
+  }
+
+  const contentRows = Array.from(contentMap.values())
+  const last = contentRows[contentRows.length - 1]
+  const nextCursor = last ? `${last.created_at}|${last.id}` : undefined
+
+  const items = input.includeTags
+    ? await attachTagsToContent(ctx, contentRows)
+    : contentRows.map(r => mapContentRow(r, ctx.user.id))
+
+  return {
+    items: items.map(i => contentListItemSchema.parse(i)),
+    nextCursor,
+  }
 }
 
 async function resolveTagTitlesToIds(ctx: any, titles: string[]): Promise<string[]> {
