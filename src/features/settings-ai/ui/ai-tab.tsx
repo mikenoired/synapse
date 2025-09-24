@@ -1,12 +1,10 @@
-import { Card } from '@/shared/ui/card'
-
 export default function AiTab() {
   const used = 12000
   const quota = 20000
   const percent = Math.round((used / quota) * 100)
 
   return (
-    <Card className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-muted">
       <h2 className="text-2xl font-semibold mb-4">AI статистика</h2>
       <div className="space-y-2">
         <div className="flex justify-between">
@@ -25,6 +23,6 @@ export default function AiTab() {
           % использовано
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

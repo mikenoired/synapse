@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -7,7 +8,116 @@ import { AuthDialog } from '@/features/auth-dialog/ui/auth-dialog'
 import { ThemeToggle } from '@/features/theme-toggle/ui/theme-toggle'
 import { useAuth } from '@/shared/lib/auth-context'
 import { Button } from '@/shared/ui/button'
-import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+
+interface FeatureHighlightProps {
+  title: string
+  description: string
+  accentGradient: string
+  icon: ReactNode
+}
+
+const features: FeatureHighlightProps[] = [
+  {
+    title: 'Умные заметки',
+    description: 'Создавайте заметки с богатым форматированием и мгновенным поиском',
+    accentGradient: 'from-blue-500/10 to-blue-500/5',
+    icon: (
+      <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: 'Система тегов',
+    description: 'Организуйте контент с помощью гибкой системы тегов и категорий',
+    accentGradient: 'from-green-500/10 to-green-500/5',
+    icon: (
+      <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: 'Медиа файлы',
+    description: 'Храните изображения, видео и документы с автоматическим превью',
+    accentGradient: 'from-purple-500/10 to-purple-500/5',
+    icon: (
+      <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: 'Быстрый поиск',
+    description: 'Находите нужную информацию мгновенно с полнотекстовым поиском',
+    accentGradient: 'from-orange-500/10 to-orange-500/5',
+    icon: (
+      <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: 'Мобильная версия',
+    description: 'Доступ к вашим данным с любого устройства в любое время',
+    accentGradient: 'from-pink-500/10 to-pink-500/5',
+    icon: (
+      <svg className="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+        />
+      </svg>
+    ),
+  },
+  {
+    title: 'Безопасность',
+    description: 'Ваши данные защищены современными методами шифрования',
+    accentGradient: 'from-cyan-500/10 to-cyan-500/5',
+    icon: (
+      <svg className="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+        />
+      </svg>
+    ),
+  },
+]
+
+function FeatureHighlight({ title, description, accentGradient, icon }: FeatureHighlightProps) {
+  return (
+    <div className="group border border-primary/20 p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl">
+      <div className={`p-3 bg-gradient-to-br ${accentGradient} w-fit mb-4`}>{icon}</div>
+      <h3 className="text-xl font-semibold mb-2">{title}</h3>
+      <p className="text-muted-foreground leading-relaxed">{description}</p>
+    </div>
+  )
+}
 
 export default function HomePage() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
@@ -124,7 +234,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Features Section */}
       <section className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-4 mb-16">
@@ -144,90 +253,9 @@ export default function HomePage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Feature Cards */}
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
-              <CardHeader>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-500/5 w-fit mb-2">
-                  <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                </div>
-                <CardTitle>Умные заметки</CardTitle>
-                <CardDescription>
-                  Создавайте заметки с богатым форматированием и мгновенным поиском
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
-              <CardHeader>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-green-500/10 to-green-500/5 w-fit mb-2">
-                  <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                  </svg>
-                </div>
-                <CardTitle>Система тегов</CardTitle>
-                <CardDescription>
-                  Организуйте контент с помощью гибкой системы тегов и категорий
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
-              <CardHeader>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-purple-500/10 to-purple-500/5 w-fit mb-2">
-                  <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <CardTitle>Медиа файлы</CardTitle>
-                <CardDescription>
-                  Храните изображения, видео и документы с автоматическим превью
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
-              <CardHeader>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-orange-500/10 to-orange-500/5 w-fit mb-2">
-                  <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
-                <CardTitle>Быстрый поиск</CardTitle>
-                <CardDescription>
-                  Находите нужную информацию мгновенно с полнотекстовым поиском
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
-              <CardHeader>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-pink-500/10 to-pink-500/5 w-fit mb-2">
-                  <svg className="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <CardTitle>Мобильная версия</CardTitle>
-                <CardDescription>
-                  Доступ к вашим данным с любого устройства в любое время
-                </CardDescription>
-              </CardHeader>
-            </Card>
-
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-primary/20">
-              <CardHeader>
-                <div className="p-3 rounded-lg bg-gradient-to-br from-cyan-500/10 to-cyan-500/5 w-fit mb-2">
-                  <svg className="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                  </svg>
-                </div>
-                <CardTitle>Безопасность</CardTitle>
-                <CardDescription>
-                  Ваши данные защищены современными методами шифрования
-                </CardDescription>
-              </CardHeader>
-            </Card>
+            {features.map(feature => (
+              <FeatureHighlight key={feature.title} {...feature} />
+            ))}
           </div>
         </div>
       </section>

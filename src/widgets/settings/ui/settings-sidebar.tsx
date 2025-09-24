@@ -2,7 +2,6 @@
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Button } from '@/shared/ui/button'
-import { Card } from '@/shared/ui/card'
 
 const tabs = [
   { key: 'general', label: 'General' },
@@ -17,7 +16,7 @@ export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
 
   return (
     <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-background flex md:flex-col flex-row md:h-auto h-14 md:min-h-screen">
-      <Card className="flex md:flex-col flex-row w-full h-full p-0 md:gap-3 md:mt-10 shadow-none border-none bg-transparent">
+      <div className="flex md:flex-col flex-row w-full h-full md:gap-3 md:mt-10">
         {tabs.map(tabItem => (
           <Link
             key={tabItem.key}
@@ -33,7 +32,7 @@ export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
             </Button>
           </Link>
         ))}
-      </Card>
+      </div>
     </aside>
   )
 }

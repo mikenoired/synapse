@@ -1,7 +1,6 @@
 'use client'
 
 import { trpc } from '@/shared/api/trpc'
-import { Card } from '@/shared/ui/card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 export default function GeneralTab() {
@@ -9,7 +8,7 @@ export default function GeneralTab() {
 
   if (isLoading) {
     return (
-      <Card className="p-6 space-y-6">
+      <div className="p-6 space-y-6 bg-muted">
         <h2 className="text-2xl font-semibold mb-4">Основная информация</h2>
         <div className="space-y-4">
           <div>
@@ -21,12 +20,12 @@ export default function GeneralTab() {
             <Skeleton className="h-5 w-1/3 mt-1" />
           </div>
         </div>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <Card className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-muted">
       <h2 className="text-2xl font-semibold mb-4">Основная информация</h2>
       <div className="space-y-4">
         <div>
@@ -40,6 +39,6 @@ export default function GeneralTab() {
           </label>
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

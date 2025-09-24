@@ -6,7 +6,6 @@ import { FileText, Search } from 'lucide-react'
 import { lazy, memo, Suspense, useEffect, useRef } from 'react'
 import Masonry from 'react-masonry-css'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent } from '@/shared/ui/card'
 import { Skeleton } from '@/shared/ui/skeleton'
 
 const Item = lazy(() => import('@/entities/item/ui/item'))
@@ -97,17 +96,15 @@ export const ContentGrid = memo(({
   if (showEmptyState) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center py-12">
-        <Card className="w-full max-w-md p-8">
-          <CardContent className="space-y-4">
-            <FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
-            <div>
-              <h3 className="text-xl font-semibold mb-2">Ваш мозг пока пуст</h3>
-              <p className="text-muted-foreground mb-6">
-                Начните с добавления заметки, файла или ссылки.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="w-full max-w-md p-8 space-y-4">
+          <FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
+          <div>
+            <h3 className="text-xl font-semibold mb-2">Ваш мозг пока пуст</h3>
+            <p className="text-muted-foreground mb-6">
+              Начните с добавления заметки, файла или ссылки.
+            </p>
+          </div>
+        </div>
       </div>
     )
   }

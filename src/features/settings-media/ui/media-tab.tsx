@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Card } from '@/shared/ui/card'
 
 export default function MediaTab() {
   const totalSpace = 1000 // GB
@@ -65,7 +64,7 @@ export default function MediaTab() {
   }
 
   return (
-    <Card className="p-6 space-y-4">
+    <div className="p-6 space-y-4 bg-muted">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">Storage Usage</h2>
         <span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
@@ -153,6 +152,6 @@ export default function MediaTab() {
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   )
 }

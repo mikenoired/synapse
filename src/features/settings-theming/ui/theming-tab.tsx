@@ -1,10 +1,9 @@
 import { Button } from '@/shared/ui/button'
-import { Card } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 
 export default function ThemingTab() {
   return (
-    <Card className="p-6 space-y-6">
+    <div className="p-6 space-y-6 bg-muted">
       <h2 className="text-2xl font-semibold mb-4">Кастомизация интерфейса</h2>
       <div className="space-y-4">
         <div>
@@ -17,6 +16,6 @@ export default function ThemingTab() {
         </div>
         <Button className="mt-4 w-full md:w-auto" disabled>Сохранить (мок)</Button>
       </div>
-    </Card>
+    </div>
   )
 }
