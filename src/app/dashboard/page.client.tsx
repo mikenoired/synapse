@@ -60,17 +60,11 @@ export default function DashboardClient({ initial }: Props) {
   useEffect(() => {
     if (!searchParams) return
     const tagsFromUrl = searchParams.get('tags');
-    if (tagsFromUrl) {
-      setSelectedTags(tagsFromUrl.split(','));
-    } else {
-      setSelectedTags([]);
-    }
+    setSelectedTags(tagsFromUrl ? tagsFromUrl.split(',') : []);
   }, [searchParams]);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/')
-    }
+    if (!loading && !user) router.push('/')
   }, [user, loading, router])
 
   useEffect(() => {
@@ -86,7 +80,7 @@ export default function DashboardClient({ initial }: Props) {
       event.preventDefault();
       event.stopPropagation();
       dragCounter.current--;
-      if (dragCounter.current === 0) setDragActive(false);
+      if (!dragCounter.current) setDragActive(false);
     };
     const handleWindowDragOver = (e: Event) => {
       const event = e as unknown as DragEvent;
@@ -139,7 +133,7 @@ export default function DashboardClient({ initial }: Props) {
     router.push('/dashboard')
   }
 
-  if (loading && initial.items.length === 0) {
+  if (loading && !initial.items.length) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="loading-placeholder h-8 w-8 rounded-full"></div>

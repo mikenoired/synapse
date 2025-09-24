@@ -32,6 +32,10 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
+        <script
+          crossOrigin="anonymous"
+          src="//unpkg.com/react-scan/dist/auto.global.js"
+        />
         <link rel="preconnect" href="http://localhost:9000" />
         <link rel="dns-prefetch" href="http://localhost:9000" />
         <meta name="theme-color" content="#ffffff" />

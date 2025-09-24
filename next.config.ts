@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
       '@tiptap/react',
       '@tiptap/core'
     ],
-    turbo: {},
     optimizeCss: true,
   },
 
@@ -23,49 +22,49 @@ const nextConfig: NextConfig = {
     } : false,
   },
 
-  webpack: (config, { dev }) => {
-    if (!dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          ...config.optimization.splitChunks,
-          chunks: 'all',
-          cacheGroups: {
-            ...config.optimization.splitChunks.cacheGroups,
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'initial',
-              priority: 10,
-              enforce: true,
-            },
-            framework: {
-              chunks: 'all',
-              name: 'framework',
-              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-              priority: 40,
-              enforce: true,
-            },
-            ui: {
-              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react)[\\/]/,
-              name: 'ui-lib',
-              chunks: 'all',
-              priority: 30,
-              enforce: true,
-            },
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'async',
-              priority: 20,
-              reuseExistingChunk: true,
-            },
-          },
-        },
-      }
-    }
-    return config
-  },
+  // webpack: (config, { dev }) => {
+  //   if (!dev) {
+  //     config.optimization = {
+  //       ...config.optimization,
+  //       splitChunks: {
+  //         ...config.optimization.splitChunks,
+  //         chunks: 'all',
+  //         cacheGroups: {
+  //           ...config.optimization.splitChunks.cacheGroups,
+  //           vendor: {
+  //             test: /[\\/]node_modules[\\/]/,
+  //             name: 'vendors',
+  //             chunks: 'initial',
+  //             priority: 10,
+  //             enforce: true,
+  //           },
+  //           framework: {
+  //             chunks: 'all',
+  //             name: 'framework',
+  //             test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+  //             priority: 40,
+  //             enforce: true,
+  //           },
+  //           ui: {
+  //             test: /[\\/]node_modules[\\/](@radix-ui|lucide-react)[\\/]/,
+  //             name: 'ui-lib',
+  //             chunks: 'all',
+  //             priority: 30,
+  //             enforce: true,
+  //           },
+  //           common: {
+  //             name: 'common',
+  //             minChunks: 2,
+  //             chunks: 'async',
+  //             priority: 20,
+  //             reuseExistingChunk: true,
+  //           },
+  //         },
+  //       },
+  //     }
+  //   }
+  //   return config
+  // },
 
   images: {
     remotePatterns: [
