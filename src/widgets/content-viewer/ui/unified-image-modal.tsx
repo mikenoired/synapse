@@ -200,7 +200,7 @@ export function UnifiedMediaModal({
 
   const slideVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
+      x: direction > 0 ? '100%' : '-100%',
       opacity: 0
     }),
     center: {
@@ -210,7 +210,7 @@ export function UnifiedMediaModal({
     },
     exit: (direction: number) => ({
       zIndex: 0,
-      x: direction < 0 ? 300 : -300,
+      x: direction < 0 ? '100%' : '-100%',
       opacity: 0
     })
   }
@@ -385,7 +385,7 @@ export function UnifiedMediaModal({
           )}
 
           <div className="flex-1 min-h-0 flex items-center justify-center relative overflow-hidden">
-            <AnimatePresence mode="wait" custom={direction}>
+            <AnimatePresence initial={false} mode="sync" custom={direction}>
               {currentMedia.media_type === 'video' ? (
                 <motion.div
                   key={currentIndex}
@@ -395,10 +395,11 @@ export function UnifiedMediaModal({
                   animate="center"
                   exit="exit"
                   transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 }
+                    x: { type: "tween", duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                    opacity: { duration: 0.2, ease: 'linear' }
                   }}
-                  style={{ width: '100%', height: '100%', borderRadius: 12, background: '#000' }}
+                  className="absolute inset-0 w-full h-full"
+                  style={{ borderRadius: 12, background: '#000' }}
                 >
                   <CustomVideoPlayer
                     src={mediaSrc || ''}
@@ -416,12 +417,12 @@ export function UnifiedMediaModal({
                   animate="center"
                   exit="exit"
                   transition={{
-                    x: { type: "spring", stiffness: 300, damping: 30 },
-                    opacity: { duration: 0.2 }
+                    x: { type: "tween", duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                    opacity: { duration: 0.2, ease: 'linear' }
                   }}
                   src={mediaSrc || undefined}
                   alt={`${item.title || 'Изображение'} ${currentIndex + 1}`}
-                  className="w-full h-full object-contain cursor-pointer"
+                  className="absolute inset-0 w-full h-full object-contain cursor-pointer"
                   draggable={false}
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
