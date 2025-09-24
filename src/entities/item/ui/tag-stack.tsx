@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react'
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 import { parseMediaJson } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
-import { Card, CardContent } from '@/shared/ui/card'
 
 interface TagStackProps {
   items: Content[]
@@ -30,7 +29,7 @@ function TagPreview({ item, session }: { item: Content, session: Session | null 
 
       const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null
       if (media?.url) {
-        const url = await getPresignedMediaUrl(media.url, session?.access_token)
+        const url = await getPresignedMediaUrl(media.url)
         if (cancelled)
           return
 
@@ -148,19 +147,17 @@ export function TagStack({ items, session }: TagStackProps) {
   return (
     <div className="relative aspect-square w-full cursor-pointer">
       {items.slice(0, 3).reverse().map((item, index) => (
-        <Card
+        <div
           key={item.id}
           className={cn(
-            'absolute w-full h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-xl p-0',
+            'absolute w-full h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-lg shadow-md p-0',
             index === 0 && 'z-30',
             index === 1 && 'z-20 rotate-0 translate-x-1.5 -translate-y-3 group-hover:rotate-3 group-hover:translate-x-4 group-hover:-translate-y-4',
             index === 2 && 'z-10 -rotate-2 -translate-x-1.5 translate-y-3 group-hover:-translate-x-4 group-hover:translate-y-4 group-hover:-rotate-3',
           )}
         >
-          <CardContent className="p-0 h-full">
-            <TagPreview item={item} session={session} />
-          </CardContent>
-        </Card>
+          <TagPreview item={item} session={session} />
+        </div>
       ))}
     </div>
   )
