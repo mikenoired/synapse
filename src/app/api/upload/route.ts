@@ -400,12 +400,12 @@ export async function POST(request: NextRequest) {
             },
             cover: coverUrl
               ? {
-                object: coverObject,
-                url: coverUrl,
-                width: coverDims?.width,
-                height: coverDims?.height,
-                thumbnailBase64: coverThumbBase64,
-              }
+                  object: coverObject,
+                  url: coverUrl,
+                  width: coverDims?.width,
+                  height: coverDims?.height,
+                  thumbnailBase64: coverThumbBase64,
+                }
               : undefined,
           }
 

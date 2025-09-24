@@ -160,7 +160,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
   const getSubmitButtonText = () => {
     if (uploading) {
       return `Загружается ${selectedFiles.length} файл${selectedFiles.length > 1 ? (selectedFiles.length > 4 ? 'ов' : 'а') : ''
-        }...`
+      }...`
     }
     if (isSubmitting) {
       return 'Сохранение...'
@@ -210,77 +210,77 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
           {type === 'note'
             ? (
-              <AddNoteView />
-            )
+                <AddNoteView />
+              )
             : type === 'todo'
               ? (
-                <AddTodoView />
-              )
+                  <AddTodoView />
+                )
               : (
-                <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title (optional)</Label>
-                    <Input
-                      id="title"
-                      placeholder="Enter title..."
-                      value={title}
-                      onChange={e => updateTitle(e.target.value)}
-                      disabled={isLoading}
+                  <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title (optional)</Label>
+                      <Input
+                        id="title"
+                        placeholder="Enter title..."
+                        value={title}
+                        onChange={e => updateTitle(e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="content">
+                        {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
+                      </Label>
+                      {type === 'link'
+                        ? (
+                            <LinkPreview
+                              content={content}
+                              parsedLinkData={parsedLinkData}
+                              linkParsing={linkParsing}
+                              isLoading={isLoading}
+                              onContentChange={updateContent}
+                              onParseLink={parseLink}
+                              onClearParsedData={clearParsedData}
+                            />
+                          )
+                        : (
+                            <MediaDropZone
+                              dragActive={dragActive}
+                              isLoading={isLoading}
+                              selectedFiles={selectedFiles}
+                              previewUrls={previewUrls}
+                              onFileSelect={handleFileSelect}
+                              onDrag={handleDrag}
+                              onDrop={handleDrop}
+                              onRemoveFile={removeFile}
+                              onMoveFile={moveFile}
+                            />
+                          )}
+                    </div>
+
+                    {type === 'audio' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="makeTrack">Сделать треком</Label>
+                        <div className="flex items-center gap-2">
+                          <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
+                          <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <TagInput
+                      tags={tags}
+                      currentTag={currentTag}
+                      isLoading={isLoading}
+                      onCurrentTagChange={updateCurrentTag}
+                      onAddTag={addTag}
+                      onRemoveTag={removeTag}
+                      onKeyDown={handleTagKeyDown}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="content">
-                      {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
-                    </Label>
-                    {type === 'link'
-                      ? (
-                        <LinkPreview
-                          content={content}
-                          parsedLinkData={parsedLinkData}
-                          linkParsing={linkParsing}
-                          isLoading={isLoading}
-                          onContentChange={updateContent}
-                          onParseLink={parseLink}
-                          onClearParsedData={clearParsedData}
-                        />
-                      )
-                      : (
-                        <MediaDropZone
-                          dragActive={dragActive}
-                          isLoading={isLoading}
-                          selectedFiles={selectedFiles}
-                          previewUrls={previewUrls}
-                          onFileSelect={handleFileSelect}
-                          onDrag={handleDrag}
-                          onDrop={handleDrop}
-                          onRemoveFile={removeFile}
-                          onMoveFile={moveFile}
-                        />
-                      )}
-                  </div>
-
-                  {type === 'audio' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="makeTrack">Сделать треком</Label>
-                      <div className="flex items-center gap-2">
-                        <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
-                        <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <TagInput
-                    tags={tags}
-                    currentTag={currentTag}
-                    isLoading={isLoading}
-                    onCurrentTagChange={updateCurrentTag}
-                    onAddTag={addTag}
-                    onRemoveTag={removeTag}
-                    onKeyDown={handleTagKeyDown}
-                  />
-                </div>
-              )}
+                )}
 
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">

@@ -49,23 +49,23 @@ function SidebarItem({ item, pathname }: { item: NavItem, pathname: string }) {
       <TooltipTrigger asChild>
         {item.href
           ? (
-            <Link
-              href={item.href}
-              className={cn('flex h-12 w-12 items-center justify-center transition-colors', isActive ? 'bg-primary/10 text-primary pointer-events-none' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-              )}
-            >
-              <item.icon className="size-5" />
-            </Link>
-          )
+              <Link
+                href={item.href}
+                className={cn('flex h-12 w-12 items-center justify-center transition-colors', isActive ? 'bg-primary/10 text-primary pointer-events-none' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                )}
+              >
+                <item.icon className="size-5" />
+              </Link>
+            )
           : (
-            <button
-              onClick={item.action}
-              onMouseEnter={item.onMouseEnter}
-              className="flex h-12 w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground hover:bg-muted cursor-pointer"
-            >
-              <item.icon className="size-5" />
-            </button>
-          )}
+              <button
+                onClick={item.action}
+                onMouseEnter={item.onMouseEnter}
+                className="flex h-12 w-12 items-center justify-center text-muted-foreground transition-colors hover:text-foreground hover:bg-muted cursor-pointer"
+              >
+                <item.icon className="size-5" />
+              </button>
+            )}
       </TooltipTrigger>
       <TooltipContent side="right" sideOffset={5}>{item.label}</TooltipContent>
     </Tooltip>

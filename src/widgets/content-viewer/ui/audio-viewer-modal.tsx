@@ -202,13 +202,53 @@ export function AudioViewerModal({ open: _open, onOpenChange, item, session }: A
     <div className="w-full">
       {isTallLayout
         ? (
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-center">
-              <button type="button" onClick={togglePlay} className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-              </button>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-center">
+                <button type="button" onClick={togglePlay} className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                  {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="text-xs tabular-nums w-12 text-right">{formatTime(currentTime)}</div>
+                <div className="flex-1 flex items-center gap-2">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={seeking ? seekValue : progressPercent}
+                    onMouseDown={onSeekStart}
+                    onTouchStart={onSeekStart}
+                    onChange={e => onSeekChange(Number(e.target.value))}
+                    onMouseUp={onSeekEnd}
+                    onTouchEnd={onSeekEnd}
+                    className="w-full cursor-pointer"
+                  />
+                </div>
+                <div className="text-xs tabular-nums w-12">{formatTime(duration)}</div>
+              </div>
+              {!isMobile && (
+                <div className="flex items-center gap-3 justify-center">
+                  <button type="button" onClick={() => setMuted(!muted)} className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground">
+                    {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={muted ? 0 : volume}
+                    onChange={e => setVolume(Number(e.target.value))}
+                    className="w-32 cursor-pointer"
+                  />
+                </div>
+              )}
             </div>
+          )
+        : (
             <div className="flex items-center gap-3">
+              <button type="button" onClick={togglePlay} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              </button>
               <div className="text-xs tabular-nums w-12 text-right">{formatTime(currentTime)}</div>
               <div className="flex-1 flex items-center gap-2">
                 <input
@@ -225,64 +265,24 @@ export function AudioViewerModal({ open: _open, onOpenChange, item, session }: A
                 />
               </div>
               <div className="text-xs tabular-nums w-12">{formatTime(duration)}</div>
+              {!isMobile && (
+                <>
+                  <button type="button" onClick={() => setMuted(!muted)} className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground">
+                    {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                  </button>
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    value={muted ? 0 : volume}
+                    onChange={e => setVolume(Number(e.target.value))}
+                    className="w-24 cursor-pointer"
+                  />
+                </>
+              )}
             </div>
-            {!isMobile && (
-              <div className="flex items-center gap-3 justify-center">
-                <button type="button" onClick={() => setMuted(!muted)} className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground">
-                  {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={muted ? 0 : volume}
-                  onChange={e => setVolume(Number(e.target.value))}
-                  className="w-32 cursor-pointer"
-                />
-              </div>
-            )}
-          </div>
-        )
-        : (
-          <div className="flex items-center gap-3">
-            <button type="button" onClick={togglePlay} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-              {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-            </button>
-            <div className="text-xs tabular-nums w-12 text-right">{formatTime(currentTime)}</div>
-            <div className="flex-1 flex items-center gap-2">
-              <input
-                type="range"
-                min={0}
-                max={100}
-                value={seeking ? seekValue : progressPercent}
-                onMouseDown={onSeekStart}
-                onTouchStart={onSeekStart}
-                onChange={e => onSeekChange(Number(e.target.value))}
-                onMouseUp={onSeekEnd}
-                onTouchEnd={onSeekEnd}
-                className="w-full cursor-pointer"
-              />
-            </div>
-            <div className="text-xs tabular-nums w-12">{formatTime(duration)}</div>
-            {!isMobile && (
-              <>
-                <button type="button" onClick={() => setMuted(!muted)} className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground">
-                  {muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-                <input
-                  type="range"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  value={muted ? 0 : volume}
-                  onChange={e => setVolume(Number(e.target.value))}
-                  className="w-24 cursor-pointer"
-                />
-              </>
-            )}
-          </div>
-        )}
+          )}
     </div>
   )
 
@@ -291,15 +291,17 @@ export function AudioViewerModal({ open: _open, onOpenChange, item, session }: A
       <div className="p-4">
         <audio ref={audioRef} src={audioSrc} className="hidden" />
         <div className="mx-auto w-full max-w-xl flex flex-col gap-4">
-          {isTrack && coverSrc ? (
-            <div className="relative w-full bg-muted rounded-lg" style={{ aspectRatio: '1 / 1' }}>
-              <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover z-10" />
-              {/** TODO: Make glow effect by main color of cover */}
-              <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover absolute inset-0 blur-2xl scale-110 opacity-50" />
-            </div>
-          ) : (
-            <div className="w-full aspect-square rounded-lg border bg-muted/40" />
-          )}
+          {isTrack && coverSrc
+            ? (
+                <div className="relative w-full bg-muted rounded-lg" style={{ aspectRatio: '1 / 1' }}>
+                  <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover z-10" />
+                  {/** TODO: Make glow effect by main color of cover */}
+                  <Image src={coverSrc} alt={audioData?.track?.title || item.title || 'cover'} fill unoptimized className="object-cover absolute inset-0 blur-2xl scale-110 opacity-50" />
+                </div>
+              )
+            : (
+                <div className="w-full aspect-square rounded-lg border bg-muted/40" />
+              )}
           {InfoBlock}
           {Controls}
         </div>

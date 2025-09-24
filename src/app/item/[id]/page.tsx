@@ -11,7 +11,7 @@ import { Skeleton } from '@/shared/ui/skeleton'
 
 export default function ItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
-  const { user, loading, session } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const { data: item, isLoading, error } = trpc.content.getById.useQuery(
     { id },
@@ -42,7 +42,7 @@ export default function ItemPage({ params }: { params: Promise<{ id: string }> }
         <ArrowLeft className="mr-2 h-4 w-4" />
         Back
       </Button>
-      <Item item={item} session={session} index={0} />
+      <Item item={item} index={0} />
     </div>
   )
 }

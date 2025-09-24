@@ -545,11 +545,5 @@ function mapContentRow(row: Tables<'content'>, fallbackUserId: string): Content 
     tag_ids: [],
     created_at: row.created_at ?? new Date().toISOString(),
     updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
-    media_url: row.media_url ?? undefined,
-    url: row.url ?? undefined,
-    media_type: (row.media_type as Content['media_type']) ?? undefined,
-    thumbnail_base64: row.thumbnail_base64 ?? undefined,
-    media_width: row.media_width ?? undefined,
-    media_height: row.media_height ?? undefined,
   }
 }

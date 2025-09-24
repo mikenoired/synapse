@@ -124,7 +124,6 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
         <ContentGrid
           items={content}
           isLoading={contentLoading && content.length === 0}
-          session={session}
           onContentChanged={handleContentChanged}
           onItemClick={handleItemClick}
           excludedTag={tagTitle}

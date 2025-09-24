@@ -1,6 +1,5 @@
 'use client'
 
-import type { Session } from '@supabase/supabase-js'
 import type { Content } from '@/shared/lib/schemas'
 import { FileText, Search } from 'lucide-react'
 import { lazy, memo, Suspense, useEffect, useRef } from 'react'
@@ -16,7 +15,6 @@ interface ContentGridProps {
   fetchNext?: () => void
   hasNext?: boolean
   isFetchingNext?: boolean
-  session: Session | null
   onContentChanged: () => void
   onItemClick: (item: Content) => void
   onItemHover?: () => void
@@ -41,7 +39,6 @@ export const ContentGrid = memo(({
   isLoading,
   fetchNext,
   hasNext,
-  session,
   onContentChanged,
   onItemClick,
   onItemHover,
@@ -146,7 +143,6 @@ export const ContentGrid = memo(({
             <Item
               item={item}
               index={index}
-              session={session}
               onContentChanged={onContentChanged}
               onItemClick={onItemClick}
               excludedTag={excludedTag}

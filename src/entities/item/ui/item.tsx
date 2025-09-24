@@ -1,4 +1,3 @@
-import type { Session } from '@supabase/supabase-js'
 import type { Content, LinkContent } from '@/shared/lib/schemas'
 import { generateHTML } from '@tiptap/core'
 import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
@@ -26,14 +25,12 @@ import MediaItem from './media-item'
 interface ItemProps {
   item: Content
   index: number
-  session: Session | null
   onContentChanged?: () => void
-
   onItemClick?: (content: Content) => void
   excludedTag?: string
 }
 
-export default function Item({ item, index, session, onContentChanged, onItemClick, excludedTag }: ItemProps) {
+export default function Item({ item, index, onContentChanged, onItemClick, excludedTag }: ItemProps) {
   const [editOpen, setEditOpen] = useState(false)
 
   const deleteMutation = trpc.content.delete.useMutation({
@@ -59,7 +56,6 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
                 tags: displayTags,
               }}
               index={index}
-              session={session}
             />
           </div>
         </ContextMenuTrigger>
@@ -81,7 +77,7 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
   )
 }
 
-function ItemContent({ item, index, session, onItemClick }: ItemProps) {
+function ItemContent({ item, index, onItemClick }: ItemProps) {
   const [thumbSrc, setThumbSrc] = useState<string | null>(null)
   useEffect(() => {
     let cancelled = false
@@ -89,7 +85,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     const thumb = media?.thumbnailUrl
     if (media?.type === 'video' && thumb) {
       setThumbSrc(null)
-      getPresignedMediaUrl(thumb, session?.access_token)
+      getPresignedMediaUrl(thumb)
         .then((url) => {
           if (!cancelled)
             setThumbSrc(url)
@@ -102,7 +98,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     return () => {
       cancelled = true
     }
-  }, [item.content, item.type, session?.access_token])
+  }, [item.content, item.type])
 
   const getTextContent = useMemo(() => {
     if (item.type !== 'note')
@@ -223,39 +219,39 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
         <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
           {item.type === 'media' || item.type === 'audio'
             ? (
-              <MediaItem item={item} session={session} onItemClick={onItemClick} thumbSrc={thumbSrc} />
-            )
+                <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
+              )
             : item.type === 'link'
               ? (
-                <div>
-                  {renderLinkPreview()}
-                  {item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {item.tags.map((tag: string) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )
+                  <div>
+                    {renderLinkPreview()}
+                    {item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {item.tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
               : item.type === 'todo'
                 ? (
-                  renderTodoPreview()
-                )
+                    renderTodoPreview()
+                  )
                 : (
-                  <>
-                    <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
-                    <div className="flex flex-wrap mt-3">
-                      {item.tags.map((tag: string) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </>
-                )}
+                    <>
+                      <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
+                      <div className="flex flex-wrap mt-3">
+                        {item.tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </>
+                  )}
         </div>
       </div>
     </motion.div>

@@ -76,51 +76,51 @@ export default function MediaTab() {
         <div className="flex justify-center w-full max-w-[220px] mx-auto">
           {loading
             ? (
-              <div className="animate-pulse w-[180px] h-[180px] rounded-full bg-muted/60" />
-            )
+                <div className="animate-pulse w-[180px] h-[180px] rounded-full bg-muted/60" />
+              )
             : (
-              <svg
-                width="180"
-                height="180"
-                viewBox="0 0 180 180"
-                style={{ maxWidth: 220, display: 'block' }}
-              >
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="80"
-                  fill="none"
-                  stroke="var(--muted)"
-                  strokeWidth="18"
-                />
-                <circle
-                  cx="90"
-                  cy="90"
-                  r="80"
-                  fill="none"
-                  stroke={getRingColor(animatedPercent)}
-                  strokeWidth="18"
-                  strokeDasharray={2 * Math.PI * 80}
-                  strokeDashoffset={2 * Math.PI * 80 * (1 - animatedPercent / 100)}
-                  strokeLinecap="round"
-                  style={{
-                    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))',
-                  }}
-                />
-                <text
-                  x="50%"
-                  y="50%"
-                  textAnchor="middle"
-                  dominantBaseline="central"
-                  fontSize="2.2rem"
-                  fontWeight="bold"
-                  fill="var(--foreground)"
+                <svg
+                  width="180"
+                  height="180"
+                  viewBox="0 0 180 180"
+                  style={{ maxWidth: 220, display: 'block' }}
                 >
-                  {Math.round(animatedPercent)}
-                  %
-                </text>
-              </svg>
-            )}
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="80"
+                    fill="none"
+                    stroke="var(--muted)"
+                    strokeWidth="18"
+                  />
+                  <circle
+                    cx="90"
+                    cy="90"
+                    r="80"
+                    fill="none"
+                    stroke={getRingColor(animatedPercent)}
+                    strokeWidth="18"
+                    strokeDasharray={2 * Math.PI * 80}
+                    strokeDashoffset={2 * Math.PI * 80 * (1 - animatedPercent / 100)}
+                    strokeLinecap="round"
+                    style={{
+                      filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))',
+                    }}
+                  />
+                  <text
+                    x="50%"
+                    y="50%"
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    fontSize="2.2rem"
+                    fontWeight="bold"
+                    fill="var(--foreground)"
+                  >
+                    {Math.round(animatedPercent)}
+                    %
+                  </text>
+                </svg>
+              )}
         </div>
 
         <div className="space-y-4 flex-1">

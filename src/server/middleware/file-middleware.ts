@@ -111,6 +111,7 @@ const MALWARE_PATTERNS = [
 export function sanitizeFileName(fileName: string): string {
   // Remove dangerous characters and sequences
   return fileName
+    // eslint-disable-next-line no-control-regex
     .replace(/[<>:"|*?\\/\x00-\x1F]/g, '_')
     .replace(/\u202E/g, '') // Right-to-Left Override
     .replace(/\.+$/, '') // Remove dots at the end
@@ -232,6 +233,7 @@ export async function validateFile(
     }
 
     // Check for forbidden characters
+    // eslint-disable-next-line no-control-regex
     if (/[<>:"|*?\\/\x00-\x1F]/.test(fileName)) {
       errors.push('File name contains forbidden characters')
     }

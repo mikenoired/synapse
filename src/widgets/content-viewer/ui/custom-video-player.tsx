@@ -187,14 +187,14 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = '
           >
             {isPlaying
               ? (
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
-                  <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
-                  <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
-                </svg>
-              )
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
+                    <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
+                  </svg>
+                )
               : (
-                <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M7 6v12l10-6-10-6z" fill="currentColor" /></svg>
-              )}
+                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M7 6v12l10-6-10-6z" fill="currentColor" /></svg>
+                )}
           </button>
           <span className="text-xs text-white/80 font-mono select-none">
             {formatTime(currentTime)}
