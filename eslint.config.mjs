@@ -1,13 +1,7 @@
 import antfu from '@antfu/eslint-config'
- 
-const config = new antfu({
-  baseDirectory: import.meta.dirname,
+
+export default antfu({
+  rules: {
+    'node/prefer-global/process': 'off',
+  },
 })
- 
-const eslintConfig = [
-  ...config.config({
-    extends: ['next'],
-  }),
-]
- 
-export default eslintConfig

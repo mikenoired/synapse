@@ -1,9 +1,9 @@
 'use client'
 
-import { Button } from '@/shared/ui/button'
 import { Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
+import { Button } from '@/shared/ui/button'
 
 export function ThemeToggle() {
   const { setTheme, theme } = useTheme()
@@ -11,7 +11,8 @@ export function ThemeToggle() {
 
   useEffect(() => setMounted(true), [])
 
-  if (!mounted) return <Button variant="outline" size="icon" disabled />
+  if (!mounted)
+    return <Button variant="outline" size="icon" disabled />
 
   return (
     <Button
@@ -24,4 +25,4 @@ export function ThemeToggle() {
       <span className="sr-only">Переключить тему</span>
     </Button>
   )
-} 
+}

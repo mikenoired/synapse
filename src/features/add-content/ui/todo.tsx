@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import { Badge } from "@/shared/ui/badge";
-import { Input } from "@/shared/ui/input";
-import { X } from "lucide-react";
-import { TodoList } from './components/todo-list';
+import { X } from 'lucide-react'
+import { Badge } from '@/shared/ui/badge'
+import { Input } from '@/shared/ui/input'
 import { useAddContent } from '../model/add-content-context'
+import { TodoList } from './components/todo-list'
 
 export default function AddTodoView() {
   const {
@@ -31,7 +31,7 @@ export default function AddTodoView() {
             id="title"
             placeholder="Title (optional)..."
             value={title}
-            onChange={(e) => updateTitle(e.target.value)}
+            onChange={e => updateTitle(e.target.value)}
             disabled={isSubmitting}
             className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
           />
@@ -53,7 +53,7 @@ export default function AddTodoView() {
               id="tags"
               placeholder="+ Add tag"
               value={currentTag}
-              onChange={(e) => updateCurrentTag(e.target.value)}
+              onChange={e => updateCurrentTag(e.target.value)}
               onKeyDown={handleTagKeyDown}
               className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
               disabled={isSubmitting}

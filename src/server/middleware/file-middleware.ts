@@ -1,5 +1,6 @@
-import * as crypto from 'crypto'
-import * as path from 'path'
+import { Buffer } from 'node:buffer'
+import * as crypto from 'node:crypto'
+import * as path from 'node:path'
 
 export interface FileValidationConfig {
   maxFileSize: number // in bytes
@@ -21,9 +22,25 @@ export interface ValidationResult {
 const DEFAULT_CONFIG: FileValidationConfig = {
   maxFileSize: 10 * 1024 * 1024, // 10MB
   allowedExtensions: [
-    '.jpg', '.jpeg', '.png', '.gif', '.webp', '.pdf', '.txt', '.docx',
-    '.mp4', '.mov', '.avi', '.mkv',
-    '.mp3', '.m4a', '.aac', '.flac', '.wav', '.ogg', '.opus'
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.gif',
+    '.webp',
+    '.pdf',
+    '.txt',
+    '.docx',
+    '.mp4',
+    '.mov',
+    '.avi',
+    '.mkv',
+    '.mp3',
+    '.m4a',
+    '.aac',
+    '.flac',
+    '.wav',
+    '.ogg',
+    '.opus',
   ],
   allowedMimeTypes: [
     'image/jpeg',
@@ -44,11 +61,11 @@ const DEFAULT_CONFIG: FileValidationConfig = {
     'audio/flac',
     'audio/wav',
     'audio/ogg',
-    'audio/opus'
+    'audio/opus',
   ],
   scanForMalware: true,
   checkMagicBytes: true,
-  maxFilenameLength: 255
+  maxFilenameLength: 255,
 }
 
 const MAGIC_BYTES: Record<string, Buffer[]> = {
@@ -56,13 +73,13 @@ const MAGIC_BYTES: Record<string, Buffer[]> = {
   'image/png': [Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])],
   'image/gif': [
     Buffer.from([0x47, 0x49, 0x46, 0x38, 0x37, 0x61]), // GIF87a
-    Buffer.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61])  // GIF89a
+    Buffer.from([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]), // GIF89a
   ],
   'image/webp': [Buffer.from([0x52, 0x49, 0x46, 0x46])], // RIFF
   'application/pdf': [Buffer.from([0x25, 0x50, 0x44, 0x46])], // %PDF
   'text/plain': [], // text files don't have strict magic bytes
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': [
-    Buffer.from([0x50, 0x4B, 0x03, 0x04]) // ZIP signature (DOCX based on ZIP)
+    Buffer.from([0x50, 0x4B, 0x03, 0x04]), // ZIP signature (DOCX based on ZIP)
   ],
   'video/mp4': [Buffer.from([0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x6D, 0x70, 0x34, 0x32])], // mp4 ftyp
   'video/quicktime': [Buffer.from([0x00, 0x00, 0x00, 0x14, 0x66, 0x74, 0x79, 0x70, 0x71, 0x74, 0x20, 0x20])], // mov ftyp
@@ -75,7 +92,7 @@ const MAGIC_BYTES: Record<string, Buffer[]> = {
   'audio/flac': [Buffer.from([0x66, 0x4C, 0x61, 0x43])], // fLaC
   'audio/wav': [Buffer.from([0x52, 0x49, 0x46, 0x46])], // RIFF (WAVE)
   'audio/ogg': [Buffer.from([0x4F, 0x67, 0x67, 0x53])], // OggS
-  'audio/opus': [Buffer.from([0x4F, 0x67, 0x67, 0x53])] // OggS (Opus in Ogg)
+  'audio/opus': [Buffer.from([0x4F, 0x67, 0x67, 0x53])], // OggS (Opus in Ogg)
 }
 
 const MALWARE_PATTERNS = [
@@ -88,14 +105,14 @@ const MALWARE_PATTERNS = [
   Buffer.from('system(', 'utf8'),
   Buffer.from('%3Cscript', 'utf8'), // URL encoded <script
   Buffer.from('<!DOCTYPE html', 'utf8'),
-  Buffer.from('<html', 'utf8')
+  Buffer.from('<html', 'utf8'),
 ]
 
 export function sanitizeFileName(fileName: string): string {
   // Remove dangerous characters and sequences
   return fileName
-    .replace(/[<>:"|*?\\\/\x00-\x1f]/g, '_')
-    .replace(/\u202e/g, '') // Right-to-Left Override
+    .replace(/[<>:"|*?\\/\x00-\x1F]/g, '_')
+    .replace(/\u202E/g, '') // Right-to-Left Override
     .replace(/\.+$/, '') // Remove dots at the end
     .replace(/^\.+/, '') // Remove dots at the beginning
     .substring(0, 255) // Limit length
@@ -103,7 +120,8 @@ export function sanitizeFileName(fileName: string): string {
 
 function detectMimeTypeByMagicBytes(file: Buffer): string | undefined {
   for (const [mimeType, signatures] of Object.entries(MAGIC_BYTES)) {
-    if (signatures.length === 0) continue // Skip types without magic bytes
+    if (signatures.length === 0)
+      continue // Skip types without magic bytes
 
     for (const signature of signatures) {
       if (file.subarray(0, signature.length).equals(signature)) {
@@ -120,7 +138,7 @@ function scanForMalwarePatterns(file: Buffer): string[] {
 
   for (const pattern of MALWARE_PATTERNS) {
     if (file.includes(pattern)) {
-      foundPatterns.push(pattern.toString('utf8').substring(0, 20) + '...')
+      foundPatterns.push(`${pattern.toString('utf8').substring(0, 20)}...`)
     }
   }
 
@@ -132,7 +150,8 @@ function isPolyglotFile(file: Buffer): boolean {
   const detectedTypes: string[] = []
 
   for (const [mimeType, signatures] of Object.entries(MAGIC_BYTES)) {
-    if (signatures.length === 0) continue
+    if (signatures.length === 0)
+      continue
 
     for (const signature of signatures) {
       if (file.subarray(0, signature.length).equals(signature)) {
@@ -175,7 +194,7 @@ function hasExcessiveMetadata(file: Buffer, contentType: string): boolean {
 }
 
 function isValidUserId(userId: string): boolean {
-  const userIdRegex = /^[a-zA-Z0-9_-]{1,36}$/
+  const userIdRegex = /^[\w-]{1,36}$/
   return userIdRegex.test(userId)
 }
 
@@ -184,7 +203,7 @@ export async function validateFile(
   fileName: string,
   contentType: string,
   userId: string,
-  config: Partial<FileValidationConfig> = {}
+  config: Partial<FileValidationConfig> = {},
 ): Promise<ValidationResult> {
   const fullConfig = { ...DEFAULT_CONFIG, ...config }
   const errors: string[] = []
@@ -213,12 +232,12 @@ export async function validateFile(
     }
 
     // Check for forbidden characters
-    if (/[<>:"|*?\\\/\x00-\x1f]/.test(fileName)) {
+    if (/[<>:"|*?\\/\x00-\x1F]/.test(fileName)) {
       errors.push('File name contains forbidden characters')
     }
 
     // Check for hidden extensions
-    if (fileName.includes('\u202e')) { // Right-to-Left Override
+    if (fileName.includes('\u202E')) { // Right-to-Left Override
       errors.push('Hidden file extension attempt detected')
     }
 
@@ -282,17 +301,17 @@ export async function validateFile(
       errors,
       warnings,
       fileHash,
-      detectedMimeType
+      detectedMimeType,
     }
-
-  } catch (error) {
+  }
+  catch (error) {
     errors.push(`Error checking file: ${error instanceof Error ? error.message : 'Unknown error'}`)
 
     return {
       isValid: false,
       errors,
       warnings,
-      fileHash
+      fileHash,
     }
   }
 }

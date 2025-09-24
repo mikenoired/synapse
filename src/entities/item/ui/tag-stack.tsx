@@ -1,53 +1,54 @@
-'use client';
+'use client'
 
-import { getPresignedMediaUrl } from '@/shared/lib/image-utils';
-import { Content, parseMediaJson } from '@/shared/lib/schemas';
-import { cn } from '@/shared/lib/utils';
-import { Card, CardContent } from '@/shared/ui/card';
-import { Session } from '@supabase/supabase-js';
-import { FileText, LinkIcon } from 'lucide-react';
-import Image from 'next/image';
-import { useEffect, useState } from 'react';
+import type { Session } from '@supabase/supabase-js'
+import type { Content } from '@/shared/lib/schemas'
+import { FileText, LinkIcon } from 'lucide-react'
+import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
+import { parseMediaJson } from '@/shared/lib/schemas'
+import { cn } from '@/shared/lib/utils'
+import { Card, CardContent } from '@/shared/ui/card'
 
 interface TagStackProps {
-  items: Content[];
-  session: Session | null;
+  items: Content[]
+  session: Session | null
 }
 
-function TagPreview({ item, session }: { item: Content; session: Session | null }) {
-  const [imgSrc, setImgSrc] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
-  const [errored, setErrored] = useState(false);
+function TagPreview({ item, session }: { item: Content, session: Session | null }) {
+  const [imgSrc, setImgSrc] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState(false)
+  const [errored, setErrored] = useState(false)
 
   useEffect(() => {
-    let cancelled = false;
+    let cancelled = false
 
     const loadImages = async () => {
-      setLoaded(false);
-      setErrored(false);
-      setImgSrc(null);
+      setLoaded(false)
+      setErrored(false)
+      setImgSrc(null)
 
-      const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null;
+      const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null
       if (media?.url) {
-        const url = await getPresignedMediaUrl(media.url, session?.access_token);
-        if (cancelled) return;
+        const url = await getPresignedMediaUrl(media.url, session?.access_token)
+        if (cancelled)
+          return
 
-        setImgSrc(url || null);
-
+        setImgSrc(url || null)
       }
-    };
+    }
 
-    loadImages();
+    loadImages()
 
     return () => {
-      cancelled = true;
-    };
-  }, [item.type, item.content, session?.access_token]);
+      cancelled = true
+    }
+  }, [item.type, item.content, session?.access_token])
 
   if (item.type === 'media') {
-    const media = parseMediaJson(item.content)?.media;
-    const blurThumb = media?.thumbnailBase64 || '';
-    const isVideo = media?.type === 'video';
+    const media = parseMediaJson(item.content)?.media
+    const blurThumb = media?.thumbnailBase64 || ''
+    const isVideo = media?.type === 'video'
 
     return (
       <div
@@ -72,7 +73,10 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
             className="w-full h-full object-cover relative z-10 transition-opacity duration-200 ease-in-out"
             style={{ opacity: loaded ? 1 : 0 }}
             onLoad={() => setLoaded(true)}
-            onError={() => { setErrored(true); setLoaded(true); }}
+            onError={() => {
+              setErrored(true)
+              setLoaded(true)
+            }}
             draggable={false}
             fill
             unoptimized
@@ -103,22 +107,23 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
           </div>
         )}
       </div>
-    );
+    )
   }
 
   if (item.type === 'note' && item.title) {
-    let preview = '';
+    let preview = ''
     try {
-      preview = (JSON.parse(item.content as string)?.blocks?.[0]?.data?.text as string) || '';
-    } catch {
-      preview = '';
+      preview = (JSON.parse(item.content as string)?.blocks?.[0]?.data?.text as string) || ''
+    }
+    catch {
+      preview = ''
     }
     return (
       <div className="p-4">
         <h3 className="font-semibold mb-2 line-clamp-2">{item.title}</h3>
         <p className="text-sm text-muted-foreground line-clamp-3">{preview}</p>
       </div>
-    );
+    )
   }
 
   if (item.type === 'link' && item.url) {
@@ -128,7 +133,7 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
         <p className="text-sm font-medium line-clamp-2">{item.title || item.url}</p>
         <p className="text-xs text-muted-foreground mt-1 truncate max-w-full">{item.url}</p>
       </div>
-    );
+    )
   }
 
   return (
@@ -136,7 +141,7 @@ function TagPreview({ item, session }: { item: Content; session: Session | null 
       <FileText className="size-8 text-muted-foreground" />
       <p className="mt-2 text-sm">Контент</p>
     </div>
-  );
+  )
 }
 
 export function TagStack({ items, session }: TagStackProps) {
@@ -146,10 +151,10 @@ export function TagStack({ items, session }: TagStackProps) {
         <Card
           key={item.id}
           className={cn(
-            "absolute w-full h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-xl p-0",
-            index === 0 && "z-30",
-            index === 1 && "z-20 rotate-0 translate-x-1.5 -translate-y-3 group-hover:rotate-3 group-hover:translate-x-4 group-hover:-translate-y-4",
-            index === 2 && "z-10 -rotate-2 -translate-x-1.5 translate-y-3 group-hover:-translate-x-4 group-hover:translate-y-4 group-hover:-rotate-3"
+            'absolute w-full h-full overflow-hidden transition-all duration-300 ease-in-out group-hover:shadow-xl p-0',
+            index === 0 && 'z-30',
+            index === 1 && 'z-20 rotate-0 translate-x-1.5 -translate-y-3 group-hover:rotate-3 group-hover:translate-x-4 group-hover:-translate-y-4',
+            index === 2 && 'z-10 -rotate-2 -translate-x-1.5 translate-y-3 group-hover:-translate-x-4 group-hover:translate-y-4 group-hover:-rotate-3',
           )}
         >
           <CardContent className="p-0 h-full">
@@ -158,5 +163,5 @@ export function TagStack({ items, session }: TagStackProps) {
         </Card>
       ))}
     </div>
-  );
+  )
 }

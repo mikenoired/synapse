@@ -1,8 +1,8 @@
+import type { ContentFormState, ParsedLinkData, TodoItem } from './types'
 import { useCallback } from 'react'
+import toast from 'react-hot-toast'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
-import toast from 'react-hot-toast'
-import type { ContentFormState, TodoItem, ParsedLinkData } from './types'
 
 interface UseFormSubmissionProps {
   onSuccess: () => void
@@ -27,13 +27,14 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
     files: File[],
     title?: string,
     tags?: string[],
-    extraFields?: Record<string, string | boolean>
+    extraFields?: Record<string, string | boolean>,
   ): Promise<{ objectName: string, url: string, thumbnail?: string }[]> => {
-    console.debug('[uploadMultipleFiles] start', { files: files.map(f => ({ name: f.name, type: f.type, size: f.size })), title, tags, extraFields })
     const formData = new FormData()
     files.forEach(file => formData.append('file', file))
-    if (title?.trim()) formData.append('title', title.trim())
-    if (tags && tags.length > 0) formData.append('tags', JSON.stringify(tags))
+    if (title?.trim())
+      formData.append('title', title.trim())
+    if (tags && tags.length > 0)
+      formData.append('tags', JSON.stringify(tags))
     if (extraFields) {
       Object.entries(extraFields).forEach(([k, v]) => formData.append(k, typeof v === 'boolean' ? String(v) : v))
     }
@@ -41,11 +42,10 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
     const response = await fetch('/api/upload', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${session?.access_token}`,
+        Authorization: `Bearer ${session?.access_token}`,
       },
       body: formData,
     })
-    console.debug('[uploadMultipleFiles] response', { ok: response.ok, status: response.status })
 
     if (!response.ok) {
       const error = await response.json()
@@ -54,14 +54,13 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
     }
 
     const result = await response.json()
-    console.debug('[uploadMultipleFiles] result', result)
     if (result.errors && result.errors.length > 0) {
       console.warn('Some files failed to upload:', result.errors)
     }
     return result.files.map((file: any) => ({
       objectName: file.objectName,
       url: file.url,
-      thumbnail: file.thumbnail
+      thumbnail: file.thumbnail,
     }))
   }, [session?.access_token])
 
@@ -73,7 +72,7 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
       todoItems?: TodoItem[]
       parsedLinkData?: ParsedLinkData | null
       selectedFiles?: File[]
-    }
+    },
   ) => {
     const { type, title, content } = formState
     const { editorData, todoItems, parsedLinkData, selectedFiles } = options
@@ -99,12 +98,14 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
         onSuccess()
         onContentAdded?.()
         return true
-      } else {
+      }
+      else {
         let finalContent = content
 
         if (type === 'note' && editorData) {
           finalContent = JSON.stringify(editorData)
-        } else if (type === 'todo' && todoItems) {
+        }
+        else if (type === 'todo' && todoItems) {
           finalContent = JSON.stringify(todoItems)
         }
 
@@ -121,7 +122,8 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
         })
         return true
       }
-    } catch (error) {
+    }
+    catch (error) {
       toast.error(`Error uploading: ${error instanceof Error ? error.message : 'Unknown error'}`)
       return false
     }

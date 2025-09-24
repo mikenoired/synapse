@@ -1,13 +1,13 @@
 'use client'
 
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { AuthDialog } from '@/features/auth-dialog/ui/auth-dialog'
 import { ThemeToggle } from '@/features/theme-toggle/ui/theme-toggle'
 import { useAuth } from '@/shared/lib/auth-context'
 import { Button } from '@/shared/ui/button'
 import { Card, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import Image from 'next/image'
 
 export default function HomePage() {
   const [authDialogOpen, setAuthDialogOpen] = useState(false)
@@ -16,7 +16,8 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading && user) router.push('/dashboard')
+    if (!loading && user)
+      router.push('/dashboard')
   }, [user, loading, router])
 
   const handleAuthClick = (mode: 'login' | 'register') => {
@@ -32,7 +33,8 @@ export default function HomePage() {
     )
   }
 
-  if (user) return null
+  if (user)
+    return null
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
@@ -90,7 +92,9 @@ export default function HomePage() {
                 />
               </div>
               <p className="text-2xl md:text-3xl font-medium text-muted-foreground">
-                Ваш интерактивный <span className="text-primary font-bold">мозг</span>
+                Ваш интерактивный
+                {' '}
+                <span className="text-primary font-bold">мозг</span>
               </p>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
                 Храните заметки, файлы и идеи в одном месте.

@@ -1,12 +1,19 @@
 'use client'
 
 import type { Session, User } from '@supabase/supabase-js'
+import type { ReactNode } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { createContext, ReactNode, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey)
+  throw new Error('Missing Supabase environment variables')
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  supabaseUrl,
+  supabaseAnonKey,
 )
 
 interface AuthContextType {
@@ -49,7 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Keep HttpOnly cookie in sync on sign-in/refresh/sign-out
       if (event === 'SIGNED_OUT') {
         fetch('/api/session', { method: 'DELETE' }).catch(() => { })
-      } else if (session?.access_token && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
+      }
+      else if (session?.access_token && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED')) {
         fetch('/api/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -63,7 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Periodically refresh access token and renew SSR cookie
   useEffect(() => {
-    if (!session) return
+    if (!session)
+      return
     const interval = setInterval(async () => {
       try {
         const { data } = await supabase.auth.refreshSession()
@@ -75,7 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             body: JSON.stringify({ token: newToken }),
           })
         }
-      } catch {
+      }
+      catch {
         // ignore
       }
     }, 45 * 60 * 1000) // every 45 minutes
@@ -118,13 +128,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signIn,
       signOut,
-    }}>
+    }}
+    >
       {children}
     </AuthContext.Provider>
   )
 }
 
-export const useAuth = () => {
+export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')

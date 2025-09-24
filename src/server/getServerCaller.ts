@@ -5,5 +5,3 @@ export async function getServerCaller() {
   const ctx = await createContext({})
   return appRouter.createCaller(ctx)
 }
-
-

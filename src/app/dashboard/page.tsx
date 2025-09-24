@@ -1,8 +1,8 @@
+import { Suspense } from 'react'
 import { createContext } from '@/server/context'
 import { getServerCaller } from '@/server/getServerCaller'
-import { Suspense } from 'react'
-import DashboardClient from './page.client'
 import { Skeleton } from '@/shared/ui/skeleton'
+import DashboardClient from './page.client'
 
 function DashboardSkeleton() {
   return (

@@ -1,7 +1,8 @@
-import { useState, useCallback, useEffect, DragEvent } from 'react'
+import type { DragEvent } from 'react'
+import type { MediaState } from './types'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { getVideoThumbnail } from '../utils'
-import type { MediaState } from './types'
 
 export function useMediaUpload() {
   const [state, setState] = useState<MediaState>({
@@ -33,9 +34,11 @@ export function useMediaUpload() {
       validFiles.push(file)
       if (file.type.startsWith('image/')) {
         previewPromises.push(Promise.resolve(URL.createObjectURL(file)))
-      } else if (file.type.startsWith('video/')) {
+      }
+      else if (file.type.startsWith('video/')) {
         previewPromises.push(getVideoThumbnail(file))
-      } else if (file.type.startsWith('audio/')) {
+      }
+      else if (file.type.startsWith('audio/')) {
         previewPromises.push(Promise.resolve(''))
       }
     }
@@ -65,7 +68,8 @@ export function useMediaUpload() {
   }, [state.selectedFiles, state.previewUrls])
 
   const moveFile = useCallback((fromIndex: number, toIndex: number) => {
-    if (fromIndex === toIndex) return
+    if (fromIndex === toIndex)
+      return
 
     const newFiles = [...state.selectedFiles]
     const newUrls = [...state.previewUrls]
@@ -88,7 +92,8 @@ export function useMediaUpload() {
     e.stopPropagation()
     if (e.type === 'dragenter' || e.type === 'dragover') {
       setState(prev => ({ ...prev, dragActive: true }))
-    } else if (e.type === 'dragleave') {
+    }
+    else if (e.type === 'dragleave') {
       setState(prev => ({ ...prev, dragActive: false }))
     }
   }, [])

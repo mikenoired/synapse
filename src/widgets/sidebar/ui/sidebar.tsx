@@ -1,34 +1,37 @@
-'use client';
+'use client'
 
-import { useDashboard } from '@/shared/lib/dashboard-context';
+import type {
+  LucideProps,
+} from 'lucide-react'
+import type { ForwardRefExoticComponent, RefAttributes } from 'react'
 import {
   Home,
-  LucideProps,
+  Network,
   Plus,
   Settings,
   Tag,
-  Network
-} from 'lucide-react';
-import { ForwardRefExoticComponent, RefAttributes, useCallback } from 'react';
-import DesktopSidebar from './desktop-sidebar';
-import MobileSidebar from './mobile-sidebar';
+} from 'lucide-react'
+import { useCallback } from 'react'
+import { useDashboard } from '@/shared/lib/dashboard-context'
+import DesktopSidebar from './desktop-sidebar'
+import MobileSidebar from './mobile-sidebar'
 
 export type NavItem = {
-  href: string;
-  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
-  label: string;
-  action?: undefined;
-  onMouseEnter?: undefined;
+  href: string
+  icon: ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>>
+  label: string
+  action?: undefined
+  onMouseEnter?: undefined
 } | {
-  action: () => void;
-  icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
-  label: string;
-  onMouseEnter: () => void;
-  href?: undefined;
+  action: () => void
+  icon: ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>>
+  label: string
+  onMouseEnter: () => void
+  href?: undefined
 }
 
 export default function Sidebar() {
-  const { setAddDialogOpen } = useDashboard();
+  const { setAddDialogOpen } = useDashboard()
 
   const preloadAddContentDialog = useCallback(() => {
     import('@/features/add-content/ui/add-content-dialog')
@@ -42,15 +45,15 @@ export default function Sidebar() {
       action: () => setAddDialogOpen(true),
       icon: Plus,
       label: 'Добавить',
-      onMouseEnter: preloadAddContentDialog
+      onMouseEnter: preloadAddContentDialog,
     },
-    { href: '/dashboard/settings', icon: Settings, label: 'Настройки' }
-  ];
+    { href: '/dashboard/settings', icon: Settings, label: 'Настройки' },
+  ]
 
   return (
     <>
       <MobileSidebar navItems={navItems} />
       <DesktopSidebar navItems={navItems} />
     </>
-  );
-} 
+  )
+}

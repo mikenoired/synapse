@@ -1,18 +1,21 @@
 'use client'
 
-import { trpc } from '@/shared/api/trpc'
-import { AuthProvider, useAuth } from '@/shared/lib/auth-context'
+import type { ReactNode } from 'react'
+import type { AppRouter } from '@/server/routers/_app'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createTRPCClient, httpBatchLink } from '@trpc/client'
-import type { AppRouter } from '@/server/routers/_app'
-import superjson from 'superjson'
 import { ThemeProvider } from 'next-themes'
-import { ReactNode, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
+import superjson from 'superjson'
+import { trpc } from '@/shared/api/trpc'
+import { AuthProvider, useAuth } from '@/shared/lib/auth-context'
 
 function getBaseUrl() {
-  if (typeof window !== 'undefined') return ''
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  if (typeof window !== 'undefined')
+    return ''
+  if (process.env.VERCEL_URL)
+    return `https://${process.env.VERCEL_URL}`
   return `http://localhost:${process.env.PORT ?? 3000}`
 }
 
@@ -48,7 +51,7 @@ function TRPCProvider({ children }: { children: ReactNode }) {
           }),
         ],
       }),
-    [session?.access_token]
+    [session?.access_token],
   )
 
   return (
@@ -82,4 +85,4 @@ export function Providers({ children }: { children: ReactNode }) {
       </TRPCProvider>
     </AuthProvider>
   )
-} 
+}

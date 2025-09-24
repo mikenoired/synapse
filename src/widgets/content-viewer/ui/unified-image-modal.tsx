@@ -1,26 +1,28 @@
 'use client'
 
-import { trpc } from "@/shared/api/trpc"
-import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
-import { Content, parseMediaJson } from "@/shared/lib/schemas"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import { Dialog, DialogContent, DialogTitle } from "@/shared/ui/dialog"
-import { Input } from "@/shared/ui/input"
-import { PreviewImage } from "@/shared/ui/preview-image"
-import { Session } from "@supabase/supabase-js"
-import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, Ungroup, X } from "lucide-react"
-import { AnimatePresence, motion } from "motion/react"
-import { useRouter } from "next/navigation"
-import { TouchEvent, useEffect, useState } from "react"
-import { CustomVideoPlayer } from "./custom-video-player"
+import type { Session } from '@supabase/supabase-js'
+import type { TouchEvent } from 'react'
+import type { Content } from '@/shared/lib/schemas'
+import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, Ungroup, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { trpc } from '@/shared/api/trpc'
+import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
+import { parseMediaJson } from '@/shared/lib/schemas'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { PreviewImage } from '@/shared/ui/preview-image'
+import { CustomVideoPlayer } from './custom-video-player'
 
 interface UnifiedMediaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item: Content
   session: Session | null
-  gallery?: { url: string; parentId: string; media_type?: string; thumbnail_url?: string }[]
+  gallery?: { url: string, parentId: string, media_type?: string, thumbnail_url?: string }[]
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   onContentChanged?: () => void
@@ -34,7 +36,7 @@ export function UnifiedMediaModal({
   gallery = [],
   onEdit,
   onDelete,
-  onContentChanged
+  onContentChanged,
 }: UnifiedMediaModalProps) {
   const initialIndex = (gallery.length > 0) ? gallery.findIndex(g => g.parentId === item.id) : 0
   const [currentIndex, setCurrentIndex] = useState(initialIndex >= 0 ? initialIndex : 0)
@@ -58,20 +60,20 @@ export function UnifiedMediaModal({
   const updateContentMutation = trpc.content.update.useMutation({
     onSuccess: () => {
       onContentChanged?.()
-    }
+    },
   })
 
   const createContentMutation = trpc.content.create.useMutation({
     onSuccess: () => {
       onContentChanged?.()
-    }
+    },
   })
 
   const deleteContentMutation = trpc.content.delete.useMutation({
     onSuccess: () => {
       onContentChanged?.()
       onOpenChange(false)
-    }
+    },
   })
 
   useEffect(() => {
@@ -82,15 +84,27 @@ export function UnifiedMediaModal({
     }
   }, [open, item.id])
 
+  const goToNext = () => {
+    setDirection(1)
+    setCurrentIndex(i => (i < imageUrls.length - 1 ? i + 1 : i))
+  }
+
+  const goToPrevious = () => {
+    setDirection(-1)
+    setCurrentIndex(i => (i > 0 ? i - 1 : i))
+  }
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return
+      if (!open)
+        return
 
       switch (e.key) {
         case 'Escape':
           if (showTags) {
             setShowTags(false)
-          } else {
+          }
+          else {
             onOpenChange(false)
           }
           break
@@ -113,16 +127,6 @@ export function UnifiedMediaModal({
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [open, showTags])
 
-  const goToNext = () => {
-    setDirection(1)
-    setCurrentIndex(i => (i < imageUrls.length - 1 ? i + 1 : i))
-  }
-
-  const goToPrevious = () => {
-    setDirection(-1)
-    setCurrentIndex(i => (i > 0 ? i - 1 : i))
-  }
-
   const handleTouchStart = (e: TouchEvent) => {
     setTouchEnd(null)
     setTouchStart(e.targetTouches[0].clientX)
@@ -133,7 +137,8 @@ export function UnifiedMediaModal({
   }
 
   const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return
+    if (!touchStart || !touchEnd)
+      return
 
     const distance = touchStart - touchEnd
     const isLeftSwipe = distance > 50
@@ -148,9 +153,12 @@ export function UnifiedMediaModal({
   }
 
   const handleUngroup = async () => {
-    if (!isMultiple) return
+    if (!isMultiple)
+      return
 
-    if (!confirm(`Разделить ${imageUrls.length} изображений на отдельные элементы?`)) return
+    // eslint-disable-next-line no-alert
+    if (!confirm(`Разделить ${imageUrls.length} изображений на отдельные элементы?`))
+      return
 
     try {
       const createPromises = imageUrls.map((url, index) => {
@@ -169,31 +177,37 @@ export function UnifiedMediaModal({
       await deleteContentMutation.mutateAsync({ id: item.id })
 
       onOpenChange(false)
-    } catch {
+    }
+    catch {
+      // eslint-disable-next-line no-alert
       alert('Ошибка при разгруппировке')
     }
   }
 
   const handleAddTag = async (toAll: boolean = false) => {
-    if (!newTag.trim()) return
+    if (!newTag.trim())
+      return
 
     try {
       if (toAll || !isMultiple) {
         const updatedTags = [...new Set([...(item.tags || []), newTag.trim()])]
         await updateContentMutation.mutateAsync({
           id: item.id,
-          tags: updatedTags
+          tags: updatedTags,
         })
-      } else {
+      }
+      else {
         const updatedTags = [...new Set([...(item.tags || []), newTag.trim()])]
         await updateContentMutation.mutateAsync({
           id: item.id,
-          tags: updatedTags
+          tags: updatedTags,
         })
       }
 
       setNewTag('')
-    } catch {
+    }
+    catch {
+      // eslint-disable-next-line no-alert
       alert('Ошибка при добавлении тега')
     }
   }
@@ -201,18 +215,18 @@ export function UnifiedMediaModal({
   const slideVariants = {
     enter: (direction: number) => ({
       x: direction > 0 ? '100%' : '-100%',
-      opacity: 0
+      opacity: 0,
     }),
     center: {
       zIndex: 1,
       x: 0,
-      opacity: 1
+      opacity: 1,
     },
     exit: (direction: number) => ({
       zIndex: 0,
       x: direction < 0 ? '100%' : '-100%',
-      opacity: 0
-    })
+      opacity: 0,
+    }),
   }
 
   const handleEdit = () => {
@@ -221,6 +235,7 @@ export function UnifiedMediaModal({
   }
 
   const handleDelete = () => {
+    // eslint-disable-next-line no-alert
     if (confirm('Удалить этот контент?')) {
       deleteContentMutation.mutate({ id: item.id })
     }
@@ -228,18 +243,26 @@ export function UnifiedMediaModal({
 
   const currentMedia = gallery && gallery.length > 0
     ? gallery[currentIndex]
-    : { url: item.media_url || imageUrls[currentIndex], media_type: item.media_type, thumbnail_url: item.thumbnail_url };
+    : { url: item.media_url || imageUrls[currentIndex], media_type: item.media_type, thumbnail_url: item.thumbnail_url }
 
   const [mediaSrc, setMediaSrc] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setMediaSrc(null)
-    getPresignedMediaUrl(currentMedia.url, session?.access_token)
-      .then(url => { if (!cancelled) setMediaSrc(url) })
-      .catch(() => { if (!cancelled) setMediaSrc(null) })
-    return () => { cancelled = true }
-  }, [currentMedia.url, session?.access_token])
+    getPresignedMediaUrl(currentMedia.url)
+      .then((url) => {
+        if (!cancelled)
+          setMediaSrc(url)
+      })
+      .catch(() => {
+        if (!cancelled)
+          setMediaSrc(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [currentMedia.url])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -259,7 +282,13 @@ export function UnifiedMediaModal({
                 <div className="flex items-center gap-3 text-sm text-white/70">
                   {isMultiple && (
                     <>
-                      <span>{currentIndex + 1} из {imageUrls.length}</span>
+                      <span>
+                        {currentIndex + 1}
+                        {' '}
+                        из
+                        {' '}
+                        {imageUrls.length}
+                      </span>
                       <div className="flex items-center gap-1">
                         <Layers className="w-3 h-3" />
                         <span>Группа</span>
@@ -353,7 +382,7 @@ export function UnifiedMediaModal({
                   <Input
                     placeholder="Добавить тег..."
                     value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
+                    onChange={e => setNewTag(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleAddTag(true)
@@ -386,52 +415,54 @@ export function UnifiedMediaModal({
 
           <div className="flex-1 min-h-0 flex items-center justify-center relative overflow-hidden">
             <AnimatePresence initial={false} mode="sync" custom={direction}>
-              {currentMedia.media_type === 'video' ? (
-                <motion.div
-                  key={currentIndex}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "tween", duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                    opacity: { duration: 0.2, ease: 'linear' }
-                  }}
-                  className="absolute inset-0 w-full h-full"
-                  style={{ borderRadius: 12, background: '#000' }}
-                >
-                  <CustomVideoPlayer
-                    src={mediaSrc || ''}
-                    poster={currentMedia.thumbnail_url}
-                    autoPlay={true}
-                    className="w-full h-full"
+              {currentMedia.media_type === 'video'
+                ? (
+                  <motion.div
+                    key={currentIndex}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                      opacity: { duration: 0.2, ease: 'linear' },
+                    }}
+                    className="absolute inset-0 w-full h-full"
+                    style={{ borderRadius: 12, background: '#000' }}
+                  >
+                    <CustomVideoPlayer
+                      src={mediaSrc || ''}
+                      poster={currentMedia.thumbnail_url}
+                      autoPlay={true}
+                      className="w-full h-full"
+                    />
+                  </motion.div>
+                )
+                : (
+                  <motion.img
+                    key={currentIndex}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                      opacity: { duration: 0.2, ease: 'linear' },
+                    }}
+                    src={mediaSrc || undefined}
+                    alt={`${item.title || 'Изображение'} ${currentIndex + 1}`}
+                    className="absolute inset-0 w-full h-full object-contain cursor-pointer"
+                    draggable={false}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                    }}
                   />
-                </motion.div>
-              ) : (
-                <motion.img
-                  key={currentIndex}
-                  custom={direction}
-                  variants={slideVariants}
-                  initial="enter"
-                  animate="center"
-                  exit="exit"
-                  transition={{
-                    x: { type: "tween", duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                    opacity: { duration: 0.2, ease: 'linear' }
-                  }}
-                  src={mediaSrc || undefined}
-                  alt={`${item.title || 'Изображение'} ${currentIndex + 1}`}
-                  className="absolute inset-0 w-full h-full object-contain cursor-pointer"
-                  draggable={false}
-                  onTouchStart={handleTouchStart}
-                  onTouchMove={handleTouchMove}
-                  onTouchEnd={handleTouchEnd}
-                  onError={(e) => {
-                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                  }}
-                />
-              )}
+                )}
             </AnimatePresence>
 
             {isMultiple && (
@@ -460,7 +491,8 @@ export function UnifiedMediaModal({
                 const isVideo = media.media_type?.startsWith('video')
                 const previewSrc = isVideo ? media.thumbnail_url || media.url : media.url
                 const distance = Math.abs(index - currentIndex)
-                if (distance > 15) return null
+                if (distance > 15)
+                  return null
                 return (
                   <button
                     key={index}

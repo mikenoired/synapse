@@ -1,13 +1,13 @@
 'use client'
 
-import Item from "@/entities/item/ui/item"
+import { ArrowLeft } from 'lucide-react'
+import { notFound, useRouter } from 'next/navigation'
+import { use, useEffect } from 'react'
+import Item from '@/entities/item/ui/item'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
-import { ArrowLeft } from 'lucide-react'
-import { notFound, useRouter } from 'next/navigation'
-import { use, useEffect } from 'react'
 
 export default function ItemPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -15,7 +15,7 @@ export default function ItemPage({ params }: { params: Promise<{ id: string }> }
   const router = useRouter()
   const { data: item, isLoading, error } = trpc.content.getById.useQuery(
     { id },
-    { enabled: !!id && !!user && !loading, retry: false }
+    { enabled: !!id && !!user && !loading, retry: false },
   )
 
   useEffect(() => {
@@ -33,7 +33,8 @@ export default function ItemPage({ params }: { params: Promise<{ id: string }> }
     )
   }
 
-  if (!item) return notFound()
+  if (!item)
+    return notFound()
 
   return (
     <div className="container mx-auto p-4">
@@ -44,4 +45,4 @@ export default function ItemPage({ params }: { params: Promise<{ id: string }> }
       <Item item={item} session={session} index={0} />
     </div>
   )
-} 
+}

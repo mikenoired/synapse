@@ -1,19 +1,19 @@
-'use client';
-import { Button } from '@/shared/ui/button';
-import { Card } from '@/shared/ui/card';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+'use client'
+import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
 
 const tabs = [
   { key: 'general', label: 'General' },
   { key: 'media', label: 'Media' },
   { key: 'ai', label: 'AI' },
   { key: 'theming', label: 'Theming' },
-];
+]
 
 export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
-  const searchParams = useSearchParams();
-  const tab = searchParams.get('tab') || activeTab || 'general';
+  const searchParams = useSearchParams()
+  const tab = searchParams.get('tab') || activeTab || 'general'
 
   return (
     <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-background flex md:flex-col flex-row md:h-auto h-14 md:min-h-screen">
@@ -35,5 +35,5 @@ export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
         ))}
       </Card>
     </aside>
-  );
+  )
 }

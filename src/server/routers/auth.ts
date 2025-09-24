@@ -29,7 +29,8 @@ export const authRouter = router({
         password: input.password,
       })
 
-      if (error) handleAuthError(error, 'UNAUTHORIZED')
+      if (error)
+        handleAuthError(error, 'UNAUTHORIZED')
 
       return { user: data.user, session: data.session }
     }),
@@ -38,8 +39,9 @@ export const authRouter = router({
     .mutation(async ({ ctx }) => {
       const { error } = await ctx.supabase.auth.signOut()
 
-      if (error) handleSupabaseError(error)
+      if (error)
+        handleSupabaseError(error)
 
       return { success: true }
     }),
-}) 
+})

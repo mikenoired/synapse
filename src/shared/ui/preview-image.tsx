@@ -1,6 +1,6 @@
-import { getPresignedMediaUrl } from "@/shared/lib/image-utils"
-import Image from "next/image"
-import { useEffect, useState } from "react"
+import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 
 interface PreviewImageProps {
   src: string
@@ -19,7 +19,7 @@ export function PreviewImage({ src, token, alt, className, skeletonClassName }: 
     let cancelled = false
     setLoading(true)
     setError(false)
-    getPresignedMediaUrl(src, token)
+    getPresignedMediaUrl(src)
       .then((presigned) => {
         if (!cancelled) {
           setUrl(presigned)
@@ -32,14 +32,16 @@ export function PreviewImage({ src, token, alt, className, skeletonClassName }: 
           setLoading(false)
         }
       })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [src, token])
 
   if (loading) {
-    return <div className={skeletonClassName || "bg-muted animate-pulse w-full h-full rounded"} />
+    return <div className={skeletonClassName || 'bg-muted animate-pulse w-full h-full rounded'} />
   }
   if (error || !url) {
-    return <div className={skeletonClassName || "bg-destructive/20 w-full h-full rounded flex items-center justify-center text-xs text-destructive"}>Ошибка</div>
+    return <div className={skeletonClassName || 'bg-destructive/20 w-full h-full rounded flex items-center justify-center text-xs text-destructive'}>Ошибка</div>
   }
   return <Image src={url} alt={alt || ''} className={className} draggable={false} fill unoptimized />
 }

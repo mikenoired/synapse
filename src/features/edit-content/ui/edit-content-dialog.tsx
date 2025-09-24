@@ -1,13 +1,13 @@
+import type { JSONContent } from '@tiptap/core'
+import type { Content } from '@/shared/lib/schemas'
+import { Maximize, Minimize, Plus, X } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { trpc } from '@/shared/api/trpc'
-import { Content } from '@/shared/lib/schemas'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Editor } from '@/widgets/editor/ui/editor'
-import { JSONContent } from '@tiptap/core'
-import { Maximize, Minimize, Plus, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
 
 interface EditContentDialogProps {
   open: boolean
@@ -23,7 +23,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
   const [currentTag, setCurrentTag] = useState('')
   const [isFullScreen, setIsFullScreen] = useState(false)
   const [startY, setStartY] = useState<number | null>(null)
-  const [todoItems, setTodoItems] = useState<{ text: string; marked: boolean }[]>([])
+  const [todoItems, setTodoItems] = useState<{ text: string, marked: boolean }[]>([])
   const [todoInput, setTodoInput] = useState('')
   const [showUnsavedModal, setShowUnsavedModal] = useState(false)
   const [hasUnsaved, setHasUnsaved] = useState(false)
@@ -60,7 +60,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
     if (content.type === 'todo') {
       try {
         setTodoItems(JSON.parse(content.content))
-      } catch {
+      }
+      catch {
         setTodoItems([])
       }
     }
@@ -80,7 +81,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (content.type === 'todo') {
-      if (todoItems.length === 0 || todoItems.some(item => !item.text.trim())) return
+      if (todoItems.length === 0 || todoItems.some(item => !item.text.trim()))
+        return
       try {
         updateContentMutation.mutate({
           id: content.id,
@@ -90,12 +92,14 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
           tags,
         })
         setHasUnsaved(false)
-      } catch (error) {
+      }
+      catch (error) {
         toast.error(`Ошибка сохранения: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
       return
     }
-    if (!editorData || !editorData.content || editorData.content.length === 0) return
+    if (!editorData || !editorData.content || editorData.content.length === 0)
+      return
     try {
       const finalContent = JSON.stringify(editorData)
       updateContentMutation.mutate({
@@ -105,7 +109,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
         content: finalContent,
         tags,
       })
-    } catch (error) {
+    }
+    catch (error) {
       toast.error(`Ошибка сохранения: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
@@ -151,7 +156,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
   const handleClose = () => {
     if (content.type === 'todo' && hasUnsaved) {
       setShowUnsavedModal(true)
-    } else {
+    }
+    else {
       onOpenChange(false)
     }
   }
@@ -166,7 +172,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
     onOpenChange(false)
   }
 
-  if (!open) return null
+  if (!open)
+    return null
 
   const renderTodoForm = () => (
     <div className="flex flex-col h-full">
@@ -213,7 +220,10 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
               placeholder="Добавить пункт..."
               value={todoInput}
               onChange={e => setTodoInput(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAddTodo() }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter')
+                  handleAddTodo()
+              }}
               disabled={updateContentMutation.isPending}
               className="flex-1"
             />
@@ -274,57 +284,59 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
           </div>
         </div>
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-          {content.type === 'todo' ? (
-            renderTodoForm()
-          ) : (
-            <div className="flex flex-col h-full">
-              <div className="p-6 pb-4 border-b">
-                <div className="max-w-[700px] mx-auto w-full">
-                  <Input
-                    id="title"
-                    placeholder="Заголовок (опционально)..."
-                    value={title}
-                    onChange={e => setTitle(e.target.value)}
-                    disabled={updateContentMutation.isPending}
-                    className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
-                  />
-                  <div className="flex flex-wrap gap-2 mt-3">
-                    {tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                          disabled={updateContentMutation.isPending}
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
+          {content.type === 'todo'
+            ? (
+              renderTodoForm()
+            )
+            : (
+              <div className="flex flex-col h-full">
+                <div className="p-6 pb-4 border-b">
+                  <div className="max-w-[700px] mx-auto w-full">
                     <Input
-                      id="tags"
-                      placeholder="+ Добавить тег"
-                      value={currentTag}
-                      onChange={e => setCurrentTag(e.target.value)}
-                      onKeyDown={handleKeyDown}
-                      className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+                      id="title"
+                      placeholder="Заголовок (опционально)..."
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
                       disabled={updateContentMutation.isPending}
+                      className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+                    />
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                            disabled={updateContentMutation.isPending}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
+                      <Input
+                        id="tags"
+                        placeholder="+ Добавить тег"
+                        value={currentTag}
+                        onChange={e => setCurrentTag(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+                        disabled={updateContentMutation.isPending}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1 p-6 pt-2 overflow-y-auto">
+                  <div className="max-w-[700px] mx-auto w-full">
+                    <Editor
+                      data={editorData}
+                      onChange={setEditorData}
+                      readOnly={updateContentMutation.isPending}
                     />
                   </div>
                 </div>
               </div>
-              <div className="flex-1 p-6 pt-2 overflow-y-auto">
-                <div className="max-w-[700px] mx-auto w-full">
-                  <Editor
-                    data={editorData}
-                    onChange={setEditorData}
-                    readOnly={updateContentMutation.isPending}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+            )}
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">
               <Button
@@ -338,8 +350,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
               <Button
                 type="submit"
                 disabled={
-                  updateContentMutation.isPending ||
-                  (content.type === 'todo'
+                  updateContentMutation.isPending
+                  || (content.type === 'todo'
                     ? todoItems.length === 0 || todoItems.some(item => !item.text.trim())
                     : !editorData || !editorData.content || editorData.content.length === 0)
                 }

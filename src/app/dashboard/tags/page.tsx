@@ -4,7 +4,8 @@ import TagsClient from './page.client'
 
 export default async function TagsPage() {
   const ctx = await createContext({})
-  if (!ctx.user) return <TagsClient initial={[]} />
+  if (!ctx.user)
+    return <TagsClient initial={[]} />
 
   const caller = await getServerCaller()
   const tagsWithContent = await caller.content.getTagsWithContent()

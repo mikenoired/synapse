@@ -1,12 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { TagStack } from '@/entities/item/ui/tag-stack'
 import { useAuth } from '@/shared/lib/auth-context'
 import { Skeleton } from '@/shared/ui/skeleton'
-import Link from 'next/link'
 
 interface Props {
-  initial: { id: string; title: string; items: any[] }[]
+  initial: { id: string, title: string, items: any[] }[]
 }
 
 export default function TagsClient({ initial }: Props) {
@@ -54,5 +54,3 @@ export default function TagsClient({ initial }: Props) {
     </div>
   )
 }
-
-

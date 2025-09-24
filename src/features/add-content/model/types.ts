@@ -1,4 +1,4 @@
-import { Content } from '@/shared/lib/schemas'
+import type { Content } from '@/shared/lib/schemas'
 
 export interface TodoItem {
   text: string

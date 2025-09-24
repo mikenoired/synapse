@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const userSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  email: z.email(),
   created_at: z.string(),
 })
 
@@ -13,18 +13,18 @@ export const contentBlockSchema = z.object({
   attrs: z.record(z.any(), z.any()).optional(),
   marks: z.array(z.object({
     type: z.string(),
-    attrs: z.record(z.any(), z.any()).optional()
-  })).optional()
+    attrs: z.record(z.any(), z.any()).optional(),
+  })).optional(),
 })
 
 export const structuredContentSchema = z.object({
   type: z.literal('doc'),
-  content: z.array(contentBlockSchema)
+  content: z.array(contentBlockSchema),
 })
 
 // Схема для контента ссылок в JSON формате
 export const linkContentSchema = z.object({
-  url: z.string().url(),
+  url: z.url(),
   title: z.string(),
   description: z.string(),
   content: structuredContentSchema, // Теперь структурированный контент!
@@ -45,7 +45,7 @@ export const linkContentSchema = z.object({
     success: z.boolean(),
     warnings: z.array(z.string()).optional(),
     extractedImages: z.number().optional(), // Количество извлеченных изображений
-  })
+  }),
 })
 
 export const contentSchema = z.object({
@@ -121,7 +121,7 @@ export const updateContentSchema = createContentSchema.partial().extend({
 })
 
 export const authSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(6),
 })
 
@@ -136,21 +136,22 @@ export type UpdateContent = z.infer<typeof updateContentSchema>
 export type Auth = z.infer<typeof authSchema>
 
 // Хелпер функции для работы с link content
-export const parseLinkContent = (content: string): LinkContent | null => {
+export function parseLinkContent(content: string): LinkContent | null {
   try {
     const parsed = JSON.parse(content)
     return linkContentSchema.parse(parsed)
-  } catch {
+  }
+  catch {
     return null
   }
 }
 
-export const stringifyLinkContent = (linkContent: LinkContent): string => {
+export function stringifyLinkContent(linkContent: LinkContent): string {
   return JSON.stringify(linkContent)
 }
 
 // ---- Media content helpers (for DB model with JSON in content) ----
-export type MediaJson = {
+export interface MediaJson {
   media: {
     object?: string
     url?: string
@@ -162,18 +163,20 @@ export type MediaJson = {
   }
 }
 
-export const parseMediaJson = (content: string): MediaJson | null => {
+export function parseMediaJson(content: string): MediaJson | null {
   try {
     const parsed = JSON.parse(content)
-    if (parsed && parsed.media && typeof parsed.media.type === 'string') return parsed as MediaJson
+    if (parsed && parsed.media && typeof parsed.media.type === 'string')
+      return parsed as MediaJson
     return null
-  } catch {
+  }
+  catch {
     return null
   }
 }
 
 // ---- Audio content helpers ----
-export type AudioJson = {
+export interface AudioJson {
   audio: {
     object?: string
     url?: string
@@ -204,22 +207,26 @@ export type AudioJson = {
   }
 }
 
-export const parseAudioJson = (content: string): AudioJson | null => {
+export function parseAudioJson(content: string): AudioJson | null {
   try {
     const parsed = JSON.parse(content)
-    if (parsed && parsed.audio) return parsed as AudioJson
+    if (parsed && parsed.audio)
+      return parsed as AudioJson
     return null
-  } catch {
+  }
+  catch {
     return null
   }
 }
 
 // Функция для извлечения текста из структурированного контента (для поиска)
-export const extractTextFromStructuredContent = (structuredContent: any): string => {
-  if (!structuredContent?.content) return ''
+export function extractTextFromStructuredContent(structuredContent: any): string {
+  if (!structuredContent?.content)
+    return ''
 
   const extractFromBlock = (block: any): string => {
-    if (block.type === 'text') return block.text || ''
+    if (block.type === 'text')
+      return block.text || ''
     if (block.content) {
       if (Array.isArray(block.content)) {
         return block.content.map(extractFromBlock).join('')
@@ -237,8 +244,9 @@ export const extractTextFromStructuredContent = (structuredContent: any): string
 }
 
 // Функция для расчета времени чтения статьи
-export const calculateReadingTime = (text: string): string => {
-  if (!text || text.trim().length === 0) return '0 мин'
+export function calculateReadingTime(text: string): string {
+  if (!text || text.trim().length === 0)
+    return '0 мин'
 
   // Средняя скорость чтения: 200-250 слов в минуту (берем 225 как среднее)
   const wordsPerMinute = 225
@@ -249,21 +257,25 @@ export const calculateReadingTime = (text: string): string => {
   // Расчет времени в минутах
   const minutes = Math.ceil(words / wordsPerMinute)
 
-  if (minutes < 1) return 'меньше минуты'
-  if (minutes === 1) return '1 мин'
-  if (minutes < 60) return `${minutes} мин`
+  if (minutes < 1)
+    return 'меньше минуты'
+  if (minutes === 1)
+    return '1 мин'
+  if (minutes < 60)
+    return `${minutes} мин`
 
   // Для времени больше часа
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
 
-  if (remainingMinutes === 0) return `${hours} ч`
+  if (remainingMinutes === 0)
+    return `${hours} ч`
   return `${hours} ч ${remainingMinutes} мин`
 }
 
 // Функция для расчета времени чтения из LinkContent
-export const calculateReadingTimeFromLinkContent = (linkContent: LinkContent): string => {
+export function calculateReadingTimeFromLinkContent(linkContent: LinkContent): string {
   // Используем rawText если доступен, иначе извлекаем из структурированного контента
   const text = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
   return calculateReadingTime(text)
-} 
+}

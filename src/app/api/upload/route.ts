@@ -1,18 +1,21 @@
+import type { NextRequest } from 'next/server'
+import { Buffer } from 'node:buffer'
+import { spawn } from 'node:child_process'
+import { randomUUID } from 'node:crypto'
+import { unlink, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import * as mm from 'music-metadata'
+import { NextResponse } from 'next/server'
+import sharp from 'sharp'
+import { generateThumbnail, getImageDimensions } from '@/server/lib/generate-thumbnail'
 import { getPublicUrl, uploadFile } from '@/shared/api/minio'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
-import { spawn } from 'child_process'
-import { randomUUID } from 'crypto'
-import { unlink, writeFile } from 'fs/promises'
-import { NextRequest, NextResponse } from 'next/server'
-import { tmpdir } from 'os'
-import { join } from 'path'
-import { generateThumbnail, getImageDimensions } from '../../../server/lib/generate-thumbnail'
-import * as mm from 'music-metadata'
-import sharp from 'sharp'
 
 async function resolveTagTitlesToIds(supabase: ReturnType<typeof createSupabaseClient>, titles: string[]): Promise<string[]> {
   const unique = Array.from(new Set((titles || []).filter(Boolean)))
-  if (unique.length === 0) return []
+  if (!unique.length)
+    return []
   const { data: existing } = await supabase.from('tags').select('id, title').in('title', unique)
   const byTitle = new Map((existing || []).map(t => [t.title, t.id]))
   const missing = unique.filter(t => !byTitle.has(t))
@@ -27,7 +30,7 @@ async function resolveTagTitlesToIds(supabase: ReturnType<typeof createSupabaseC
 async function getOrCreateContentNode(
   supabase: ReturnType<typeof createSupabaseClient>,
   userId: string,
-  params: { contentId: string; title?: string; type: string }
+  params: { contentId: string, title?: string, type: string },
 ) {
   const { data: existing } = await supabase
     .from('nodes')
@@ -35,20 +38,22 @@ async function getOrCreateContentNode(
     .eq('user_id', userId)
     .contains('metadata', { content_id: params.contentId })
     .maybeSingle()
-  if (existing?.id) return existing.id as string
+  if (existing?.id)
+    return existing.id as string
   const { data, error } = await supabase
     .from('nodes')
     .insert([{ content: params.title ?? '', type: params.type, user_id: userId, metadata: { content_id: params.contentId } }])
     .select('id')
     .single()
-  if (error) throw error
+  if (error)
+    throw error
   return (data as { id: string }).id
 }
 
 async function getOrCreateTagNodeIds(
   supabase: ReturnType<typeof createSupabaseClient>,
   userId: string,
-  tagIds: string[]
+  tagIds: string[],
 ): Promise<Record<string, string>> {
   const out: Record<string, string> = {}
   for (const tagId of Array.from(new Set(tagIds))) {
@@ -68,7 +73,8 @@ async function getOrCreateTagNodeIds(
       .insert([{ content: tag?.title ?? '', type: 'tag', user_id: userId, metadata: { tag_id: tagId } }])
       .select('id')
       .single()
-    if (error) throw error
+    if (error)
+      throw error
     out[tagId] = (created as { id: string }).id
   }
   return out
@@ -80,19 +86,20 @@ async function upsertContentTags(
   contentId: string,
   tagIds: string[],
   contentNodeId: string,
-  tagNodeIdByTagId: Record<string, string>
+  tagNodeIdByTagId: Record<string, string>,
 ) {
-  if (!tagIds.length) return
+  if (!tagIds.length)
+    return
   await supabase.from('content_tags').insert(tagIds.map(id => ({ content_id: contentId, tag_id: id })))
   const edgeRows = tagIds
     .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag', user_id: userId }))
     .filter(r => !!r.to_node)
-  if (edgeRows.length) await supabase.from('edges').insert(edgeRows)
+  if (edgeRows.length)
+    await supabase.from('edges').insert(edgeRows)
 }
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('[UPLOAD] start')
     const token = request.headers.get('authorization')?.replace('Bearer ', '')
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -111,15 +118,15 @@ export async function POST(request: NextRequest) {
     const tagsRaw = formData.get('tags')?.toString()
     const makeTrackRaw = formData.get('makeTrack')?.toString()
     const makeTrack = makeTrackRaw === 'true'
-    console.log('[UPLOAD] form data', { files: files.length, title: titleRaw, tagsRaw, makeTrack })
     let tags: string[] = []
     if (tagsRaw) {
       try {
         const parsed = JSON.parse(tagsRaw)
         if (Array.isArray(parsed)) {
-          tags = parsed.filter((t) => typeof t === 'string')
+          tags = parsed.filter(t => typeof t === 'string')
         }
-      } catch {
+      }
+      catch {
         // ignore malformed tags
       }
     }
@@ -135,7 +142,6 @@ export async function POST(request: NextRequest) {
       const file = files[i]
 
       try {
-        console.log('[UPLOAD] processing', { name: file.name, type: file.type, size: file.size })
         if (file.type.startsWith('image/')) {
           if (!file.type.startsWith('image/')) {
             errors.push(`File "${file.name}" is not an image`)
@@ -163,17 +169,19 @@ export async function POST(request: NextRequest) {
 
           const publicUrl = getPublicUrl(objectName)
 
-          let thumbnailBase64: string | undefined = undefined
+          let thumbnailBase64: string | undefined
           try {
             thumbnailBase64 = await generateThumbnail(buffer, file.type)
-          } catch (error) {
+          }
+          catch (error) {
             console.error('Error generating thumbnail:', error)
           }
 
-          let imageDimensions: { width: number; height: number } | undefined = undefined
+          let imageDimensions: { width: number, height: number } | undefined
           try {
             imageDimensions = await getImageDimensions(buffer)
-          } catch (error) {
+          }
+          catch (error) {
             console.error('Error getting image dimensions:', error)
           }
 
@@ -185,7 +193,7 @@ export async function POST(request: NextRequest) {
               width: imageDimensions?.width,
               height: imageDimensions?.height,
               thumbnailBase64,
-            }
+            },
           }
           const { data: inserted, error: insertErr } = await supabase.from('content').insert([{
             user_id: user.id,
@@ -193,7 +201,8 @@ export async function POST(request: NextRequest) {
             content: JSON.stringify(mediaJson),
             title: titleRaw || undefined,
           }]).select('id').single()
-          if (insertErr) console.error('[UPLOAD] insert image error', insertErr)
+          if (insertErr)
+            console.error('[UPLOAD] insert image error', insertErr)
 
           if (inserted?.id) {
             const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: inserted.id, title: titleRaw || undefined, type: 'media' })
@@ -210,44 +219,45 @@ export async function POST(request: NextRequest) {
             fileName: file.name,
             size: file.size,
             type: file.type,
-            thumbnailBase64
+            thumbnailBase64,
           })
-        } else if (file.type.startsWith('video/')) {
-          console.log('Start processing video:', file.name)
+        }
+        else if (file.type.startsWith('video/')) {
           const tempVideoPath = join(tmpdir(), `${randomUUID()}-${file.name}`)
           const tempThumbPath = join(tmpdir(), `${randomUUID()}.jpg`)
           const bytes = await file.arrayBuffer()
           await writeFile(tempVideoPath, Buffer.from(bytes))
-          console.log('Video written to temp:', tempVideoPath)
           const compressedPath = join(tmpdir(), `${randomUUID()}-compressed.mp4`)
-          console.log('Start ffmpeg compress:', compressedPath)
           await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', [
-              '-i', tempVideoPath,
-              '-c:v', 'copy',
-              '-c:a', 'copy',
-              compressedPath
+              '-i',
+              tempVideoPath,
+              '-c:v',
+              'copy',
+              '-c:a',
+              'copy',
+              compressedPath,
             ])
-            ffmpeg.on('close', code => {
-              console.log('ffmpeg compress close:', code)
+            ffmpeg.on('close', (code) => {
               code === 0 ? resolve(0) : reject(new Error('ffmpeg compress error'))
             })
           })
-          console.log('Start ffmpeg thumbnail:', tempThumbPath)
           await new Promise((resolve, reject) => {
             const ffmpeg = spawn('ffmpeg', [
-              '-i', tempVideoPath,
-              '-ss', '00:00:01.000',
-              '-vframes', '1',
-              tempThumbPath
+              '-i',
+              tempVideoPath,
+              '-ss',
+              '00:00:01.000',
+              '-vframes',
+              '1',
+              tempThumbPath,
             ])
-            ffmpeg.on('close', code => {
-              console.log('ffmpeg thumbnail close:', code)
+            ffmpeg.on('close', (code) => {
               code === 0 ? resolve(0) : reject(new Error('ffmpeg thumbnail error'))
             })
           })
-          const compressedBuffer = await import('fs').then(fs => fs.readFileSync(compressedPath))
-          const thumbBuffer = await import('fs').then(fs => fs.readFileSync(tempThumbPath))
+          const compressedBuffer = await import('node:fs').then(fs => fs.readFileSync(compressedPath))
+          const thumbBuffer = await import('node:fs').then(fs => fs.readFileSync(tempThumbPath))
           const { objectName: videoObject } = await uploadFile(compressedBuffer, file.name.replace(/\.[^.]+$/, '.mp4'), 'video/mp4', user.id, 'media')
           const { objectName: thumbObject } = await uploadFile(thumbBuffer, file.name.replace(/\.[^.]+$/, '.jpg'), 'image/jpeg', user.id, 'media-thumbs')
           await unlink(tempVideoPath)
@@ -257,21 +267,22 @@ export async function POST(request: NextRequest) {
             errors.push(`Failed to upload video or thumbnail for "${file.name}"`)
             continue
           }
-          let thumbnailBase64: string | undefined = undefined
+          let thumbnailBase64: string | undefined
           try {
             thumbnailBase64 = await generateThumbnail(compressedBuffer, 'video/mp4')
-          } catch (error) {
+          }
+          catch (error) {
             console.error('Error generating video blur thumbnail:', error)
           }
 
-          let videoDimensions: { width: number; height: number } | undefined = undefined
+          let videoDimensions: { width: number, height: number } | undefined
           try {
             videoDimensions = await getImageDimensions(thumbBuffer)
-          } catch (error) {
+          }
+          catch (error) {
             console.error('Error getting video dimensions:', error)
           }
 
-          console.log('Insert video to content:', videoObject)
           const mediaJsonVideo = {
             media: {
               object: videoObject,
@@ -281,7 +292,7 @@ export async function POST(request: NextRequest) {
               height: videoDimensions?.height,
               thumbnailUrl: getPublicUrl(thumbObject),
               thumbnailBase64,
-            }
+            },
           }
           const { data: insertedVideo, error: insertVideoErr } = await supabase.from('content').insert([{
             user_id: user.id,
@@ -289,7 +300,8 @@ export async function POST(request: NextRequest) {
             content: JSON.stringify(mediaJsonVideo),
             title: titleRaw || undefined,
           }]).select('id').single()
-          if (insertVideoErr) console.error('[UPLOAD] insert video error', insertVideoErr)
+          if (insertVideoErr)
+            console.error('[UPLOAD] insert video error', insertVideoErr)
           if (insertedVideo?.id) {
             const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: insertedVideo.id, title: titleRaw || undefined, type: 'media' })
             if (tags.length) {
@@ -298,7 +310,6 @@ export async function POST(request: NextRequest) {
               await upsertContentTags(supabase, user.id, insertedVideo.id, ids, contentNodeId, tagNodeIds)
             }
           }
-          console.log('Inserted video to content:', videoObject)
           uploadResults.push({
             objectName: videoObject,
             url: getPublicUrl(videoObject),
@@ -306,9 +317,10 @@ export async function POST(request: NextRequest) {
             fileName: file.name,
             size: file.size,
             type: file.type,
-            thumbnailBase64
+            thumbnailBase64,
           })
-        } else if (file.type.startsWith('audio/')) {
+        }
+        else if (file.type.startsWith('audio/')) {
           if (file.size > 50 * 1024 * 1024) {
             errors.push(`File "${file.name}" is too large (max 50MB)`)
             continue
@@ -320,13 +332,8 @@ export async function POST(request: NextRequest) {
           let metadata: mm.IAudioMetadata | null = null
           try {
             metadata = await mm.parseBuffer(buffer, { mimeType: file.type, size: buffer.length })
-            console.log('[UPLOAD] metadata parsed', {
-              title: metadata?.common.title,
-              artist: metadata?.common.artist,
-              album: metadata?.common.album,
-              duration: metadata?.format.duration,
-            })
-          } catch (e) {
+          }
+          catch (e) {
             console.warn('Failed to parse audio metadata:', e)
           }
 
@@ -344,7 +351,7 @@ export async function POST(request: NextRequest) {
           let coverUrl: string | undefined
           let coverObject: string | undefined
           let coverThumbBase64: string | undefined
-          let coverDims: { width: number; height: number } | undefined
+          let coverDims: { width: number, height: number } | undefined
           const pic = metadata?.common.picture?.[0]
           if (pic && pic.data && pic.data.length > 0) {
             try {
@@ -356,11 +363,13 @@ export async function POST(request: NextRequest) {
                 coverThumbBase64 = await generateThumbnail(jpeg, 'image/jpeg')
                 try {
                   coverDims = await getImageDimensions(jpeg)
-                } catch (err) {
-                  console.warn('[UPLOAD] getImageDimensions error', err)
+                }
+                catch (err) {
+                  console.warn('Error getting image dimensions:', err)
                 }
               }
-            } catch (e) {
+            }
+            catch (e) {
               console.warn('Failed to process cover:', e)
             }
           }
@@ -378,7 +387,7 @@ export async function POST(request: NextRequest) {
             },
             track: {
               isTrack: makeTrack || Boolean(
-                metadata?.common.artist || metadata?.common.album || metadata?.common.title || metadata?.common.genre?.length
+                metadata?.common.artist || metadata?.common.album || metadata?.common.title || metadata?.common.genre?.length,
               ),
               title: metadata?.common.title || titleRaw || undefined,
               artist: metadata?.common.artist || undefined,
@@ -389,13 +398,15 @@ export async function POST(request: NextRequest) {
               diskNumber: metadata?.common.disk?.no || undefined,
               lyrics: metadata?.common.lyrics?.join('\n') || undefined,
             },
-            cover: coverUrl ? {
-              object: coverObject,
-              url: coverUrl,
-              width: coverDims?.width,
-              height: coverDims?.height,
-              thumbnailBase64: coverThumbBase64,
-            } : undefined,
+            cover: coverUrl
+              ? {
+                object: coverObject,
+                url: coverUrl,
+                width: coverDims?.width,
+                height: coverDims?.height,
+                thumbnailBase64: coverThumbBase64,
+              }
+              : undefined,
           }
 
           const { data: insertedAudio, error: insertAudioErr } = await supabase.from('content').insert([{
@@ -404,7 +415,8 @@ export async function POST(request: NextRequest) {
             content: JSON.stringify(audioJson),
             title: titleRaw || metadata?.common.title || undefined,
           }]).select('id').single()
-          if (insertAudioErr) console.error('[UPLOAD] insert audio error', insertAudioErr)
+          if (insertAudioErr)
+            console.error('[UPLOAD] insert audio error', insertAudioErr)
 
           if (insertedAudio?.id) {
             const contentNodeId = await getOrCreateContentNode(supabase, user.id, { contentId: insertedAudio.id, title: titleRaw || metadata?.common.title || undefined, type: 'audio' })
@@ -423,11 +435,13 @@ export async function POST(request: NextRequest) {
             type: file.type,
             cover: coverUrl,
           })
-        } else {
+        }
+        else {
           errors.push(`File "${file.name}" is not an image, video, or audio`)
           continue
         }
-      } catch (error) {
+      }
+      catch (error) {
         console.error('Upload error for file:', file.name, error)
         errors.push(`Failed to upload "${file.name}": ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
@@ -437,20 +451,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         files: uploadResults,
-        errors: errors.length > 0 ? errors : undefined
+        errors: errors.length > 0 ? errors : undefined,
       })
-    } else {
+    }
+    else {
       console.warn('[UPLOAD] no files saved', { errors })
       return NextResponse.json({
         error: 'No files uploaded successfully',
-        details: errors
+        details: errors,
       }, { status: 400 })
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json(
       { error: 'Upload failed' },
-      { status: 500 }
+      { status: 500 },
     )
   }
-} 
+}

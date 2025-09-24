@@ -1,30 +1,30 @@
-'use client';
+'use client'
 
-import { Content } from '@/shared/lib/schemas';
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent } from '@/shared/ui/card';
-import { Skeleton } from '@/shared/ui/skeleton';
-import { Session } from '@supabase/supabase-js';
-import { FileText, Search } from 'lucide-react';
-import { useEffect, useRef, memo, lazy, Suspense } from 'react';
-import Masonry from 'react-masonry-css';
+import type { Session } from '@supabase/supabase-js'
+import type { Content } from '@/shared/lib/schemas'
+import { FileText, Search } from 'lucide-react'
+import { lazy, memo, Suspense, useEffect, useRef } from 'react'
+import Masonry from 'react-masonry-css'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Skeleton } from '@/shared/ui/skeleton'
 
-const Item = lazy(() => import('@/entities/item/ui/item'));
+const Item = lazy(() => import('@/entities/item/ui/item'))
 
 interface ContentGridProps {
-  items: Content[];
-  isLoading: boolean;
-  fetchNext?: () => void;
-  hasNext?: boolean;
-  isFetchingNext?: boolean;
-  session: Session | null;
-  onContentChanged: () => void;
-  onItemClick: (item: Content) => void;
-  onItemHover?: () => void;
-  searchQuery?: string;
-  selectedTags?: string[];
-  onClearFilters?: () => void;
-  excludedTag?: string;
+  items: Content[]
+  isLoading: boolean
+  fetchNext?: () => void
+  hasNext?: boolean
+  isFetchingNext?: boolean
+  session: Session | null
+  onContentChanged: () => void
+  onItemClick: (item: Content) => void
+  onItemHover?: () => void
+  searchQuery?: string
+  selectedTags?: string[]
+  onClearFilters?: () => void
+  excludedTag?: string
 }
 
 const breakpointColumnsObj = {
@@ -34,10 +34,10 @@ const breakpointColumnsObj = {
   1280: 3,
   1024: 2,
   768: 2,
-  640: 1
-};
+  640: 1,
+}
 
-export const ContentGrid = memo(function ContentGrid({
+export const ContentGrid = memo(({
   items,
   isLoading,
   fetchNext,
@@ -50,29 +50,31 @@ export const ContentGrid = memo(function ContentGrid({
   selectedTags,
   onClearFilters,
   excludedTag,
-}: ContentGridProps) {
-
-  const hasContent = items.length > 0;
-  const showEmptyState = !isLoading && !hasContent && !searchQuery && (!selectedTags || selectedTags.length === 0);
-  const showNotFoundState = !isLoading && !hasContent && (searchQuery || (selectedTags && selectedTags.length > 0));
+}: ContentGridProps) => {
+  const hasContent = items.length > 0
+  const showEmptyState = !isLoading && !hasContent && !searchQuery && (!selectedTags || selectedTags.length === 0)
+  const showNotFoundState = !isLoading && !hasContent && (searchQuery || (selectedTags && selectedTags.length > 0))
 
   const sentinelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!fetchNext || !hasNext) return
-    const observer = new IntersectionObserver(entries => {
+    if (!fetchNext || !hasNext)
+      return
+    const observer = new IntersectionObserver((entries) => {
       const first = entries[0]
       if (first.isIntersecting) {
         fetchNext()
       }
     }, {
       rootMargin: '100px',
-      threshold: 0.1
+      threshold: 0.1,
     })
     const current = sentinelRef.current
-    if (current) observer.observe(current)
+    if (current)
+      observer.observe(current)
     return () => {
-      if (current) observer.unobserve(current)
+      if (current)
+        observer.unobserve(current)
     }
   }, [fetchNext, hasNext])
 
@@ -89,7 +91,7 @@ export const ContentGrid = memo(function ContentGrid({
           </div>
         ))}
       </Masonry>
-    );
+    )
   }
 
   if (showEmptyState) {
@@ -107,7 +109,7 @@ export const ContentGrid = memo(function ContentGrid({
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   if (showNotFoundState) {
@@ -128,7 +130,7 @@ export const ContentGrid = memo(function ContentGrid({
           )}
         </div>
       </div>
-    );
+    )
   }
 
   return (

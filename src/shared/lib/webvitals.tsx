@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 'use client'
 
 import { useReportWebVitals } from 'next/web-vitals'
@@ -18,7 +19,7 @@ function sendToAnalytics(metric: any) {
     CLS: { good: 0.1, poor: 0.25 },
     FID: { good: 100, poor: 300 },
     TTFB: { good: 800, poor: 1800 },
-    INP: { good: 200, poor: 500 }
+    INP: { good: 200, poor: 500 },
   }
 
   const threshold = thresholds[name as keyof typeof thresholds]
@@ -26,17 +27,22 @@ function sendToAnalytics(metric: any) {
     if (name === 'CLS') {
       if (value <= threshold.good) {
         console.log('✅ Excellent CLS score!')
-      } else if (value <= threshold.poor) {
+      }
+      else if (value <= threshold.poor) {
         console.log('⚠️ CLS needs improvement')
-      } else {
+      }
+      else {
         console.log('❌ Poor CLS - check for layout shifts')
       }
-    } else {
+    }
+    else {
       if (value <= threshold.good) {
         console.log('✅ Excellent performance!')
-      } else if (value <= threshold.poor) {
+      }
+      else if (value <= threshold.poor) {
         console.log('⚠️ Performance needs improvement')
-      } else {
+      }
+      else {
         console.log('❌ Poor performance - requires optimization')
       }
     }

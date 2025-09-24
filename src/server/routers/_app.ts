@@ -1,8 +1,8 @@
 import { router } from '../trpc'
 import { authRouter } from './auth'
 import { contentRouter } from './content'
-import { userRouter } from './user'
 import { graphRouter } from './graph'
+import { userRouter } from './user'
 
 export const appRouter = router({
   auth: authRouter,
@@ -11,4 +11,4 @@ export const appRouter = router({
   graph: graphRouter,
 })
 
-export type AppRouter = typeof appRouter 
+export type AppRouter = typeof appRouter

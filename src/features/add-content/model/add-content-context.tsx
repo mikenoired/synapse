@@ -1,13 +1,14 @@
 'use client'
 
-import { createContext, useContext, ReactNode } from 'react'
+import type { ReactNode } from 'react'
+import type { Content } from '@/shared/lib/schemas'
+import { createContext, useContext } from 'react'
 import { useContentForm } from './use-content-form'
-import { useTagManager } from './use-tag-manager'
-import { useMediaUpload } from './use-media-upload'
-import { useTodoManager } from './use-todo-manager'
-import { useLinkParser } from './use-link-parser'
 import { useFormSubmission } from './use-form-submission'
-import { Content } from '@/shared/lib/schemas'
+import { useLinkParser } from './use-link-parser'
+import { useMediaUpload } from './use-media-upload'
+import { useTagManager } from './use-tag-manager'
+import { useTodoManager } from './use-todo-manager'
 
 interface AddContentContextType {
   // Form state
@@ -54,7 +55,7 @@ interface AddContentContextType {
   // Form submission
   submitContent: () => Promise<boolean>
   isSubmitting: boolean
-  uploadFiles: (files: File[], title?: string, tags?: string[], extra?: Record<string, string | boolean>) => Promise<{ objectName: string; url: string; thumbnail?: string }[]>
+  uploadFiles: (files: File[], title?: string, tags?: string[], extra?: Record<string, string | boolean>) => Promise<{ objectName: string, url: string, thumbnail?: string }[]>
 
   // Utils
   resetForm: () => void
@@ -73,7 +74,7 @@ export function AddContentProvider({
   children,
   initialTags = [],
   onSuccess,
-  onContentAdded
+  onContentAdded,
 }: AddContentProviderProps) {
   const form = useContentForm()
   const tags = useTagManager(initialTags)
@@ -99,7 +100,7 @@ export function AddContentProvider({
         todoItems: todos.items,
         parsedLinkData: links.parsedData,
         selectedFiles: media.selectedFiles,
-      }
+      },
     )
   }
 

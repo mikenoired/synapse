@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { Badge } from "@/shared/ui/badge";
-import { Input } from "@/shared/ui/input";
-import { X } from "lucide-react";
+import { X } from 'lucide-react'
+import { Badge } from '@/shared/ui/badge'
+import { Input } from '@/shared/ui/input'
 import { Editor } from '@/widgets/editor/ui/editor'
 import { useAddContent } from '../model/add-content-context'
 
@@ -28,7 +28,7 @@ export default function AddNoteView() {
             id="title"
             placeholder="Title (optional)..."
             value={title}
-            onChange={(e) => updateTitle(e.target.value)}
+            onChange={e => updateTitle(e.target.value)}
             disabled={isSubmitting}
             className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
           />
@@ -50,7 +50,7 @@ export default function AddNoteView() {
               id="tags"
               placeholder="+ Add tag"
               value={currentTag}
-              onChange={(e) => updateCurrentTag(e.target.value)}
+              onChange={e => updateCurrentTag(e.target.value)}
               onKeyDown={handleTagKeyDown}
               className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
               disabled={isSubmitting}
@@ -58,7 +58,6 @@ export default function AddNoteView() {
           </div>
         </div>
       </div>
-
 
       <div className="flex-1 p-6 pt-2 overflow-y-auto">
         <div className="max-w-[700px] mx-auto w-full">

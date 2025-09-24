@@ -1,14 +1,14 @@
 'use client'
 
-import { Content } from "@/shared/lib/schemas"
+import type { Content } from '@/shared/lib/schemas'
+import { Calendar, Clock, FileText, Pencil, Trash2 } from 'lucide-react'
+import { motion } from 'motion/react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import Modal from "@/shared/ui/modal"
+import Modal from '@/shared/ui/modal'
 import { EditorRenderer } from '@/widgets/editor/ui/editor-renderer'
-import { Calendar, Clock, FileText, Pencil, Trash2 } from 'lucide-react'
-import { motion } from "motion/react"
-import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
 
 interface NoteViewerModalProps {
   open: boolean
@@ -23,7 +23,7 @@ export function NoteViewerModal({
   onOpenChange,
   item,
   onEdit,
-  onDelete
+  onDelete,
 }: NoteViewerModalProps) {
   const [isHovered, setIsHovered] = useState(false)
   const router = useRouter()
@@ -31,7 +31,8 @@ export function NoteViewerModal({
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return
+      if (!open)
+        return
 
       if (e.key === 'Escape') {
         onOpenChange(false)
@@ -46,7 +47,8 @@ export function NoteViewerModal({
     if (onEdit) {
       onEdit(item.id)
       onOpenChange(false)
-    } else {
+    }
+    else {
       router.push(`/edit/${item.id}`)
       onOpenChange(false)
     }
@@ -54,6 +56,7 @@ export function NoteViewerModal({
 
   const handleDelete = () => {
     if (onDelete) {
+      // eslint-disable-next-line no-alert
       if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
         onDelete(item.id)
         onOpenChange(false)
@@ -68,7 +71,8 @@ export function NoteViewerModal({
         if (parsedData.type === 'doc') {
           return <EditorRenderer data={parsedData} />
         }
-      } catch {
+      }
+      catch {
         // Fallback to plain text
       }
     }
@@ -107,23 +111,28 @@ export function NoteViewerModal({
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span>{new Date(item.created_at).toLocaleDateString('ru-RU', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</span>
+                  <span>
+                    {new Date(item.created_at).toLocaleDateString('ru-RU', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
                 </div>
                 {item.updated_at !== item.created_at && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span>Обновлено: {new Date(item.updated_at).toLocaleDateString('ru-RU', {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}</span>
+                    <span>
+                      Обновлено:
+                      {new Date(item.updated_at).toLocaleDateString('ru-RU', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </div>
                 )}
               </div>
@@ -181,4 +190,4 @@ export function NoteViewerModal({
       </div>
     </Modal>
   )
-} 
+}

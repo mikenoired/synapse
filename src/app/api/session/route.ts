@@ -1,5 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
+import { NextResponse } from 'next/server'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
 
 const COOKIE_NAME = 'synapse_token'
@@ -13,7 +14,8 @@ export async function POST(req: NextRequest) {
 
     const supabase = createSupabaseClient(token)
     const { data: { user }, error } = await supabase.auth.getUser(token)
-    if (error || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    if (error || !user)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const cookieStore = await cookies()
     cookieStore.set({
@@ -29,7 +31,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ success: true })
-  } catch {
+  }
+  catch {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 }
@@ -39,5 +42,3 @@ export async function DELETE() {
   cookieStore.set({ name: COOKIE_NAME, value: '', maxAge: 0, path: '/' })
   return NextResponse.json({ success: true })
 }
-
-

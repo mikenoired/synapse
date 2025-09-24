@@ -1,5 +1,8 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
+import { toast } from 'react-hot-toast'
 import { useAuth } from '@/shared/lib/auth-context'
 import { Button } from '@/shared/ui/button'
 import {
@@ -11,8 +14,6 @@ import {
 } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
 
 interface AuthDialogProps {
   open: boolean
@@ -36,16 +37,19 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
       const result = mode === 'login' ? await signIn(email, password) : await signUp(email, password)
 
       if (result.error) {
-        alert(result.error.message)
-      } else {
+        toast.error(result.error.message)
+      }
+      else {
         onOpenChange(false)
         setEmail('')
         setPassword('')
         router.push('/dashboard')
       }
-    } catch (error) {
-      alert('Произошла ошибка')
-    } finally {
+    }
+    catch {
+      toast.error('Произошла ошибка')
+    }
+    finally {
       setIsLoading(false)
     }
   }
@@ -60,8 +64,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
           <DialogDescription>
             {mode === 'login'
               ? 'Введите свои данные для входа в систему'
-              : 'Создайте новый аккаунт для начала работы'
-            }
+              : 'Создайте новый аккаунт для начала работы'}
           </DialogDescription>
         </DialogHeader>
 
@@ -73,7 +76,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
               type="email"
               placeholder="example@mail.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={e => setEmail(e.target.value)}
               required
             />
           </div>
@@ -85,7 +88,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
             />
@@ -108,4 +111,4 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
       </DialogContent>
     </Dialog>
   )
-} 
+}

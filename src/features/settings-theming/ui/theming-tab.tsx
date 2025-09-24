@@ -1,6 +1,6 @@
-import { Button } from '@/shared/ui/button';
-import { Card } from '@/shared/ui/card';
-import { Input } from '@/shared/ui/input';
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
 
 export default function ThemingTab() {
   return (
@@ -18,5 +18,5 @@ export default function ThemingTab() {
         <Button className="mt-4 w-full md:w-auto" disabled>Сохранить (мок)</Button>
       </div>
     </Card>
-  );
+  )
 }

@@ -19,7 +19,8 @@ export async function getVideoThumbnail(file: File): Promise<string> {
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
         const dataUrl = canvas.toDataURL('image/png')
         resolve(dataUrl)
-      } else {
+      }
+      else {
         reject(new Error('Canvas context is null'))
       }
       URL.revokeObjectURL(url)

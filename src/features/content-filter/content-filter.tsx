@@ -1,33 +1,34 @@
-'use client';
+'use client'
 
-import { useDashboard } from '@/shared/lib/dashboard-context';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react'
+import { useDashboard } from '@/shared/lib/dashboard-context'
 
 const placeholders = [
-  "Помню как-то называлось...",
-  "Где-то я это уже сохранял...",
-  "О чём это было...",
-  "Точно помню, что это где-то тут...",
-  "Вспомнить всё",
-  "Может, по тегу найдётся...",
+  'Помню как-то называлось...',
+  'Где-то я это уже сохранял...',
+  'О чём это было...',
+  'Точно помню, что это где-то тут...',
+  'Вспомнить всё',
+  'Может, по тегу найдётся...',
 ]
 
 interface ContentFilterProps {
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
+  searchQuery: string
+  setSearchQuery: (query: string) => void
 }
 
 export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProps) {
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const { setTriggerSearchFocus } = useDashboard();
+  const searchInputRef = useRef<HTMLInputElement>(null)
+  const { setTriggerSearchFocus } = useDashboard()
 
   useEffect(() => {
-    if (searchInputRef.current) setTriggerSearchFocus(() => searchInputRef.current?.focus)
-  }, [setTriggerSearchFocus]);
+    if (searchInputRef.current)
+      setTriggerSearchFocus(() => searchInputRef.current?.focus)
+  }, [setTriggerSearchFocus])
 
   const placeholder = useMemo(() => {
-    return placeholders[Math.floor(Math.random() * placeholders.length)];
-  }, []);
+    return placeholders[Math.floor(Math.random() * placeholders.length)]
+  }, [])
 
   return (
     <div className="space-y-6 mb-8">
@@ -38,10 +39,10 @@ export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProp
           type="text"
           placeholder={placeholder}
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="w-full bg-background pr-4 py-4 text-2xl border-b focus:outline-none"
         />
       </div>
     </div>
-  );
-} 
+  )
+}

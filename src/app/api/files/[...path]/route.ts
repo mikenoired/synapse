@@ -1,10 +1,11 @@
+import type { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { getFileMetadata, getPresignedUrl } from '@/shared/api/minio'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
-import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
   request: NextRequest,
-  context: { params: Promise<{ path: string[] }> }
+  context: { params: Promise<{ path: string[] }> },
 ) {
   try {
     const headerToken = request.headers.get('authorization')?.replace('Bearer ', '')
@@ -41,11 +42,12 @@ export async function GET(
     // Частный кеш для браузера на короткий срок
     res.headers.set('Cache-Control', 'private, max-age=60')
     return res
-  } catch (error) {
+  }
+  catch (error) {
     console.error('File access error:', error)
     return NextResponse.json(
       { error: 'File access failed' },
-      { status: 500 }
+      { status: 500 },
     )
   }
-} 
+}

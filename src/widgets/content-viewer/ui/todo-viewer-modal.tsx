@@ -1,23 +1,23 @@
-import { Content } from '@/shared/lib/schemas'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import Modal from '@/shared/ui/modal'
-import { Input } from '@/shared/ui/input'
+import type { Content } from '@/shared/lib/schemas'
 import { Calendar, Clock, ListChecks, Pencil, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import Modal from '@/shared/ui/modal'
 
 interface TodoViewerModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item: Content
-  onUpdate: (newTodos: { text: string; marked: boolean }[]) => void
+  onUpdate: (newTodos: { text: string, marked: boolean }[]) => void
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
 }
 
 export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, onDelete }: TodoViewerModalProps) {
-  const [todos, setTodos] = useState<{ text: string; marked: boolean }[]>([])
+  const [todos, setTodos] = useState<{ text: string, marked: boolean }[]>([])
   const [changed, setChanged] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isHovered, setIsHovered] = useState(false)
@@ -25,21 +25,25 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
   useEffect(() => {
     try {
       setTodos(JSON.parse(item.content))
-    } catch {
+    }
+    catch {
       setTodos([])
     }
     setChanged(false)
   }, [item])
 
   useEffect(() => {
-    if (!changed) return
-    if (debounceRef.current) clearTimeout(debounceRef.current)
+    if (!changed)
+      return
+    if (debounceRef.current)
+      clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(() => {
       onUpdate(todos)
       setChanged(false)
     }, 300)
     return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
+      if (debounceRef.current)
+        clearTimeout(debounceRef.current)
     }
   }, [todos, changed, onUpdate])
 
@@ -57,6 +61,7 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
 
   const handleDelete = () => {
     if (onDelete) {
+      // eslint-disable-next-line no-alert
       if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
         onDelete(item.id)
         onOpenChange(false)
@@ -89,16 +94,28 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span>{new Date(item.created_at).toLocaleDateString('ru-RU', {
-                    year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                  })}</span>
+                  <span>
+                    {new Date(item.created_at).toLocaleDateString('ru-RU', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </span>
                 </div>
                 {item.updated_at !== item.created_at && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span>Обновлено: {new Date(item.updated_at).toLocaleDateString('ru-RU', {
-                      month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                    })}</span>
+                    <span>
+                      Обновлено:
+                      {new Date(item.updated_at).toLocaleDateString('ru-RU', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
                   </div>
                 )}
               </div>

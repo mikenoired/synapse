@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react'
+import type { LinkState } from './types'
+import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/shared/lib/auth-context'
-import type { LinkState } from './types'
 
 export function useLinkParser() {
   const { session } = useAuth()
@@ -11,7 +11,8 @@ export function useLinkParser() {
   })
 
   const parseLink = useCallback(async (url: string) => {
-    if (!url || !url.trim()) return
+    if (!url || !url.trim())
+      return
 
     try {
       setState(prev => ({ ...prev, isLoading: true }))
@@ -37,10 +38,12 @@ export function useLinkParser() {
         toast.success('Link parsed successfully!')
         return result.data
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error parsing link:', error)
       toast.error('Failed to parse the link')
-    } finally {
+    }
+    finally {
       setState(prev => ({ ...prev, isLoading: false }))
     }
   }, [session?.access_token])

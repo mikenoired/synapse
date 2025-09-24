@@ -1,7 +1,8 @@
-import { createSupabaseClient } from '@/shared/api/supabase-client'
-import { LinkContent } from '@/shared/lib/schemas'
+import type { NextRequest } from 'next/server'
+import type { LinkContent } from '@/shared/lib/schemas'
 import { JSDOM } from 'jsdom'
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { createSupabaseClient } from '@/shared/api/supabase-client'
 
 interface ContentBlock {
   type: 'paragraph' | 'heading' | 'image' | 'list' | 'quote' | 'code' | 'divider'
@@ -31,12 +32,13 @@ function extractMetaTags(document: Document): MetaData {
   const meta: MetaData = {}
 
   const metaTags = document.querySelectorAll('meta')
-  metaTags.forEach(tag => {
+  metaTags.forEach((tag) => {
     const property = tag.getAttribute('property')
     const name = tag.getAttribute('name')
     const content = tag.getAttribute('content')
 
-    if (!content) return
+    if (!content)
+      return
 
     // Open Graph tags
     const propertyMap: Record<string, keyof MetaData> = {
@@ -45,7 +47,7 @@ function extractMetaTags(document: Document): MetaData {
       'og:image': 'image',
       'og:site_name': 'siteName',
       'og:author': 'author',
-      'article:published_time': 'publishedTime'
+      'article:published_time': 'publishedTime',
     }
 
     if (property && propertyMap[property]) {
@@ -53,13 +55,18 @@ function extractMetaTags(document: Document): MetaData {
     }
 
     // Twitter Card tags
-    if (name === 'twitter:title' && !meta.title) meta.title = content
-    if (name === 'twitter:description' && !meta.description) meta.description = content
-    if (name === 'twitter:image' && !meta.image) meta.image = content
+    if (name === 'twitter:title' && !meta.title)
+      meta.title = content
+    if (name === 'twitter:description' && !meta.description)
+      meta.description = content
+    if (name === 'twitter:image' && !meta.image)
+      meta.image = content
 
     // // Standard meta tags
-    if (name === 'description' && !meta.description) meta.description = content
-    if (name === 'author' && !meta.author) meta.author = content
+    if (name === 'description' && !meta.description)
+      meta.description = content
+    if (name === 'author' && !meta.author)
+      meta.author = content
   })
 
   return meta
@@ -75,7 +82,7 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
     '.entry-content',
     '.article-content',
     '.story-body',
-    '.post-body'
+    '.post-body',
   ]
 
   let contentContainer: Element | null = null
@@ -107,13 +114,13 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
       case 'h4':
       case 'h5':
       case 'h6': {
-        const level = parseInt(tagName.charAt(1))
+        const level = Number.parseInt(tagName.charAt(1))
         const text = element.textContent?.trim()
         if (text) {
           blocks.push({
             type: 'heading',
             content: text,
-            attrs: { level }
+            attrs: { level },
           })
         }
         break
@@ -124,7 +131,7 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
         if (pText && pText.length > 10) { // Игнорируем очень короткие параграфы
           blocks.push({
             type: 'paragraph',
-            content: pText
+            content: pText,
           })
         }
         break
@@ -142,10 +149,11 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
               attrs: {
                 src: absoluteUrl,
                 alt,
-                title: element.getAttribute('title') || alt
-              }
+                title: element.getAttribute('title') || alt,
+              },
             })
-          } catch {
+          }
+          catch {
             // Игнорируем некорректные URL
           }
         }
@@ -157,7 +165,7 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
         if (quoteText) {
           blocks.push({
             type: 'quote',
-            content: quoteText
+            content: quoteText,
           })
         }
         break
@@ -171,8 +179,8 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
             type: 'code',
             content: codeText,
             attrs: {
-              language: element.getAttribute('class')?.match(/language-(\w+)/)?.[1] || 'text'
-            }
+              language: element.getAttribute('class')?.match(/language-(\w+)/)?.[1] || 'text',
+            },
           })
         }
         break
@@ -189,8 +197,8 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
             type: 'list',
             content: listItems.join('\n'),
             attrs: {
-              listType: tagName === 'ul' ? 'bullet' : 'ordered'
-            }
+              listType: tagName === 'ul' ? 'bullet' : 'ordered',
+            },
           })
         }
         break
@@ -198,7 +206,7 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
 
       case 'hr':
         blocks.push({
-          type: 'divider'
+          type: 'divider',
         })
         break
 
@@ -214,10 +222,12 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
 
   return {
     type: 'doc',
-    content: blocks.length > 0 ? blocks : [{
-      type: 'paragraph',
-      content: 'Не удалось извлечь содержимое статьи'
-    }]
+    content: blocks.length > 0
+      ? blocks
+      : [{
+        type: 'paragraph',
+        content: 'Не удалось извлечь содержимое статьи',
+      }],
   }
 }
 
@@ -233,7 +243,7 @@ function extractFavicon(document: Document, baseUrl: string): string | undefined
   const iconSelectors = [
     'link[rel="icon"]',
     'link[rel="shortcut icon"]',
-    'link[rel="apple-touch-icon"]'
+    'link[rel="apple-touch-icon"]',
   ]
 
   for (const selector of iconSelectors) {
@@ -241,7 +251,8 @@ function extractFavicon(document: Document, baseUrl: string): string | undefined
     if (icon?.href) {
       try {
         return new URL(icon.href, baseUrl).href
-      } catch {
+      }
+      catch {
         continue
       }
     }
@@ -249,16 +260,19 @@ function extractFavicon(document: Document, baseUrl: string): string | undefined
 
   try {
     return new URL('/favicon.ico', baseUrl).href
-  } catch {
+  }
+  catch {
     return undefined
   }
 }
 
 function makeAbsoluteUrl(url: string | undefined, baseUrl: string): string | undefined {
-  if (!url) return undefined
+  if (!url)
+    return undefined
   try {
     return new URL(url, baseUrl).href
-  } catch {
+  }
+  catch {
     return undefined
   }
 }
@@ -285,7 +299,8 @@ export async function POST(request: NextRequest) {
 
     try {
       new URL(url)
-    } catch {
+    }
+    catch {
       return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 })
     }
 
@@ -297,15 +312,15 @@ export async function POST(request: NextRequest) {
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate',
           'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
+          'Upgrade-Insecure-Requests': '1',
         },
-        signal: AbortSignal.timeout(10000) // 10 seconds timeout
+        signal: AbortSignal.timeout(10000), // 10 seconds timeout
       })
 
       if (!response.ok) {
         return NextResponse.json(
           { error: `Failed to fetch URL: ${response.status} ${response.statusText}` },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
@@ -313,7 +328,7 @@ export async function POST(request: NextRequest) {
       if (!contentType.includes('text/html')) {
         return NextResponse.json(
           { error: 'URL does not point to an HTML page' },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
@@ -321,9 +336,9 @@ export async function POST(request: NextRequest) {
       const dom = new JSDOM(html, { url })
       const document = dom.window.document
 
-      const title = document.querySelector('title')?.textContent?.trim() ||
-        document.querySelector('h1')?.textContent?.trim() ||
-        'Untitled'
+      const title = document.querySelector('title')?.textContent?.trim()
+        || document.querySelector('h1')?.textContent?.trim()
+        || 'Untitled'
 
       const metaData = extractMetaTags(document)
       const structuredContent = convertHtmlToStructuredContent(document)
@@ -350,42 +365,41 @@ export async function POST(request: NextRequest) {
           publishedTime: metaData.publishedTime,
           extractedAt: new Date().toISOString(),
           contentBlocks: structuredContent.content.length,
-          images
+          images,
         },
         parsing: {
           method: 'jsdom',
           userAgent: 'Mozilla/5.0 (compatible; Synapse-LinkParser/1.0)',
           success: true,
-          extractedImages: images.length
-        }
+          extractedImages: images.length,
+        },
       }
 
       if (!rawText || rawText.length < 50) {
         return NextResponse.json(
           { error: 'Unable to extract meaningful content from this page' },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
       return NextResponse.json({
         success: true,
-        data: linkContent
+        data: linkContent,
       })
-
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Error parsing URL:', error)
       return NextResponse.json(
         { error: 'Failed to parse the webpage content' },
-        { status: 500 }
+        { status: 500 },
       )
     }
-
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Parse link API error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }
-

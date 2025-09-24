@@ -1,17 +1,18 @@
 'use client'
 
+import type { FormEvent, TouchEvent } from 'react'
+import React, { useEffect, useState } from 'react'
+import toast from 'react-hot-toast'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
-import React, { useEffect, useState, TouchEvent, FormEvent } from 'react'
-import toast from 'react-hot-toast'
 import { AddContentProvider, useAddContent } from '../model/add-content-context'
 import {
   ContentTypeSelector,
-  MediaDropZone,
   LinkPreview,
-  TagInput
+  MediaDropZone,
+  TagInput,
 } from './components'
 import AddNoteView from './note'
 import AddTodoView from './todo'
@@ -82,7 +83,8 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 
   useEffect(() => {
     const handleEsc = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onOpenChange(false)
+      if (event.key === 'Escape')
+        onOpenChange(false)
     }
     window.addEventListener('keydown', handleEsc)
     return () => window.removeEventListener('keydown', handleEsc)
@@ -98,35 +100,34 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    console.debug('[AddContentDialog] submit start', { type, files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })), makeTrack })
 
-    if (type === 'media' && selectedFiles.length > 0) {
+    if (type === 'media' && selectedFiles.length > 0)
       setUploading(true)
-    }
 
     try {
       let success = false
       if (type === 'audio' && selectedFiles.length > 0) {
         setUploading(true)
-        const files = await uploadFiles(selectedFiles, title, tags, { makeTrack: makeTrack })
-        console.debug('[AddContentDialog] uploadFiles returned', files)
+        const files = await uploadFiles(selectedFiles, title, tags, { makeTrack })
         if (files && files.length > 0) {
           toast.success('Saved')
           success = true
-        } else {
+        }
+        else {
           toast.error('Не удалось загрузить файл')
           success = false
         }
-      } else {
+      }
+      else {
         success = await submitContent()
       }
-      console.debug('[AddContentDialog] submit done', { success })
       if (success) {
         resetForm()
         onOpenChange(false)
         onContentAdded?.()
       }
-    } finally {
+    }
+    finally {
       setUploading(false)
     }
   }
@@ -168,7 +169,8 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
   }
 
   const isSubmitDisabled = () => {
-    if (isLoading || linkParsing) return true
+    if (isLoading || linkParsing)
+      return true
 
     switch (type) {
       case 'note':
@@ -193,7 +195,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
     >
       <div
         className={`bg-background shadow-lg relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
@@ -206,73 +208,79 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
         />
 
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-          {type === 'note' ? (
-            <AddNoteView />
-          ) : type === 'todo' ? (
-            <AddTodoView />
-          ) : (
-            <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title (optional)</Label>
-                <Input
-                  id="title"
-                  placeholder="Enter title..."
-                  value={title}
-                  onChange={(e) => updateTitle(e.target.value)}
-                  disabled={isLoading}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="content">
-                  {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
-                </Label>
-                {type === 'link' ? (
-                  <LinkPreview
-                    content={content}
-                    parsedLinkData={parsedLinkData}
-                    linkParsing={linkParsing}
-                    isLoading={isLoading}
-                    onContentChange={updateContent}
-                    onParseLink={parseLink}
-                    onClearParsedData={clearParsedData}
-                  />
-                ) : (
-                  <MediaDropZone
-                    dragActive={dragActive}
-                    isLoading={isLoading}
-                    selectedFiles={selectedFiles}
-                    previewUrls={previewUrls}
-                    onFileSelect={handleFileSelect}
-                    onDrag={handleDrag}
-                    onDrop={handleDrop}
-                    onRemoveFile={removeFile}
-                    onMoveFile={moveFile}
-                  />
-                )}
-              </div>
-
-              {type === 'audio' && (
-                <div className="space-y-2">
-                  <Label htmlFor="makeTrack">Сделать треком</Label>
-                  <div className="flex items-center gap-2">
-                    <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={(e) => setMakeTrack(e.target.checked)} />
-                    <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
+          {type === 'note'
+            ? (
+              <AddNoteView />
+            )
+            : type === 'todo'
+              ? (
+                <AddTodoView />
+              )
+              : (
+                <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Title (optional)</Label>
+                    <Input
+                      id="title"
+                      placeholder="Enter title..."
+                      value={title}
+                      onChange={e => updateTitle(e.target.value)}
+                      disabled={isLoading}
+                    />
                   </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="content">
+                      {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
+                    </Label>
+                    {type === 'link'
+                      ? (
+                        <LinkPreview
+                          content={content}
+                          parsedLinkData={parsedLinkData}
+                          linkParsing={linkParsing}
+                          isLoading={isLoading}
+                          onContentChange={updateContent}
+                          onParseLink={parseLink}
+                          onClearParsedData={clearParsedData}
+                        />
+                      )
+                      : (
+                        <MediaDropZone
+                          dragActive={dragActive}
+                          isLoading={isLoading}
+                          selectedFiles={selectedFiles}
+                          previewUrls={previewUrls}
+                          onFileSelect={handleFileSelect}
+                          onDrag={handleDrag}
+                          onDrop={handleDrop}
+                          onRemoveFile={removeFile}
+                          onMoveFile={moveFile}
+                        />
+                      )}
+                  </div>
+
+                  {type === 'audio' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="makeTrack">Сделать треком</Label>
+                      <div className="flex items-center gap-2">
+                        <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
+                        <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <TagInput
+                    tags={tags}
+                    currentTag={currentTag}
+                    isLoading={isLoading}
+                    onCurrentTagChange={updateCurrentTag}
+                    onAddTag={addTag}
+                    onRemoveTag={removeTag}
+                    onKeyDown={handleTagKeyDown}
+                  />
                 </div>
               )}
-
-              <TagInput
-                tags={tags}
-                currentTag={currentTag}
-                isLoading={isLoading}
-                onCurrentTagChange={updateCurrentTag}
-                onAddTag={addTag}
-                onRemoveTag={removeTag}
-                onKeyDown={handleTagKeyDown}
-              />
-            </div>
-          )}
 
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">
@@ -301,7 +309,6 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 export function AddContentDialog(props: AddContentDialogProps) {
   const { open: isOpen, onOpenChange, onContentAdded, initialTags } = props
 
-
   React.useEffect(() => {
     if (isOpen) {
       const originalOverflow = document.body.style.overflow
@@ -312,7 +319,8 @@ export function AddContentDialog(props: AddContentDialogProps) {
     }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen)
+    return null
 
   return (
     <AddContentProvider
@@ -326,4 +334,4 @@ export function AddContentDialog(props: AddContentDialogProps) {
       />
     </AddContentProvider>
   )
-} 
+}

@@ -1,9 +1,9 @@
-import { Card } from '@/shared/ui/card';
+import { Card } from '@/shared/ui/card'
 
 export default function AiTab() {
-  const used = 12000;
-  const quota = 20000;
-  const percent = Math.round((used / quota) * 100);
+  const used = 12000
+  const quota = 20000
+  const percent = Math.round((used / quota) * 100)
 
   return (
     <Card className="p-6 space-y-6">
@@ -20,8 +20,11 @@ export default function AiTab() {
         <div className="w-full bg-muted h-3 rounded-full overflow-hidden mt-2">
           <div className="bg-primary h-full" style={{ width: `${percent}%` }} />
         </div>
-        <div className="text-right text-xs text-muted-foreground">{percent}% использовано</div>
+        <div className="text-right text-xs text-muted-foreground">
+          {percent}
+          % использовано
+        </div>
       </div>
     </Card>
-  );
+  )
 }

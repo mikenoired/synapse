@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -11,15 +11,17 @@ const nextConfig: NextConfig = {
       'lucide-react',
       '@tanstack/react-query',
       '@tiptap/react',
-      '@tiptap/core'
+      '@tiptap/core',
     ],
     optimizeCss: true,
   },
 
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production' ? {
-      exclude: ['error', 'warn']
-    } : false,
+    removeConsole: process.env.NODE_ENV === 'production'
+      ? {
+        exclude: ['error', 'warn'],
+      }
+      : false,
   },
 
   // webpack: (config, { dev }) => {
@@ -89,19 +91,19 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'X-DNS-Prefetch-Control',
-            value: 'on'
+            value: 'on',
           },
           {
             key: 'X-XSS-Protection',
-            value: '1; mode=block'
+            value: '1; mode=block',
           },
           {
             key: 'X-Frame-Options',
-            value: 'SAMEORIGIN'
+            value: 'SAMEORIGIN',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            value: 'nosniff',
           },
         ],
       },
@@ -110,12 +112,12 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=300, s-maxage=300'
-          }
-        ]
-      }
+            value: 'public, max-age=300, s-maxage=300',
+          },
+        ],
+      },
     ]
-  }
-};
+  },
+}
 
-export default nextConfig;
+export default nextConfig

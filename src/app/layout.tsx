@@ -1,28 +1,28 @@
-import { Providers } from "@/app/providers";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { ReactNode } from "react";
-import "./globals.css";
-import { WebVitals } from "@/shared/lib/webvitals";
-import { PerformanceMonitor } from "@/shared/lib/performance-monitor";
+import type { Metadata } from 'next'
+import type { ReactNode } from 'react'
+import { Inter } from 'next/font/google'
+import { Providers } from '@/app/providers'
+import { PerformanceMonitor } from '@/shared/lib/performance-monitor'
+import { WebVitals } from '@/shared/lib/webvitals'
+import './globals.css'
 
 const inter = Inter({
-  subsets: ["latin"],
+  subsets: ['latin'],
   display: 'swap',
   preload: true,
   fallback: ['system-ui', 'arial'],
-});
+})
 
 export const metadata: Metadata = {
-  title: "Synapse - Ваш интерактивный мозг",
-  description: "Современное приложение для хранения заметок, файлов и идей",
-  keywords: "заметки, файлы, идеи, организация, productivity",
-  authors: [{ name: "Mike Vetkal'" }],
-  viewport: "width=device-width, initial-scale=1, viewport-fit=cover",
+  title: 'Synapse - Ваш интерактивный мозг',
+  description: 'Современное приложение для хранения заметок, файлов и идей',
+  keywords: 'заметки, файлы, идеи, организация, productivity',
+  authors: [{ name: 'Mike Vetkal\'' }],
+  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
   other: {
     'resource-timing': 'navigation',
-  }
-};
+  },
+}
 
 export default function RootLayout({
   children,
@@ -49,5 +49,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  );
+  )
 }

@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react'
-import type { TagState } from './types'
 import type { KeyboardEvent } from 'react'
+import type { TagState } from './types'
+import { useCallback, useState } from 'react'
 
 export function useTagManager(initialTags: string[] = []) {
   const [state, setState] = useState<TagState>({

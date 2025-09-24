@@ -1,33 +1,34 @@
-import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog';
-import { trpc } from "@/shared/api/trpc";
-import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
-import { Content, LinkContent, parseLinkContent, extractTextFromStructuredContent, parseMediaJson } from "@/shared/lib/schemas";
-import { Badge } from "@/shared/ui/badge";
+import type { Session } from '@supabase/supabase-js'
+import type { Content, LinkContent } from '@/shared/lib/schemas'
+import { generateHTML } from '@tiptap/core'
+import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight'
+import Underline from '@tiptap/extension-underline'
+import StarterKit from '@tiptap/starter-kit'
+import DOMPurify from 'dompurify'
+import { common, createLowlight } from 'lowlight'
+import { ListChecks } from 'lucide-react'
+import { motion } from 'motion/react'
+import { useEffect, useMemo, useState } from 'react'
+import toast from 'react-hot-toast'
+import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog'
+import { trpc } from '@/shared/api/trpc'
+import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
+import { extractTextFromStructuredContent, parseLinkContent, parseMediaJson } from '@/shared/lib/schemas'
+import { Badge } from '@/shared/ui/badge'
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuTrigger
-} from "@/shared/ui/context-menu";
-import { Session } from "@supabase/supabase-js";
-import { generateHTML } from "@tiptap/core";
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
-import Underline from "@tiptap/extension-underline";
-import StarterKit from "@tiptap/starter-kit";
-import DOMPurify from 'dompurify';
-import { common, createLowlight } from "lowlight";
-import { ListChecks } from 'lucide-react';
-import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
-import toast from 'react-hot-toast';
-import MediaItem from './media-item';
+  ContextMenuTrigger,
+} from '@/shared/ui/context-menu'
+import MediaItem from './media-item'
 
 interface ItemProps {
   item: Content
   index: number
-  session: Session | null,
+  session: Session | null
   onContentChanged?: () => void
-  // eslint-disable-next-line no-unused-vars
+
   onItemClick?: (content: Content) => void
   excludedTag?: string
 }
@@ -39,23 +40,27 @@ export default function Item({ item, index, session, onContentChanged, onItemCli
     onSuccess: () => {
       toast.success('Элемент удален')
       onContentChanged?.()
-    }
+    },
   })
 
   const handleDelete = () => deleteMutation.mutate({ id: item.id })
   const handleEdit = () => setEditOpen(true)
 
-  const displayTags = excludedTag ? item.tags.filter(t => t !== excludedTag) : item.tags;
+  const displayTags = excludedTag ? item.tags.filter(t => t !== excludedTag) : item.tags
 
   return (
     <>
       <ContextMenu>
         <ContextMenuTrigger>
           <div onClick={() => onItemClick?.(item)} className="cursor-pointer">
-            <ItemContent item={{
-              ...item,
-              tags: displayTags
-            }} index={index} session={session} />
+            <ItemContent
+              item={{
+                ...item,
+                tags: displayTags,
+              }}
+              index={index}
+              session={session}
+            />
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
@@ -85,14 +90,23 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
     if (media?.type === 'video' && thumb) {
       setThumbSrc(null)
       getPresignedMediaUrl(thumb, session?.access_token)
-        .then(url => { if (!cancelled) setThumbSrc(url) })
-        .catch(() => { if (!cancelled) setThumbSrc(null) })
+        .then((url) => {
+          if (!cancelled)
+            setThumbSrc(url)
+        })
+        .catch(() => {
+          if (!cancelled)
+            setThumbSrc(null)
+        })
     }
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [item.content, item.type, session?.access_token])
 
   const getTextContent = useMemo(() => {
-    if (item.type !== 'note') return item.content;
+    if (item.type !== 'note')
+      return item.content
 
     const lowlight = createLowlight(common)
     const data = JSON.parse(item.content)
@@ -102,10 +116,11 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
   }, [item.content, item.type])
 
   const renderTodoPreview = () => {
-    let todos: { text: string; marked: boolean }[] = []
+    let todos: { text: string, marked: boolean }[] = []
     try {
       todos = JSON.parse(item.content)
-    } catch {
+    }
+    catch {
       console.error('Failed to parse todos', item.content)
     }
     const done = todos.filter(t => t.marked).length
@@ -113,7 +128,12 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
           <ListChecks className="w-4 h-4" />
-          {done} / {todos.length} выполнено
+          {done}
+          {' '}
+          /
+          {todos.length}
+          {' '}
+          выполнено
         </div>
         {todos.slice(0, 3).map((todo, idx) => (
           <div key={idx} className="flex items-center gap-2">
@@ -121,12 +141,22 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
             <span className={todo.marked ? 'line-through opacity-60' : ''}>{todo.text}</span>
           </div>
         ))}
-        {todos.length > 3 && <div className="text-xs text-muted-foreground">+ ещё {todos.length - 3}...</div>}
-        {item.tags && <div className='flex flex-wrap gap-1 mt-3'>{item.tags.map((tag: string) => (
-          <Badge key={tag} variant='outline' className="text-xs">
-            {tag}
-          </Badge>
-        ))}</div>}
+        {todos.length > 3 && (
+          <div className="text-xs text-muted-foreground">
+            + ещё
+            {todos.length - 3}
+            ...
+          </div>
+        )}
+        {item.tags && (
+          <div className="flex flex-wrap gap-1 mt-3">
+            {item.tags.map((tag: string) => (
+              <Badge key={tag} variant="outline" className="text-xs">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </div>
     )
   }
@@ -153,7 +183,7 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
 
     const fullText = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
     const previewText = fullText.length > 200
-      ? fullText.substring(0, 200) + '...'
+      ? `${fullText.substring(0, 200)}...`
       : fullText
 
     return (
@@ -182,42 +212,50 @@ function ItemContent({ item, index, session, onItemClick }: ItemProps) {
       transition={{ delay: index * 0.1 }}
       className="group"
     >
-      <div className={`hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0 bg-muted/50`}>
-        {item.title && item.type !== 'link' && (<div className={`pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100`}>
-          <span className="text-lg font-semibold leading-tight">
-            {item.title}
-          </span>
-        </div>)}
+      <div className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0 bg-muted/50">
+        {item.title && item.type !== 'link' && (
+          <div className="pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100">
+            <span className="text-lg font-semibold leading-tight">
+              {item.title}
+            </span>
+          </div>
+        )}
         <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
-          {item.type === 'media' || item.type === 'audio' ? (
-            <MediaItem item={item} session={session} onItemClick={onItemClick} thumbSrc={thumbSrc} />
-          ) : item.type === 'link' ? (
-            <div>
-              {renderLinkPreview()}
-              {item.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {item.tags.map((tag: string) => (
-                    <Badge key={tag} variant="outline" className="text-xs">
-                      {tag}
-                    </Badge>
-                  ))}
+          {item.type === 'media' || item.type === 'audio'
+            ? (
+              <MediaItem item={item} session={session} onItemClick={onItemClick} thumbSrc={thumbSrc} />
+            )
+            : item.type === 'link'
+              ? (
+                <div>
+                  {renderLinkPreview()}
+                  {item.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-3">
+                      {item.tags.map((tag: string) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ) : item.type === 'todo' ? (
-            renderTodoPreview()
-          ) : (
-            <>
-              <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
-              <div className="flex flex-wrap mt-3">
-                {item.tags.map((tag: string) => (
-                  <Badge key={tag} variant='outline' className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </>
-          )}
+              )
+              : item.type === 'todo'
+                ? (
+                  renderTodoPreview()
+                )
+                : (
+                  <>
+                    <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
+                    <div className="flex flex-wrap mt-3">
+                      {item.tags.map((tag: string) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </>
+                )}
         </div>
       </div>
     </motion.div>

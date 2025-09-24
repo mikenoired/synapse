@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react'
 import type { TodoState } from './types'
+import { useCallback, useState } from 'react'
 
 export function useTodoManager() {
   const [state, setState] = useState<TodoState>({
@@ -24,7 +24,7 @@ export function useTodoManager() {
   const toggleTodo = useCallback((index: number) => {
     setState(prev => ({
       items: prev.items.map((item, i) =>
-        i === index ? { ...item, marked: !item.marked } : item
+        i === index ? { ...item, marked: !item.marked } : item,
       ),
     }))
   }, [])
@@ -32,7 +32,7 @@ export function useTodoManager() {
   const updateTodoText = useCallback((index: number, text: string) => {
     setState(prev => ({
       items: prev.items.map((item, i) =>
-        i === index ? { ...item, text } : item
+        i === index ? { ...item, text } : item,
       ),
     }))
   }, [])

@@ -1,7 +1,7 @@
-import { handleAuthError } from '@/shared/lib/utils'
-import { initTRPC, TRPCError } from '@trpc/server'
 import type { Context } from './context'
+import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
+import { handleAuthError } from '@/shared/lib/utils'
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -67,7 +67,8 @@ const slowLogger = t.middleware(async ({ ctx, path, type, next }) => {
 export const publicProcedure = t.procedure.use(rateLimiter).use(slowLogger)
 
 const isAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.user) handleAuthError(null, 'UNAUTHORIZED')
+  if (!ctx.user)
+    handleAuthError(null, 'UNAUTHORIZED')
 
   return next({
     ctx: {

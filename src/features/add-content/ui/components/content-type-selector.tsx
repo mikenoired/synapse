@@ -1,9 +1,9 @@
 'use client'
 
-import { Button } from '@/shared/ui/button'
+import type { Content } from '@/shared/lib/schemas'
 import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Music2 } from 'lucide-react'
-import { Content } from '@/shared/lib/schemas'
 import { cn } from '@/shared/lib/utils'
+import { Button } from '@/shared/ui/button'
 
 interface ContentTypeSelectorProps {
   type: Content['type']
@@ -16,7 +16,7 @@ export function ContentTypeSelector({
   type,
   onTypeChange,
   isFullScreen,
-  onToggleFullScreen
+  onToggleFullScreen,
 }: ContentTypeSelectorProps) {
   const contentTypes = [
     { key: 'note', icon: FileText, label: 'Заметка' },
@@ -37,8 +37,8 @@ export function ContentTypeSelector({
             size="sm"
             onClick={() => onTypeChange(key)}
             className={cn(
-              "flex items-center gap-2 bg-none",
-              type === key && "bg-muted"
+              'flex items-center gap-2 bg-none',
+              type === key && 'bg-muted',
             )}
           >
             <Icon className="w-4 h-4" />

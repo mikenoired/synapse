@@ -1,10 +1,10 @@
 'use client'
 
-import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
+import type { TodoItem } from '../../model/types'
 import { Plus, X } from 'lucide-react'
 import { useState } from 'react'
-import type { TodoItem } from '../../model/types'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 
 interface TodoListProps {
   items: TodoItem[]
@@ -40,7 +40,10 @@ export function TodoList({
           placeholder="Добавить пункт..."
           value={todoInput}
           onChange={e => setTodoInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleAddTodo() }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter')
+              handleAddTodo()
+          }}
           disabled={isLoading}
           className="flex-1"
         />

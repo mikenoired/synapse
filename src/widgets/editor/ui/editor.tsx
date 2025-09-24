@@ -1,13 +1,14 @@
-"use client"
+'use client'
 
-import { Button } from '@/shared/ui/button'
+import type { JSONContent } from '@tiptap/react'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Placeholder from '@tiptap/extension-placeholder'
 import Underline from '@tiptap/extension-underline'
-import { EditorContent, JSONContent, useEditor } from '@tiptap/react'
+import { EditorContent, useEditor } from '@tiptap/react'
 import { BubbleMenu } from '@tiptap/react/menus'
 import StarterKit from '@tiptap/starter-kit'
 import { common, createLowlight } from 'lowlight'
+import { Button } from '@/shared/ui/button'
 
 interface EditorProps {
   data?: JSONContent | null
@@ -35,7 +36,8 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
     content: data || '',
     editable: !readOnly,
     onUpdate({ editor }) {
-      if (onChange) onChange(editor.getJSON())
+      if (onChange)
+        onChange(editor.getJSON())
     },
   })
 
@@ -109,13 +111,16 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 }
 
 export function editorDataToText(data: JSONContent): string {
-  if (!data || !data.content) return ''
+  if (!data || !data.content)
+    return ''
 
   function extractText(nodes: any[]): string {
     return nodes
       .map((node) => {
-        if (node.type === 'text') return node.text || ''
-        if (node.content) return extractText(node.content)
+        if (node.type === 'text')
+          return node.text || ''
+        if (node.content)
+          return extractText(node.content)
         return ''
       })
       .filter(Boolean)
@@ -126,22 +131,25 @@ export function editorDataToText(data: JSONContent): string {
 }
 
 export function editorDataToShortText(data: JSONContent, maxLength: number = 150): string {
-  if (!data || !data.content) return ''
+  if (!data || !data.content)
+    return ''
 
   let text = ''
   let currentLength = 0
 
   function walk(nodes: any[]): void {
     for (const node of nodes) {
-      if (currentLength >= maxLength) break
+      if (currentLength >= maxLength)
+        break
       let nodeText = ''
       if (node.type === 'text') {
         nodeText = node.text || ''
-      } else if (node.content) {
+      }
+      else if (node.content) {
         nodeText = extractText(node.content)
       }
       if (currentLength + nodeText.length > maxLength) {
-        nodeText = nodeText.substring(0, maxLength - currentLength - 3) + '...'
+        nodeText = `${nodeText.substring(0, maxLength - currentLength - 3)}...`
       }
       if (nodeText) {
         text += (text ? ' ' : '') + nodeText
@@ -153,8 +161,10 @@ export function editorDataToShortText(data: JSONContent, maxLength: number = 150
   function extractText(nodes: any[]): string {
     return nodes
       .map((node) => {
-        if (node.type === 'text') return node.text || ''
-        if (node.content) return extractText(node.content)
+        if (node.type === 'text')
+          return node.text || ''
+        if (node.content)
+          return extractText(node.content)
         return ''
       })
       .filter(Boolean)
@@ -163,4 +173,4 @@ export function editorDataToShortText(data: JSONContent, maxLength: number = 150
 
   walk(data.content)
   return text
-} 
+}

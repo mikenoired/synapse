@@ -1,4 +1,5 @@
-import { ChangeEvent, TouchEvent, useEffect, useRef, useState } from "react"
+import type { ChangeEvent, TouchEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 interface CustomVideoPlayerProps {
   src: string
@@ -7,7 +8,7 @@ interface CustomVideoPlayerProps {
   className?: string
 }
 
-export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "" }: CustomVideoPlayerProps) {
+export function CustomVideoPlayer({ src, poster, autoPlay = false, className = '' }: CustomVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isPlaying, setIsPlaying] = useState(autoPlay)
   const [currentTime, setCurrentTime] = useState(0)
@@ -24,23 +25,27 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 
   const togglePlay = () => {
     const video = videoRef.current
-    if (!video) return
+    if (!video)
+      return
     if (video.paused) {
       video.play()
-    } else {
+    }
+    else {
       video.pause()
     }
   }
 
   const handleLoadedMetadata = () => {
     const video = videoRef.current
-    if (!video) return
+    if (!video)
+      return
     setDuration(video.duration)
   }
 
   const handleProgress = () => {
     const video = videoRef.current
-    if (!video) return
+    if (!video)
+      return
     if (video.buffered.length > 0) {
       setBuffered(video.buffered.end(video.buffered.length - 1))
     }
@@ -48,14 +53,15 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video)
+      return
     const onPlay = () => setIsPlaying(true)
     const onPause = () => setIsPlaying(false)
-    video.addEventListener("play", onPlay)
-    video.addEventListener("pause", onPause)
+    video.addEventListener('play', onPlay)
+    video.addEventListener('pause', onPause)
     return () => {
-      video.removeEventListener("play", onPlay)
-      video.removeEventListener("pause", onPause)
+      video.removeEventListener('play', onPlay)
+      video.removeEventListener('pause', onPause)
     }
   }, [])
 
@@ -84,20 +90,22 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 
   useEffect(() => {
     const video = videoRef.current
-    if (!video) return
+    if (!video)
+      return
     const onTimeUpdate = () => {
       setCurrentTime(video.currentTime)
     }
-    video.addEventListener("timeupdate", onTimeUpdate)
+    video.addEventListener('timeupdate', onTimeUpdate)
     return () => {
-      video.removeEventListener("timeupdate", onTimeUpdate)
+      video.removeEventListener('timeupdate', onTimeUpdate)
     }
   }, [])
 
   const handleSeek = (e: ChangeEvent<HTMLInputElement>) => {
     const video = videoRef.current
-    if (!video) return
-    const time = parseFloat(e.target.value)
+    if (!video)
+      return
+    const time = Number.parseFloat(e.target.value)
     setCurrentTime(time)
     video.currentTime = time
   }
@@ -114,10 +122,12 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
     const diff = touchCurrentX - touchStartX
     if (Math.abs(diff) > 40) {
       const video = videoRef.current
-      if (!video) return
+      if (!video)
+        return
       if (diff > 0) {
         video.currentTime = Math.max(0, video.currentTime - 10)
-      } else {
+      }
+      else {
         video.currentTime = Math.min(duration, video.currentTime + 10)
       }
     }
@@ -126,7 +136,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
   const formatTime = (t: number) => {
     const m = Math.floor(t / 60)
     const s = Math.floor(t % 60)
-    return `${m}:${s.toString().padStart(2, "0")}`
+    return `${m}:${s.toString().padStart(2, '0')}`
   }
 
   return (
@@ -163,7 +173,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
             onChange={handleSeek}
             className="w-full h-2 bg-transparent appearance-none cursor-pointer z-10"
             style={{
-              background: "none"
+              background: 'none',
             }}
             onMouseDown={() => setIsSeeking(true)}
             onMouseUp={() => setIsSeeking(false)}
@@ -173,16 +183,24 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
           <button
             onClick={togglePlay}
             className="text-white bg-black/40 rounded p-1 hover:bg-white/20 transition"
-            aria-label={isPlaying ? "Pause" : "Play"}
+            aria-label={isPlaying ? 'Pause' : 'Play'}
           >
-            {isPlaying ? (
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" /><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" /></svg>
-            ) : (
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M7 6v12l10-6-10-6z" fill="currentColor" /></svg>
-            )}
+            {isPlaying
+              ? (
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />
+                  <rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor" />
+                </svg>
+              )
+              : (
+                <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M7 6v12l10-6-10-6z" fill="currentColor" /></svg>
+              )}
           </button>
           <span className="text-xs text-white/80 font-mono select-none">
-            {formatTime(currentTime)} / {formatTime(duration)}
+            {formatTime(currentTime)}
+            {' '}
+            /
+            {formatTime(duration)}
           </span>
         </div>
       </div>

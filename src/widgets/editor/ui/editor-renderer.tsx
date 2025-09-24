@@ -1,11 +1,13 @@
 'use client'
 
-import { generateHTML, JSONContent } from '@tiptap/core'
+import type { JSONContent } from '@tiptap/core'
+import { generateHTML } from '@tiptap/core'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import Underline from '@tiptap/extension-underline'
 import StarterKit from '@tiptap/starter-kit'
 import DOMPurify from 'dompurify'
 import { common, createLowlight } from 'lowlight'
+
 const lowlight = createLowlight(common)
 
 interface EditorRendererProps {
@@ -13,7 +15,8 @@ interface EditorRendererProps {
 }
 
 export function EditorRenderer({ data }: EditorRendererProps) {
-  if (!data || !data.content) return null
+  if (!data || !data.content)
+    return null
 
   const html = generateHTML(data, [
     StarterKit,
@@ -24,4 +27,4 @@ export function EditorRenderer({ data }: EditorRendererProps) {
   return (
     <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
   )
-} 
+}

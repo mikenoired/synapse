@@ -11,7 +11,7 @@ export function PerformanceMonitor() {
             console.warn(`⚠️ Long task detected: ${entry.duration}ms`, {
               name: entry.name,
               startTime: entry.startTime,
-              duration: entry.duration
+              duration: entry.duration,
             })
           }
         }
@@ -19,7 +19,8 @@ export function PerformanceMonitor() {
 
       try {
         longTaskObserver.observe({ entryTypes: ['longtask'] })
-      } catch {
+      }
+      catch {
         // longtask is not supported in all browsers
       }
 
@@ -30,8 +31,8 @@ export function PerformanceMonitor() {
               sources: (entry as any).sources?.map((source: any) => ({
                 node: source.node,
                 previousRect: source.previousRect,
-                currentRect: source.currentRect
-              }))
+                currentRect: source.currentRect,
+              })),
             })
           }
         }
@@ -39,7 +40,8 @@ export function PerformanceMonitor() {
 
       try {
         layoutShiftObserver.observe({ entryTypes: ['layout-shift'] })
-      } catch {
+      }
+      catch {
         // layout-shift is not supported in all browsers
       }
 
@@ -51,14 +53,14 @@ export function PerformanceMonitor() {
             console.warn(`🐌 Slow resource: ${resource.name}`, {
               duration: resource.duration,
               size: resource.transferSize,
-              type: resource.initiatorType
+              type: resource.initiatorType,
             })
           }
 
           if (resource.transferSize && resource.transferSize > 500 * 1024) {
             console.warn(`📦 Large resource: ${resource.name}`, {
               size: `${(resource.transferSize / 1024).toFixed(2)}KB`,
-              duration: resource.duration
+              duration: resource.duration,
             })
           }
         }
@@ -66,7 +68,8 @@ export function PerformanceMonitor() {
 
       try {
         resourceObserver.observe({ entryTypes: ['resource'] })
-      } catch {
+      }
+      catch {
         // resource timing not supported
       }
 

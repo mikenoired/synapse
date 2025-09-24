@@ -1,7 +1,8 @@
-"use client"
+'use client'
 
-import { AnimatePresence, motion } from "motion/react"
-import { useEffect, useRef, useState, type ReactNode } from "react"
+import type { ReactNode } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useEffect, useRef, useState } from 'react'
 
 interface ModalProps {
   open: boolean
@@ -19,7 +20,8 @@ export default function Modal({ open, onOpenChange, children }: ModalProps) {
     if (open) {
       document.body.style.overflow = 'hidden'
       document.body.style.paddingRight = 'var(--removed-body-scroll-bar-size, 0px)'
-    } else {
+    }
+    else {
       document.body.style.overflow = ''
       document.body.style.paddingRight = ''
     }
@@ -33,29 +35,33 @@ export default function Modal({ open, onOpenChange, children }: ModalProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => e.key === 'Escape' && open && onOpenChange(false)
 
-    if (open) document.addEventListener('keydown', handleEscape)
+    if (open)
+      document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
   }, [open, onOpenChange])
 
   useEffect(() => {
-    if (!open || !modalRef.current) return
+    if (!open || !modalRef.current)
+      return
 
     const modal = modalRef.current
     const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     )
     const firstElement = focusableElements[0] as HTMLElement
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
 
     const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab') return
+      if (e.key !== 'Tab')
+        return
 
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
           e.preventDefault()
           lastElement?.focus()
         }
-      } else {
+      }
+      else {
         if (document.activeElement === lastElement) {
           e.preventDefault()
           firstElement?.focus()
@@ -69,7 +75,8 @@ export default function Modal({ open, onOpenChange, children }: ModalProps) {
     return () => modal.removeEventListener('keydown', handleTabKey)
   }, [open])
 
-  if (!mounted) return null
+  if (!mounted)
+    return null
 
   return (
     <AnimatePresence>
@@ -88,9 +95,9 @@ export default function Modal({ open, onOpenChange, children }: ModalProps) {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
+            transition={{ type: 'spring', duration: 0.3, bounce: 0.1 }}
             className="relative z-10 w-full max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             {children}
           </motion.div>

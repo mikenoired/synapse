@@ -1,13 +1,12 @@
-import { createSupabaseClient } from '@/shared/api/supabase-client'
-import { cookies } from 'next/headers'
 import type { NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
+import { createSupabaseClient } from '@/shared/api/supabase-client'
 
 export async function createContext({ req }: { req?: NextRequest }) {
   const headerToken = req?.headers.get('authorization')?.replace('Bearer ', '')
   const cookieStore = await cookies().catch(() => undefined)
   const cookieToken = cookieStore?.get('synapse_token')?.value
   const token = headerToken || cookieToken
-
 
   const supabase = createSupabaseClient(token)
 
@@ -18,7 +17,8 @@ export async function createContext({ req }: { req?: NextRequest }) {
       if (!error && authUser) {
         user = authUser
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error('Ошибка проверки токена:', error)
     }
   }
@@ -34,4 +34,4 @@ export async function createContext({ req }: { req?: NextRequest }) {
   }
 }
 
-export type Context = Awaited<ReturnType<typeof createContext>> 
+export type Context = Awaited<ReturnType<typeof createContext>>

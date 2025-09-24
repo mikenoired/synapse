@@ -1,7 +1,8 @@
+import type { Buffer } from 'node:buffer'
+import type Stream from 'node:stream'
 import type { FileValidationConfig, ValidationResult } from '@/server/middleware/file-middleware'
-import { sanitizeFileName, validateFile } from '@/server/middleware/file-middleware'
 import * as Minio from 'minio'
-import Stream from 'stream'
+import { sanitizeFileName, validateFile } from '@/server/middleware/file-middleware'
 
 const {
   MINIO_ENDPOINT,
@@ -19,7 +20,7 @@ const [host, portStr] = MINIO_ENDPOINT.split(':')
 
 const minioClient = new Minio.Client({
   endPoint: host,
-  port: portStr ? parseInt(portStr, 10) : undefined,
+  port: portStr ? Number.parseInt(portStr, 10) : undefined,
   useSSL: MINIO_USE_SSL === 'true',
   accessKey: MINIO_ACCESS_KEY,
   secretKey: MINIO_SECRET_KEY,
@@ -33,7 +34,8 @@ export async function ensureBucketExists() {
     if (!exists) {
       await minioClient.makeBucket(bucketName, 'us-east-1')
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error creating bucket:', error)
   }
 }
@@ -44,19 +46,19 @@ export async function uploadFile(
   contentType: string,
   userId: string,
   folder: string = 'images',
-  validationConfig?: Partial<FileValidationConfig>
-): Promise<{ success: boolean; objectName?: string; validation: ValidationResult }> {
-
+  validationConfig?: Partial<FileValidationConfig>,
+): Promise<{ success: boolean, objectName?: string, validation: ValidationResult }> {
   const validation = await validateFile(file, fileName, contentType, userId, validationConfig)
 
   if (!validation.isValid) {
     return {
       success: false,
-      validation
+      validation,
     }
   }
 
-  if (validation.warnings.length > 0) console.warn('File upload warnings:', validation.warnings)
+  if (validation.warnings.length > 0)
+    console.warn('File upload warnings:', validation.warnings)
 
   try {
     const sanitizedFileName = sanitizeFileName(fileName)
@@ -69,30 +71,29 @@ export async function uploadFile(
       file.length,
       {
         'Content-Type': contentType,
-        'x-amz-meta-user-id': userId
-      }
+        'x-amz-meta-user-id': userId,
+      },
     )
-
-    console.log(`File uploaded successfully: ${objectName}, hash: ${validation.fileHash}`)
 
     return {
       success: true,
       objectName,
-      validation
+      validation,
     }
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       validation: {
         ...validation,
-        errors: [...validation.errors, `Ошибка загрузки: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`]
-      }
+        errors: [...validation.errors, `Ошибка загрузки: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`],
+      },
     }
   }
 }
 
 export function getPublicUrl(objectName: string): string {
-  // В реальном приложении здесь может быть более сложная логика, 
+  // В реальном приложении здесь может быть более сложная логика,
   // например, генерация presigned URL или использование CDN.
   // Сейчас мы просто формируем прямой URL к нашему локальному API-роуту.
   return `/api/files/${objectName}`
@@ -105,7 +106,7 @@ export async function getFile(objectName: string): Promise<{ stream: Stream.Read
 
   return {
     stream,
-    contentType: stat.metaData?.['content-type']
+    contentType: stat.metaData?.['content-type'],
   }
 }
 
@@ -116,9 +117,10 @@ export async function getFileMetadata(objectName: string) {
       size: stat.size,
       contentType: stat.metaData?.['content-type'],
       userId: stat.metaData?.['x-amz-meta-user-id'],
-      lastModified: stat.lastModified
+      lastModified: stat.lastModified,
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error getting file metadata:', error)
     return null
   }
@@ -127,7 +129,8 @@ export async function getFileMetadata(objectName: string) {
 export async function deleteFile(objectName: string): Promise<void> {
   try {
     await minioClient.removeObject(bucketName, objectName)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('Error deleting file:', error)
   }
 }
@@ -137,4 +140,3 @@ export async function getPresignedUrl(objectName: string, expirySeconds: number 
 }
 
 export { bucketName, minioClient }
-

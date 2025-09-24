@@ -1,19 +1,20 @@
 'use client'
 
+import type { DragEvent } from 'react'
+import type { Content } from '@/shared/lib/schemas'
+import { useRouter } from 'next/navigation'
+import { useEffect, useRef, useState } from 'react'
 import { AddContentDialog } from '@/features/add-content/ui/add-content-dialog'
 import { ContentGrid } from '@/features/content-grid/content-grid'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
-import { Content } from '@/shared/lib/schemas'
 import { ContentModalManager } from '@/widgets/content-viewer/ui/content-modal-manager'
-import { useRouter } from 'next/navigation'
-import { DragEvent, useEffect, useRef, useState } from 'react'
 
 interface Props {
   tagId: string
   tagTitle: string
-  initial: { items: Content[]; nextCursor: string | undefined }
+  initial: { items: Content[], nextCursor: string | undefined }
 }
 
 export default function TagClient({ tagId, tagTitle, initial }: Props) {
@@ -41,7 +42,8 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
   const content: Content[] = queryData?.items ?? []
 
   useEffect(() => {
-    if (!loading && !user && !initial.items.length) router.push('/')
+    if (!loading && !user && !initial.items.length)
+      router.push('/')
   }, [user, loading, router, initial.items.length])
 
   const handleContentChanged = () => refetchContent()
@@ -61,33 +63,34 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
   }
 
   const handleDragEnter = (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current++;
-    setDragActive(true);
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current++
+    setDragActive(true)
   }
 
   const handleDragLeave = (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current--;
-    if (dragCounter.current === 0) setDragActive(false);
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current--
+    if (dragCounter.current === 0)
+      setDragActive(false)
   }
 
   const handleDragOver = (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+    e.preventDefault()
+    e.stopPropagation()
   }
 
   const handleDrop = (e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-    dragCounter.current = 0;
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    dragCounter.current = 0
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
     if (files.length > 0) {
-      setPreloadedFiles(files);
-      setAddDialogOpen(true);
+      setPreloadedFiles(files)
+      setAddDialogOpen(true)
     }
   }
 
@@ -150,5 +153,3 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
     </div>
   )
 }
-
-

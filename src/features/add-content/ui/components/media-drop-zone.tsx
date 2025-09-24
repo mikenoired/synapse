@@ -1,10 +1,10 @@
 'use client'
 
+import type { DragEvent } from 'react'
+import { Plus, Upload, X } from 'lucide-react'
+import Image from 'next/image'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { Upload, Plus, X } from 'lucide-react'
-import Image from 'next/image'
-import { DragEvent } from 'react'
 
 interface MediaDropZoneProps {
   dragActive: boolean
@@ -64,7 +64,7 @@ export function MediaDropZone({
             className="hidden"
             id="file-upload"
             disabled={isLoading}
-            onChange={(e) => e.target.files && onFileSelect(e.target.files)}
+            onChange={e => e.target.files && onFileSelect(e.target.files)}
           />
           <Button
             type="button"
@@ -103,24 +103,26 @@ export function MediaDropZone({
                 }}
                 onDrop={(e) => {
                   e.preventDefault()
-                  const fromIndex = parseInt(e.dataTransfer.getData('text/plain'))
+                  const fromIndex = Number.parseInt(e.dataTransfer.getData('text/plain'))
                   const toIndex = index
                   onMoveFile(fromIndex, toIndex)
                 }}
               >
-                {selectedFiles[index].type.startsWith('audio/') ? (
-                  <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
-                    {selectedFiles[index].name}
-                  </div>
-                ) : (
-                  <Image
-                    src={url}
-                    alt={`Превью ${index + 1}`}
-                    className="w-full aspect-square object-cover rounded-lg border"
-                    width={200}
-                    height={200}
-                  />
-                )}
+                {selectedFiles[index].type.startsWith('audio/')
+                  ? (
+                    <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
+                      {selectedFiles[index].name}
+                    </div>
+                  )
+                  : (
+                    <Image
+                      src={url}
+                      alt={`Превью ${index + 1}`}
+                      className="w-full aspect-square object-cover rounded-lg border"
+                      width={200}
+                      height={200}
+                    />
+                  )}
                 {selectedFiles.length > 1 && (
                   <div className="absolute top-1 left-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-xs font-medium">
                     {index + 1}

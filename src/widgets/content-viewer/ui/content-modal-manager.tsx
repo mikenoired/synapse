@@ -1,15 +1,16 @@
 'use client'
 
+import type { Session } from '@supabase/supabase-js'
+import type { Content } from '@/shared/lib/schemas'
+import { useState } from 'react'
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog'
 import { trpc } from '@/shared/api/trpc'
-import { Content, parseMediaJson } from "@/shared/lib/schemas"
-import { Session } from "@supabase/supabase-js"
-import { useState } from 'react'
-import { LinkViewerModal } from "./link-viewer-modal"
-import { NoteViewerModal } from "./note-viewer-modal"
-import { TodoViewerModal } from './todo-viewer-modal'
-import { UnifiedMediaModal } from "./unified-image-modal"
+import { parseMediaJson } from '@/shared/lib/schemas'
 import { AudioViewerModal } from './audio-viewer-modal'
+import { LinkViewerModal } from './link-viewer-modal'
+import { NoteViewerModal } from './note-viewer-modal'
+import { TodoViewerModal } from './todo-viewer-modal'
+import { UnifiedMediaModal } from './unified-image-modal'
 
 interface ContentModalManagerProps {
   open: boolean
@@ -30,24 +31,26 @@ export function ContentModalManager({
   session,
   onEdit,
   onDelete,
-  onContentChanged
+  onContentChanged,
 }: ContentModalManagerProps) {
   const [editOpen, setEditOpen] = useState(false)
   const [editItem, setEditItem] = useState<Content | null>(null)
 
   const utils = trpc.useUtils()
   const updateMutation = trpc.content.update.useMutation({
-    onSuccess: () => item && utils.content.getById.invalidate({ id: item.id })
+    onSuccess: () => item && utils.content.getById.invalidate({ id: item.id }),
   })
 
-  if (!item) return null
+  if (!item)
+    return null
 
   if (item.type === 'media') {
     const imageGallery = allItems
       .filter(i => i.type === 'media')
-      .flatMap(i => {
+      .flatMap((i) => {
         const media = parseMediaJson(i.content)?.media
-        if (media?.url) return [{ url: media.url, parentId: i.id, media_type: media.type, thumbnail_url: media.thumbnailUrl }]
+        if (media?.url)
+          return [{ url: media.url, parentId: i.id, media_type: media.type, thumbnail_url: media.thumbnailUrl }]
         return []
       })
 
@@ -132,7 +135,7 @@ export function ContentModalManager({
           open={open && !editOpen}
           onOpenChange={onOpenChange}
           item={item}
-          onUpdate={newTodos => {
+          onUpdate={(newTodos) => {
             updateMutation.mutate({ id: item.id, content: JSON.stringify(newTodos) })
           }}
           onEdit={() => {
@@ -166,4 +169,4 @@ export function ContentModalManager({
   }
 
   return null
-} 
+}

@@ -1,9 +1,9 @@
 'use client'
 
+import type { ParsedLinkData } from '../../model/types'
+import { Clock, ExternalLink, Globe, X } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { X, Globe, Clock, ExternalLink } from 'lucide-react'
-import type { ParsedLinkData } from '../../model/types'
 
 interface LinkPreviewProps {
   content: string
@@ -33,7 +33,7 @@ export function LinkPreview({
             type="url"
             placeholder="https://example.com"
             value={content}
-            onChange={(e) => onContentChange(e.target.value)}
+            onChange={e => onContentChange(e.target.value)}
             required
             disabled={isLoading || linkParsing}
           />
@@ -44,14 +44,16 @@ export function LinkPreview({
             size="sm"
             className="min-w-24"
           >
-            {linkParsing ? (
-              <Clock className="w-4 h-4 animate-spin" />
-            ) : (
-              <>
-                <Globe className="w-4 h-4 mr-1" />
-                Parse
-              </>
-            )}
+            {linkParsing
+              ? (
+                <Clock className="w-4 h-4 animate-spin" />
+              )
+              : (
+                <>
+                  <Globe className="w-4 h-4 mr-1" />
+                  Parse
+                </>
+              )}
           </Button>
         </div>
 
@@ -82,12 +84,23 @@ export function LinkPreview({
                     <span>{parsedLinkData.metadata.siteName}</span>
                   )}
                   {parsedLinkData.metadata.author && (
-                    <span>• by {parsedLinkData.metadata.author}</span>
+                    <span>
+                      • by
+                      {parsedLinkData.metadata.author}
+                    </span>
                   )}
                   {parsedLinkData.metadata.publishedTime && (
-                    <span>• {new Date(parsedLinkData.metadata.publishedTime).toLocaleDateString()}</span>
+                    <span>
+                      •
+                      {new Date(parsedLinkData.metadata.publishedTime).toLocaleDateString()}
+                    </span>
                   )}
-                  <span>• {parsedLinkData.metadata.contentBlocks} блоков</span>
+                  <span>
+                    •
+                    {parsedLinkData.metadata.contentBlocks}
+                    {' '}
+                    блоков
+                  </span>
                 </div>
               </div>
               <Button

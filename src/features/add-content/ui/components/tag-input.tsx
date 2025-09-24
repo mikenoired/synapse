@@ -1,10 +1,10 @@
 'use client'
 
+import { X } from 'lucide-react'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Label } from '@/shared/ui/label'
-import { X } from 'lucide-react'
 
 interface TagInputProps {
   tags: string[]
@@ -33,7 +33,7 @@ export function TagInput({
           id="tags"
           placeholder="Добавить тег..."
           value={currentTag}
-          onChange={(e) => onCurrentTagChange(e.target.value)}
+          onChange={e => onCurrentTagChange(e.target.value)}
           onKeyDown={onKeyDown}
           className="flex-1"
           disabled={isLoading}

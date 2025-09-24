@@ -1,11 +1,11 @@
-'use client';
+'use client'
 
-import { trpc } from '@/shared/api/trpc';
-import { Card } from '@/shared/ui/card';
-import { Skeleton } from '@/shared/ui/skeleton';
+import { trpc } from '@/shared/api/trpc'
+import { Card } from '@/shared/ui/card'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 export default function GeneralTab() {
-  const { data: user, isLoading } = trpc.user.getUser.useQuery();
+  const { data: user, isLoading } = trpc.user.getUser.useQuery()
 
   if (isLoading) {
     return (
@@ -17,12 +17,12 @@ export default function GeneralTab() {
             <Skeleton className="h-5 w-1/2" />
           </div>
           <div>
-            <label className='block mb-1 font-medium'>Мозгует с</label>
+            <label className="block mb-1 font-medium">Мозгует с</label>
             <Skeleton className="h-5 w-1/3 mt-1" />
           </div>
         </div>
       </Card>
-    );
+    )
   }
 
   return (
@@ -34,9 +34,12 @@ export default function GeneralTab() {
           <span>{user?.email}</span>
         </div>
         <div>
-          <label className='block mb-1 font-medium'>Мозгует с {new Date(user?.created_at || '').toLocaleDateString()}</label>
+          <label className="block mb-1 font-medium">
+            Мозгует с
+            {new Date(user?.created_at || '').toLocaleDateString()}
+          </label>
         </div>
       </div>
     </Card>
-  );
+  )
 }

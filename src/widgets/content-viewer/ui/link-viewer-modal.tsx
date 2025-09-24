@@ -1,16 +1,18 @@
 'use client'
 
-import { Content, LinkContent, parseLinkContent, calculateReadingTimeFromLinkContent } from "@/shared/lib/schemas"
-import { Badge } from "@/shared/ui/badge"
-import { Button } from "@/shared/ui/button"
-import Modal from "@/shared/ui/modal"
-import { Calendar, Clock, ExternalLink, Pencil, Trash2, X, Globe, User, FileText, Image as ImageIcon } from "lucide-react"
-import { motion } from "motion/react"
-import { useRouter } from "next/navigation"
-import React, { useState } from "react"
+import type { Content, LinkContent } from '@/shared/lib/schemas'
+import { Calendar, Clock, ExternalLink, FileText, Globe, Image as ImageIcon, Pencil, Trash2, User, X } from 'lucide-react'
+import { motion } from 'motion/react'
+import { useRouter } from 'next/navigation'
+import React, { useState } from 'react'
+import { calculateReadingTimeFromLinkContent, parseLinkContent } from '@/shared/lib/schemas'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import Modal from '@/shared/ui/modal'
 
 function StructuredContentRenderer({ content }: { content: any }) {
-  if (!content?.content) return null
+  if (!content?.content)
+    return null
 
   return (
     <article className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-7 prose-p:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:bg-muted/50 prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-md prose-pre:bg-muted prose-pre:border prose-img:rounded-lg prose-img:border">
@@ -24,7 +26,7 @@ function StructuredContentRenderer({ content }: { content: any }) {
               3: 'text-xl font-semibold mb-3 mt-5 text-foreground',
               4: 'text-lg font-semibold mb-3 mt-4 text-foreground',
               5: 'text-base font-semibold mb-2 mt-3 text-foreground',
-              6: 'text-sm font-semibold mb-2 mt-3 text-foreground'
+              6: 'text-sm font-semibold mb-2 mt-3 text-foreground',
             }
 
             switch (level) {
@@ -48,7 +50,6 @@ function StructuredContentRenderer({ content }: { content: any }) {
           case 'image':
             return (
               <figure key={index} className="my-6 space-y-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={block.attrs?.src}
                   alt={block.attrs?.alt || ''}
@@ -86,23 +87,25 @@ function StructuredContentRenderer({ content }: { content: any }) {
             const items = block.content?.split('\n').filter((item: string) => item.trim())
             const isOrdered = block.attrs?.listType === 'ordered'
 
-            return isOrdered ? (
-              <ol key={index} className="my-4 space-y-2 list-decimal list-inside">
-                {items?.map((item: string, itemIndex: number) => (
-                  <li key={itemIndex} className="text-foreground/90 leading-7">
-                    {item.trim()}
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <ul key={index} className="my-4 space-y-2 list-disc list-inside">
-                {items?.map((item: string, itemIndex: number) => (
-                  <li key={itemIndex} className="text-foreground/90 leading-7">
-                    {item.trim()}
-                  </li>
-                ))}
-              </ul>
-            )
+            return isOrdered
+              ? (
+                <ol key={index} className="my-4 space-y-2 list-decimal list-inside">
+                  {items?.map((item: string, itemIndex: number) => (
+                    <li key={itemIndex} className="text-foreground/90 leading-7">
+                      {item.trim()}
+                    </li>
+                  ))}
+                </ol>
+              )
+              : (
+                <ul key={index} className="my-4 space-y-2 list-disc list-inside">
+                  {items?.map((item: string, itemIndex: number) => (
+                    <li key={itemIndex} className="text-foreground/90 leading-7">
+                      {item.trim()}
+                    </li>
+                  ))}
+                </ul>
+              )
           }
 
           case 'divider':
@@ -131,7 +134,7 @@ export function LinkViewerModal({
   onOpenChange,
   item,
   onEdit,
-  onDelete
+  onDelete,
 }: LinkViewerModalProps) {
   const [isHovered, setIsHovered] = useState(false)
   const router = useRouter()
@@ -144,7 +147,8 @@ export function LinkViewerModal({
     if (onEdit) {
       onEdit(item.id)
       onOpenChange(false)
-    } else {
+    }
+    else {
       router.push(`/edit/${item.id}`)
       onOpenChange(false)
     }
@@ -152,6 +156,7 @@ export function LinkViewerModal({
 
   const handleDelete = () => {
     if (onDelete) {
+      // eslint-disable-next-line no-alert
       if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
         onDelete(item.id)
         onOpenChange(false)
@@ -193,7 +198,7 @@ export function LinkViewerModal({
                         src={linkContent.metadata.favicon}
                         alt=""
                         className="w-5 h-5 rounded-sm flex-shrink-0"
-                        onError={(e) => e.currentTarget.style.display = 'none'}
+                        onError={e => e.currentTarget.style.display = 'none'}
                       />
                     )}
                     <div className="min-w-0 flex-1">
@@ -237,26 +242,36 @@ export function LinkViewerModal({
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
-                  <span>{new Date(item.created_at).toLocaleDateString('ru-RU', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}</span>
+                  <span>
+                    {new Date(item.created_at).toLocaleDateString('ru-RU', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
                 </div>
                 {linkContent?.metadata.publishedTime && (
                   <div className="flex items-center gap-1">
                     <FileText className="w-3 h-3" />
-                    <span>Опубликовано: {new Date(linkContent.metadata.publishedTime).toLocaleDateString('ru-RU', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}</span>
+                    <span>
+                      Опубликовано:
+                      {new Date(linkContent.metadata.publishedTime).toLocaleDateString('ru-RU', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </span>
                   </div>
                 )}
                 {linkContent && (
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    <span>~{calculateReadingTimeFromLinkContent(linkContent)} чтения</span>
+                    <span>
+                      ~
+                      {calculateReadingTimeFromLinkContent(linkContent)}
+                      {' '}
+                      чтения
+                    </span>
                   </div>
                 )}
               </div>
@@ -278,85 +293,87 @@ export function LinkViewerModal({
           </div>
 
           <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-            {linkContent ? (
-              <div className="pb-6">
-                {linkContent.metadata.image && (
-                  <div className="relative w-full mb-8">
-                    <img
-                      src={linkContent.metadata.image}
-                      alt={linkContent.title || 'Article image'}
-                      className="w-full h-64 md:h-80 object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = 'none'
-                      }}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
-                  </div>
-                )}
-
-                <div className="px-6 max-w-none">
-                  <StructuredContentRenderer content={linkContent.content} />
-                </div>
-
-                {linkContent.metadata.images && linkContent.metadata.images.length > 1 && (
-                  <div className="px-6 mt-8 space-y-3">
-                    <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                      <ImageIcon className="w-4 h-4" />
-                      Дополнительные изображения
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                      {linkContent.metadata.images.slice(1).map((img, index) => (
-                        <img
-                          key={index}
-                          src={img}
-                          alt={`Additional image ${index + 1}`}
-                          className="w-full h-24 object-cover rounded-lg border border-border"
-                          loading="lazy"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none'
-                          }}
-                        />
-                      ))}
+            {linkContent
+              ? (
+                <div className="pb-6">
+                  {linkContent.metadata.image && (
+                    <div className="relative w-full mb-8">
+                      <img
+                        src={linkContent.metadata.image}
+                        alt={linkContent.title || 'Article image'}
+                        className="w-full h-64 md:h-80 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
                     </div>
+                  )}
+
+                  <div className="px-6 max-w-none">
+                    <StructuredContentRenderer content={linkContent.content} />
                   </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-8 px-6">
-                <div className="text-center space-y-6 max-w-md">
-                  <div className="p-6 border border-border rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
-                        <ExternalLink className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Внешняя ссылка
+
+                  {linkContent.metadata.images && linkContent.metadata.images.length > 1 && (
+                    <div className="px-6 mt-8 space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                        <ImageIcon className="w-4 h-4" />
+                        Дополнительные изображения
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {linkContent.metadata.images.slice(1).map((img, index) => (
+                          <img
+                            key={index}
+                            src={img}
+                            alt={`Additional image ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border border-border"
+                            loading="lazy"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none'
+                            }}
+                          />
+                        ))}
                       </div>
                     </div>
+                  )}
+                </div>
+              )
+              : (
+                <div className="flex items-center justify-center py-8 px-6">
+                  <div className="text-center space-y-6 max-w-md">
+                    <div className="p-6 border border-border rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <ExternalLink className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          Внешняя ссылка
+                        </div>
+                      </div>
 
-                    <div className="space-y-3">
-                      <p className="text-sm font-mono text-left break-all bg-muted/50 p-3 rounded">
-                        {item.content}
-                      </p>
+                      <div className="space-y-3">
+                        <p className="text-sm font-mono text-left break-all bg-muted/50 p-3 rounded">
+                          {item.content}
+                        </p>
 
-                      <Button
-                        onClick={handleOpenLink}
-                        className="w-full"
-                        size="lg"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Открыть ссылку
-                      </Button>
+                        <Button
+                          onClick={handleOpenLink}
+                          className="w-full"
+                          size="lg"
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Открыть ссылку
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="text-xs text-muted-foreground">
+                      Эта ссылка была сохранена в старом формате.
+                      Отредактируйте её для повторного парсинга контента.
                     </div>
                   </div>
-
-                  <div className="text-xs text-muted-foreground">
-                    Эта ссылка была сохранена в старом формате.
-                    Отредактируйте её для повторного парсинга контента.
-                  </div>
                 </div>
-              </div>
-            )}
+              )}
           </div>
 
           <div className="flex-shrink-0">
@@ -391,4 +408,4 @@ export function LinkViewerModal({
       </div>
     </Modal>
   )
-} 
+}
