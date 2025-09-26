@@ -2,6 +2,7 @@
 
 import type { Dispatch, ReactNode, SetStateAction } from 'react'
 import { createContext, useCallback, useContext, useMemo, useState } from 'react'
+import { AddContentDialog } from '@/features/add-content/ui/add-content-dialog'
 
 interface AddDialogOpenOptions {
   initialTags?: string[]
@@ -87,13 +88,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   return (
     <DashboardContext.Provider value={value}>
       {children}
+      {isAddDialogOpen && <AddContentDialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen} initialTags={dialogOptions.initialTags} onContentAdded={dialogOptions.onContentAdded} />}
     </DashboardContext.Provider>
   )
 }
 
 export function useDashboard() {
   const context = useContext(DashboardContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useDashboard must be used within a DashboardProvider')
   }
   return context
