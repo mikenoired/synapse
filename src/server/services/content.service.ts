@@ -1,0 +1,345 @@
+import type z from 'zod'
+import type { Context } from '../context'
+import type { Content, createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
+import type { Tables } from '@/shared/types/database'
+import { deleteFile } from '@/shared/api/minio'
+import { contentDetailSchema, contentListItemSchema, parseMediaJson } from '@/shared/lib/schemas'
+import ContentRepository from '../repositories/content.repository'
+
+const tagsCache = new Map<string, CacheEntry<Array<{ id: string, title: string }>>>()
+const tagsWithContentCache = new Map<string, CacheEntry<Array<{ id: string, title: string, items: Content[] }>>>()
+
+interface CacheEntry<T> { data: T, expires: number }
+
+const TAGS_CACHE_TTL_MS = Number(process.env.TAGS_CACHE_TTL_MS ?? 30000)
+
+export default class ContentService {
+  private repo: ContentRepository
+  private ctx: Context
+
+  constructor(ctx: Context) {
+    this.repo = new ContentRepository(ctx)
+    this.ctx = ctx
+  }
+
+  async getAll(
+    search: string | undefined,
+    type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined,
+    tagIds: string[] | undefined,
+    cursor: string | undefined,
+    limit: number | 12,
+    includeTags: boolean,
+  ) {
+    if (tagIds && tagIds.length) {
+      return await this.getContentWithTagFilter(tagIds, limit, search, type, cursor, includeTags)
+    }
+    const data = await this.repo.getAll(search, type, cursor, limit)
+
+    const contentRows = (data || []) as Tables<'content'>[]
+    const last = contentRows[contentRows.length - 1]
+    const nextCursor = last ? `${last.created_at}|${last.id}` : undefined
+
+    const items = includeTags
+      ? await this.attachTagsToContent(contentRows)
+      : contentRows.map(r => this.mapContentRow(r, this.ctx.user!.id))
+
+    return {
+      items: items.map(i => contentListItemSchema.parse(i)),
+      nextCursor,
+    }
+  }
+
+  async getById(id: string) {
+    const data = await this.repo.getById(id)
+    return contentDetailSchema.parse(this.mapContentRow(data as Tables<'content'>, this.ctx.user!.id))
+  }
+
+  private async getContentWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined, includeTags: boolean) {
+    const data = await this.repo.getWithTagFilter(tagIds, limit, search, type, cursor)
+
+    const contentMap = new Map<string, Tables<'content'>>()
+    for (const row of data || []) {
+      if (!contentMap.has(row.id)) {
+        contentMap.set(row.id, row)
+      }
+    }
+
+    const contentRows = Array.from(contentMap.values())
+    const last = contentRows[contentRows.length - 1]
+    const nextCursor = last ? `${last.created_at}|${last.id}` : undefined
+
+    const items = includeTags
+      ? await this.attachTagsToContent(contentRows)
+      : contentRows.map(r => this.mapContentRow(r, this.ctx.user!.id))
+
+    return {
+      items: items.map(i => contentListItemSchema.parse(i)),
+      nextCursor,
+    }
+  }
+
+  async create(createContentData: z.infer<typeof createContentSchema>) {
+    const { tag_ids: inputTagIds, tags: legacyTagTitles, ...contentData } = createContentData
+
+    const data = await this.repo.create(createContentData)
+
+    const contentId = (data as Tables<'content'>).id
+
+    const contentNodeId = await this.repo.getOrCreateContentNode({
+      content_id: contentId,
+      title: contentData.title,
+      type: contentData.type,
+    })
+
+    const tagIds = inputTagIds as string[] | undefined
+    const tagTitles = legacyTagTitles as string[] | undefined
+    if (tagIds && tagIds.length) {
+      const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds)
+      await this.upsertContentTags(contentId, tagIds, contentNodeId, tagNodeIds)
+    }
+    else if (tagTitles && tagTitles.length) {
+      const ids = await this.resolveTagTitlesToIds(tagTitles)
+      if (ids.length) {
+        const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids)
+        await this.upsertContentTags(contentId, ids, contentNodeId, tagNodeIds)
+      }
+    }
+
+    const [withTags] = await this.attachTagsToContent([data as Tables<'content'>])
+    this.invalidateUserTags()
+    return contentDetailSchema.parse(withTags)
+  }
+
+  async update(input: z.infer<typeof updateContentSchema>) {
+    const data = await this.repo.updateContent(input)
+
+    const { id, tag_ids: inputTagIds, tags: legacyTagTitles, ...updateData } = input
+
+    const tagIds = inputTagIds as string[] | undefined
+    const tagTitles = legacyTagTitles as string[] | undefined
+    const contentNodeId = await this.repo.getOrCreateContentNode({ content_id: id, title: updateData.title, type: updateData.type || 'note' })
+    if (tagIds) {
+      const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds)
+      await this.replaceContentTags(id, tagIds, contentNodeId, tagNodeIds)
+    }
+    else if (tagTitles) {
+      const ids = await this.resolveTagTitlesToIds(tagTitles)
+      const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids)
+      await this.replaceContentTags(id, ids, contentNodeId, tagNodeIds)
+    }
+
+    const [withTags] = await this.attachTagsToContent([data as Tables<'content'>])
+    this.invalidateUserTags()
+    return contentDetailSchema.parse(withTags)
+  }
+
+  async delete(id: string) {
+    const content = await this.repo.getById(id)
+    const node = await this.repo.getNodeByContentId(id)
+
+    const contentNodeId = (node as { id: string } | null)?.id
+
+    await this.repo.deleteContentTag(id)
+    if (contentNodeId) {
+      await Promise.all([
+        await this.repo.deleteEdge(contentNodeId),
+        await this.repo.deleteNode(contentNodeId),
+      ])
+    }
+
+    await this.repo.deleteContent(id)
+
+    if (content.type === 'media') {
+      const mediaJson = parseMediaJson(content.content)
+      const mainObject = mediaJson?.media?.object || this.extractObjectNameFromApiUrl(mediaJson?.media?.url)
+      const thumbObject = this.extractObjectNameFromApiUrl(mediaJson?.media?.thumbnailUrl)
+      try {
+        if (mainObject)
+          await deleteFile(mainObject)
+      }
+      catch { /* ignore */ }
+      try {
+        if (thumbObject)
+          await deleteFile(thumbObject)
+      }
+      catch { /* ignore */ }
+    }
+
+    else if (content.type === 'audio') {
+      try {
+        const parsed = JSON.parse(content.content)
+        const audioObj = parsed?.audio?.object || this.extractObjectNameFromApiUrl(parsed?.audio?.url)
+        const coverObj = parsed?.cover?.object || this.extractObjectNameFromApiUrl(parsed?.cover?.url)
+        if (audioObj)
+          await deleteFile(audioObj)
+        if (coverObj)
+          await deleteFile(coverObj)
+      }
+      catch {
+        // ignore
+      }
+    }
+
+    this.invalidateUserTags()
+    return { success: true }
+  }
+
+  async getTags() {
+    const cacheKey = this.ctx.user!.id
+    const cached = this.getFromCache(tagsCache, cacheKey)
+    if (cached)
+      return cached
+
+    const contentTags = await this.repo.getContentTags()
+    const tagIds = Array.from(new Set((contentTags || []).map((r: any) => r.tag_id)))
+    if (!tagIds.length)
+      return []
+
+    const tags = await this.repo.getTags(tagIds)
+    const result = (tags || []).map(t => ({ id: t.id, title: t.title }))
+    this.setCache(tagsCache, cacheKey, result)
+    return result
+  }
+
+  async getTagById(id: string) {
+    return await this.repo.getTagById(id)
+  }
+
+  async getTagsWithContent() {
+    const cacheKey = this.ctx.user!.id
+    const cached = this.getFromCache(tagsWithContentCache, cacheKey)
+    if (cached)
+      return cached
+
+    const content = await this.repo.getAll('', undefined, undefined, 4)
+    if (!content)
+      return []
+    const items = await this.attachTagsToContent(content as Tables<'content'>[])
+    const tagsMap = new Map<string, { id: string, title: string, items: Content[] }>()
+    for (const item of items) {
+      item.tag_ids.forEach((tid, idx) => {
+        const tTitle = item.tags[idx] || ''
+        if (!tagsMap.has(tid))
+          tagsMap.set(tid, { id: tid, title: tTitle, items: [] })
+        const bucket = tagsMap.get(tid)!
+        if (bucket.items.length < 3)
+          bucket.items.push(item)
+      })
+    }
+
+    const result = Array.from(tagsMap.values())
+    this.setCache(tagsWithContentCache, cacheKey, result)
+    return result
+  }
+
+  private extractObjectNameFromApiUrl(url?: string | null): string | null {
+    if (!url)
+      return null
+    try {
+      const prefix = '/api/files/'
+      if (url.startsWith(prefix))
+        return url.slice(prefix.length)
+      const idx = url.indexOf('/api/files/')
+      if (idx >= 0)
+        return url.slice(idx + '/api/files/'.length)
+    }
+    catch {
+      // ignore
+    }
+    return null
+  }
+
+  private async replaceContentTags(contentId: string, tagIds: string[], contentNodeId: string, tagNodeIdByTagId: Record<string, string>) {
+    await this.repo.deleteContentTag(contentId)
+    await this.repo.deleteTagEdge(contentId)
+    await this.upsertContentTags(contentId, tagIds, contentNodeId, tagNodeIdByTagId)
+  }
+
+  private async invalidateUserTags() {
+    tagsCache.delete(this.ctx.user!.id)
+    tagsWithContentCache.delete(this.ctx.user!.id)
+  }
+
+  private getFromCache<T>(map: Map<string, CacheEntry<T>>, key: string): T | undefined {
+    const hit = map.get(key)
+    if (!hit)
+      return undefined
+    if (Date.now() > hit.expires) {
+      map.delete(key)
+      return undefined
+    }
+    return hit.data
+  }
+
+  private setCache<T>(map: Map<string, CacheEntry<T>>, key: string, data: T) {
+    map.set(key, { data, expires: Date.now() + TAGS_CACHE_TTL_MS })
+  }
+
+  private async attachTagsToContent(rows: Tables<'content'>[]): Promise<Content[]> {
+    const items = rows.map(r => this.mapContentRow(r, this.ctx.user!.id))
+    if (!items.length)
+      return items
+
+    const ids = rows.map(r => r.id)
+    const contentTagsWithTitles = await this.repo.contentTagsWithTitles(ids)
+    const byContent = new Map<string, { ids: string[], titles: string[] }>()
+
+    for (const r of contentTagsWithTitles || []) {
+      const existing = byContent.get(r.content_id) || { ids: [], titles: [] }
+      existing.ids.push(r.tag_id)
+      existing.titles.push((r.tags as any).title)
+      byContent.set(r.content_id, existing)
+    }
+
+    return items.map((i) => {
+      const tags = byContent.get(i.id)
+      return {
+        ...i,
+        tag_ids: tags?.ids || [],
+        tags: tags?.titles || [],
+      }
+    })
+  }
+
+  private async resolveTagTitlesToIds(titles: string[]): Promise<string[]> {
+    if (titles.length === 0)
+      return []
+    const existing = await this.repo.getTagsByTitle(titles)
+    const existingMap = new Map((existing || []).map((t: any) => [t.title, t.id]))
+    const missing = titles.filter(t => !existingMap.has(t))
+    if (missing.length) {
+      const inserted = await this.repo.createTags(missing.map(title => ({ title })))
+      for (const t of inserted || []) {
+        await this.repo.createNode(t.title)
+        existingMap.set(t.title, t.id)
+      }
+    }
+    const ids = titles.map(t => existingMap.get(t))
+    return ids.filter((v): v is string => typeof v === 'string' && v.length > 0)
+  }
+
+  private async upsertContentTags(contentId: string, tagIds: string[], contentNodeId: string, tagNodeIdByTagId: Record<string, string>) {
+    if (!tagIds.length)
+      return
+    await this.repo.createContentTags(tagIds, contentId)
+    const edgeRows = tagIds
+      .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag', user_id: this.ctx.user!.id }))
+      .filter(r => !!r.to_node)
+    if (edgeRows.length)
+      await this.repo.createEdges(edgeRows)
+  }
+
+  private mapContentRow(row: Tables<'content'>, fallbackUserId: string): Content {
+    return {
+      id: row.id,
+      user_id: row.user_id ?? fallbackUserId,
+      type: (row.type as Content['type']),
+      title: row.title ?? undefined,
+      content: row.content,
+      tags: [],
+      tag_ids: [],
+      created_at: row.created_at ?? new Date().toISOString(),
+      updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+    }
+  }
+}
