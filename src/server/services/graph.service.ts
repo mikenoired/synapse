@@ -1,7 +1,7 @@
 import type { Context } from '../context'
 import GraphRepository from '../repositories/graph.repository'
 
-export default class AuthService {
+export default class GraphService {
   private repo: GraphRepository
 
   constructor(ctx: Context) {

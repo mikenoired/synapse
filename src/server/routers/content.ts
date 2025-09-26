@@ -15,7 +15,7 @@ export const contentRouter = router({
     }))
     .query(async ({ input, ctx }) => {
       const service = new ContentService(ctx)
-      return await service.getAll(input.search, input.type, input.tagIds, input.cursor, input.limit, input.includeTags)
+      return await service.getAll(input.search, input.type, input.tagIds, input.cursor, input.limit || 12, input.includeTags)
     }),
 
   getById: protectedProcedure

@@ -125,29 +125,67 @@ export default class ContentRepository {
   }
 
   async getOrCreateTagNodeIds(tagIds: string[]): Promise<Record<string, string>> {
-    const out: Record<string, string> = {}
-    for (const tagId of Array.from(new Set(tagIds))) {
-      const { data: existing } = await this.ctx.supabase
-        .from('nodes')
-        .select('id')
-        .eq('user_id', this.ctx.user!.id)
-        .contains('metadata', { tag_id: tagId })
-        .maybeSingle()
-      if (existing?.id) {
-        out[tagId] = existing.id as string
-        continue
-      }
-      const { data: tag } = await this.ctx.supabase.from('tags').select('title').eq('id', tagId).single()
-      const { data: created, error } = await this.ctx.supabase
-        .from('nodes')
-        .insert([{ content: tag?.title ?? '', type: 'tag', user_id: this.ctx.user!.id, metadata: { tag_id: tagId } }])
-        .select('id')
-        .single()
-      if (error)
-        handleSupabaseError(error)
-      out[tagId] = (created as { id: string }).id
+    const result: Record<string, string> = {}
+    const uniqueIds = Array.from(new Set(tagIds))
+    if (uniqueIds.length === 0)
+      return result
+
+    const inList = uniqueIds.map(v => `"${v}"`).join(',')
+
+    const { data: existingNodes, error: existingErr } = await this.ctx.supabase
+      .from('nodes')
+      .select('id, metadata')
+      .eq('user_id', this.ctx.user!.id)
+      .eq('type', 'tag')
+      .filter('metadata->>tag_id', 'in', `(${inList})`)
+
+    if (existingErr)
+      handleSupabaseError(existingErr)
+
+    for (const row of existingNodes || []) {
+      const meta = (row as any).metadata as { tag_id?: string } | null
+      const tagId = meta?.tag_id
+      if (tagId)
+        result[tagId] = (row as any).id as string
     }
-    return out
+
+    const missing = uniqueIds.filter(id => !result[id])
+    if (!missing.length)
+      return result
+
+    const { data: tags, error: tagsErr } = await this.ctx.supabase
+      .from('tags')
+      .select('id, title')
+      .in('id', missing)
+
+    if (tagsErr)
+      handleSupabaseError(tagsErr)
+
+    const rows = (tags || []).map(t => ({
+      content: (t as any).title ?? '',
+      type: 'tag',
+      user_id: this.ctx.user!.id,
+      metadata: { tag_id: (t as any).id },
+    }))
+
+    if (rows.length) {
+      const { data: created, error: createErr } = await this.ctx.supabase
+        .from('nodes')
+        .insert(rows)
+        .select('id, metadata')
+
+      if (createErr)
+        handleSupabaseError(createErr)
+
+      for (const row of created || []) {
+        const meta = (row as any).metadata as { tag_id?: string } | null
+        const tagId = meta?.tag_id
+        if (tagId)
+          result[tagId] = (row as any).id as string
+      }
+    }
+
+    return result
   }
 
   async getOrCreateContentNode(params: { content_id: string, title?: string, type: string }) {
@@ -266,6 +304,7 @@ export default class ContentRepository {
       .from('edges')
       .delete()
       .or(`from_node.eq.${contentNodeId},to_node.eq.${contentNodeId}`)
+      .eq('user_id', this.ctx.user!.id)
 
     if (error)
       handleSupabaseError(error)

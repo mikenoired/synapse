@@ -27,7 +27,7 @@ export default class ContentService {
     type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined,
     tagIds: string[] | undefined,
     cursor: string | undefined,
-    limit: number | 12,
+    limit: number,
     includeTags: boolean,
   ) {
     if (tagIds && tagIds.length) {
@@ -287,7 +287,7 @@ export default class ContentService {
     for (const r of contentTagsWithTitles || []) {
       const existing = byContent.get(r.content_id) || { ids: [], titles: [] }
       existing.ids.push(r.tag_id)
-      existing.titles.push((r.tags as any).title)
+      existing.titles.push(r.tags.title)
       byContent.set(r.content_id, existing)
     }
 
@@ -305,7 +305,7 @@ export default class ContentService {
     if (titles.length === 0)
       return []
     const existing = await this.repo.getTagsByTitle(titles)
-    const existingMap = new Map((existing || []).map((t: any) => [t.title, t.id]))
+    const existingMap = new Map((existing || []).map(t => [t.title, t.id]))
     const missing = titles.filter(t => !existingMap.has(t))
     if (missing.length) {
       const inserted = await this.repo.createTags(missing.map(title => ({ title })))
