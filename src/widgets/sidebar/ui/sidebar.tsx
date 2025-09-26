@@ -31,7 +31,7 @@ export type NavItem = {
 }
 
 export default function Sidebar() {
-  const { setAddDialogOpen } = useDashboard()
+  const { openAddDialog } = useDashboard()
 
   const preloadAddContentDialog = useCallback(() => {
     import('@/features/add-content/ui/add-content-dialog')
@@ -42,7 +42,7 @@ export default function Sidebar() {
     { href: '/dashboard/tags', icon: Tag, label: 'Теги' },
     { href: '/dashboard/graph', icon: Network, label: 'Граф' },
     {
-      action: () => setAddDialogOpen(true),
+      action: () => openAddDialog(),
       icon: Plus,
       label: 'Добавить',
       onMouseEnter: preloadAddContentDialog,

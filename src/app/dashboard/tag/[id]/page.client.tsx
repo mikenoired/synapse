@@ -3,8 +3,7 @@
 import type { DragEvent } from 'react'
 import type { Content } from '@/shared/lib/schemas'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
-import { AddContentDialog } from '@/features/add-content/ui/add-content-dialog'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ContentGrid } from '@/features/content-grid/content-grid'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
@@ -20,7 +19,7 @@ interface Props {
 export default function TagClient({ tagId, tagTitle, initial }: Props) {
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const { isAddDialogOpen, setAddDialogOpen, setPreloadedFiles } = useDashboard()
+  const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
   const [dragActive, setDragActive] = useState(false)
   const dragCounter = useRef(0)
   const { user, loading, session } = useAuth()
@@ -46,7 +45,14 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
       router.push('/')
   }, [user, loading, router, initial.items.length])
 
-  const handleContentChanged = () => refetchContent()
+  const handleContentChanged = useCallback(() => {
+    refetchContent()
+  }, [refetchContent])
+
+  useEffect(() => {
+    setAddDialogDefaults({ initialTags: [tagTitle], onContentAdded: handleContentChanged })
+    return () => setAddDialogDefaults({ initialTags: [], onContentAdded: null })
+  }, [setAddDialogDefaults, tagTitle, handleContentChanged])
 
   const handleItemClick = (item: Content) => {
     setSelectedItem(item)
@@ -90,11 +96,11 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'))
     if (files.length > 0) {
       setPreloadedFiles(files)
-      setAddDialogOpen(true)
+      openAddDialog({ initialTags: [tagTitle], onContentAdded: handleContentChanged })
     }
   }
 
-  if (loading && initial.items.length === 0) {
+  if (loading && initial.items.length!) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -142,12 +148,6 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
         }}
         onDelete={handleModalDelete}
         onContentChanged={handleContentChanged}
-      />
-      <AddContentDialog
-        open={isAddDialogOpen}
-        onOpenChange={setAddDialogOpen}
-        onContentAdded={handleContentChanged}
-        initialTags={[tagTitle]}
       />
     </div>
   )

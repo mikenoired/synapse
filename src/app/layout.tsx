@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 import { Inter } from 'next/font/google'
 import { Providers } from '@/app/providers'
@@ -18,10 +18,15 @@ export const metadata: Metadata = {
   description: 'Современное приложение для хранения заметок, файлов и идей',
   keywords: 'заметки, файлы, идеи, организация, productivity',
   authors: [{ name: 'Mike Vetkal\'' }],
-  viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
   other: {
     'resource-timing': 'navigation',
   },
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'contain',
 }
 
 export default function RootLayout({

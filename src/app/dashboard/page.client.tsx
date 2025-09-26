@@ -3,13 +3,12 @@
 import type { DragEvent } from 'react'
 import type { Content } from '@/shared/lib/schemas'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Skeleton } from '@/shared/ui/skeleton'
 
-const AddContentDialog = lazy(() => import('@/features/add-content/ui/add-content-dialog').then(mod => ({ default: mod.AddContentDialog })))
 const ContentFilter = lazy(() => import('@/features/content-filter/content-filter').then(mod => ({ default: mod.ContentFilter })))
 const ContentGrid = lazy(() => import('@/features/content-grid/content-grid').then(mod => ({ default: mod.ContentGrid })))
 const ContentModalManager = lazy(() => import('@/widgets/content-viewer/ui/content-modal-manager').then(mod => ({ default: mod.ContentModalManager })))
@@ -21,7 +20,7 @@ interface Props {
 export default function DashboardClient({ initial }: Props) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
-  const { isAddDialogOpen, setAddDialogOpen, setPreloadedFiles } = useDashboard()
+  const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
   const { user, loading, session } = useAuth()
@@ -58,6 +57,10 @@ export default function DashboardClient({ initial }: Props) {
 
   const content: Content[] = pages?.pages.flatMap(p => p.items) ?? []
 
+  const handleContentChanged = useCallback(() => {
+    refetchContent()
+  }, [refetchContent])
+
   useEffect(() => {
     if (!searchParams)
       return
@@ -69,6 +72,11 @@ export default function DashboardClient({ initial }: Props) {
     if (!loading && !user)
       router.push('/')
   }, [user, loading, router])
+
+  useEffect(() => {
+    setAddDialogDefaults({ initialTags: [], onContentAdded: handleContentChanged })
+    return () => setAddDialogDefaults({ initialTags: [], onContentAdded: null })
+  }, [setAddDialogDefaults, handleContentChanged])
 
   useEffect(() => {
     const handleWindowDragEnter = (e: Event) => {
@@ -100,7 +108,7 @@ export default function DashboardClient({ initial }: Props) {
       const files = Array.from(event.dataTransfer?.files ?? []).filter(f => f.type.startsWith('image/') || f.type.startsWith('video/'))
       if (files.length > 0) {
         setPreloadedFiles(files)
-        setAddDialogOpen(true)
+        openAddDialog()
       }
     }
     window.addEventListener('dragenter', handleWindowDragEnter)
@@ -113,9 +121,7 @@ export default function DashboardClient({ initial }: Props) {
       window.removeEventListener('dragover', handleWindowDragOver)
       window.removeEventListener('drop', handleWindowDrop)
     }
-  }, [setAddDialogOpen, setPreloadedFiles])
-
-  const handleContentChanged = () => refetchContent()
+  }, [openAddDialog, setPreloadedFiles])
 
   const handleItemClick = (item: Content) => {
     setSelectedItem(item)
@@ -191,14 +197,6 @@ export default function DashboardClient({ initial }: Props) {
           />
         </Suspense>
       </main>
-
-      <Suspense fallback={null}>
-        <AddContentDialog
-          open={isAddDialogOpen}
-          onOpenChange={setAddDialogOpen}
-          onContentAdded={handleContentChanged}
-        />
-      </Suspense>
       <Suspense fallback={null}>
         <ContentModalManager
           open={modalOpen}
