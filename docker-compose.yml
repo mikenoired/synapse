@@ -22,13 +22,31 @@ services:
     restart: unless-stopped
     networks:
       - synapse-network
+  dragonfly:
+    container_name: synapse-dragonfly
+    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    restart: unless-stopped
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "6379:6379"
+    volumes:
+      - dragonflydata:/data
+    networks:
+      - dragonfly-network
 
 volumes:
   minio_data:
     driver: local
   minio_config:
     driver: local
+  dragonflydata:
+    driver: local
 
 networks:
   synapse-network:
+    driver: bridge
+  dragonfly-network:
     driver: bridge

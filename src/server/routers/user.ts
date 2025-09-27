@@ -6,4 +6,8 @@ export const userRouter = router({
     const service = new UserService(ctx)
     return await service.getUser()
   }),
+  getStorageUsage: protectedProcedure.query(async ({ ctx }) => {
+    const service = new UserService(ctx)
+    return await service.getStorageUsage()
+  }),
 })

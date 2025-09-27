@@ -47,7 +47,7 @@ export async function uploadFile(
   userId: string,
   folder: string = 'images',
   validationConfig?: Partial<FileValidationConfig>,
-): Promise<{ success: boolean, objectName?: string, validation: ValidationResult }> {
+): Promise<{ success: boolean, objectName?: string, validation: ValidationResult, fileSize?: number }> {
   const validation = await validateFile(file, fileName, contentType, userId, validationConfig)
 
   if (!validation.isValid) {
@@ -79,6 +79,7 @@ export async function uploadFile(
       success: true,
       objectName,
       validation,
+      fileSize: file.length,
     }
   }
   catch (error) {

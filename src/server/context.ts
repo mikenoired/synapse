@@ -1,6 +1,8 @@
 import type { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
+import { getRedis } from '@/server/lib/redis'
 import { createSupabaseClient } from '@/shared/api/supabase-client'
+import { CacheRepository } from './repositories/cache.repository'
 
 export async function createContext({ req }: { req?: NextRequest }) {
   const headerToken = req?.headers.get('authorization')?.replace('Bearer ', '')
@@ -9,6 +11,7 @@ export async function createContext({ req }: { req?: NextRequest }) {
   const token = headerToken || cookieToken
 
   const supabase = createSupabaseClient(token)
+  const redis = getRedis()
 
   let user = null
   if (token) {
@@ -24,6 +27,7 @@ export async function createContext({ req }: { req?: NextRequest }) {
   }
 
   return {
+    cache: new CacheRepository(redis),
     supabase,
     req,
     user,

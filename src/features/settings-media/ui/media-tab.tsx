@@ -1,13 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { trpc } from '@/shared/api/trpc'
+import { formatSize } from '@/shared/lib/utils'
 
 export default function MediaTab() {
-  const totalSpace = 1000 // GB
-  const usedSpace = 900 // GB
-  const freeSpace = totalSpace - usedSpace
+  const { data: storageUsage } = trpc.user.getStorageUsage.useQuery()
+
+  const totalSpaceBytes = 1000 * 1024 * 1024 * 1024 // 1000 GB in bytes
+  const usedSpaceBytes = storageUsage || 0 // bytes from API
+  const freeSpaceBytes = totalSpaceBytes - usedSpaceBytes
   const totalFiles = 45672
-  const usagePercentage = (usedSpace / totalSpace) * 100
+  const usagePercentage = (usedSpaceBytes / totalSpaceBytes) * 100
 
   const [loading, setLoading] = useState(true)
   const [animatedPercent, setAnimatedPercent] = useState(0)
@@ -52,13 +56,6 @@ export default function MediaTab() {
       : 1 - (-2 * t + 2) ** 3 / 2
   }
 
-  const formatSize = (sizeInGB: number) => {
-    if (sizeInGB >= 1000) {
-      return `${(sizeInGB / 1000).toFixed(1)} TB`
-    }
-    return `${sizeInGB} GB`
-  }
-
   const formatNumber = (num: number) => {
     return num.toLocaleString()
   }
@@ -76,51 +73,51 @@ export default function MediaTab() {
         <div className="flex justify-center w-full max-w-[220px] mx-auto">
           {loading
             ? (
-                <div className="animate-pulse w-[180px] h-[180px] rounded-full bg-muted/60" />
-              )
+              <div className="animate-pulse w-[180px] h-[180px] rounded-full bg-muted/60" />
+            )
             : (
-                <svg
-                  width="180"
-                  height="180"
-                  viewBox="0 0 180 180"
-                  style={{ maxWidth: 220, display: 'block' }}
+              <svg
+                width="180"
+                height="180"
+                viewBox="0 0 180 180"
+                style={{ maxWidth: 220, display: 'block' }}
+              >
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="80"
+                  fill="none"
+                  stroke="var(--muted)"
+                  strokeWidth="18"
+                />
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="80"
+                  fill="none"
+                  stroke={getRingColor(animatedPercent)}
+                  strokeWidth="18"
+                  strokeDasharray={2 * Math.PI * 80}
+                  strokeDashoffset={2 * Math.PI * 80 * (1 - animatedPercent / 100)}
+                  strokeLinecap="round"
+                  style={{
+                    filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))',
+                  }}
+                />
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  fontSize="2.2rem"
+                  fontWeight="bold"
+                  fill="var(--foreground)"
                 >
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="80"
-                    fill="none"
-                    stroke="var(--muted)"
-                    strokeWidth="18"
-                  />
-                  <circle
-                    cx="90"
-                    cy="90"
-                    r="80"
-                    fill="none"
-                    stroke={getRingColor(animatedPercent)}
-                    strokeWidth="18"
-                    strokeDasharray={2 * Math.PI * 80}
-                    strokeDashoffset={2 * Math.PI * 80 * (1 - animatedPercent / 100)}
-                    strokeLinecap="round"
-                    style={{
-                      filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.08))',
-                    }}
-                  />
-                  <text
-                    x="50%"
-                    y="50%"
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    fontSize="2.2rem"
-                    fontWeight="bold"
-                    fill="var(--foreground)"
-                  >
-                    {Math.round(animatedPercent)}
-                    %
-                  </text>
-                </svg>
-              )}
+                  {Math.round(animatedPercent)}
+                  %
+                </text>
+              </svg>
+            )}
         </div>
 
         <div className="space-y-4 flex-1">
@@ -128,10 +125,10 @@ export default function MediaTab() {
             <span className="text-muted-foreground">Used Space</span>
             <div className="h-px w-full bg-border flex-1"></div>
             <span className="font-semibold text-foreground">
-              {formatSize(usedSpace)}
+              {formatSize(usedSpaceBytes)}
               {' '}
               /
-              {formatSize(totalSpace)}
+              {formatSize(totalSpaceBytes)}
             </span>
           </div>
 
@@ -139,7 +136,7 @@ export default function MediaTab() {
             <span className="text-muted-foreground">Free Space</span>
             <div className="h-px w-full bg-border flex-1"></div>
             <span className="font-semibold text-green-600">
-              {formatSize(freeSpace)}
+              {formatSize(freeSpaceBytes)}
             </span>
           </div>
 

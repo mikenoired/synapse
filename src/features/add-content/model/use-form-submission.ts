@@ -1,8 +1,8 @@
 import type { ContentFormState, ParsedLinkData, TodoItem } from './types'
+import { Buffer } from 'node:buffer'
 import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { trpc } from '@/shared/api/trpc'
-import { useAuth } from '@/shared/lib/auth-context'
 
 interface UseFormSubmissionProps {
   onSuccess: () => void
@@ -10,8 +10,6 @@ interface UseFormSubmissionProps {
 }
 
 export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissionProps) {
-  const { session } = useAuth()
-
   const createContentMutation = trpc.content.create.useMutation({
     onSuccess: () => {
       toast.success('Saved')
@@ -23,46 +21,33 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
     },
   })
 
+  const uploadMutation = trpc.upload.formData.useMutation()
+
   const uploadMultipleFiles = useCallback(async (
     files: File[],
     title?: string,
     tags?: string[],
     extraFields?: Record<string, string | boolean>,
   ): Promise<{ objectName: string, url: string, thumbnail?: string }[]> => {
-    const formData = new FormData()
-    files.forEach(file => formData.append('file', file))
-    if (title?.trim())
-      formData.append('title', title.trim())
-    if (tags && tags.length > 0)
-      formData.append('tags', JSON.stringify(tags))
-    if (extraFields) {
-      Object.entries(extraFields).forEach(([k, v]) => formData.append(k, typeof v === 'boolean' ? String(v) : v))
-    }
+    const filesPayload = await Promise.all(files.map(async file => ({
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      content: Buffer.from(await file.arrayBuffer()).toString('base64'),
+    })))
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${session?.access_token}`,
-      },
-      body: formData,
+    const result = await uploadMutation.mutateAsync({
+      files: filesPayload,
+      title: title?.trim(),
+      tags: tags && tags.length > 0 ? tags : undefined,
+      makeTrack: extraFields?.makeTrack === true || extraFields?.makeTrack === 'true',
     })
 
-    if (!response.ok) {
-      const error = await response.json()
-      console.error('[uploadMultipleFiles] server error', error)
-      throw new Error(error.error || 'Upload failed')
-    }
-
-    const result = await response.json()
-    if (result.errors && result.errors.length > 0) {
+    if (result.errors && result.errors.length > 0)
       console.warn('Some files failed to upload:', result.errors)
-    }
-    return result.files.map((file: any) => ({
-      objectName: file.objectName,
-      url: file.url,
-      thumbnail: file.thumbnail,
-    }))
-  }, [session?.access_token])
+
+    return result.files
+  }, [uploadMutation])
 
   const submitContent = useCallback(async (
     formState: ContentFormState,
