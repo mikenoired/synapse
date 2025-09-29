@@ -13,6 +13,6 @@ export default class UserService {
   }
 
   async getStorageUsage() {
-    return await this.ctx.cache.getFileSize(this.ctx.user!.id)
+    return await this.ctx.cache.getUserStorage(this.ctx.user!.id)
   }
 }

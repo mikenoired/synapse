@@ -21,18 +21,29 @@ export class CacheRepository {
     return await redis.del(key)
   }
 
-  async addFileSize(userId: string, fileSize: number): Promise<number> {
-    return await redis.hincrby(`user:${userId}`, 'storage', fileSize)
+  async addFile(userId: string, fileSize: number, updateFileCount = true) {
+    const operations = [redis.hincrby(`user:${userId}`, 'storage', fileSize)]
+
+    if (updateFileCount) {
+      operations.push(redis.hincrby(`user:${userId}`, 'files', 1))
+    }
+
+    return await Promise.all(operations)
   }
 
-  // get user storage size in bytes
-  async getFileSize(userId: string): Promise<number> {
-    const fileSize = await redis.hget(`user:${userId}`, 'storage')
-    console.log('fileSize', fileSize)
-    return fileSize ? Number.parseInt(fileSize) : 0
+  // get user storage size in bytes and files count
+  async getUserStorage(userId: string) {
+    const [fileSize, files] = await Promise.all([
+      redis.hget(`user:${userId}`, 'storage'),
+      redis.hget(`user:${userId}`, 'files'),
+    ])
+    return { fileSize: fileSize ? Number.parseInt(fileSize) : 0, files: files ? Number.parseInt(files) : 0 }
   }
 
-  async removeFileSize(userId: string, fileSize: number): Promise<number> {
-    return await redis.hincrby(`user:${userId}`, 'storage', -fileSize)
+  async removeFile(userId: string, fileSize: number) {
+    return await Promise.all([
+      redis.hincrby(`user:${userId}`, 'storage', -fileSize),
+      redis.hincrby(`user:${userId}`, 'files', -1),
+    ])
   }
 }

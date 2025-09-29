@@ -1,5 +1,4 @@
 import type { ContentFormState, ParsedLinkData, TodoItem } from './types'
-import { Buffer } from 'node:buffer'
 import { useCallback } from 'react'
 import toast from 'react-hot-toast'
 import { trpc } from '@/shared/api/trpc'
@@ -33,6 +32,7 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
       name: file.name,
       type: file.type,
       size: file.size,
+      // eslint-disable-next-line node/prefer-global/buffer
       content: Buffer.from(await file.arrayBuffer()).toString('base64'),
     })))
 

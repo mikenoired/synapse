@@ -2,8 +2,8 @@ import type z from 'zod'
 import type { Context } from '../context'
 import type { Content, createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
 import type { Tables } from '@/shared/types/database'
-import { deleteFile } from '@/shared/api/minio'
-import { contentDetailSchema, contentListItemSchema, parseMediaJson } from '@/shared/lib/schemas'
+import { deleteFile, getFileMetadata } from '@/shared/api/minio'
+import { contentDetailSchema, contentListItemSchema, parseAudioJson, parseMediaJson } from '@/shared/lib/schemas'
 import ContentRepository from '../repositories/content.repository'
 
 const tagsCache = new Map<string, CacheEntry<Array<{ id: string, title: string }>>>()
@@ -149,34 +149,81 @@ export default class ContentService {
 
     await this.repo.deleteContent(id)
 
+    let totalFileSize = 0
+
     if (content.type === 'media') {
       const mediaJson = parseMediaJson(content.content)
       const mainObject = mediaJson?.media?.object || this.extractObjectNameFromApiUrl(mediaJson?.media?.url)
       const thumbObject = this.extractObjectNameFromApiUrl(mediaJson?.media?.thumbnailUrl)
+
       try {
-        if (mainObject)
+        if (mainObject) {
+          const metadata = await getFileMetadata(mainObject)
+          if (metadata?.size)
+            totalFileSize += metadata.size
           await deleteFile(mainObject)
+        }
       }
       catch { /* ignore */ }
-      try {
-        if (thumbObject)
-          await deleteFile(thumbObject)
+
+      if (mediaJson?.media?.type === 'image') {
+        const thumbnailBase64 = mediaJson?.media?.thumbnailBase64
+        if (thumbnailBase64) {
+          totalFileSize += thumbnailBase64.length
+        }
       }
-      catch { /* ignore */ }
+      else {
+        try {
+          if (thumbObject) {
+            const metadata = await getFileMetadata(thumbObject)
+            if (metadata?.size)
+              totalFileSize += metadata.size
+            await deleteFile(thumbObject)
+          }
+        }
+        catch { /* ignore */ }
+      }
     }
 
     else if (content.type === 'audio') {
       try {
-        const parsed = JSON.parse(content.content)
-        const audioObj = parsed?.audio?.object || this.extractObjectNameFromApiUrl(parsed?.audio?.url)
-        const coverObj = parsed?.cover?.object || this.extractObjectNameFromApiUrl(parsed?.cover?.url)
+        const audioJson = parseAudioJson(content.content)
+        const audioObj = audioJson?.audio?.object || this.extractObjectNameFromApiUrl(audioJson?.audio?.url)
+        const coverObj = audioJson?.cover?.object || this.extractObjectNameFromApiUrl(audioJson?.cover?.url)
+
+        if (audioJson?.audio?.sizeBytes) {
+          totalFileSize += audioJson.audio.sizeBytes
+        }
+        else if (audioObj) {
+          const metadata = await getFileMetadata(audioObj)
+          if (metadata?.size)
+            totalFileSize += metadata.size
+        }
+
         if (audioObj)
           await deleteFile(audioObj)
-        if (coverObj)
+
+        if (coverObj) {
+          const metadata = await getFileMetadata(coverObj)
+          if (metadata?.size)
+            totalFileSize += metadata.size
           await deleteFile(coverObj)
+        }
+        else if (audioJson?.cover?.thumbnailBase64) {
+          totalFileSize += audioJson.cover.thumbnailBase64.length
+        }
       }
       catch {
         // ignore
+      }
+    }
+
+    if (totalFileSize > 0) {
+      try {
+        await this.ctx.cache.removeFile(this.ctx.user!.id, totalFileSize)
+      }
+      catch (error) {
+        console.error('Error updating cache on file deletion:', error as Error)
       }
     }
 

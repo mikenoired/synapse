@@ -24,14 +24,14 @@ services:
       - synapse-network
   dragonfly:
     container_name: synapse-dragonfly
-    image: 'docker.dragonflydb.io/dragonflydb/dragonfly'
+    image: docker.dragonflydb.io/dragonflydb/dragonfly
     restart: unless-stopped
     ulimits:
       memlock:
         soft: -1
         hard: -1
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - dragonflydata:/data
     networks:
