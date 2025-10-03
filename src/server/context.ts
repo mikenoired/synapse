@@ -1,22 +1,25 @@
 import type { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
-import { createSupabaseClient } from '@/shared/api/supabase-client'
+import { db } from './db'
+import { verifyToken } from './lib/jwt'
 import { CacheRepository } from './repositories/cache.repository'
 
 export async function createContext({ req }: { req?: NextRequest }) {
   const headerToken = req?.headers.get('authorization')?.replace('Bearer ', '')
   const cookieStore = await cookies().catch(() => undefined)
   const cookieToken = cookieStore?.get('synapse_token')?.value
+  const refreshToken = cookieStore?.get('synapse_refresh_token')?.value
   const token = headerToken || cookieToken
-
-  const supabase = createSupabaseClient(token)
 
   let user = null
   if (token) {
     try {
-      const { data: { user: authUser }, error } = await supabase.auth.getUser(token)
-      if (!error && authUser) {
-        user = authUser
+      const payload = verifyToken(token)
+      if (payload) {
+        user = {
+          id: payload.userId,
+          email: payload.email,
+        }
       }
     }
     catch (error) {
@@ -26,10 +29,11 @@ export async function createContext({ req }: { req?: NextRequest }) {
 
   return {
     cache: new CacheRepository(),
-    supabase,
+    db,
     req,
     user,
     token,
+    refreshToken,
     requestId: req?.headers.get('x-request-id') || crypto.randomUUID?.() || undefined,
     ip: req?.headers.get('x-forwarded-for') || undefined,
     userAgent: req?.headers.get('user-agent') || undefined,

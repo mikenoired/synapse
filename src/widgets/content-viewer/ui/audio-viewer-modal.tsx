@@ -1,6 +1,4 @@
 'use client'
-
-import type { Session } from '@supabase/supabase-js'
 import type { Content } from '@/shared/lib/schemas'
 import { Pause, Play, Volume2, VolumeX } from 'lucide-react'
 import Image from 'next/image'
@@ -13,10 +11,9 @@ interface AudioViewerModalProps {
   open: boolean
   onOpenChange: (isOpen: boolean) => void
   item: Content
-  session: Session | null
 }
 
-export function AudioViewerModal({ open: _open, onOpenChange, item, session }: AudioViewerModalProps) {
+export function AudioViewerModal({ open: _open, onOpenChange, item }: AudioViewerModalProps) {
   const audioData = useMemo(() => parseAudioJson(item.content), [item.content])
   const audioUrlApi = audioData?.audio?.url || ''
   const [audioSrc, setAudioSrc] = useState('')
@@ -60,7 +57,7 @@ export function AudioViewerModal({ open: _open, onOpenChange, item, session }: A
     return () => {
       cancelled = true
     }
-  }, [_open, audioUrlApi, session?.access_token])
+  }, [_open, audioUrlApi])
 
   const isTrack = Boolean(audioData?.track?.isTrack)
   const coverUrl = audioData?.cover?.url

@@ -14,7 +14,7 @@ interface Props {
 }
 
 export default function TagsClient({ initial }: Props) {
-  const { session, loading } = useAuth()
+  const { loading, user } = useAuth()
   const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
   const [dragActive, setDragActive] = useState(false)
   const dragCounter = useRef(0)
@@ -25,7 +25,7 @@ export default function TagsClient({ initial }: Props) {
     refetch: refetchContent,
   } = trpc.content.getTagsWithContent.useQuery(undefined, {
     initialData: initial,
-    enabled: !!session,
+    enabled: !!user,
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
@@ -134,7 +134,7 @@ export default function TagsClient({ initial }: Props) {
         {tagsWithContent.map(({ id, title, items }) => (
           <Link key={id} href={`/dashboard/tag/${id}`} className="group">
             <h2 className="text-lg font-medium mb-3 capitalize group-hover:text-primary transition-colors">{title}</h2>
-            <TagStack items={items} session={session} />
+            <TagStack items={items} />
           </Link>
         ))}
       </div>

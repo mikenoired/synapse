@@ -5,9 +5,11 @@ import { randomUUID } from 'node:crypto'
 import { readFile, unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { and, eq, inArray, sql } from 'drizzle-orm'
 import * as mm from 'music-metadata'
 import sharp from 'sharp'
 import { getPublicUrl, uploadFile } from '@/shared/api/minio'
+import { content, contentTags, edges, nodes, tags } from '../db/schema'
 import { generateThumbnail, getImageDimensions } from '../lib/generate-thumbnail'
 
 interface UploadedFileInfo {
@@ -167,17 +169,13 @@ export default class UploadService {
       },
     }
 
-    const insertResponse = await this.ctx.supabase.from('content').insert([{
-      user_id: params.userId,
+    const [inserted] = await this.ctx.db.insert(content).values({
+      userId: params.userId,
       type: 'media',
       content: JSON.stringify(mediaJson),
       title: params.title || undefined,
-    }]).select('id').single()
+    }).returning({ id: content.id })
 
-    if (insertResponse.error)
-      console.error('[UPLOAD] insert image error', insertResponse.error)
-
-    const inserted = insertResponse.data as { id: string } | null
     if (inserted?.id)
       await this.attachTags(inserted.id, params.tags, 'media', params.title || undefined)
 
@@ -291,17 +289,13 @@ export default class UploadService {
         },
       }
 
-      const insertResponse = await this.ctx.supabase.from('content').insert([{
-        user_id: params.userId,
+      const [inserted] = await this.ctx.db.insert(content).values({
+        userId: params.userId,
         type: 'media',
         content: JSON.stringify(mediaJsonVideo),
         title: params.title || undefined,
-      }]).select('id').single()
+      }).returning({ id: content.id })
 
-      if (insertResponse.error)
-        console.error('[UPLOAD] insert video error', insertResponse.error)
-
-      const inserted = insertResponse.data as { id: string } | null
       if (inserted?.id)
         await this.attachTags(inserted.id, params.tags, 'media', params.title || undefined)
 
@@ -423,17 +417,13 @@ export default class UploadService {
         : undefined,
     }
 
-    const insertResponse = await this.ctx.supabase.from('content').insert([{
-      user_id: params.userId,
+    const [inserted] = await this.ctx.db.insert(content).values({
+      userId: params.userId,
       type: 'audio',
       content: JSON.stringify(audioJson),
       title: params.title || metadata?.common.title || undefined,
-    }]).select('id').single()
+    }).returning({ id: content.id })
 
-    if (insertResponse.error)
-      console.error('[UPLOAD] insert audio error', insertResponse.error)
-
-    const inserted = insertResponse.data as { id: string } | null
     if (inserted?.id)
       await this.attachTags(inserted.id, params.tags, 'audio', params.title || metadata?.common.title || undefined)
 
@@ -468,21 +458,23 @@ export default class UploadService {
     if (!unique.length)
       return []
 
-    const { data: existing } = await this.ctx.supabase
-      .from('tags')
-      .select('id, title')
-      .in('title', unique)
+    const existing = await this.ctx.db.query.tags.findMany({
+      where: inArray(tags.title, unique),
+      columns: {
+        id: true,
+        title: true,
+      },
+    })
 
-    const byTitle = new Map((existing || []).map(t => [t.title, t.id]))
+    const byTitle = new Map(existing.map(t => [t.title, t.id]))
     const missing = unique.filter(t => !byTitle.has(t))
 
     if (missing.length) {
-      const { data: inserted } = await this.ctx.supabase
-        .from('tags')
-        .insert(missing.map(title => ({ title })))
-        .select('id, title')
+      const inserted = await this.ctx.db.insert(tags)
+        .values(missing.map(title => ({ title })))
+        .returning({ id: tags.id, title: tags.title })
 
-      for (const t of inserted || [])
+      for (const t of inserted)
         byTitle.set(t.title, t.id)
     }
 
@@ -491,26 +483,29 @@ export default class UploadService {
   }
 
   private async getOrCreateContentNode(params: { contentId: string, title?: string, type: string }) {
-    const { data: existing } = await this.ctx.supabase
-      .from('nodes')
-      .select('id')
-      .eq('user_id', this.requireUserId())
-      .contains('metadata', { content_id: params.contentId })
-      .maybeSingle()
+    const existing = await this.ctx.db.query.nodes.findFirst({
+      where: and(
+        eq(nodes.userId, this.requireUserId()),
+        sql`${nodes.metadata}->>'content_id' = ${params.contentId}`,
+      ),
+      columns: {
+        id: true,
+      },
+    })
 
     if (existing?.id)
-      return existing.id as string
+      return existing.id
 
-    const { data, error } = await this.ctx.supabase
-      .from('nodes')
-      .insert([{ content: params.title ?? '', type: params.type, user_id: this.requireUserId(), metadata: { content_id: params.contentId } }])
-      .select('id')
-      .single()
+    const [data] = await this.ctx.db.insert(nodes)
+      .values({
+        content: params.title ?? '',
+        type: params.type,
+        userId: this.requireUserId(),
+        metadata: { content_id: params.contentId },
+      })
+      .returning({ id: nodes.id })
 
-    if (error)
-      throw error
-
-    return (data as { id: string }).id
+    return data.id
   }
 
   private async getOrCreateTagNodeIds(tagIds: string[]): Promise<Record<string, string>> {
@@ -519,49 +514,46 @@ export default class UploadService {
     if (!uniqueIds.length)
       return result
 
-    const inList = uniqueIds.map(v => `"${v}"`).join(',')
+    const existingNodes = await this.ctx.db.query.nodes.findMany({
+      where: and(
+        eq(nodes.userId, this.requireUserId()),
+        eq(nodes.type, 'tag'),
+        inArray(sql`${nodes.metadata}->>'tag_id'`, uniqueIds),
+      ),
+    })
 
-    const { data: existingNodes } = await this.ctx.supabase
-      .from('nodes')
-      .select('id, metadata')
-      .eq('user_id', this.requireUserId())
-      .eq('type', 'tag')
-      .filter('metadata->>tag_id', 'in', `(${inList})`)
-
-    for (const row of existingNodes || []) {
-      const meta = (row as any).metadata as { tag_id?: string } | null
+    for (const row of existingNodes) {
+      const meta = row.metadata as { tag_id?: string } | null
       const tagId = meta?.tag_id
       if (tagId)
-        result[tagId] = (row as any).id as string
+        result[tagId] = row.id
     }
 
     const missing = uniqueIds.filter(id => !result[id])
     if (!missing.length)
       return result
 
-    const { data: tags } = await this.ctx.supabase
-      .from('tags')
-      .select('id, title')
-      .in('id', missing)
+    const tagsList = await this.ctx.db.query.tags.findMany({
+      where: inArray(tags.id, missing),
+    })
 
-    const rows = (tags || []).map(t => ({
-      content: (t as any).title ?? '',
+    const rows = tagsList.map(t => ({
+      content: t.title ?? '',
       type: 'tag',
-      user_id: this.requireUserId(),
-      metadata: { tag_id: (t as any).id },
+      userId: this.requireUserId(),
+      metadata: { tag_id: t.id },
     }))
 
     if (rows.length) {
-      const { data: created } = await this.ctx.supabase
-        .from('nodes')
-        .insert(rows)
-        .select('id, metadata')
+      const created = await this.ctx.db.insert(nodes)
+        .values(rows)
+        .returning()
 
-      for (const row of created || []) {
-        const meta = (row as any).metadata as { tag_id?: string } | null
+      for (const row of created) {
+        const meta = row.metadata as { tag_id?: string } | null
         const tagId = meta?.tag_id
         if (tagId)
-          result[tagId] = (row as any).id as string
+          result[tagId] = row.id
       }
     }
 
@@ -574,14 +566,21 @@ export default class UploadService {
 
     const uniqueTagIds = Array.from(new Set(tagIds))
 
-    await this.ctx.supabase.from('content_tags').insert(uniqueTagIds.map(id => ({ content_id: contentId, tag_id: id })))
+    await this.ctx.db.insert(contentTags).values(
+      uniqueTagIds.map(id => ({ contentId, tagId: id })),
+    )
 
     const edgeRows = uniqueTagIds
-      .map(tagId => ({ from_node: contentNodeId, to_node: tagNodeIdByTagId[tagId], relation_type: 'content_tag', user_id: this.requireUserId() }))
-      .filter(r => !!r.to_node)
+      .map(tagId => ({
+        fromNode: contentNodeId,
+        toNode: tagNodeIdByTagId[tagId],
+        relationType: 'content_tag',
+        userId: this.requireUserId(),
+      }))
+      .filter(r => !!r.toNode)
 
     if (edgeRows.length)
-      await this.ctx.supabase.from('edges').insert(edgeRows)
+      await this.ctx.db.insert(edges).values(edgeRows)
   }
 
   private requireUserId(): string {

@@ -1,6 +1,5 @@
 'use client'
 
-import type { Session } from '@supabase/supabase-js'
 import type { Content } from '@/shared/lib/schemas'
 import { FileText, LinkIcon } from 'lucide-react'
 import Image from 'next/image'
@@ -11,10 +10,9 @@ import { cn } from '@/shared/lib/utils'
 
 interface TagStackProps {
   items: Content[]
-  session: Session | null
 }
 
-function TagPreview({ item, session }: { item: Content, session: Session | null }) {
+function TagPreview({ item }: { item: Content }) {
   const [imgSrc, setImgSrc] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [errored, setErrored] = useState(false)
@@ -42,7 +40,7 @@ function TagPreview({ item, session }: { item: Content, session: Session | null 
     return () => {
       cancelled = true
     }
-  }, [item.type, item.content, session?.access_token])
+  }, [item.type, item.content])
 
   if (item.type === 'media') {
     const media = parseMediaJson(item.content)?.media
@@ -143,7 +141,7 @@ function TagPreview({ item, session }: { item: Content, session: Session | null 
   )
 }
 
-export function TagStack({ items, session }: TagStackProps) {
+export function TagStack({ items }: TagStackProps) {
   return (
     <div className="relative aspect-square w-full cursor-pointer">
       {items.slice(0, 3).reverse().map((item, index) => (
@@ -156,7 +154,7 @@ export function TagStack({ items, session }: TagStackProps) {
             index === 2 && 'z-10 -rotate-2 -translate-x-1.5 translate-y-3 group-hover:-translate-x-4 group-hover:translate-y-4 group-hover:-rotate-3',
           )}
         >
-          <TagPreview item={item} session={session} />
+          <TagPreview item={item} />
         </div>
       ))}
     </div>

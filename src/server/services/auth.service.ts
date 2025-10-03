@@ -1,5 +1,4 @@
 import type { Context } from '../context'
-import { handleAuthError, handleConflictError } from '@/shared/lib/utils'
 import AuthRepository from '../repositories/auth.repository'
 
 export default class AuthService {
@@ -10,33 +9,17 @@ export default class AuthService {
   }
 
   async register(email: string, password: string) {
-    const { data, error } = await this.repo.registerUser(email, password)
-
-    if (error) {
-      if (typeof error.message === 'string' && error.message.toLowerCase().includes('already')) {
-        handleConflictError('Пользователь с таким email уже существует')
-      }
-      handleAuthError(error)
-    }
-
-    return { user: data.user, session: data.session }
+    const { data } = await this.repo.registerUser(email, password)
+    return { user: data.user, token: data.token, refreshToken: data.refreshToken }
   }
 
   async login(email: string, password: string) {
-    const { data, error } = await this.repo.loginUser(email, password)
-
-    if (error)
-      handleAuthError(error)
-
-    return { user: data.user }
+    const { data } = await this.repo.loginUser(email, password)
+    return { user: data.user, token: data.token, refreshToken: data.refreshToken }
   }
 
   async logout() {
-    const { error } = await this.repo.logoutUser()
-
-    if (error)
-      handleAuthError(error)
-
+    await this.repo.logoutUser()
     return { success: true }
   }
 }

@@ -1,28 +1,36 @@
 import type { Context } from '../context'
-import { handleSupabaseError } from '@/shared/lib/utils'
+import { TRPCError } from '@trpc/server'
+import { eq } from 'drizzle-orm'
+import { edges, nodes } from '../db/schema'
 
 export default class GraphRepository {
   constructor(private readonly ctx: Context) { }
 
   async getNodes() {
-    const { data, error } = await this.ctx.supabase
-      .from('nodes')
-      .select('id, content, type, metadata')
-      .eq('user_id', this.ctx.user!.id)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    const data = await this.ctx.db.query.nodes.findMany({
+      where: eq(nodes.userId, this.ctx.user.id),
+      columns: {
+        id: true,
+        content: true,
+        type: true,
+        metadata: true,
+      },
+    })
+
     return data
   }
 
   async getEdges() {
-    const { data, error } = await this.ctx.supabase
-      .from('edges')
-      .select('*')
-      .eq('user_id', this.ctx.user!.id)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    const data = await this.ctx.db.query.edges.findMany({
+      where: eq(edges.userId, this.ctx.user.id),
+    })
+
     return data
   }
 }

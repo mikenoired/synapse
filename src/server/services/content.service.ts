@@ -1,10 +1,12 @@
 import type z from 'zod'
 import type { Context } from '../context'
+import type { content as contentTable } from '../db/schema'
 import type { Content, createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
-import type { Tables } from '@/shared/types/database'
 import { deleteFile, getFileMetadata } from '@/shared/api/minio'
 import { contentDetailSchema, contentListItemSchema, parseAudioJson, parseMediaJson } from '@/shared/lib/schemas'
 import ContentRepository from '../repositories/content.repository'
+
+type ContentRow = typeof contentTable.$inferSelect
 
 const tagsCache = new Map<string, CacheEntry<Array<{ id: string, title: string }>>>()
 const tagsWithContentCache = new Map<string, CacheEntry<Array<{ id: string, title: string, items: Content[] }>>>()
@@ -35,9 +37,9 @@ export default class ContentService {
     }
     const data = await this.repo.getAll(search, type, cursor, limit)
 
-    const contentRows = (data || []) as Tables<'content'>[]
+    const contentRows = (data || []) as ContentRow[]
     const last = contentRows[contentRows.length - 1]
-    const nextCursor = last ? `${last.created_at}|${last.id}` : undefined
+    const nextCursor = last ? `${last.createdAt}|${last.id}` : undefined
 
     const items = includeTags
       ? await this.attachTagsToContent(contentRows)
@@ -51,13 +53,13 @@ export default class ContentService {
 
   async getById(id: string) {
     const data = await this.repo.getById(id)
-    return contentDetailSchema.parse(this.mapContentRow(data as Tables<'content'>, this.ctx.user!.id))
+    return contentDetailSchema.parse(this.mapContentRow(data as ContentRow, this.ctx.user!.id))
   }
 
   private async getContentWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined, includeTags: boolean) {
     const data = await this.repo.getWithTagFilter(tagIds, limit, search, type, cursor)
 
-    const contentMap = new Map<string, Tables<'content'>>()
+    const contentMap = new Map<string, ContentRow>()
     for (const row of data || []) {
       if (!contentMap.has(row.id)) {
         contentMap.set(row.id, row)
@@ -66,7 +68,7 @@ export default class ContentService {
 
     const contentRows = Array.from(contentMap.values())
     const last = contentRows[contentRows.length - 1]
-    const nextCursor = last ? `${last.created_at}|${last.id}` : undefined
+    const nextCursor = last ? `${last.createdAt}|${last.id}` : undefined
 
     const items = includeTags
       ? await this.attachTagsToContent(contentRows)
@@ -83,7 +85,7 @@ export default class ContentService {
 
     const data = await this.repo.create(createContentData)
 
-    const contentId = (data as Tables<'content'>).id
+    const contentId = (data as ContentRow).id
 
     const contentNodeId = await this.repo.getOrCreateContentNode({
       content_id: contentId,
@@ -105,7 +107,7 @@ export default class ContentService {
       }
     }
 
-    const [withTags] = await this.attachTagsToContent([data as Tables<'content'>])
+    const [withTags] = await this.attachTagsToContent([data as ContentRow])
     this.invalidateUserTags()
     return contentDetailSchema.parse(withTags)
   }
@@ -128,7 +130,7 @@ export default class ContentService {
       await this.replaceContentTags(id, ids, contentNodeId, tagNodeIds)
     }
 
-    const [withTags] = await this.attachTagsToContent([data as Tables<'content'>])
+    const [withTags] = await this.attachTagsToContent([data as ContentRow])
     this.invalidateUserTags()
     return contentDetailSchema.parse(withTags)
   }
@@ -261,7 +263,7 @@ export default class ContentService {
     const content = await this.repo.getAll('', undefined, undefined, 4)
     if (!content)
       return []
-    const items = await this.attachTagsToContent(content as Tables<'content'>[])
+    const items = await this.attachTagsToContent(content as ContentRow[])
     const tagsMap = new Map<string, { id: string, title: string, items: Content[] }>()
     for (const item of items) {
       item.tag_ids.forEach((tid, idx) => {
@@ -322,7 +324,7 @@ export default class ContentService {
     map.set(key, { data, expires: Date.now() + TAGS_CACHE_TTL_MS })
   }
 
-  private async attachTagsToContent(rows: Tables<'content'>[]): Promise<Content[]> {
+  private async attachTagsToContent(rows: ContentRow[]): Promise<Content[]> {
     const items = rows.map(r => this.mapContentRow(r, this.ctx.user!.id))
     if (!items.length)
       return items
@@ -376,17 +378,17 @@ export default class ContentService {
       await this.repo.createEdges(edgeRows)
   }
 
-  private mapContentRow(row: Tables<'content'>, fallbackUserId: string): Content {
+  private mapContentRow(row: ContentRow, fallbackUserId: string): Content {
     return {
       id: row.id,
-      user_id: row.user_id ?? fallbackUserId,
+      user_id: row.userId ?? fallbackUserId,
       type: (row.type as Content['type']),
       title: row.title ?? undefined,
       content: row.content,
       tags: [],
       tag_ids: [],
-      created_at: row.created_at ?? new Date().toISOString(),
-      updated_at: row.updated_at ?? row.created_at ?? new Date().toISOString(),
+      created_at: row.createdAt?.toISOString() ?? new Date().toISOString(),
+      updated_at: row.updatedAt?.toISOString() ?? row.createdAt?.toISOString() ?? new Date().toISOString(),
     }
   }
 }

@@ -1,187 +1,222 @@
 import type z from 'zod'
 import type { Context } from '../context'
 import type { createContentSchema, updateContentSchema } from '@/shared/lib/schemas'
-import { handleSupabaseError, handleSupabaseNotFound } from '@/shared/lib/utils'
+import { TRPCError } from '@trpc/server'
+import { and, desc, eq, ilike, inArray, lt, or, sql } from 'drizzle-orm'
+import { content, contentTags, edges, nodes, tags } from '../db/schema'
 
 export default class ContentRepository {
   constructor(private readonly ctx: Context) { }
 
   async getAll(search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined, limit: number) {
-    let query = this.ctx.supabase
-      .from('content')
-      .select('*')
-      .order('created_at', { ascending: false, nullsFirst: false })
-      .eq('user_id', this.ctx.user!.id)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
+    const conditions = [eq(content.userId, this.ctx.user.id)]
 
     if (search && search.trim().length > 0) {
       const term = `%${search.trim()}%`
-      query = query.or(`title.ilike.${term},content.ilike.${term}`)
+      conditions.push(
+        or(
+          ilike(content.title, term),
+          ilike(content.content, term),
+        )!,
+      )
     }
 
     if (type)
-      query = query.eq('type', type)
+      conditions.push(eq(content.type, type))
 
     if (cursor) {
       const [ts, id] = cursor.split('|')
       if (ts && id) {
-        query = query.lt('created_at', ts).or(`created_at.eq.${ts},id.lt.${id}`)
+        conditions.push(
+          or(
+            lt(content.createdAt, new Date(ts)),
+            and(eq(content.createdAt, new Date(ts)), lt(content.id, id))!,
+          )!,
+        )
       }
     }
 
-    const { data, error } = await query.limit(limit)
+    const data = await this.ctx.db
+      .select()
+      .from(content)
+      .where(and(...conditions))
+      .orderBy(desc(content.createdAt))
+      .limit(limit)
 
-    if (error)
-      handleSupabaseError(error)
     return data
   }
 
   async getWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined) {
-    let query = this.ctx.supabase
-      .from('content')
-      .select(`
-      *,
-      content_tags!inner(tag_id)
-    `)
-      .order('created_at', { ascending: false, nullsFirst: false })
-      .eq('user_id', this.ctx.user!.id)
-      .in('content_tags.tag_id', tagIds)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
+    const conditions = [
+      eq(content.userId, this.ctx.user.id),
+      inArray(contentTags.tagId, tagIds),
+    ]
 
     if (search && search.trim().length > 0) {
       const term = `%${search.trim()}%`
-      query = query.or(`title.ilike.${term},content.ilike.${term}`)
+      conditions.push(
+        or(
+          ilike(content.title, term),
+          ilike(content.content, term),
+        )!,
+      )
     }
 
     if (type)
-      query = query.eq('type', type)
+      conditions.push(eq(content.type, type))
 
     if (cursor) {
       const [ts, id] = cursor.split('|')
       if (ts && id) {
-        query = query.lt('created_at', ts).or(`created_at.eq.${ts},id.lt.${id}`)
+        conditions.push(
+          or(
+            lt(content.createdAt, new Date(ts)),
+            and(eq(content.createdAt, new Date(ts)), lt(content.id, id))!,
+          )!,
+        )
       }
     }
 
-    const { data, error } = await query.limit(limit)
-
-    if (error)
-      handleSupabaseError(error)
+    const data = await this.ctx.db
+      .select({
+        id: content.id,
+        type: content.type,
+        content: content.content,
+        title: content.title,
+        thumbnailBase64: content.thumbnailBase64,
+        createdAt: content.createdAt,
+        updatedAt: content.updatedAt,
+        userId: content.userId,
+      })
+      .from(content)
+      .innerJoin(contentTags, eq(content.id, contentTags.contentId))
+      .where(and(...conditions))
+      .orderBy(desc(content.createdAt))
+      .limit(limit)
 
     return data
   }
 
   async contentTagsWithTitles(ids: string[]) {
-    const { data, error } = await this.ctx.supabase
-      .from('content_tags')
-      .select('content_id, tag_id, tags!inner(id, title)')
-      .in('content_id', ids)
-
-    if (error)
-      handleSupabaseError(error)
+    const data = await this.ctx.db
+      .select({
+        content_id: contentTags.contentId,
+        tag_id: contentTags.tagId,
+        tags: {
+          id: tags.id,
+          title: tags.title,
+        },
+      })
+      .from(contentTags)
+      .innerJoin(tags, eq(contentTags.tagId, tags.id))
+      .where(inArray(contentTags.contentId, ids))
 
     return data
   }
 
   async getById(id: string) {
-    const { data, error } = await this.ctx.supabase
-      .from('content')
-      .select('*')
-      .eq('id', id)
-      .eq('user_id', this.ctx.user!.id)
-      .single()
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseNotFound(error, 'Контент не найден')
+    const data = await this.ctx.db.query.content.findFirst({
+      where: and(
+        eq(content.id, id),
+        eq(content.userId, this.ctx.user.id),
+      ),
+    })
+
+    if (!data)
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Контент не найден' })
+
     return data
   }
 
   async getNodeByContentId(id: string) {
-    const { data, error } = await this.ctx.supabase
-      .from('nodes')
-      .select('id')
-      .eq('user_id', this.ctx.user!.id)
-      .contains('metadata', { content_id: id })
-      .maybeSingle()
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseNotFound(error, 'Контент не найден')
+    const data = await this.ctx.db.query.nodes.findFirst({
+      where: and(
+        eq(nodes.userId, this.ctx.user.id),
+        sql`${nodes.metadata}->>'content_id' = ${id}`,
+      ),
+      columns: {
+        id: true,
+      },
+    })
+
     return data
   }
 
   async create(contentData: z.infer<typeof createContentSchema>) {
-    const { data, error } = await this.ctx.supabase
-      .from('content')
-      .insert([{
-        ...contentData,
-        user_id: this.ctx.user!.id,
-        thumbnail_base64: contentData.thumbnail_base64,
-      }])
-      .select()
-      .single()
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    const [data] = await this.ctx.db.insert(content).values({
+      ...contentData,
+      userId: this.ctx.user.id,
+      thumbnailBase64: contentData.thumbnail_base64,
+    }).returning()
+
+    if (!data)
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка создания контента' })
 
     return data
   }
 
   async getOrCreateTagNodeIds(tagIds: string[]): Promise<Record<string, string>> {
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
     const result: Record<string, string> = {}
     const uniqueIds = Array.from(new Set(tagIds))
     if (uniqueIds.length === 0)
       return result
 
-    const inList = uniqueIds.map(v => `"${v}"`).join(',')
+    const existingNodes = await this.ctx.db.query.nodes.findMany({
+      where: and(
+        eq(nodes.userId, this.ctx.user.id),
+        eq(nodes.type, 'tag'),
+        inArray(sql`${nodes.metadata}->>'tag_id'`, uniqueIds),
+      ),
+    })
 
-    const { data: existingNodes, error: existingErr } = await this.ctx.supabase
-      .from('nodes')
-      .select('id, metadata')
-      .eq('user_id', this.ctx.user!.id)
-      .eq('type', 'tag')
-      .filter('metadata->>tag_id', 'in', `(${inList})`)
-
-    if (existingErr)
-      handleSupabaseError(existingErr)
-
-    for (const row of existingNodes || []) {
-      const meta = (row as any).metadata as { tag_id?: string } | null
+    for (const row of existingNodes) {
+      const meta = row.metadata as { tag_id?: string } | null
       const tagId = meta?.tag_id
       if (tagId)
-        result[tagId] = (row as any).id as string
+        result[tagId] = row.id
     }
 
     const missing = uniqueIds.filter(id => !result[id])
     if (!missing.length)
       return result
 
-    const { data: tags, error: tagsErr } = await this.ctx.supabase
-      .from('tags')
-      .select('id, title')
-      .in('id', missing)
+    const tagsList = await this.ctx.db.query.tags.findMany({
+      where: inArray(tags.id, missing),
+    })
 
-    if (tagsErr)
-      handleSupabaseError(tagsErr)
-
-    const rows = (tags || []).map(t => ({
-      content: (t as any).title ?? '',
+    const rows = tagsList.map(t => ({
+      content: t.title ?? '',
       type: 'tag',
-      user_id: this.ctx.user!.id,
-      metadata: { tag_id: (t as any).id },
+      userId: this.ctx.user!.id,
+      metadata: { tag_id: t.id },
     }))
 
     if (rows.length) {
-      const { data: created, error: createErr } = await this.ctx.supabase
-        .from('nodes')
-        .insert(rows)
-        .select('id, metadata')
+      const created = await this.ctx.db.insert(nodes).values(rows).returning()
 
-      if (createErr)
-        handleSupabaseError(createErr)
-
-      for (const row of created || []) {
-        const meta = (row as any).metadata as { tag_id?: string } | null
+      for (const row of created) {
+        const meta = row.metadata as { tag_id?: string } | null
         const tagId = meta?.tag_id
         if (tagId)
-          result[tagId] = (row as any).id as string
+          result[tagId] = row.id
       }
     }
 
@@ -189,28 +224,43 @@ export default class ContentRepository {
   }
 
   async getOrCreateContentNode(params: { content_id: string, title?: string, type: string }) {
-    const { data: existing } = await this.ctx.supabase
-      .from('nodes')
-      .select('id')
-      .eq('user_id', this.ctx.user!.id)
-      .contains('metadata', { content_id: params.content_id })
-      .maybeSingle()
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
+    const existing = await this.ctx.db.query.nodes.findFirst({
+      where: and(
+        eq(nodes.userId, this.ctx.user.id),
+        sql`${nodes.metadata}->>'content_id' = ${params.content_id}`,
+      ),
+      columns: {
+        id: true,
+      },
+    })
+
     if (existing?.id)
-      return existing.id as string
-    const { data, error } = await this.ctx.supabase
-      .from('nodes')
-      .insert([{ content: params.title ?? '', type: params.type, user_id: this.ctx.user!.id, metadata: { content_id: params.content_id } }])
-      .select('id')
-      .single()
-    if (error)
-      handleSupabaseError(error)
-    return (data as { id: string }).id
+      return existing.id
+
+    const [data] = await this.ctx.db.insert(nodes).values({
+      content: params.title ?? '',
+      type: params.type,
+      userId: this.ctx.user.id,
+      metadata: { content_id: params.content_id },
+    }).returning({ id: nodes.id })
+
+    if (!data)
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка создания узла' })
+
+    return data.id
   }
 
   async createContentTags(tagIds: string[], contentId: string) {
-    const { data, error } = await this.ctx.supabase.from('content_tags').insert(tagIds.map(id => ({ content_id: contentId, tag_id: id })))
-    if (error)
-      handleSupabaseError(error)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
+    const data = await this.ctx.db.insert(contentTags).values(
+      tagIds.map(id => ({ contentId, tagId: id, userId: this.ctx.user!.id })),
+    )
+
     return data
   }
 
@@ -220,137 +270,167 @@ export default class ContentRepository {
     relation_type: string
     user_id: string
   }[]) {
-    const { data, error } = await this.ctx.supabase.from('edges').insert(edgeRows)
-    if (error)
-      handleSupabaseError(error)
+    const data = await this.ctx.db.insert(edges).values(
+      edgeRows.map(row => ({
+        fromNode: row.from_node,
+        toNode: row.to_node,
+        relationType: row.relation_type,
+        userId: row.user_id,
+      })),
+    )
+
     return data
   }
 
   async createNode(content: string) {
-    const { data, error } = await this.ctx.supabase.from('nodes').insert([{
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
+    const [data] = await this.ctx.db.insert(nodes).values({
       content,
       type: 'tag',
-      user_id: this.ctx.user!.id,
-    }]).select().single()
-    if (error)
-      handleSupabaseError(error)
+      userId: this.ctx.user.id,
+    }).returning()
+
+    if (!data)
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка создания узла' })
+
     return data
   }
 
   async getTagsByTitle(titles: string[]) {
-    const { data, error } = await this.ctx.supabase
-      .from('tags')
-      .select('id, title')
-      .in('title', titles)
+    const data = await this.ctx.db.query.tags.findMany({
+      where: inArray(tags.title, titles),
+      columns: {
+        id: true,
+        title: true,
+      },
+    })
 
-    if (error)
-      handleSupabaseError(error)
     return data
   }
 
   async getTagById(id: string) {
-    const { data, error } = await this.ctx.supabase
-      .from('tags')
-      .select('id, title')
-      .eq('id', id)
-      .single()
+    const data = await this.ctx.db.query.tags.findFirst({
+      where: eq(tags.id, id),
+      columns: {
+        id: true,
+        title: true,
+      },
+    })
 
-    if (error)
-      handleSupabaseError(error)
+    if (!data)
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Тег не найден' })
+
     return data
   }
 
   async getTags(ids: string[]) {
-    const { data, error } = await this.ctx.supabase
-      .from('tags')
-      .select('id, title')
-      .in('id', ids)
+    const data = await this.ctx.db.query.tags.findMany({
+      where: inArray(tags.id, ids),
+      columns: {
+        id: true,
+        title: true,
+      },
+    })
 
-    if (error)
-      handleSupabaseError(error)
     return data
   }
 
   async createTags(titles: { title: string }[]) {
-    const { data, error } = await this.ctx.supabase
-      .from('tags')
-      .insert(titles)
-      .select('id, title')
-    if (error)
-      handleSupabaseError(error)
+    const data = await this.ctx.db.insert(tags).values(titles).returning({
+      id: tags.id,
+      title: tags.title,
+    })
+
     return data
   }
 
   async updateContent(updData: z.infer<typeof updateContentSchema>) {
-    const { data, error } = await this.ctx.supabase
-      .from('content')
-      .update({
-        ...updData,
-        updated_at: new Date().toISOString(),
-        thumbnail_base64: updData.thumbnail_base64,
-      })
-      .eq('id', updData.id)
-      .eq('user_id', this.ctx.user!.id)
-      .select()
-      .single()
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    const [data] = await this.ctx.db.update(content).set({
+      ...updData,
+      updatedAt: new Date(),
+      thumbnailBase64: updData.thumbnail_base64,
+    }).where(
+      and(
+        eq(content.id, updData.id),
+        eq(content.userId, this.ctx.user.id),
+      ),
+    ).returning()
+
+    if (!data)
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Контент не найден' })
+
     return data
   }
 
   async deleteEdge(contentNodeId: string) {
-    const { error } = await this.ctx.supabase
-      .from('edges')
-      .delete()
-      .or(`from_node.eq.${contentNodeId},to_node.eq.${contentNodeId}`)
-      .eq('user_id', this.ctx.user!.id)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    await this.ctx.db.delete(edges).where(
+      and(
+        or(
+          eq(edges.fromNode, contentNodeId),
+          eq(edges.toNode, contentNodeId),
+        )!,
+        eq(edges.userId, this.ctx.user.id),
+      ),
+    )
   }
 
   async deleteNode(contentNodeId: string) {
-    const { error } = await this.ctx.supabase
-      .from('nodes')
-      .delete()
-      .eq('id', contentNodeId)
-      .eq('user_id', this.ctx.user!.id)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    await this.ctx.db.delete(nodes).where(
+      and(
+        eq(nodes.id, contentNodeId),
+        eq(nodes.userId, this.ctx.user.id),
+      ),
+    )
   }
 
   async getContentTags() {
-    const { data, error } = await this.ctx.supabase
-      .from('content_tags')
-      .select('tag_id, content_id')
+    const data = await this.ctx.db.select({
+      tag_id: contentTags.tagId,
+      content_id: contentTags.contentId,
+    }).from(contentTags)
 
-    if (error)
-      handleSupabaseError(error)
     return data
   }
 
   async deleteContent(id: string) {
-    const { error } = await this.ctx.supabase
-      .from('content')
-      .delete()
-      .eq('id', id)
-      .eq('user_id', this.ctx.user!.id)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
 
-    if (error)
-      handleSupabaseError(error)
+    await this.ctx.db.delete(content).where(
+      and(
+        eq(content.id, id),
+        eq(content.userId, this.ctx.user.id),
+      ),
+    )
   }
 
   async deleteTagEdge(contentNodeId: string) {
-    const { error } = await this.ctx.supabase.from('edges').delete().eq('from_node', contentNodeId).eq('relation_type', 'content_tag').eq('user_id', this.ctx.user!.id)
-    if (error)
-      handleSupabaseError(error)
+    if (!this.ctx.user)
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+
+    await this.ctx.db.delete(edges).where(
+      and(
+        eq(edges.fromNode, contentNodeId),
+        eq(edges.relationType, 'content_tag'),
+        eq(edges.userId, this.ctx.user.id),
+      ),
+    )
   }
 
   async deleteContentTag(contentId: string) {
-    const { error } = await this.ctx.supabase.from('content_tags').delete().eq('content_id', contentId)
-    if (error)
-      handleSupabaseError(error)
+    await this.ctx.db.delete(contentTags).where(
+      eq(contentTags.contentId, contentId),
+    )
   }
 }

@@ -1,6 +1,5 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { toast } from 'react-hot-toast'
 import { useAuth } from '@/shared/lib/auth-context'
@@ -26,7 +25,6 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
   const { signIn, signUp } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -38,18 +36,11 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 
       if (result.error) {
         toast.error(result.error.message)
-      }
-      else {
-        onOpenChange(false)
-        setEmail('')
-        setPassword('')
-        router.push('/dashboard')
+        setIsLoading(false)
       }
     }
     catch {
       toast.error('Произошла ошибка')
-    }
-    finally {
       setIsLoading(false)
     }
   }
@@ -90,8 +81,13 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              minLength={6}
+              minLength={8}
             />
+            {mode === 'register' && (
+              <p className="text-xs text-muted-foreground">
+                Минимум 8 символов, включая заглавные и строчные буквы, цифры
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col space-y-2">

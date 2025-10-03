@@ -1,6 +1,5 @@
 'use client'
 
-import type { Json } from '@/shared/types/database'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useRef } from 'react'
 
@@ -10,8 +9,8 @@ type NodeMetadata = {
   tag_id: string
 }
 
-interface Node { id: string, content: string | null, type: string, created_at?: string | null, updated_at?: string | null, metadata?: Json | null }
-interface Edge { id?: string, from_node: string | null, to_node: string | null, relation_type: string }
+interface Node { id: string, content: string | null, type: string, created_at?: string | null, updated_at?: string | null, metadata?: any | null }
+interface Edge { id?: string, fromNode: string | null, toNode: string | null, relationType: string }
 
 export default function GraphClient({ nodes, edges }: { nodes: Node[], edges: Edge[] }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -19,8 +18,8 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[], edges: Ed
 
   const data = useMemo(() => {
     const links = edges
-      .filter(e => e.from_node && e.to_node)
-      .map(e => ({ source: e.from_node as string, target: e.to_node as string }))
+      .filter(e => e.fromNode && e.toNode)
+      .map(e => ({ source: e.fromNode as string, target: e.toNode as string }))
     const degree: Record<string, number> = {}
     links.forEach((l) => {
       degree[l.source] = (degree[l.source] || 0) + 1

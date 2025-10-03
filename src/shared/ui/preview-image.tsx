@@ -4,13 +4,12 @@ import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 
 interface PreviewImageProps {
   src: string
-  token?: string
   alt?: string
   className?: string
   skeletonClassName?: string
 }
 
-export function PreviewImage({ src, token, alt, className, skeletonClassName }: PreviewImageProps) {
+export function PreviewImage({ src, alt, className, skeletonClassName }: PreviewImageProps) {
   const [url, setUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -35,7 +34,7 @@ export function PreviewImage({ src, token, alt, className, skeletonClassName }: 
     return () => {
       cancelled = true
     }
-  }, [src, token])
+  }, [src])
 
   if (loading) {
     return <div className={skeletonClassName || 'bg-muted animate-pulse w-full h-full rounded'} />

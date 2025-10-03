@@ -1,6 +1,4 @@
 'use client'
-
-import type { Session } from '@supabase/supabase-js'
 import type { TouchEvent } from 'react'
 import type { Content } from '@/shared/lib/schemas'
 import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, Ungroup, X } from 'lucide-react'
@@ -21,7 +19,6 @@ interface UnifiedMediaModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   item: Content
-  session: Session | null
   gallery?: { url: string, parentId: string, media_type?: string, thumbnail_url?: string }[]
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -32,7 +29,6 @@ export function UnifiedMediaModal({
   open,
   onOpenChange,
   item,
-  session,
   gallery = [],
   onEdit,
   onDelete,
@@ -507,7 +503,6 @@ export function UnifiedMediaModal({
                   >
                     <PreviewImage
                       src={previewSrc}
-                      token={session?.access_token}
                       alt={`Превью ${index + 1}`}
                       className="w-full h-full object-cover"
                       skeletonClassName="w-full h-full bg-white/10 animate-pulse rounded"

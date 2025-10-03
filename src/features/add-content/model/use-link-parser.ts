@@ -1,10 +1,8 @@
 import type { LinkState } from './types'
 import { useCallback, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useAuth } from '@/shared/lib/auth-context'
 
 export function useLinkParser() {
-  const { session } = useAuth()
   const [state, setState] = useState<LinkState>({
     parsedData: null,
     isLoading: false,
@@ -21,8 +19,8 @@ export function useLinkParser() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session?.access_token}`,
         },
+        credentials: 'include',
         body: JSON.stringify({ url: url.trim() }),
       })
 
@@ -46,7 +44,7 @@ export function useLinkParser() {
     finally {
       setState(prev => ({ ...prev, isLoading: false }))
     }
-  }, [session?.access_token])
+  }, [])
 
   const clearParsedData = useCallback(() => {
     setState(prev => ({ ...prev, parsedData: null }))

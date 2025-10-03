@@ -121,8 +121,12 @@ export const updateContentSchema = createContentSchema.partial().extend({
 })
 
 export const authSchema = z.object({
-  email: z.email(),
-  password: z.string().min(6),
+  email: z.string().email('Некорректный email адрес'),
+  password: z.string()
+    .min(8, 'Пароль должен содержать минимум 8 символов')
+    .regex(/[A-Z]/, 'Пароль должен содержать хотя бы одну заглавную букву')
+    .regex(/[a-z]/, 'Пароль должен содержать хотя бы одну строчную букву')
+    .regex(/\d/, 'Пароль должен содержать хотя бы одну цифру'),
 })
 
 export type User = z.infer<typeof userSchema>

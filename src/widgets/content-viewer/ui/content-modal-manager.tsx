@@ -1,6 +1,4 @@
 'use client'
-
-import type { Session } from '@supabase/supabase-js'
 import type { Content } from '@/shared/lib/schemas'
 import { useState } from 'react'
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog'
@@ -17,7 +15,6 @@ interface ContentModalManagerProps {
   onOpenChange: (open: boolean) => void
   item: Content | null
   allItems: Content[]
-  session: Session | null
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
   onContentChanged?: () => void
@@ -28,7 +25,6 @@ export function ContentModalManager({
   onOpenChange,
   item,
   allItems,
-  session,
   onEdit,
   onDelete,
   onContentChanged,
@@ -59,7 +55,6 @@ export function ContentModalManager({
         open={open}
         onOpenChange={onOpenChange}
         item={item}
-        session={session}
         gallery={imageGallery}
         onEdit={onEdit}
         onDelete={onDelete}
@@ -74,7 +69,6 @@ export function ContentModalManager({
         open={open}
         onOpenChange={onOpenChange}
         item={item}
-        session={session}
       />
     )
   }

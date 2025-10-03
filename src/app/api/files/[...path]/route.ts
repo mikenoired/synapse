@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
+import { verifyToken } from '@/server/lib/jwt'
 import { getFileMetadata, getPresignedUrl } from '@/shared/api/minio'
-import { createSupabaseClient } from '@/shared/api/supabase-client'
 
 export async function GET(
   request: NextRequest,
@@ -17,12 +17,11 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createSupabaseClient(token)
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
-    if (authError || !user) {
+    const payload = verifyToken(token)
+    if (!payload) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
     const { path } = await context.params
     const objectName = path.join('/')
 
@@ -32,7 +31,7 @@ export async function GET(
     }
 
     const pathUserId = objectName.split('/')[1] // images/userId/filename
-    if (metadata.userId !== user.id && pathUserId !== user.id) {
+    if (metadata.userId !== payload.userId && pathUserId !== payload.userId) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 

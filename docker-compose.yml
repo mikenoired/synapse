@@ -36,6 +36,25 @@ services:
       - dragonflydata:/data
     networks:
       - dragonfly-network
+  postgres:
+    container_name: synapse-postgres
+    image: postgres:15
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-synapse}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - postgres-network
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U postgres]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   minio_data:
@@ -44,9 +63,13 @@ volumes:
     driver: local
   dragonflydata:
     driver: local
+  postgres_data:
+    driver: local
 
 networks:
   synapse-network:
     driver: bridge
   dragonfly-network:
+    driver: bridge
+  postgres-network:
     driver: bridge

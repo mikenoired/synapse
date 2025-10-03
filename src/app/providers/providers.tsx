@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react'
 import { Toaster } from 'react-hot-toast'
 import superjson from 'superjson'
 import { trpc } from '@/shared/api/trpc'
-import { AuthProvider, useAuth } from '@/shared/lib/auth-context'
+import { AuthProvider } from '@/shared/lib/auth-context'
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')
@@ -20,7 +20,6 @@ function getBaseUrl() {
 }
 
 function TRPCProvider({ children }: { children: ReactNode }) {
-  const { session } = useAuth()
   const [queryClient] = useState(() => new QueryClient({
     defaultOptions: {
       queries: {
@@ -43,15 +42,16 @@ function TRPCProvider({ children }: { children: ReactNode }) {
           httpBatchLink({
             url: `${getBaseUrl()}/api/trpc`,
             transformer: superjson,
-            headers() {
-              return {
-                authorization: session?.access_token ? `Bearer ${session.access_token}` : '',
-              }
+            fetch(url, options) {
+              return fetch(url, {
+                ...options,
+                credentials: 'include',
+              })
             },
           }),
         ],
       }),
-    [session?.access_token],
+    [],
   )
 
   return (

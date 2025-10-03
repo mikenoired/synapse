@@ -23,7 +23,7 @@ export default function DashboardClient({ initial }: Props) {
   const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
   const [selectedItem, setSelectedItem] = useState<Content | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  const { user, loading, session } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [dragActive, setDragActive] = useState(false)
@@ -203,7 +203,6 @@ export default function DashboardClient({ initial }: Props) {
           onOpenChange={setModalOpen}
           item={selectedItem}
           allItems={content}
-          session={session}
           onEdit={(id: string) => {
             router.push(`/edit/${id}`)
             setModalOpen(false)

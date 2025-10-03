@@ -22,7 +22,7 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
   const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
   const [dragActive, setDragActive] = useState(false)
   const dragCounter = useRef(0)
-  const { user, loading, session } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   const {
@@ -141,7 +141,6 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
         onOpenChange={setModalOpen}
         item={selectedItem}
         allItems={content}
-        session={session}
         onEdit={(id: string) => {
           router.push(`/edit/${id}`)
           setModalOpen(false)
