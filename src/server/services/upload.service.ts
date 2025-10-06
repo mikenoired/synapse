@@ -220,8 +220,25 @@ export default class UploadService {
           'copy',
           compressedPath,
         ])
+
+        let stderr = ''
+        ffmpeg.stderr?.on('data', (data) => {
+          stderr += data.toString()
+        })
+
+        ffmpeg.on('error', (error) => {
+          console.error('ffmpeg process error:', error)
+          reject(new Error(`ffmpeg process error: ${error.message}`))
+        })
+
         ffmpeg.on('close', (code) => {
-          code === 0 ? resolve() : reject(new Error('ffmpeg compress error'))
+          if (code === 0) {
+            resolve()
+          }
+          else {
+            console.error('ffmpeg compress failed with code', code, 'stderr:', stderr)
+            reject(new Error(`ffmpeg compress failed with code ${code}: ${stderr.slice(-500)}`))
+          }
         })
       })
 
@@ -235,8 +252,25 @@ export default class UploadService {
           '1',
           tempThumbPath,
         ])
+
+        let stderr = ''
+        ffmpeg.stderr?.on('data', (data) => {
+          stderr += data.toString()
+        })
+
+        ffmpeg.on('error', (error) => {
+          console.error('ffmpeg thumbnail process error:', error)
+          reject(new Error(`ffmpeg thumbnail process error: ${error.message}`))
+        })
+
         ffmpeg.on('close', (code) => {
-          code === 0 ? resolve() : reject(new Error('ffmpeg thumbnail error'))
+          if (code === 0) {
+            resolve()
+          }
+          else {
+            console.error('ffmpeg thumbnail failed with code', code, 'stderr:', stderr)
+            reject(new Error(`ffmpeg thumbnail failed with code ${code}: ${stderr.slice(-500)}`))
+          }
         })
       })
 
@@ -408,12 +442,12 @@ export default class UploadService {
       },
       cover: coverUrl
         ? {
-            object: coverObject,
-            url: coverUrl,
-            width: coverDims?.width,
-            height: coverDims?.height,
-            thumbnailBase64: coverThumbBase64,
-          }
+          object: coverObject,
+          url: coverUrl,
+          width: coverDims?.width,
+          height: coverDims?.height,
+          thumbnailBase64: coverThumbBase64,
+        }
         : undefined,
     }
 
