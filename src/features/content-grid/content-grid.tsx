@@ -136,10 +136,10 @@ export const ContentGrid = memo(({
       {items.map((item, index) => (
         <div
           key={item.id}
-          className="animate-in fade-in-0 duration-300"
+          className="animate-in fade-in-0 duration-300 shadow-sm rounded-sm"
           onMouseEnter={onItemHover}
         >
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-lg" />}>
+          <Suspense fallback={<Skeleton className="h-40 w-full rounded-sm" />}>
             <Item
               item={item}
               index={index}

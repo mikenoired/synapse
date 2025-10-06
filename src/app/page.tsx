@@ -5,7 +5,6 @@ import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { AuthDialog } from '@/features/auth-dialog/ui/auth-dialog'
-import { ThemeToggle } from '@/features/theme-toggle/ui/theme-toggle'
 import { useAuth } from '@/shared/lib/auth-context'
 import { Button } from '@/shared/ui/button'
 
@@ -169,7 +168,7 @@ export default function HomePage() {
               className="invert dark:invert-0"
             />
           </div>
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
         </div>
       </header>
 

@@ -38,15 +38,15 @@ export default function Sidebar() {
   }, [])
 
   const navItems: NavItem[] = [
-    { href: '/dashboard', icon: Home, label: 'Главная' },
-    { href: '/dashboard/tags', icon: Tag, label: 'Теги' },
-    { href: '/dashboard/graph', icon: Network, label: 'Граф' },
     {
       action: () => openAddDialog(),
       icon: Plus,
       label: 'Добавить',
       onMouseEnter: preloadAddContentDialog,
     },
+    { href: '/dashboard', icon: Home, label: 'Главная' },
+    { href: '/dashboard/tags', icon: Tag, label: 'Теги' },
+    { href: '/dashboard/graph', icon: Network, label: 'Граф' },
     { href: '/dashboard/settings', icon: Settings, label: 'Настройки' },
   ]
 

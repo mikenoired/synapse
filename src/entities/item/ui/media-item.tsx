@@ -81,7 +81,7 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
 
   return (
     <div
-      className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
+      className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-md"
       style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : blurAspectRatio }}
     >
       {blurThumb && (

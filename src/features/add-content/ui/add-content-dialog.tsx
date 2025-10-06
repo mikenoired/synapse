@@ -194,7 +194,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
       onClick={() => onOpenChange(false)}
     >
       <div
-        className={`bg-background shadow-lg relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
+        className={`bg-background shadow-lg relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95 rounded-lg`}
         onClick={e => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

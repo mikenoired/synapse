@@ -16,7 +16,7 @@ export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
 
   return (
     <aside className="w-full md:w-64 border-b md:border-b-0 md:border-r border-border bg-background flex md:flex-col flex-row md:h-auto h-14 md:min-h-screen">
-      <div className="flex md:flex-col flex-row w-full h-full md:gap-3 md:mt-10">
+      <div className="flex md:flex-col flex-row w-full h-full">
         {tabs.map(tabItem => (
           <Link
             key={tabItem.key}

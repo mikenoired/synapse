@@ -28,7 +28,7 @@ export function ContentTypeSelector({
 
   return (
     <div className="p-4 border-b flex flex-row items-center justify-between">
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
         {contentTypes.map(({ key, icon: Icon, label }) => (
           <Button
             key={key}

@@ -263,7 +263,7 @@ export function UnifiedMediaModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTitle className="hidden"></DialogTitle>
-      <DialogContent showCloseButton={false} className="max-w-none w-screen h-screen min-h-0 p-0 m-0 bg-black/95 border-none flex flex-col">
+      <DialogContent showCloseButton={false} className="max-w-none w-screen h-screen rounded-none min-h-0 p-0 m-0 bg-black/95 border-none flex flex-col">
         <div
           className="w-full h-full min-h-0 flex flex-col flex-1 relative"
           onMouseEnter={() => setIsHovered(true)}

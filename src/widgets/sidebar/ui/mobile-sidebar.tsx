@@ -25,7 +25,6 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
       )
     }
 
-    // Action button (Plus)
     const isAddButton = item.label === 'Добавить'
 
     return (
@@ -36,10 +35,9 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
         aria-label={item.label}
         className={cn(
           commonClasses,
-          inactiveClasses,
           isAddButton && isMobile
-            ? 'w-16 h-16 -mt-8 rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-ring'
-            : 'w-16 text-center',
+            ? 'w-16 h-16 -mt-8 rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-ring font-semibold'
+            : 'w-16 text-center text-primary font-semibold',
         )}
         style={isAddButton && isMobile ? { position: 'relative', zIndex: 60 } : undefined}
       >

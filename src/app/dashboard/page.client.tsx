@@ -171,7 +171,7 @@ export default function DashboardClient({ initial }: Props) {
           </div>
         </div>
       )}
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-4">
         <Suspense fallback={<Skeleton className="h-10 w-full max-w-md mb-6" />}>
           <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
         </Suspense>
