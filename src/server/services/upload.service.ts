@@ -154,8 +154,8 @@ export default class UploadService {
     }
 
     await Promise.all([
-      await this.ctx.cache.addFile(this.ctx.user!.id, uploadResult.fileSize || 0),
-      await this.ctx.cache.addFile(this.ctx.user!.id, thumbnailBase64?.length || 0, false),
+      this.ctx.cache.addFile(this.ctx.user!.id, uploadResult.fileSize || 0),
+      this.ctx.cache.addFile(this.ctx.user!.id, thumbnailBase64?.length || 0, false),
     ])
 
     const mediaJson = {
@@ -307,8 +307,8 @@ export default class UploadService {
       }
 
       await Promise.all([
-        await this.ctx.cache.addFile(this.ctx.user!.id, videoUpload.fileSize || 0),
-        await this.ctx.cache.addFile(this.ctx.user!.id, thumbUpload.fileSize || 0, false),
+        this.ctx.cache.addFile(this.ctx.user!.id, videoUpload.fileSize || 0),
+        this.ctx.cache.addFile(this.ctx.user!.id, thumbUpload.fileSize || 0, false),
       ])
 
       const mediaJsonVideo = {
@@ -412,8 +412,8 @@ export default class UploadService {
     }
 
     await Promise.all([
-      await this.ctx.cache.addFile(this.ctx.user!.id, audioUpload.fileSize || 0),
-      await this.ctx.cache.addFile(this.ctx.user!.id, coverFileSize || 0, false),
+      this.ctx.cache.addFile(this.ctx.user!.id, audioUpload.fileSize || 0),
+      this.ctx.cache.addFile(this.ctx.user!.id, coverFileSize || 0, false),
     ])
 
     const audioJson = {

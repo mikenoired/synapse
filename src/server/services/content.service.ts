@@ -144,8 +144,8 @@ export default class ContentService {
     await this.repo.deleteContentTag(id)
     if (contentNodeId) {
       await Promise.all([
-        await this.repo.deleteEdge(contentNodeId),
-        await this.repo.deleteNode(contentNodeId),
+        this.repo.deleteEdge(contentNodeId),
+        this.repo.deleteNode(contentNodeId),
       ])
     }
 
