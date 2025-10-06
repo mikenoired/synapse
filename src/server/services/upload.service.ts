@@ -10,7 +10,8 @@ import * as mm from 'music-metadata'
 import sharp from 'sharp'
 import { getPublicUrl, uploadFile } from '@/shared/api/minio'
 import { content, contentTags, edges, nodes, tags } from '../db/schema'
-import { generateThumbnail, getImageDimensions } from '../lib/generate-thumbnail'
+import { getImageDimensions } from '../lib/generate-thumbnail'
+import { thumbnailQueue } from '../lib/queue'
 
 interface UploadedFileInfo {
   objectName: string
@@ -137,14 +138,6 @@ export default class UploadService {
     const objectName = uploadResult.objectName
     const publicUrl = getPublicUrl(objectName)
 
-    let thumbnailBase64: string | undefined
-    try {
-      thumbnailBase64 = await generateThumbnail(buffer, file.type)
-    }
-    catch (error) {
-      console.error('Error generating thumbnail:', error)
-    }
-
     let imageDimensions: { width: number, height: number } | undefined
     try {
       imageDimensions = await getImageDimensions(buffer)
@@ -153,10 +146,7 @@ export default class UploadService {
       console.error('Error getting image dimensions:', error)
     }
 
-    await Promise.all([
-      this.ctx.cache.addFile(this.ctx.user!.id, uploadResult.fileSize || 0),
-      this.ctx.cache.addFile(this.ctx.user!.id, thumbnailBase64?.length || 0, false),
-    ])
+    await this.ctx.cache.addFile(this.ctx.user!.id, uploadResult.fileSize || 0)
 
     const mediaJson = {
       media: {
@@ -165,7 +155,6 @@ export default class UploadService {
         type: 'image' as const,
         width: imageDimensions?.width,
         height: imageDimensions?.height,
-        thumbnailBase64,
       },
     }
 
@@ -176,8 +165,16 @@ export default class UploadService {
       title: params.title || undefined,
     }).returning({ id: content.id })
 
-    if (inserted?.id)
+    if (inserted?.id) {
       await this.attachTags(inserted.id, params.tags, 'media', params.title || undefined)
+
+      await thumbnailQueue.add('generate-thumbnail', {
+        contentId: inserted.id,
+        objectName,
+        mimeType: file.type,
+        type: 'image',
+      })
+    }
 
     return {
       result: {
@@ -186,7 +183,6 @@ export default class UploadService {
         fileName: file.name,
         size: file.size,
         type: file.type,
-        thumbnailBase64,
       },
       errors,
     }
@@ -290,14 +286,6 @@ export default class UploadService {
         return { errors }
       }
 
-      let thumbnailBase64: string | undefined
-      try {
-        thumbnailBase64 = await generateThumbnail(compressedBuffer, 'video/mp4')
-      }
-      catch (error) {
-        console.error('Error generating video blur thumbnail:', error)
-      }
-
       let videoDimensions: { width: number, height: number } | undefined
       try {
         videoDimensions = await getImageDimensions(thumbBuffer)
@@ -319,7 +307,6 @@ export default class UploadService {
           width: videoDimensions?.width,
           height: videoDimensions?.height,
           thumbnailUrl: getPublicUrl(thumbUpload.objectName),
-          thumbnailBase64,
         },
       }
 
@@ -330,8 +317,16 @@ export default class UploadService {
         title: params.title || undefined,
       }).returning({ id: content.id })
 
-      if (inserted?.id)
+      if (inserted?.id) {
         await this.attachTags(inserted.id, params.tags, 'media', params.title || undefined)
+
+        await thumbnailQueue.add('generate-thumbnail', {
+          contentId: inserted.id,
+          objectName: videoUpload.objectName,
+          mimeType: 'video/mp4',
+          type: 'video',
+        })
+      }
 
       return {
         result: {
@@ -341,7 +336,6 @@ export default class UploadService {
           fileName: file.name,
           size: file.size,
           type: file.type,
-          thumbnailBase64,
         },
         errors,
       }
@@ -380,7 +374,6 @@ export default class UploadService {
 
     let coverUrl: string | undefined
     let coverObject: string | undefined
-    let coverThumbBase64: string | undefined
     let coverDims: { width: number, height: number } | undefined
     let coverFileSize: number | undefined
 
@@ -396,7 +389,6 @@ export default class UploadService {
         if (coverUpload.success && coverUpload.objectName) {
           coverObject = coverUpload.objectName
           coverUrl = getPublicUrl(coverUpload.objectName)
-          coverThumbBase64 = await generateThumbnail(jpeg, 'image/jpeg')
           coverFileSize = coverUpload.fileSize || 0
           try {
             coverDims = await getImageDimensions(jpeg)
@@ -446,7 +438,6 @@ export default class UploadService {
           url: coverUrl,
           width: coverDims?.width,
           height: coverDims?.height,
-          thumbnailBase64: coverThumbBase64,
         }
         : undefined,
     }
@@ -458,8 +449,18 @@ export default class UploadService {
       title: params.title || metadata?.common.title || undefined,
     }).returning({ id: content.id })
 
-    if (inserted?.id)
+    if (inserted?.id) {
       await this.attachTags(inserted.id, params.tags, 'audio', params.title || metadata?.common.title || undefined)
+
+      if (coverObject) {
+        await thumbnailQueue.add('generate-thumbnail', {
+          contentId: inserted.id,
+          objectName: coverObject,
+          mimeType: 'image/jpeg',
+          type: 'audio-cover',
+        })
+      }
+    }
 
     return {
       result: {

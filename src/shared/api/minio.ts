@@ -1,6 +1,6 @@
-import type { Buffer } from 'node:buffer'
 import type Stream from 'node:stream'
 import type { FileValidationConfig, ValidationResult } from '@/server/middleware/file-middleware'
+import { Buffer } from 'node:buffer'
 import * as Minio from 'minio'
 import { sanitizeFileName, validateFile } from '@/server/middleware/file-middleware'
 
@@ -108,6 +108,23 @@ export async function getFile(objectName: string): Promise<{ stream: Stream.Read
   return {
     stream,
     contentType: stat.metaData?.['content-type'],
+  }
+}
+
+export async function getFileBuffer(objectName: string) {
+  try {
+    const chunks: Uint8Array[] = []
+    const stream = await minioClient.getObject(bucketName, objectName)
+
+    return new Promise<Buffer>((resolve, reject) => {
+      stream.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+      stream.on('end', () => resolve(Buffer.concat(chunks)))
+      stream.on('error', err => reject(err))
+    })
+  }
+  catch (error) {
+    console.error('Error getting file buffer:', error)
+    return null
   }
 }
 
