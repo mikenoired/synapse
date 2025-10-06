@@ -332,10 +332,10 @@ export default class ContentService {
     const byContent = new Map<string, { ids: string[], titles: string[] }>()
 
     for (const r of contentTagsWithTitles || []) {
-      const existing = byContent.get(r.content_id) || { ids: [], titles: [] }
-      existing.ids.push(r.tag_id)
-      existing.titles.push(r.tags.title)
-      byContent.set(r.content_id, existing)
+      byContent.set(r.content_id, {
+        ids: r.tag_ids || [],
+        titles: r.tag_titles || [],
+      })
     }
 
     return items.map((i) => {

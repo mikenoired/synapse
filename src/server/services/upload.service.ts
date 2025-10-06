@@ -601,7 +601,7 @@ export default class UploadService {
     const uniqueTagIds = Array.from(new Set(tagIds))
 
     await this.ctx.db.insert(contentTags).values(
-      uniqueTagIds.map(id => ({ contentId, tagId: id })),
+      uniqueTagIds.map(id => ({ contentId, tagId: id, userId: this.requireUserId() })),
     )
 
     const edgeRows = uniqueTagIds

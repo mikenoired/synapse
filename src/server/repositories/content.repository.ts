@@ -107,15 +107,13 @@ export default class ContentRepository {
     const data = await this.ctx.db
       .select({
         content_id: contentTags.contentId,
-        tag_id: contentTags.tagId,
-        tags: {
-          id: tags.id,
-          title: tags.title,
-        },
+        tag_ids: sql<string[]>`array_agg(${contentTags.tagId})`.as('tag_ids'),
+        tag_titles: sql<string[]>`array_agg(${tags.title})`.as('tag_titles'),
       })
       .from(contentTags)
       .innerJoin(tags, eq(contentTags.tagId, tags.id))
       .where(inArray(contentTags.contentId, ids))
+      .groupBy(contentTags.contentId)
 
     return data
   }

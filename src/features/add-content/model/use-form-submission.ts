@@ -9,9 +9,13 @@ interface UseFormSubmissionProps {
 }
 
 export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissionProps) {
+  const utils = trpc.useUtils()
+
   const createContentMutation = trpc.content.create.useMutation({
     onSuccess: () => {
       toast.success('Saved')
+      utils.content.getTags.invalidate()
+      utils.content.getTagsWithContent.invalidate()
       onSuccess()
       onContentAdded?.()
     },
@@ -20,7 +24,12 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
     },
   })
 
-  const uploadMutation = trpc.upload.formData.useMutation()
+  const uploadMutation = trpc.upload.formData.useMutation({
+    onSuccess: () => {
+      utils.content.getTags.invalidate()
+      utils.content.getTagsWithContent.invalidate()
+    },
+  })
 
   const uploadMultipleFiles = useCallback(async (
     files: File[],
