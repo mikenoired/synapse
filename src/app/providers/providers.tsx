@@ -10,6 +10,7 @@ import { Toaster } from 'react-hot-toast'
 import superjson from 'superjson'
 import { trpc } from '@/shared/api/trpc'
 import { AuthProvider } from '@/shared/lib/auth-context'
+import { SyncProvider } from '@/shared/sync/sync-context'
 
 function getBaseUrl() {
   if (typeof window !== 'undefined')
@@ -67,21 +68,23 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
       <TRPCProvider>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange={false}
-        >
-          {children}
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              duration: 3000,
-              className: 'bg-background border border-border text-foreground shadow-lg',
-            }}
-          />
-        </ThemeProvider>
+        <SyncProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange={false}
+          >
+            {children}
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                duration: 3000,
+                className: 'bg-background border border-border text-foreground shadow-lg',
+              }}
+            />
+          </ThemeProvider>
+        </SyncProvider>
       </TRPCProvider>
     </AuthProvider>
   )

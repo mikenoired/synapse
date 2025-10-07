@@ -9,6 +9,7 @@
         "@radix-ui/react-label": "^2.1.7",
         "@radix-ui/react-slot": "^1.2.3",
         "@radix-ui/react-tooltip": "^1.2.8",
+        "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
         "@tanstack/react-query": "^5.90.2",
         "@tiptap/core": "^3.6.5",
         "@tiptap/extension-bubble-menu": "^3.6.5",
@@ -409,6 +410,8 @@
     "@rtsao/scc": ["@rtsao/scc@1.1.0", "", {}, "sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g=="],
 
     "@rushstack/eslint-patch": ["@rushstack/eslint-patch@1.11.0", "", {}, "sha512-zxnHvoMQVqewTJr/W4pKjF0bMGiKJv1WX7bSrkl46Hg0QjESbzBROWK0Wg4RphzSOS5Jiy7eFimmM3UgMrMZbQ=="],
+
+    "@sqlite.org/sqlite-wasm": ["@sqlite.org/sqlite-wasm@3.50.4-build1", "", { "bin": { "sqlite-wasm": "bin/index.js" } }, "sha512-Qig2Wso7gPkU1PtXwFzndh+CTRzrIFxVGqv6eCetjU7YqxlHItj+GvQYwYTppCRgAPawtRN/4AJcEgB9xDHGug=="],
 
     "@stylistic/eslint-plugin": ["@stylistic/eslint-plugin@5.4.0", "", { "dependencies": { "@eslint-community/eslint-utils": "^4.9.0", "@typescript-eslint/types": "^8.44.0", "eslint-visitor-keys": "^4.2.1", "espree": "^10.4.0", "estraverse": "^5.3.0", "picomatch": "^4.0.3" }, "peerDependencies": { "eslint": ">=9.0.0" } }, "sha512-UG8hdElzuBDzIbjG1QDwnYH0MQ73YLXDFHgZzB4Zh/YJfnw8XNsloVtytqzx0I2Qky9THSdpTmi8Vjn/pf/Lew=="],
 
