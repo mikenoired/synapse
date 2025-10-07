@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import './thumbnail-worker'
 
 console.log('🚀 Worker process started')

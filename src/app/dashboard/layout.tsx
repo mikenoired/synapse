@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { DashboardProvider } from '@/shared/lib/dashboard-context'
 import Sidebar from '@/widgets/sidebar/ui/sidebar'
+import { DebugPanel } from './components/debug-panel'
 import DashboardWrapper from './dashboard-wrapper'
 
 export default function DashboardLayout({
@@ -13,6 +14,7 @@ export default function DashboardLayout({
       <div className="h-screen min-h-0 flex w-full bg-muted overflow-hidden">
         <Sidebar />
         <DashboardWrapper>{children}</DashboardWrapper>
+        <DebugPanel />
       </div>
     </DashboardProvider>
   )

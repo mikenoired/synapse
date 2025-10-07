@@ -434,11 +434,11 @@ export default class UploadService {
       },
       cover: coverUrl
         ? {
-          object: coverObject,
-          url: coverUrl,
-          width: coverDims?.width,
-          height: coverDims?.height,
-        }
+            object: coverObject,
+            url: coverUrl,
+            width: coverDims?.width,
+            height: coverDims?.height,
+          }
         : undefined,
     }
 

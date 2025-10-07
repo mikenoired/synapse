@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import type { Job } from 'bullmq'
 import type { ThumbnailJobData } from '../lib/queue'
 import { Worker } from 'bullmq'

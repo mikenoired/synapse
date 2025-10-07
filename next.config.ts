@@ -105,6 +105,14 @@ const nextConfig: NextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
+          // {
+          //   key: 'Cross-Origin-Embedder-Policy',
+          //   value: 'require-corp',
+          // },
+          // {
+          //   key: 'Cross-Origin-Opener-Policy',
+          //   value: 'same-origin',
+          // },
         ],
       },
       {
@@ -117,6 +125,19 @@ const nextConfig: NextConfig = {
         ],
       },
     ]
+  },
+
+  webpack: (config) => {
+    // Support for WASM
+    config.experiments = {
+      ...config.experiments,
+      asyncWebAssembly: true,
+      layers: true,
+    }
+
+    config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm'
+
+    return config
   },
 }
 
