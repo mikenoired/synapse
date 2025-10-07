@@ -35,6 +35,7 @@ export default function GeneralTab() {
         <div>
           <label className="block mb-1 font-medium">
             Мозгует с
+            {' '}
             {new Date(user?.createdAt || '').toLocaleDateString()}
           </label>
         </div>
