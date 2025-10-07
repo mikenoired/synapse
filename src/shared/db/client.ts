@@ -34,10 +34,45 @@ export async function initSQLite(): Promise<SQLiteDB> {
       let db: any
 
       if ('opfs' in sqlite3 && sqlite3.opfs) {
-        // eslint-disable-next-line no-console
-        console.log('[SQLite] Using OPFS for persistence')
-        const opfs = await (sqlite3 as any).opfs.OpfsDb.create('/synapse.db')
-        db = opfs
+        try {
+          // eslint-disable-next-line no-console
+          console.log('[SQLite] Using OPFS for persistence')
+          const opfs = await (sqlite3 as any).opfs.OpfsDb.create('/synapse.db')
+          db = opfs
+
+          // Проверка целостности базы данных
+          try {
+            // Простой запрос для проверки работоспособности БД
+            db.exec('SELECT 1')
+            console.log('[SQLite] OPFS database integrity check passed')
+          }
+          catch (integrityError) {
+            console.error('[SQLite] OPFS database integrity check failed:', integrityError)
+            throw new Error('Database integrity check failed')
+          }
+        }
+        catch (opfsError) {
+          console.error('[SQLite] Failed to initialize OPFS database:', opfsError)
+          console.warn('[SQLite] Falling back to in-memory database')
+          db = new sqlite3.oo1.DB('/synapse.db', 'ct')
+
+          // Восстановление из резервной копии
+          try {
+            console.log('[SQLite] Attempting to recover data from backup...')
+            // Динамический импорт для избежания циклических зависимостей
+            const { restoreFromBackup } = await import('./backup')
+            const restored = await restoreFromBackup()
+            if (restored) {
+              console.log('[SQLite] Successfully restored data from backup')
+            }
+            else {
+              console.warn('[SQLite] No valid backup found for recovery')
+            }
+          }
+          catch (recoveryError) {
+            console.error('[SQLite] Recovery failed:', recoveryError)
+          }
+        }
       }
       else {
         console.warn('[SQLite] OPFS not available, using in-memory database')

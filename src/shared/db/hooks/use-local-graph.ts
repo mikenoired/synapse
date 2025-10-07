@@ -35,6 +35,7 @@ export function useLocalGraphData() {
       }
     },
     enabled: !!user,
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 0, // Always refetch to get latest local data
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }

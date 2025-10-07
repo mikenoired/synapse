@@ -82,32 +82,54 @@ export class SyncEngine {
     }
 
     this.syncInProgress = true
+    let retryCount = 0
+    const maxRetries = 3
 
     try {
       console.log('[Sync] Starting sync...')
 
-      const pushResult = await this.pushLocalChanges()
-
-      const pullResult = await this.pullServerChanges()
-
-      const result: SyncResult = {
-        success: true,
-        conflicts: [...pushResult.conflicts, ...pullResult.conflicts],
-        synced: pushResult.synced + pullResult.synced,
-        failed: pushResult.failed + pullResult.failed,
+      // Создаем резервную копию перед синхронизацией
+      try {
+        const { createBackup } = await import('../db/backup')
+        await createBackup()
+        console.log('[Sync] Created backup before sync')
+      }
+      catch (backupError) {
+        console.warn('[Sync] Failed to create backup:', backupError)
       }
 
+      // Функция для повторения попытки синхронизации
+      const attemptSync = async (): Promise<SyncResult> => {
+        try {
+          const pushResult = await this.pushLocalChanges()
+          const pullResult = await this.pullServerChanges()
+
+          return {
+            success: true,
+            conflicts: [...pushResult.conflicts, ...pullResult.conflicts],
+            synced: pushResult.synced + pullResult.synced,
+            failed: pushResult.failed + pullResult.failed,
+          }
+        }
+        catch (error) {
+          if (retryCount < maxRetries && (error instanceof TypeError || error.message?.includes('network'))) {
+            retryCount++
+            console.warn(`[Sync] Network error, retrying (${retryCount}/${maxRetries})...`)
+            // Экспоненциальная задержка перед повторной попыткой
+            await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** retryCount))
+            return attemptSync()
+          }
+          throw error
+        }
+      }
+
+      const result = await attemptSync()
       console.log('[Sync] Completed:', result)
       return result
     }
     catch (error) {
-      console.error('[Sync] Sync failed:', error)
-      return {
-        success: false,
-        conflicts: [],
-        synced: 0,
-        failed: 0,
-      }
+      console.error('[Sync] Failed:', error)
+      return { success: false, conflicts: [], synced: 0, failed: 1 }
     }
     finally {
       this.syncInProgress = false
@@ -173,6 +195,7 @@ export class SyncEngine {
         body: JSON.stringify({ userId: this.userId }),
       })
 
+      // Проверка статуса ответа
       if (!response.ok) {
         throw new Error(`Pull failed: ${response.statusText}`)
       }
@@ -325,6 +348,10 @@ export class SyncEngine {
         console.log('[Sync] Local wins (newer version)')
       }
     }
+  }
+
+  async getUnsyncedOperations() {
+    return await this.syncRepo.getUnsyncedOperations(this.userId)
   }
 
   async initialSync(): Promise<void> {

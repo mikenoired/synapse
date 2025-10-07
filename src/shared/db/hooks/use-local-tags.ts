@@ -42,7 +42,8 @@ export function useLocalTagById(id: string) {
       return await tagRepo.getById(id, user.id)
     },
     enabled: !!user && !!id,
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 0, // Always refetch to get latest local data
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
@@ -100,6 +101,7 @@ export function useLocalTagsWithContent() {
       return Array.from(tagsMap.values())
     },
     enabled: !!user,
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 0, // Always refetch to get latest local data
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }

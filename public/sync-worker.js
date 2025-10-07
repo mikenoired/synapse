@@ -95,10 +95,43 @@ async function performSync() {
           changes,
         })
       }
+    } else {
+      // Обработка ошибок HTTP
+      const errorText = await response.text();
+      globalThis.console.error(`[SyncWorker] Sync HTTP error: ${response.status} ${response.statusText}`, errorText);
+      
+      // Уведомление всех вкладок об ошибке синхронизации
+      broadcastToAll({
+        type: 'SYNC_ERROR',
+        error: {
+          status: response.status,
+          statusText: response.statusText,
+          message: `Ошибка синхронизации: ${response.status} ${response.statusText}`
+        }
+      });
+      
+      // Если ошибка авторизации, возможно, нужно перелогиниться
+      if (response.status === 401 || response.status === 403) {
+        broadcastToAll({
+          type: 'AUTH_ERROR',
+          error: {
+            message: 'Требуется повторная авторизация'
+          }
+        });
+      }
     }
   }
   catch (error) {
-    globalThis.console.error('[SyncWorker] Sync failed:', error)
+    globalThis.console.error('[SyncWorker] Sync failed:', error);
+    
+    // Уведомление всех вкладок о сетевой ошибке
+    broadcastToAll({
+      type: 'SYNC_ERROR',
+      error: {
+        message: `Ошибка сети при синхронизации: ${error.message || 'Неизвестная ошибка'}`,
+        isNetworkError: true
+      }
+    });
   }
 }
 

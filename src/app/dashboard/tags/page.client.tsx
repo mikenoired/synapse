@@ -4,36 +4,24 @@ import type { DragEvent } from 'react'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TagStack } from '@/entities/item/ui/tag-stack'
-import { trpc } from '@/shared/api/trpc'
+import { useLocalTagsWithContent } from '@/shared/db/hooks/use-local-tags'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { Skeleton } from '@/shared/ui/skeleton'
 
-interface Props {
-  initial: { id: string, title: string, items: any[] }[]
-}
-
-export default function TagsClient({ initial }: Props) {
-  const { loading, user } = useAuth()
+export default function TagsClient() {
+  const { loading } = useAuth()
   const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
   const [dragActive, setDragActive] = useState(false)
   const dragCounter = useRef(0)
 
   const {
-    data: tagsData,
+    data: tagsWithContent,
     isLoading: tagsLoading,
     refetch: refetchContent,
-  } = trpc.content.getTagsWithContent.useQuery(undefined, {
-    initialData: initial,
-    enabled: !!user,
-    retry: 1,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
-    staleTime: 60000,
-  })
+  } = useLocalTagsWithContent()
 
-  const tagsWithContent = tagsData ?? initial
-  const isLoading = (loading || tagsLoading) && !tagsWithContent.length
+  const isLoading = (loading || tagsLoading) && !tagsWithContent?.length
 
   const handleContentChanged = useCallback(() => {
     refetchContent()

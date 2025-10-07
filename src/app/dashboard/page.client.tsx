@@ -3,21 +3,16 @@
 import type { DragEvent } from 'react'
 import type { Content } from '@/shared/lib/schemas'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { trpc } from '@/shared/api/trpc'
+import { lazy, useCallback, useEffect, useRef, useState } from 'react'
+import { useDeleteLocalContent, useLocalContent } from '@/shared/db/hooks/use-local-content'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
-import { Skeleton } from '@/shared/ui/skeleton'
 
 const ContentFilter = lazy(() => import('@/features/content-filter/content-filter').then(mod => ({ default: mod.ContentFilter })))
 const ContentGrid = lazy(() => import('@/features/content-grid/content-grid').then(mod => ({ default: mod.ContentGrid })))
 const ContentModalManager = lazy(() => import('@/widgets/content-viewer/ui/content-modal-manager').then(mod => ({ default: mod.ContentModalManager })))
 
-interface Props {
-  initial: { items: Content[], nextCursor: string | undefined }
-}
-
-export default function DashboardClient({ initial }: Props) {
+export default function DashboardClient() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
@@ -30,32 +25,16 @@ export default function DashboardClient({ initial }: Props) {
   const dragCounter = useRef(0)
 
   const {
-    data: pages,
+    data: localData,
     isLoading: contentLoading,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     refetch: refetchContent,
-  } = trpc.content.getAll.useInfiniteQuery({
+  } = useLocalContent({
     search: searchQuery || undefined,
     tagIds: selectedTags.length > 0 ? selectedTags : undefined,
     limit: 12,
-  }, {
-    getNextPageParam: last => last.nextCursor,
-    enabled: !!user || initial.items.length > 0,
-    retry: 1,
-    staleTime: 60000,
-    gcTime: 300000,
-    refetchOnMount: false,
-    refetchOnReconnect: true,
-    refetchOnWindowFocus: false,
-    initialData: {
-      pageParams: [undefined],
-      pages: [initial],
-    },
   })
 
-  const content: Content[] = pages?.pages.flatMap(p => p.items) ?? []
+  const content: Content[] = localData?.items ?? []
 
   const handleContentChanged = useCallback(() => {
     refetchContent()
@@ -128,8 +107,10 @@ export default function DashboardClient({ initial }: Props) {
     setModalOpen(true)
   }
 
+  const deleteContentMutation = useDeleteLocalContent()
+
   const handleModalDelete = (id: string) => {
-    trpc.content.delete.useMutation().mutate({ id }, {
+    deleteContentMutation.mutate(id, {
       onSuccess: () => {
         handleContentChanged()
         setModalOpen(false)
@@ -143,7 +124,7 @@ export default function DashboardClient({ initial }: Props) {
     router.push('/dashboard')
   }
 
-  if (loading && !initial.items.length) {
+  if (loading) {
     return (
       <div className="flex h-full items-center justify-center p-6">
         <div className="loading-placeholder h-8 w-8 rounded-full"></div>
@@ -172,45 +153,32 @@ export default function DashboardClient({ initial }: Props) {
         </div>
       )}
       <main className="flex-1 overflow-y-auto p-4">
-        <Suspense fallback={<Skeleton className="h-10 w-full max-w-md mb-6" />}>
-          <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        </Suspense>
-        <Suspense fallback={(
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full rounded-lg" />
-            ))}
-          </div>
-        )}
-        >
-          <ContentGrid
-            items={content}
-            isLoading={contentLoading && content.length === 0}
-            onContentChanged={handleContentChanged}
-            onItemClick={handleItemClick}
-            searchQuery={searchQuery}
-            selectedTags={selectedTags}
-            onClearFilters={clearFilters}
-            fetchNext={hasNextPage ? fetchNextPage : undefined}
-            hasNext={hasNextPage}
-            isFetchingNext={isFetchingNextPage}
-          />
-        </Suspense>
-      </main>
-      <Suspense fallback={null}>
-        <ContentModalManager
-          open={modalOpen}
-          onOpenChange={setModalOpen}
-          item={selectedItem}
-          allItems={content}
-          onEdit={(id: string) => {
-            router.push(`/edit/${id}`)
-            setModalOpen(false)
-          }}
-          onDelete={handleModalDelete}
+        <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        <ContentGrid
+          items={content}
+          isLoading={contentLoading && content.length === 0}
           onContentChanged={handleContentChanged}
+          onItemClick={handleItemClick}
+          searchQuery={searchQuery}
+          selectedTags={selectedTags}
+          onClearFilters={clearFilters}
+          fetchNext={undefined}
+          hasNext={false}
+          isFetchingNext={false}
         />
-      </Suspense>
+      </main>
+      <ContentModalManager
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        item={selectedItem}
+        allItems={content}
+        onEdit={(id: string) => {
+          router.push(`/edit/${id}`)
+          setModalOpen(false)
+        }}
+        onDelete={handleModalDelete}
+        onContentChanged={handleContentChanged}
+      />
     </div>
   )
 }

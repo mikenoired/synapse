@@ -47,7 +47,6 @@ export function useLocalContent(options?: {
         )
       }
 
-      // Attach tags to content
       const contentIds = items.map(item => item.id)
       const contentTags = await contentRepo.getContentTags(contentIds)
 
@@ -76,8 +75,8 @@ export function useLocalContent(options?: {
       return { items: mappedItems, nextCursor: undefined }
     },
     enabled: !!user,
-    staleTime: Number.POSITIVE_INFINITY, // Local data is always fresh
-    gcTime: Number.POSITIVE_INFINITY,
+    staleTime: 0, // Always refetch to get latest local data
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
@@ -111,7 +110,8 @@ export function useLocalContentById(id: string) {
       } as Content
     },
     enabled: !!user && !!id,
-    staleTime: Number.POSITIVE_INFINITY,
+    staleTime: 0, // Always refetch to get latest local data
+    gcTime: 5 * 60 * 1000, // 5 minutes
   })
 }
 
@@ -132,66 +132,66 @@ export function useCreateLocalContent() {
 
       await ensureDB()
 
-      const id = crypto.randomUUID()
-      const contentData = {
-        id,
-        type: data.type,
-        content: data.content,
-        title: data.title,
-        user_id: user.id,
-      }
+      const db = await ensureDB()
 
-      const created = await contentRepo.create(contentData, user.id)
+      return db.transaction(async () => {
+        const id = crypto.randomUUID()
+        const contentData = {
+          id,
+          type: data.type,
+          content: data.content,
+          title: data.title,
+          user_id: user.id,
+        }
 
-      // Handle tags
-      const tagIds: string[] = []
+        const created = await contentRepo.create(contentData, user.id)
 
-      if (data.tag_ids?.length) {
-        tagIds.push(...data.tag_ids)
-      }
-      else if (data.tags?.length) {
-        // Create tags if they don't exist
-        for (const tagTitle of data.tags) {
-          let tag = await tagRepo.getByTitle(tagTitle, user.id)
-          if (!tag) {
-            const tagId = crypto.randomUUID()
-            tag = await tagRepo.create({ id: tagId, title: tagTitle, user_id: user.id }, user.id)
+        // Handle tags
+        const tagIds: string[] = []
+
+        if (data.tag_ids?.length) {
+          tagIds.push(...data.tag_ids)
+        }
+        else if (data.tags?.length) {
+          for (const tagTitle of data.tags) {
+            let tag = await tagRepo.getByTitle(tagTitle, user.id)
+            if (!tag) {
+              const tagId = crypto.randomUUID()
+              tag = await tagRepo.create({ id: tagId, title: tagTitle, user_id: user.id }, user.id)
+            }
+            tagIds.push(tag.id)
           }
-          tagIds.push(tag.id)
         }
-      }
 
-      // Add content tags
-      for (const tagId of tagIds) {
-        await tagRepo.addContentTag(id, tagId, user.id)
-      }
-
-      // Create graph node
-      const nodeId = crypto.randomUUID()
-      await graphRepo.createNode({
-        id: nodeId,
-        type: 'content',
-        content: data.title,
-        metadata: JSON.stringify({ content_id: id }),
-        user_id: user.id,
-      }, user.id)
-
-      // Create edges to tags
-      for (const tagId of tagIds) {
-        const tagNode = await graphRepo.getNodeByContentId(tagId, user.id)
-        if (tagNode) {
-          const edgeId = crypto.randomUUID()
-          await graphRepo.createEdge({
-            id: edgeId,
-            from_node: nodeId,
-            to_node: tagNode.id,
-            relation_type: 'content_tag',
-            user_id: user.id,
-          }, user.id)
+        for (const tagId of tagIds) {
+          await tagRepo.addContentTag(id, tagId, user.id)
         }
-      }
 
-      return created
+        const nodeId = crypto.randomUUID()
+        await graphRepo.createNode({
+          id: nodeId,
+          type: 'content',
+          content: data.title,
+          metadata: JSON.stringify({ content_id: id }),
+          user_id: user.id,
+        }, user.id)
+
+        for (const tagId of tagIds) {
+          const tagNode = await graphRepo.getNodeByContentId(tagId, user.id)
+          if (tagNode) {
+            const edgeId = crypto.randomUUID()
+            await graphRepo.createEdge({
+              id: edgeId,
+              from_node: nodeId,
+              to_node: tagNode.id,
+              relation_type: 'content_tag',
+              user_id: user.id,
+            }, user.id)
+          }
+        }
+
+        return created
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['local-content'] })

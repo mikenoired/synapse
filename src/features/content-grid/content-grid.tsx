@@ -2,7 +2,7 @@
 
 import type { Content } from '@/shared/lib/schemas'
 import { FileText, Search } from 'lucide-react'
-import { lazy, memo, Suspense, useEffect, useRef } from 'react'
+import { lazy, memo, useEffect, useRef } from 'react'
 import Masonry from 'react-masonry-css'
 import { Button } from '@/shared/ui/button'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -81,7 +81,7 @@ export const ContentGrid = memo(({
         className="masonry-grid"
         columnClassName="masonry-grid_column"
       >
-        {Array.from({ length: 12 }).map((_, i) => (
+        {Array.from({ length: 4 }).map((_, i) => (
           <div className="mb-4 bg-transparent" key={i}>
             <Skeleton className="h-40 w-full rounded-lg" />
           </div>
@@ -139,15 +139,13 @@ export const ContentGrid = memo(({
           className="animate-in fade-in-0 duration-300 shadow-sm rounded-sm"
           onMouseEnter={onItemHover}
         >
-          <Suspense fallback={<Skeleton className="h-40 w-full rounded-sm" />}>
-            <Item
-              item={item}
-              index={index}
-              onContentChanged={onContentChanged}
-              onItemClick={onItemClick}
-              excludedTag={excludedTag}
-            />
-          </Suspense>
+          <Item
+            item={item}
+            index={index}
+            onContentChanged={onContentChanged}
+            onItemClick={onItemClick}
+            excludedTag={excludedTag}
+          />
         </div>
       ))}
       {hasNext && <div ref={sentinelRef} className="h-10 w-full"></div>}

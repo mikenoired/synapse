@@ -5,11 +5,35 @@ import { Button } from '@/shared/ui/button'
 import { LoadingSpinner } from '@/shared/ui/loading-spinner'
 
 export function SyncStatus() {
-  const { isSyncing, lastSyncTime, syncNow } = useSyncContext()
+  const {
+    isSyncing,
+    lastSyncTime,
+    syncNow,
+    syncError,
+    pendingOperations,
+  } = useSyncContext()
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp)
     return date.toLocaleTimeString()
+  }
+
+  const getStatusColor = () => {
+    if (syncError)
+      return 'bg-red-500'
+    if (pendingOperations > 0)
+      return 'bg-yellow-500'
+    return 'bg-green-500'
+  }
+
+  const getStatusText = () => {
+    if (isSyncing)
+      return 'Syncing...'
+    if (syncError)
+      return 'Sync Error'
+    if (pendingOperations > 0)
+      return `${pendingOperations} pending`
+    return 'Synced'
   }
 
   return (
@@ -24,15 +48,21 @@ export function SyncStatus() {
             )
           : (
               <>
-                <div className="size-2 rounded-full bg-green-500" />
-                <span>Synced</span>
+                <div className={`size-2 rounded-full ${getStatusColor()}`} />
+                <span>{getStatusText()}</span>
               </>
             )}
       </div>
 
-      {lastSyncTime && (
+      {lastSyncTime && !isSyncing && (
         <span className="text-muted-foreground">
           {formatTime(lastSyncTime)}
+        </span>
+      )}
+
+      {syncError && (
+        <span className="text-red-500 text-xs">
+          {syncError}
         </span>
       )}
 
