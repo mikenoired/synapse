@@ -27,7 +27,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
       className="h-screen hidden flex-col sm:flex relative"
     >
       <div className="flex h-full flex-col">
-        <div className="flex items-center justify-between h-16 px-4 border-b border-border/50">
+        <div className="flex items-center justify-between h-16 px-4">
           <AnimatePresence mode="wait">
             {isSidebarExpanded
               ? (
@@ -63,8 +63,8 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    'size-8 flex-shrink-0 transition-all duration-300 ease-in-out',
-                    !isSidebarExpanded && 'absolute top-4 left-1/2 -translate-x-1/2',
+                    'size-8 flex-shrink-0 transition-all duration-300 hover:opacity-100 ease-in-out',
+                    !isSidebarExpanded && 'absolute top-4 opacity-0 left-1/2 -translate-x-1/2',
                   )}
                   onClick={toggleSidebar}
                 >
@@ -106,7 +106,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
           </TooltipProvider>
         </nav>
 
-        <div className="border-t border-border/50 py-4 px-3">
+        <div className="py-4 px-3">
           <TooltipProvider delayDuration={0}>
             <div className="flex flex-col gap-2">
               <ThemeToggle />
