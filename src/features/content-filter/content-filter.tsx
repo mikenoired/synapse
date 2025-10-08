@@ -28,7 +28,7 @@ export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProp
   }, [])
 
   return (
-    <div className="space-y-6 mb-6">
+    <div className="space-y-6 sticky top-0 bg-background z-10">
       <div className="relative">
         <input
           ref={searchInputRef}
@@ -36,8 +36,9 @@ export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProp
           type="text"
           placeholder={placeholder}
           value={searchQuery}
+          autoFocus
           onChange={e => setSearchQuery(e.target.value)}
-          className="w-full bg-background pr-4 py-3 text-2xl border-b focus:outline-none"
+          className="w-full bg-background px-4 py-3 text-2xl border-b focus:outline-none"
         />
       </div>
     </div>

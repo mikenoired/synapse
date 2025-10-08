@@ -152,20 +152,22 @@ export default function DashboardClient() {
           </div>
         </div>
       )}
-      <main className="flex-1 overflow-y-auto p-4">
+      <main className="flex-1 overflow-y-auto relative">
         <ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-        <ContentGrid
-          items={content}
-          isLoading={contentLoading && content.length === 0}
-          onContentChanged={handleContentChanged}
-          onItemClick={handleItemClick}
-          searchQuery={searchQuery}
-          selectedTags={selectedTags}
-          onClearFilters={clearFilters}
-          fetchNext={undefined}
-          hasNext={false}
-          isFetchingNext={false}
-        />
+        <div className="p-4">
+          <ContentGrid
+            items={content}
+            isLoading={contentLoading && content.length === 0}
+            onContentChanged={handleContentChanged}
+            onItemClick={handleItemClick}
+            searchQuery={searchQuery}
+            selectedTags={selectedTags}
+            onClearFilters={clearFilters}
+            fetchNext={undefined}
+            hasNext={false}
+            isFetchingNext={false}
+          />
+        </div>
       </main>
       <ContentModalManager
         open={modalOpen}
