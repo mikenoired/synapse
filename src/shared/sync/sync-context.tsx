@@ -56,13 +56,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     // Запускаем регулярное создание резервных копий
     import('../db/backup').then(({ scheduleBackups, createBackup }) => {
       // Создаем начальную резервную копию
-      createBackup();
+      createBackup()
       // Планируем регулярное создание копий каждые 5 минут
-      const stopBackups = scheduleBackups(5 * 60 * 1000);
-      
+      const stopBackups = scheduleBackups(5 * 60 * 1000)
+
       // Очистка при размонтировании
-      return () => stopBackups();
-    });
+      return () => stopBackups()
+    })
 
     const engine = new SyncEngine(user.id)
     setSyncEngine(engine)
@@ -81,12 +81,12 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         queryClient.invalidateQueries({ queryKey: ['local-tags'] })
         queryClient.invalidateQueries({ queryKey: ['local-graph'] })
       })
-      
+
       // Обработка ошибок синхронизации
       workerClient.on('SYNC_ERROR', (error) => {
         console.error('[Sync] Sync error:', error)
         setSyncError(error.message || 'Ошибка синхронизации')
-        
+
         // Автоматическая попытка восстановления при сетевых ошибках
         if (error.isNetworkError) {
           setTimeout(() => {
@@ -95,7 +95,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
           }, 10000) // Повторная попытка через 10 секунд
         }
       })
-      
+
       // Обработка ошибок авторизации
       workerClient.on('AUTH_ERROR', (error) => {
         console.error('[Sync] Auth error:', error)

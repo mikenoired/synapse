@@ -112,7 +112,7 @@ export class SyncEngine {
           }
         }
         catch (error) {
-          if (retryCount < maxRetries && (error instanceof TypeError || error.message?.includes('network'))) {
+          if (retryCount < maxRetries && (error instanceof TypeError || (error as any).message?.includes('network'))) {
             retryCount++
             console.warn(`[Sync] Network error, retrying (${retryCount}/${maxRetries})...`)
             // Экспоненциальная задержка перед повторной попыткой

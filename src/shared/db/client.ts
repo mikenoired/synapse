@@ -44,7 +44,7 @@ export async function initSQLite(): Promise<SQLiteDB> {
           try {
             // Простой запрос для проверки работоспособности БД
             db.exec('SELECT 1')
-            console.log('[SQLite] OPFS database integrity check passed')
+            console.warn('[SQLite] OPFS database integrity check passed')
           }
           catch (integrityError) {
             console.error('[SQLite] OPFS database integrity check failed:', integrityError)
@@ -58,12 +58,12 @@ export async function initSQLite(): Promise<SQLiteDB> {
 
           // Восстановление из резервной копии
           try {
-            console.log('[SQLite] Attempting to recover data from backup...')
+            console.warn('[SQLite] Attempting to recover data from backup...')
             // Динамический импорт для избежания циклических зависимостей
             const { restoreFromBackup } = await import('./backup')
             const restored = await restoreFromBackup()
             if (restored) {
-              console.log('[SQLite] Successfully restored data from backup')
+              console.warn('[SQLite] Successfully restored data from backup')
             }
             else {
               console.warn('[SQLite] No valid backup found for recovery')

@@ -24,25 +24,27 @@ export async function createBackup(): Promise<void> {
 
     // Получаем список таблиц
     const tables = db.selectObjects(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`
+      `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`,
     )
 
     // Для каждой таблицы сохраняем данные
     // Ограничиваем количество записей для экономии места
     for (const table of tables) {
       const tableName = table.name
-      
+
       // Пропускаем большие таблицы и временные данные
-      if (tableName === 'content_fts') continue
-      
+      if (tableName === 'content_fts')
+        continue
+
       // Для контента сохраняем только метаданные
       if (tableName === 'content') {
         backup.tables[tableName] = db.selectObjects(
-          `SELECT id, type, title, created_at, updated_at, user_id FROM ${tableName} LIMIT 100`
+          `SELECT id, type, title, created_at, updated_at, user_id FROM ${tableName} LIMIT 100`,
         )
-      } else {
+      }
+      else {
         backup.tables[tableName] = db.selectObjects(
-          `SELECT * FROM ${tableName} LIMIT 500`
+          `SELECT * FROM ${tableName} LIMIT 500`,
         )
       }
     }
@@ -50,7 +52,8 @@ export async function createBackup(): Promise<void> {
     // Сохраняем в localStorage
     localStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
     console.warn(`[Backup] Created backup at ${new Date(backup.timestamp).toISOString()}`)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Backup] Failed to create backup:', error)
   }
 }
@@ -73,22 +76,23 @@ export async function restoreFromBackup(): Promise<boolean> {
     }
 
     const db = await getDB()
-    
+
     // Восстанавливаем данные для каждой таблицы
     for (const [tableName, rows] of Object.entries(backup.tables)) {
-      if (!rows.length) continue
-      
+      if (!rows.length)
+        continue
+
       // Проверяем существование таблицы
       const tableExists = db.selectValue(
         `SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`,
-        [tableName]
+        [tableName],
       )
-      
+
       if (!tableExists) {
         console.warn(`[Backup] Table ${tableName} doesn't exist, skipping`)
         continue
       }
-      
+
       // Восстанавливаем данные транзакционно
       db.transaction(() => {
         for (const row of rows) {
@@ -97,43 +101,46 @@ export async function restoreFromBackup(): Promise<boolean> {
             const columns = Object.keys(row)
             const placeholders = columns.map(() => '?').join(', ')
             const values = columns.map(col => row[col])
-            
+
             // Проверяем существование записи
             const idColumn = 'id' in row ? 'id' : columns[0]
             const idValue = row[idColumn]
-            
+
             const exists = db.selectValue(
               `SELECT count(*) FROM ${tableName} WHERE ${idColumn} = ?`,
-              [idValue]
+              [idValue],
             )
-            
+
             if (exists) {
               // Обновляем существующую запись
               const setClause = columns
                 .map(col => `${col} = ?`)
                 .join(', ')
-              
+
               db.run(
                 `UPDATE ${tableName} SET ${setClause} WHERE ${idColumn} = ?`,
-                [...values, idValue]
+                [...values, idValue],
               )
-            } else {
+            }
+            else {
               // Вставляем новую запись
               db.run(
                 `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`,
-                values
+                values,
               )
             }
-          } catch (rowError) {
+          }
+          catch (rowError) {
             console.error(`[Backup] Failed to restore row in ${tableName}:`, rowError)
           }
         }
       })
     }
-    
+
     console.warn(`[Backup] Restored backup from ${new Date(backup.timestamp).toISOString()}`)
     return true
-  } catch (error) {
+  }
+  catch (error) {
     console.error('[Backup] Failed to restore from backup:', error)
     return false
   }
