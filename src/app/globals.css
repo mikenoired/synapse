@@ -283,3 +283,12 @@
     transform: translateY(0);
   }
 }
+
+.clip-path-container {
+  position: absolute;
+  z-index: 10;
+  width: 100%;
+  transition: clip-path 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  clip-path: inset(0px 100% 0px 0%);
+  will-change: clip-path;
+}

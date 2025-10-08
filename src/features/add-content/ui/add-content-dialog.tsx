@@ -1,6 +1,7 @@
 'use client'
 
 import type { FormEvent, TouchEvent } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useDashboard } from '@/shared/lib/dashboard-context'
@@ -142,7 +143,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
       case 'note':
         return 'max-w-3xl w-[95vw] h-[90vh]'
       case 'media':
-        return 'max-w-3xl w-[95vw] max-h-[90vh] h-auto'
+        return 'max-w-3xl w-[95vw] max-h-[80vh] h-auto'
       case 'link':
         return 'max-w-2xl w-[95vw] max-h-[80vh] h-auto'
       case 'todo':
@@ -194,7 +195,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
       onClick={() => onOpenChange(false)}
     >
       <div
-        className={`bg-background shadow-lg relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95 rounded-lg`}
+        className={`bg-background shadow-lg overflow-hidden relative ${getDialogSize()} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95 rounded-lg`}
         onClick={e => e.stopPropagation()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -208,79 +209,171 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
         />
 
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-          {type === 'note'
-            ? (
-                <AddNoteView />
-              )
-            : type === 'todo'
+          <AnimatePresence mode="wait" initial={false}>
+            {type === 'note'
               ? (
-                  <AddTodoView />
+                  <motion.div
+                    key="note-view"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      ease: [0.4, 0, 0.2, 1],
+                      opacity: { duration: 0.2 },
+                      height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                    }}
+                    style={{ overflow: 'hidden' }}
+                    className="flex-1"
+                  >
+                    <AddNoteView />
+                  </motion.div>
                 )
-              : (
-                  <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-                    <div className="space-y-2">
-                      <Label htmlFor="title">Title (optional)</Label>
-                      <Input
-                        id="title"
-                        placeholder="Enter title..."
-                        value={title}
-                        onChange={e => updateTitle(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="content">
-                        {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
-                      </Label>
-                      {type === 'link'
-                        ? (
-                            <LinkPreview
-                              content={content}
-                              parsedLinkData={parsedLinkData}
-                              linkParsing={linkParsing}
-                              isLoading={isLoading}
-                              onContentChange={updateContent}
-                              onParseLink={parseLink}
-                              onClearParsedData={clearParsedData}
-                            />
-                          )
-                        : (
-                            <MediaDropZone
-                              dragActive={dragActive}
-                              isLoading={isLoading}
-                              selectedFiles={selectedFiles}
-                              previewUrls={previewUrls}
-                              onFileSelect={handleFileSelect}
-                              onDrag={handleDrag}
-                              onDrop={handleDrop}
-                              onRemoveFile={removeFile}
-                              onMoveFile={moveFile}
-                            />
-                          )}
-                    </div>
-
-                    {type === 'audio' && (
+              : type === 'todo'
+                ? (
+                    <motion.div
+                      key="todo-view"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{
+                        duration: 0.2,
+                        ease: [0.4, 0, 0.2, 1],
+                        opacity: { duration: 0.2 },
+                        height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                      }}
+                      style={{ overflow: 'hidden' }}
+                      className="flex-1"
+                    >
+                      <AddTodoView />
+                    </motion.div>
+                  )
+                : (
+                    <motion.div
+                      key="media-audio-link-view"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{
+                        duration: 0.2,
+                        ease: [0.4, 0, 0.2, 1],
+                        opacity: { duration: 0.2 },
+                        height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                      }}
+                      style={{ overflow: 'hidden' }}
+                      className="flex-1 p-6 space-y-4 overflow-y-auto"
+                    >
                       <div className="space-y-2">
-                        <Label htmlFor="makeTrack">Сделать треком</Label>
-                        <div className="flex items-center gap-2">
-                          <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
-                          <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
-                        </div>
+                        <Label htmlFor="title">Title (optional)</Label>
+                        <Input
+                          id="title"
+                          placeholder="Enter title..."
+                          value={title}
+                          onChange={e => updateTitle(e.target.value)}
+                          disabled={isLoading}
+                        />
                       </div>
-                    )}
 
-                    <TagInput
-                      tags={tags}
-                      currentTag={currentTag}
-                      isLoading={isLoading}
-                      onCurrentTagChange={updateCurrentTag}
-                      onAddTag={addTag}
-                      onRemoveTag={removeTag}
-                      onKeyDown={handleTagKeyDown}
-                    />
-                  </div>
-                )}
+                      <div className="space-y-2">
+                        <Label htmlFor="content">
+                          {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
+                        </Label>
+                        <AnimatePresence mode="wait" initial={false}>
+                          {type === 'link'
+                            ? (
+                                <motion.div
+                                  key="link-preview"
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{
+                                    duration: 0.2,
+                                    ease: [0.4, 0, 0.2, 1],
+                                    opacity: { duration: 0.2 },
+                                    height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                                  }}
+                                  style={{ overflow: 'hidden' }}
+                                >
+                                  <LinkPreview
+                                    content={content}
+                                    parsedLinkData={parsedLinkData}
+                                    linkParsing={linkParsing}
+                                    isLoading={isLoading}
+                                    onContentChange={updateContent}
+                                    onParseLink={parseLink}
+                                    onClearParsedData={clearParsedData}
+                                  />
+                                </motion.div>
+                              )
+                            : (
+                                <motion.div
+                                  key="media-dropzone"
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{
+                                    duration: 0.2,
+                                    ease: [0.4, 0, 0.2, 1],
+                                    opacity: { duration: 0.2 },
+                                    height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                                  }}
+                                  style={{ overflow: 'hidden' }}
+                                >
+                                  <MediaDropZone
+                                    dragActive={dragActive}
+                                    isLoading={isLoading}
+                                    selectedFiles={selectedFiles}
+                                    previewUrls={previewUrls}
+                                    onFileSelect={handleFileSelect}
+                                    onDrag={handleDrag}
+                                    onDrop={handleDrop}
+                                    onRemoveFile={removeFile}
+                                    onMoveFile={moveFile}
+                                  />
+                                </motion.div>
+                              )}
+                        </AnimatePresence>
+                      </div>
+
+                      <AnimatePresence mode="wait" initial={false}>
+                        <motion.div
+                          key={type === 'audio' ? 'audio-track-toggle' : 'audio-track-toggle-hidden'}
+                          className="space-y-2"
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={type === 'audio' ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{
+                            duration: 0.2,
+                            ease: [0.4, 0, 0.2, 1],
+                            opacity: { duration: 0.2 },
+                            height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                          }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          {type === 'audio' && (
+                            <>
+                              <Label htmlFor="makeTrack">Сделать треком</Label>
+                              <div className="flex items-center gap-2">
+                                <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
+                                <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
+                              </div>
+                            </>
+                          )}
+                        </motion.div>
+                      </AnimatePresence>
+
+                      <TagInput
+                        tags={tags}
+                        currentTag={currentTag}
+                        isLoading={isLoading}
+                        onCurrentTagChange={updateCurrentTag}
+                        onAddTag={addTag}
+                        onRemoveTag={removeTag}
+                        onKeyDown={handleTagKeyDown}
+                      />
+                    </motion.div>
+                  )}
+          </AnimatePresence>
 
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">
