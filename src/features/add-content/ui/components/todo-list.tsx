@@ -37,7 +37,7 @@ export function TodoList({
     <div className="flex flex-col gap-4">
       <div className="flex gap-2">
         <Input
-          placeholder="Добавить пункт..."
+          placeholder="Add item..."
           value={todoInput}
           onChange={e => setTodoInput(e.target.value)}
           onKeyDown={(e) => {
@@ -54,12 +54,12 @@ export function TodoList({
           size="sm"
         >
           <Plus className="w-4 h-4 mr-1" />
-          Добавить
+          Add
         </Button>
       </div>
       <div className="flex flex-col gap-2">
         {items.length === 0 && (
-          <div className="text-muted-foreground text-sm">Нет пунктов</div>
+          <div className="text-muted-foreground text-sm">There's no items</div>
         )}
         {items.map((item, idx) => (
           <div key={idx} className="flex items-center gap-2 group">

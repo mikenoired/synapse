@@ -88,7 +88,6 @@ export class SyncEngine {
     try {
       console.log('[Sync] Starting sync...')
 
-      // Создаем резервную копию перед синхронизацией
       try {
         const { createBackup } = await import('../db/backup')
         await createBackup()
@@ -98,7 +97,6 @@ export class SyncEngine {
         console.warn('[Sync] Failed to create backup:', backupError)
       }
 
-      // Функция для повторения попытки синхронизации
       const attemptSync = async (): Promise<SyncResult> => {
         try {
           const pushResult = await this.pushLocalChanges()
@@ -115,7 +113,6 @@ export class SyncEngine {
           if (retryCount < maxRetries && (error instanceof TypeError || (error as any).message?.includes('network'))) {
             retryCount++
             console.warn(`[Sync] Network error, retrying (${retryCount}/${maxRetries})...`)
-            // Экспоненциальная задержка перед повторной попыткой
             await new Promise(resolve => setTimeout(resolve, 1000 * 2 ** retryCount))
             return attemptSync()
           }
@@ -195,7 +192,6 @@ export class SyncEngine {
         body: JSON.stringify({ userId: this.userId }),
       })
 
-      // Проверка статуса ответа
       if (!response.ok) {
         throw new Error(`Pull failed: ${response.statusText}`)
       }

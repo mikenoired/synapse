@@ -53,64 +53,50 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // Запускаем регулярное создание резервных копий
     import('../db/backup').then(({ scheduleBackups, createBackup }) => {
-      // Создаем начальную резервную копию
       createBackup()
-      // Планируем регулярное создание копий каждые 5 минут
       const stopBackups = scheduleBackups(5 * 60 * 1000)
-
-      // Очистка при размонтировании
       return () => stopBackups()
     })
 
     const engine = new SyncEngine(user.id)
     setSyncEngine(engine)
 
-    // Initialize shared worker for cross-tab sync
     const workerClient = getSharedWorkerClient()
 
     workerClient.init(user.id).then(() => {
       console.log('[Sync] Shared worker initialized')
 
-      // Listen for sync updates from other tabs
       workerClient.on('SYNC_UPDATE', (changes) => {
         console.log('[Sync] Received updates from other tab:', changes)
-        // Invalidate queries to refetch from local DB
         queryClient.invalidateQueries({ queryKey: ['local-content'] })
         queryClient.invalidateQueries({ queryKey: ['local-tags'] })
         queryClient.invalidateQueries({ queryKey: ['local-graph'] })
       })
 
-      // Обработка ошибок синхронизации
       workerClient.on('SYNC_ERROR', (error) => {
         console.error('[Sync] Sync error:', error)
-        setSyncError(error.message || 'Ошибка синхронизации')
+        setSyncError(error.message || 'Sync error')
 
-        // Автоматическая попытка восстановления при сетевых ошибках
         if (error.isNetworkError) {
           setTimeout(() => {
             console.log('[Sync] Attempting to recover from network error...')
             workerClient.syncNow()
-          }, 10000) // Повторная попытка через 10 секунд
+          }, 10000)
         }
       })
 
-      // Обработка ошибок авторизации
       workerClient.on('AUTH_ERROR', (error) => {
         console.error('[Sync] Auth error:', error)
-        setSyncError(error.message || 'Требуется повторная авторизация')
-        // Здесь можно добавить логику для перенаправления на страницу логина
+        setSyncError(error.message || '')
       })
     }).catch((error) => {
       console.warn('[Sync] Shared worker initialization failed:', error)
-      // Fallback to regular auto-sync without shared worker
       engine.startAutoSync(5000).catch((err) => {
         console.error('[Sync] Failed to start auto sync:', err)
       })
     })
 
-    // Perform initial sync
     engine.initialSync().catch((error) => {
       console.error('[Sync] Initial sync failed:', error)
     })
@@ -135,11 +121,9 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         setSyncError(`Sync failed: ${result.failed} operations failed`)
       }
 
-      // Notify other tabs
       const workerClient = getSharedWorkerClient()
       workerClient.broadcast({ type: 'SYNC_COMPLETED' })
 
-      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['local-content'] })
       queryClient.invalidateQueries({ queryKey: ['local-tags'] })
       queryClient.invalidateQueries({ queryKey: ['local-graph'] })

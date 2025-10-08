@@ -146,8 +146,8 @@ export default function DashboardClient() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19V6m0 0l-5 5m5-5l5 5" />
             </svg>
             <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0 text-center">
-              Отпустите файлы для загрузки
-              <div className="text-base font-normal mt-2 text-muted-foreground">Поддерживаются изображения и видео</div>
+              Drop file for upload
+              <div className="text-base font-normal mt-2 text-muted-foreground">Video, photo, audio supported</div>
             </div>
           </div>
         </div>

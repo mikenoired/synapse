@@ -35,10 +35,8 @@ export async function GET(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    // Получаем presigned URL и сразу делаем redirect, чтобы убрать лишний RTT
     const presignedUrl = await getPresignedUrl(objectName, 60 * 60) // 1 час
     const res = NextResponse.redirect(presignedUrl, { status: 302 })
-    // Частный кеш для браузера на короткий срок
     res.headers.set('Cache-Control', 'private, max-age=60')
     return res
   }

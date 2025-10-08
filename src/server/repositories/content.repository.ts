@@ -10,7 +10,7 @@ export default class ContentRepository {
 
   async getAll(search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined, limit: number) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const conditions = [eq(content.userId, this.ctx.user.id)]
 
@@ -51,7 +51,7 @@ export default class ContentRepository {
 
   async getWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const conditions = [
       eq(content.userId, this.ctx.user.id),
@@ -120,7 +120,7 @@ export default class ContentRepository {
 
   async getById(id: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const data = await this.ctx.db.query.content.findFirst({
       where: and(
@@ -130,14 +130,14 @@ export default class ContentRepository {
     })
 
     if (!data)
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Контент не найден' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Content not found' })
 
     return data
   }
 
   async getNodeByContentId(id: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const data = await this.ctx.db.query.nodes.findFirst({
       where: and(
@@ -154,7 +154,7 @@ export default class ContentRepository {
 
   async create(contentData: z.infer<typeof createContentSchema>) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const [data] = await this.ctx.db.insert(content).values({
       ...contentData,
@@ -163,14 +163,14 @@ export default class ContentRepository {
     }).returning()
 
     if (!data)
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка создания контента' })
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Content creation error' })
 
     return data
   }
 
   async getOrCreateTagNodeIds(tagIds: string[]): Promise<Record<string, string>> {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const result: Record<string, string> = {}
     const uniqueIds = Array.from(new Set(tagIds))
@@ -223,7 +223,7 @@ export default class ContentRepository {
 
   async getOrCreateContentNode(params: { content_id: string, title?: string, type: string }) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const existing = await this.ctx.db.query.nodes.findFirst({
       where: and(
@@ -246,14 +246,14 @@ export default class ContentRepository {
     }).returning({ id: nodes.id })
 
     if (!data)
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка создания узла' })
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Node creation error' })
 
     return data.id
   }
 
   async createContentTags(tagIds: string[], contentId: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const data = await this.ctx.db.insert(contentTags).values(
       tagIds.map(id => ({ contentId, tagId: id, userId: this.ctx.user!.id })),
@@ -282,7 +282,7 @@ export default class ContentRepository {
 
   async createNode(content: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const [data] = await this.ctx.db.insert(nodes).values({
       content,
@@ -291,7 +291,7 @@ export default class ContentRepository {
     }).returning()
 
     if (!data)
-      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Ошибка создания узла' })
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Node creation error' })
 
     return data
   }
@@ -318,7 +318,7 @@ export default class ContentRepository {
     })
 
     if (!data)
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Тег не найден' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Tag not found' })
 
     return data
   }
@@ -346,7 +346,7 @@ export default class ContentRepository {
 
   async updateContent(updData: z.infer<typeof updateContentSchema>) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const [data] = await this.ctx.db.update(content).set({
       ...updData,
@@ -360,14 +360,14 @@ export default class ContentRepository {
     ).returning()
 
     if (!data)
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Контент не найден' })
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Content not found' })
 
     return data
   }
 
   async deleteEdge(contentNodeId: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     await this.ctx.db.delete(edges).where(
       and(
@@ -382,7 +382,7 @@ export default class ContentRepository {
 
   async deleteNode(contentNodeId: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     await this.ctx.db.delete(nodes).where(
       and(
@@ -403,7 +403,7 @@ export default class ContentRepository {
 
   async deleteContent(id: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     await this.ctx.db.delete(content).where(
       and(
@@ -415,7 +415,7 @@ export default class ContentRepository {
 
   async deleteTagEdge(contentNodeId: string) {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     await this.ctx.db.delete(edges).where(
       and(

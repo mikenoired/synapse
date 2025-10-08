@@ -27,11 +27,11 @@ export function TagInput({
 }: TagInputProps) {
   return (
     <div className="space-y-3">
-      <Label htmlFor="tags">Теги</Label>
+      <Label htmlFor="tags">Tags</Label>
       <div className="flex gap-2">
         <Input
           id="tags"
-          placeholder="Добавить тег..."
+          placeholder="Add tag..."
           value={currentTag}
           onChange={e => onCurrentTagChange(e.target.value)}
           onKeyDown={onKeyDown}
@@ -44,7 +44,7 @@ export function TagInput({
           disabled={!currentTag.trim() || isLoading}
           size="sm"
         >
-          Добавить
+          Add
         </Button>
       </div>
       {tags.length > 0 && (

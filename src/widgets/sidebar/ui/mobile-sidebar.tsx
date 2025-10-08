@@ -25,7 +25,7 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
       )
     }
 
-    const isAddButton = item.label === 'Добавить'
+    const isAddButton = item.label === 'Add'
 
     return (
       <button

@@ -46,14 +46,14 @@ export function LinkPreview({
           >
             {linkParsing
               ? (
-                  <Clock className="w-4 h-4 animate-spin" />
-                )
+                <Clock className="w-4 h-4 animate-spin" />
+              )
               : (
-                  <>
-                    <Globe className="w-4 h-4 mr-1" />
-                    Parse
-                  </>
-                )}
+                <>
+                  <Globe className="w-4 h-4 mr-1" />
+                  Parse
+                </>
+              )}
           </Button>
         </div>
 
@@ -99,7 +99,7 @@ export function LinkPreview({
                     •
                     {parsedLinkData.metadata.contentBlocks}
                     {' '}
-                    блоков
+                    blocks
                   </span>
                 </div>
               </div>
@@ -129,7 +129,7 @@ export function LinkPreview({
 
             {parsedLinkData.rawText && (
               <div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded border">
-                <div className="font-medium mb-1">Извлеченный контент:</div>
+                <div className="font-medium mb-1">Parsed content:</div>
                 <p className="line-clamp-3">
                   {parsedLinkData.rawText.substring(0, 200)}
                   {parsedLinkData.rawText.length > 200 ? '...' : ''}

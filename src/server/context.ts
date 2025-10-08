@@ -23,7 +23,7 @@ export async function createContext({ req }: { req?: NextRequest }) {
       }
     }
     catch (error) {
-      console.error('Ошибка проверки токена:', error)
+      console.error('Token check error:', error)
     }
   }
 

@@ -41,13 +41,13 @@ export default function Sidebar() {
     {
       action: () => openAddDialog(),
       icon: Plus,
-      label: 'Добавить',
+      label: 'Add',
       onMouseEnter: preloadAddContentDialog,
     },
-    { href: '/dashboard', icon: Home, label: 'Главная' },
-    { href: '/dashboard/tags', icon: Tag, label: 'Теги' },
-    { href: '/dashboard/graph', icon: Network, label: 'Граф' },
-    { href: '/dashboard/settings', icon: Settings, label: 'Настройки' },
+    { href: '/dashboard', icon: Home, label: 'Main' },
+    { href: '/dashboard/tags', icon: Tag, label: 'Tags' },
+    { href: '/dashboard/graph', icon: Network, label: 'Graph' },
+    { href: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ]
 
   return (

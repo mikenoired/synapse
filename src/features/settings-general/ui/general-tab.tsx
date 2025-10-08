@@ -9,14 +9,14 @@ export default function GeneralTab() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6 bg-muted">
-        <h2 className="text-2xl font-semibold mb-4">Основная информация</h2>
+        <h2 className="text-2xl font-semibold mb-4">Main info</h2>
         <div className="space-y-4">
           <div>
             <label className="block mb-1 font-medium">Email</label>
             <Skeleton className="h-5 w-1/2" />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Мозгует с</label>
+            <label className="block mb-1 font-medium">Thinking</label>
             <Skeleton className="h-5 w-1/3 mt-1" />
           </div>
         </div>
@@ -26,7 +26,7 @@ export default function GeneralTab() {
 
   return (
     <div className="p-6 space-y-6 bg-muted">
-      <h2 className="text-2xl font-semibold mb-4">Основная информация</h2>
+      <h2 className="text-2xl font-semibold mb-4">Main info</h2>
       <div className="space-y-4">
         <div>
           <label className="block mb-1 font-medium">Email</label>
@@ -34,7 +34,7 @@ export default function GeneralTab() {
         </div>
         <div>
           <label className="block mb-1 font-medium">
-            Мозгует с
+            Thinking
             {' '}
             {new Date(user?.createdAt || '').toLocaleDateString()}
           </label>

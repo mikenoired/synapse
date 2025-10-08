@@ -87,7 +87,7 @@ export async function uploadFile(
       success: false,
       validation: {
         ...validation,
-        errors: [...validation.errors, `Ошибка загрузки: ${error instanceof Error ? error.message : 'Неизвестная ошибка'}`],
+        errors: [...validation.errors, `Upload error: ${error instanceof Error ? error.message : 'Unknown error'}`],
       },
     }
   }

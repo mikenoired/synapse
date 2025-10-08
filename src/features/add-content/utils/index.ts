@@ -27,7 +27,7 @@ export async function getVideoThumbnail(file: File): Promise<string> {
     })
     video.addEventListener('error', () => {
       URL.revokeObjectURL(url)
-      reject(new Error('Ошибка загрузки видео'))
+      reject(new Error('Video uploading error'))
     })
   })
 }

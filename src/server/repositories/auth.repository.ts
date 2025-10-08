@@ -17,7 +17,7 @@ export default class AuthRepository {
       if (existingUser) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'Пользователь с таким email уже существует',
+          message: 'User with current E-Mail already exist',
         })
       }
 
@@ -31,7 +31,7 @@ export default class AuthRepository {
       if (!user) {
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'Не удалось создать пользователя',
+          message: 'Create user error',
         })
       }
 
@@ -63,7 +63,7 @@ export default class AuthRepository {
 
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Ошибка регистрации',
+        message: 'User register error',
       })
     }
   }
@@ -77,7 +77,7 @@ export default class AuthRepository {
       if (!user) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Неверный email или пароль',
+          message: 'Incorrect E-Mail or password',
         })
       }
 
@@ -86,7 +86,7 @@ export default class AuthRepository {
       if (!isPasswordValid) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Неверный email или пароль',
+          message: 'Incorrect E-Mail or password',
         })
       }
 
@@ -118,7 +118,7 @@ export default class AuthRepository {
 
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Ошибка входа',
+        message: 'Login error',
       })
     }
   }

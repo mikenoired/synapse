@@ -6,7 +6,6 @@ export const userSchema = z.object({
   created_at: z.string(),
 })
 
-// Схема для структурированного контента (как в editor)
 export const contentBlockSchema = z.object({
   type: z.enum(['paragraph', 'heading', 'image', 'list', 'quote', 'code', 'divider']),
   content: z.string().optional(),
@@ -22,13 +21,12 @@ export const structuredContentSchema = z.object({
   content: z.array(contentBlockSchema),
 })
 
-// Схема для контента ссылок в JSON формате
 export const linkContentSchema = z.object({
   url: z.url(),
   title: z.string(),
   description: z.string(),
-  content: structuredContentSchema, // Теперь структурированный контент!
-  rawText: z.string(), // Для поиска - текстовая версия
+  content: structuredContentSchema,
+  rawText: z.string(),
   metadata: z.object({
     image: z.string().optional(),
     favicon: z.string().optional(),
@@ -36,15 +34,15 @@ export const linkContentSchema = z.object({
     author: z.string().optional(),
     publishedTime: z.string().optional(),
     extractedAt: z.string(),
-    contentBlocks: z.number(), // Количество блоков контента
-    images: z.array(z.string()).optional(), // Все изображения в статье
+    contentBlocks: z.number(),
+    images: z.array(z.string()).optional(),
   }),
   parsing: z.object({
     method: z.string(),
     userAgent: z.string(),
     success: z.boolean(),
     warnings: z.array(z.string()).optional(),
-    extractedImages: z.number().optional(), // Количество извлеченных изображений
+    extractedImages: z.number().optional(),
   }),
 })
 
@@ -53,10 +51,9 @@ export const contentSchema = z.object({
   user_id: z.string(),
   type: z.enum(['note', 'media', 'link', 'todo', 'audio']),
   title: z.string().optional(),
-  content: z.string(), // Для link: JSON с linkContentSchema, для остальных: оригинальный формат
+  content: z.string(),
   // View-only tag titles derived from relations
   tags: z.array(z.string()).default([]),
-  // New normalized tag ids (content_tags)
   tag_ids: z.array(z.string()).default([]),
   created_at: z.string(),
   updated_at: z.string(),
@@ -69,7 +66,6 @@ export const contentSchema = z.object({
   media_height: z.number().optional(),
 })
 
-// Thin list item for collections (avoid heavy fields later if needed)
 export const contentListItemSchema = contentSchema.pick({
   id: true,
   user_id: true,
@@ -89,7 +85,6 @@ export const contentListItemSchema = contentSchema.pick({
   media_height: true,
 })
 
-// Detailed view (same as contentSchema for now; reserved for future extra fields)
 export const contentDetailSchema = contentSchema
 
 export const tagSchema = z.object({
@@ -102,10 +97,8 @@ export const tagSchema = z.object({
 export const createContentSchema = z.object({
   type: z.enum(['note', 'media', 'link', 'todo', 'audio']),
   title: z.string().optional(),
-  content: z.string(), // Для link: JSON строка с linkContentSchema
-  // New API: tag ids
+  content: z.string(),
   tag_ids: z.array(z.string()).optional(),
-  // Back-compat: titles (deprecated)
   tags: z.array(z.string()).optional(),
   url: z.string().optional(),
   media_url: z.string().optional(),
@@ -121,12 +114,12 @@ export const updateContentSchema = createContentSchema.partial().extend({
 })
 
 export const authSchema = z.object({
-  email: z.email('Некорректный email адрес'),
+  email: z.email('Incorrect E-Mail address'),
   password: z.string()
-    .min(8, 'Пароль должен содержать минимум 8 символов')
-    .regex(/[A-Z]/, 'Пароль должен содержать хотя бы одну заглавную букву')
-    .regex(/[a-z]/, 'Пароль должен содержать хотя бы одну строчную букву')
-    .regex(/\d/, 'Пароль должен содержать хотя бы одну цифру'),
+    .min(8, 'Password must have 8 symbols minimum')
+    .regex(/[A-Z]/, 'Password must have at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must have at least one lowercase letter')
+    .regex(/\d/, 'Password must have at least one digit'),
 })
 
 export type User = z.infer<typeof userSchema>
@@ -139,7 +132,6 @@ export type CreateContent = z.infer<typeof createContentSchema>
 export type UpdateContent = z.infer<typeof updateContentSchema>
 export type Auth = z.infer<typeof authSchema>
 
-// Хелпер функции для работы с link content
 export function parseLinkContent(content: string): LinkContent | null {
   try {
     const parsed = JSON.parse(content)
@@ -154,7 +146,6 @@ export function stringifyLinkContent(linkContent: LinkContent): string {
   return JSON.stringify(linkContent)
 }
 
-// ---- Media content helpers (for DB model with JSON in content) ----
 export interface MediaJson {
   media: {
     object?: string
@@ -179,7 +170,6 @@ export function parseMediaJson(content: string): MediaJson | null {
   }
 }
 
-// ---- Audio content helpers ----
 export interface AudioJson {
   audio: {
     object?: string
@@ -223,7 +213,6 @@ export function parseAudioJson(content: string): AudioJson | null {
   }
 }
 
-// Функция для извлечения текста из структурированного контента (для поиска)
 export function extractTextFromStructuredContent(structuredContent: any): string {
   if (!structuredContent?.content)
     return ''
@@ -247,39 +236,32 @@ export function extractTextFromStructuredContent(structuredContent: any): string
     .trim()
 }
 
-// Функция для расчета времени чтения статьи
 export function calculateReadingTime(text: string): string {
   if (!text || text.trim().length === 0)
-    return '0 мин'
+    return '0 min'
 
-  // Средняя скорость чтения: 200-250 слов в минуту (берем 225 как среднее)
   const wordsPerMinute = 225
 
-  // Подсчет слов (разбиваем по пробелам и фильтруем пустые строки)
   const words = text.trim().split(/\s+/).filter(word => word.length > 0).length
 
-  // Расчет времени в минутах
   const minutes = Math.ceil(words / wordsPerMinute)
 
   if (minutes < 1)
-    return 'меньше минуты'
+    return 'less than a minute'
   if (minutes === 1)
-    return '1 мин'
+    return '1 min'
   if (minutes < 60)
-    return `${minutes} мин`
+    return `${minutes} min`
 
-  // Для времени больше часа
   const hours = Math.floor(minutes / 60)
   const remainingMinutes = minutes % 60
 
   if (remainingMinutes === 0)
-    return `${hours} ч`
-  return `${hours} ч ${remainingMinutes} мин`
+    return `${hours} h`
+  return `${hours} h ${remainingMinutes} min`
 }
 
-// Функция для расчета времени чтения из LinkContent
 export function calculateReadingTimeFromLinkContent(linkContent: LinkContent): string {
-  // Используем rawText если доступен, иначе извлекаем из структурированного контента
   const text = linkContent.rawText || extractTextFromStructuredContent(linkContent.content)
   return calculateReadingTime(text)
 }

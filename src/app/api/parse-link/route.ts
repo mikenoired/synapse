@@ -43,7 +43,6 @@ function extractMetaTags(document: Document): MetaData {
     if (!content)
       return
 
-    // Open Graph tags
     const propertyMap: Record<string, keyof MetaData> = {
       'og:title': 'title',
       'og:description': 'description',
@@ -57,7 +56,6 @@ function extractMetaTags(document: Document): MetaData {
       meta[propertyMap[property]] = content
     }
 
-    // Twitter Card tags
     if (name === 'twitter:title' && !meta.title)
       meta.title = content
     if (name === 'twitter:description' && !meta.description)
@@ -65,7 +63,6 @@ function extractMetaTags(document: Document): MetaData {
     if (name === 'twitter:image' && !meta.image)
       meta.image = content
 
-    // // Standard meta tags
     if (name === 'description' && !meta.description)
       meta.description = content
     if (name === 'author' && !meta.author)
@@ -90,7 +87,6 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
 
   let contentContainer: Element | null = null
 
-  // Найти основной контейнер контента
   for (const selector of selectors) {
     const element = document.querySelector(selector)
     if (element) {
@@ -99,7 +95,6 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
     }
   }
 
-  // Если не нашли контейнер, используем все параграфы
   if (!contentContainer) {
     contentContainer = document.body
   }
@@ -131,7 +126,7 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
 
       case 'p': {
         const pText = element.textContent?.trim()
-        if (pText && pText.length > 10) { // Игнорируем очень короткие параграфы
+        if (pText && pText.length > 10) {
           blocks.push({
             type: 'paragraph',
             content: pText,
@@ -157,7 +152,7 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
             })
           }
           catch {
-            // Игнорируем некорректные URL
+            // Ignore invalid URLs
           }
         }
         break
@@ -214,13 +209,11 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
         break
 
       default:
-        // Рекурсивно обрабатываем дочерние элементы
         Array.from(element.children).forEach(processElement)
         break
     }
   }
 
-  // Обрабатываем все элементы в контейнере
   Array.from(contentContainer.children).forEach(processElement)
 
   return {
@@ -228,9 +221,9 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
     content: blocks.length > 0
       ? blocks
       : [{
-          type: 'paragraph',
-          content: 'Не удалось извлечь содержимое статьи',
-        }],
+        type: 'paragraph',
+        content: 'Can\'t get content',
+      }],
   }
 }
 
@@ -350,7 +343,6 @@ export async function POST(request: NextRequest) {
       const rawText = extractTextFromStructuredContent(structuredContent)
       const favicon = extractFavicon(document, url)
 
-      // Извлекаем все изображения из структурированного контента
       const images = structuredContent.content
         .filter(block => block.type === 'image')
         .map(block => block.attrs?.src)

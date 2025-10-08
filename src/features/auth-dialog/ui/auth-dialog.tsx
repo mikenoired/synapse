@@ -40,7 +40,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
       }
     }
     catch {
-      toast.error('Произошла ошибка')
+      toast.error('Some error')
       setIsLoading(false)
     }
   }
@@ -50,12 +50,12 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {mode === 'login' ? 'Вход в аккаунт' : 'Создание аккаунта'}
+            {mode === 'login' ? 'Login' : 'Create account'}
           </DialogTitle>
           <DialogDescription>
             {mode === 'login'
-              ? 'Введите свои данные для входа в систему'
-              : 'Создайте новый аккаунт для начала работы'}
+              ? 'Write your data for login'
+              : 'Create new account for using app'}
           </DialogDescription>
         </DialogHeader>
 
@@ -73,7 +73,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Пароль</Label>
+            <Label htmlFor="password">Password</Label>
             <Input
               id="password"
               type="password"
@@ -85,14 +85,14 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
             />
             {mode === 'register' && (
               <p className="text-xs text-muted-foreground">
-                Минимум 8 символов, включая заглавные и строчные буквы, цифры
+                Minimum 8 symbols, including up and down case, digitals
               </p>
             )}
           </div>
 
           <div className="flex flex-col space-y-2">
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Загрузка...' : (mode === 'login' ? 'Войти' : 'Зарегистрироваться')}
+              {isLoading ? 'Loading...' : (mode === 'login' ? 'Login' : 'Create account')}
             </Button>
 
             <Button
@@ -100,7 +100,7 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
               variant="ghost"
               onClick={() => onModeChange(mode === 'login' ? 'register' : 'login')}
             >
-              {mode === 'login' ? 'Нет аккаунта? Создать' : 'Уже есть аккаунт? Войти'}
+              {mode === 'login' ? 'No account? Create a new one' : 'Already registered? Login'}
             </Button>
           </div>
         </form>

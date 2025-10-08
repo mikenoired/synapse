@@ -30,7 +30,6 @@ export async function initSQLite(): Promise<SQLiteDB> {
         printErr: console.error,
       })
 
-      // Try to use OPFS (Origin Private File System) for persistence
       let db: any
 
       if ('opfs' in sqlite3 && sqlite3.opfs) {
@@ -40,9 +39,7 @@ export async function initSQLite(): Promise<SQLiteDB> {
           const opfs = await (sqlite3 as any).opfs.OpfsDb.create('/synapse.db')
           db = opfs
 
-          // Проверка целостности базы данных
           try {
-            // Простой запрос для проверки работоспособности БД
             db.exec('SELECT 1')
             console.warn('[SQLite] OPFS database integrity check passed')
           }
@@ -56,10 +53,8 @@ export async function initSQLite(): Promise<SQLiteDB> {
           console.warn('[SQLite] Falling back to in-memory database')
           db = new sqlite3.oo1.DB('/synapse.db', 'ct')
 
-          // Восстановление из резервной копии
           try {
             console.warn('[SQLite] Attempting to recover data from backup...')
-            // Динамический импорт для избежания циклических зависимостей
             const { restoreFromBackup } = await import('./backup')
             const restored = await restoreFromBackup()
             if (restored) {
@@ -79,7 +74,6 @@ export async function initSQLite(): Promise<SQLiteDB> {
         db = new sqlite3.oo1.DB('/synapse.db', 'ct')
       }
 
-      // Create wrapper with consistent API
       const wrapper: SQLiteDB = {
         exec: (sql: string, options?: { bind?: any[], returnValue?: 'resultRows' | 'saveSql' }) => {
           return db.exec({

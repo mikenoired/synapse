@@ -24,11 +24,11 @@ export function useMediaUpload() {
 
     for (const file of fileArray) {
       if (file.size > 10 * 1024 * 1024) {
-        toast.error(`Файл "${file.name}" слишком большой (максимум 10MB)`)
+        toast.error(`File "${file.name}" is too big (max 10MB)`)
         continue
       }
       if (!(file.type.startsWith('image/') || file.type.startsWith('video/') || file.type.startsWith('audio/'))) {
-        toast.error(`Файл "${file.name}" не является поддерживаемым медиа (картинка, видео или аудио)`)
+        toast.error(`File "${file.name}" isn't supporting (image, video or audio)`)
         continue
       }
       validFiles.push(file)

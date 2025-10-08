@@ -26,7 +26,7 @@ export const authRouter = router({
       if (!refreshToken) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Refresh токен не найден',
+          message: 'Refresh token not found',
         })
       }
 
@@ -35,7 +35,7 @@ export const authRouter = router({
       if (!payload) {
         throw new TRPCError({
           code: 'UNAUTHORIZED',
-          message: 'Недействительный refresh токен',
+          message: 'Not allowed refresh token',
         })
       }
 

@@ -5,14 +5,14 @@ export default function AiTab() {
 
   return (
     <div className="p-6 space-y-6 bg-muted">
-      <h2 className="text-2xl font-semibold mb-4">AI статистика</h2>
+      <h2 className="text-2xl font-semibold mb-4">AI stats</h2>
       <div className="space-y-2">
         <div className="flex justify-between">
-          <span>Потрачено токенов в этом месяце</span>
+          <span>Used tokens in current month</span>
           <span className="font-bold">{used.toLocaleString()}</span>
         </div>
         <div className="flex justify-between">
-          <span>Квота</span>
+          <span>Quote</span>
           <span className="font-bold">{quota.toLocaleString()}</span>
         </div>
         <div className="w-full bg-muted h-3 rounded-full overflow-hidden mt-2">
@@ -20,7 +20,7 @@ export default function AiTab() {
         </div>
         <div className="text-right text-xs text-muted-foreground">
           {percent}
-          % использовано
+          % used
         </div>
       </div>
     </div>

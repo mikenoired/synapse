@@ -96,9 +96,9 @@ export const ContentGrid = memo(({
         <div className="w-full max-w-md p-8 space-y-4">
           <FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
           <div>
-            <h3 className="text-xl font-semibold mb-2">Ваш мозг пока пуст</h3>
+            <h3 className="text-xl font-semibold mb-2">Your storage is empty</h3>
             <p className="text-muted-foreground mb-6">
-              Начните с добавления заметки, файла или ссылки.
+              Start by adding some notes, media, etc.
             </p>
           </div>
         </div>
@@ -111,15 +111,15 @@ export const ContentGrid = memo(({
       <div className="text-center py-12">
         <div className="text-muted-foreground">
           <Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg mb-2">Ничего не найдено</p>
-          <p className="text-sm">Попробуйте изменить параметры поиска</p>
+          <p className="text-lg mb-2">There's nothing</p>
+          <p className="text-sm">Try to change search params</p>
           {onClearFilters && (
             <Button
               variant="outline"
               onClick={onClearFilters}
               className="mt-4"
             >
-              Сбросить фильтры
+              Clear filters
             </Button>
           )}
         </div>

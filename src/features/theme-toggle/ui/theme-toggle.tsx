@@ -1,7 +1,7 @@
 'use client'
 
-import { AnimatePresence, motion } from 'framer-motion'
 import { Moon, Sun } from 'lucide-react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useTheme } from 'next-themes'
 import { useEffect, useState } from 'react'
 import { SIDEBAR_ANIMATION } from '@/shared/config/animations'
@@ -48,11 +48,11 @@ export function ThemeToggle() {
                 exit={{ opacity: 0, width: 0 }}
                 transition={SIDEBAR_ANIMATION}
               >
-                {theme === 'light' ? 'Тёмная тема' : 'Светлая тема'}
+                {theme === 'light' ? 'Dark theme' : 'Light theme'}
               </motion.span>
             )}
           </AnimatePresence>
-          <span className="sr-only">Переключить тему</span>
+          <span className="sr-only">Switch theme</span>
         </Button>
       </TooltipTrigger>
       <TooltipContent
@@ -63,7 +63,7 @@ export function ThemeToggle() {
           isSidebarExpanded && 'opacity-0 pointer-events-none',
         )}
       >
-        Переключить тему
+        Switch theme
       </TooltipContent>
     </Tooltip>
   )

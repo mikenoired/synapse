@@ -119,7 +119,7 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
       {dragActive && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
           <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-            Отпустите изображения для загрузки
+            Drop image for upload
           </div>
         </div>
       )}

@@ -115,7 +115,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
           success = true
         }
         else {
-          toast.error('Не удалось загрузить файл')
+          toast.error('File isn\'t loaded')
           success = false
         }
       }
@@ -160,13 +160,12 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
 
   const getSubmitButtonText = () => {
     if (uploading) {
-      return `Загружается ${selectedFiles.length} файл${selectedFiles.length > 1 ? (selectedFiles.length > 4 ? 'ов' : 'а') : ''
-      }...`
+      return `Loading ${selectedFiles.length} file...`
     }
     if (isSubmitting) {
-      return 'Сохранение...'
+      return 'Saving...'
     }
-    return 'Сохранить'
+    return 'Save'
   }
 
   const isSubmitDisabled = () => {
@@ -212,8 +211,27 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
           <AnimatePresence mode="wait" initial={false}>
             {type === 'note'
               ? (
+                <motion.div
+                  key="note-view"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{
+                    duration: 0.2,
+                    ease: [0.4, 0, 0.2, 1],
+                    opacity: { duration: 0.2 },
+                    height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                  }}
+                  style={{ overflow: 'hidden' }}
+                  className="flex-1"
+                >
+                  <AddNoteView />
+                </motion.div>
+              )
+              : type === 'todo'
+                ? (
                   <motion.div
-                    key="note-view"
+                    key="todo-view"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -226,153 +244,134 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
                     style={{ overflow: 'hidden' }}
                     className="flex-1"
                   >
-                    <AddNoteView />
+                    <AddTodoView />
                   </motion.div>
                 )
-              : type === 'todo'
-                ? (
-                    <motion.div
-                      key="todo-view"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{
-                        duration: 0.2,
-                        ease: [0.4, 0, 0.2, 1],
-                        opacity: { duration: 0.2 },
-                        height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-                      }}
-                      style={{ overflow: 'hidden' }}
-                      className="flex-1"
-                    >
-                      <AddTodoView />
-                    </motion.div>
-                  )
                 : (
-                    <motion.div
-                      key="media-audio-link-view"
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{
-                        duration: 0.2,
-                        ease: [0.4, 0, 0.2, 1],
-                        opacity: { duration: 0.2 },
-                        height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-                      }}
-                      style={{ overflow: 'hidden' }}
-                      className="flex-1 p-6 space-y-4 overflow-y-auto"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="title">Title (optional)</Label>
-                        <Input
-                          id="title"
-                          placeholder="Enter title..."
-                          value={title}
-                          onChange={e => updateTitle(e.target.value)}
-                          disabled={isLoading}
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="content">
-                          {type === 'link' ? 'URL' : type === 'audio' ? 'Аудио' : 'Медиа (картинки и видео)'}
-                        </Label>
-                        <AnimatePresence mode="wait" initial={false}>
-                          {type === 'link'
-                            ? (
-                                <motion.div
-                                  key="link-preview"
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{
-                                    duration: 0.2,
-                                    ease: [0.4, 0, 0.2, 1],
-                                    opacity: { duration: 0.2 },
-                                    height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-                                  }}
-                                  style={{ overflow: 'hidden' }}
-                                >
-                                  <LinkPreview
-                                    content={content}
-                                    parsedLinkData={parsedLinkData}
-                                    linkParsing={linkParsing}
-                                    isLoading={isLoading}
-                                    onContentChange={updateContent}
-                                    onParseLink={parseLink}
-                                    onClearParsedData={clearParsedData}
-                                  />
-                                </motion.div>
-                              )
-                            : (
-                                <motion.div
-                                  key="media-dropzone"
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: 'auto' }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{
-                                    duration: 0.2,
-                                    ease: [0.4, 0, 0.2, 1],
-                                    opacity: { duration: 0.2 },
-                                    height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-                                  }}
-                                  style={{ overflow: 'hidden' }}
-                                >
-                                  <MediaDropZone
-                                    dragActive={dragActive}
-                                    isLoading={isLoading}
-                                    selectedFiles={selectedFiles}
-                                    previewUrls={previewUrls}
-                                    onFileSelect={handleFileSelect}
-                                    onDrag={handleDrag}
-                                    onDrop={handleDrop}
-                                    onRemoveFile={removeFile}
-                                    onMoveFile={moveFile}
-                                  />
-                                </motion.div>
-                              )}
-                        </AnimatePresence>
-                      </div>
-
-                      <AnimatePresence mode="wait" initial={false}>
-                        <motion.div
-                          key={type === 'audio' ? 'audio-track-toggle' : 'audio-track-toggle-hidden'}
-                          className="space-y-2"
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={type === 'audio' ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{
-                            duration: 0.2,
-                            ease: [0.4, 0, 0.2, 1],
-                            opacity: { duration: 0.2 },
-                            height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
-                          }}
-                          style={{ overflow: 'hidden' }}
-                        >
-                          {type === 'audio' && (
-                            <>
-                              <Label htmlFor="makeTrack">Сделать треком</Label>
-                              <div className="flex items-center gap-2">
-                                <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
-                                <span className="text-sm text-muted-foreground">Использовать расширенный плеер, если доступны метаданные</span>
-                              </div>
-                            </>
-                          )}
-                        </motion.div>
-                      </AnimatePresence>
-
-                      <TagInput
-                        tags={tags}
-                        currentTag={currentTag}
-                        isLoading={isLoading}
-                        onCurrentTagChange={updateCurrentTag}
-                        onAddTag={addTag}
-                        onRemoveTag={removeTag}
-                        onKeyDown={handleTagKeyDown}
+                  <motion.div
+                    key="media-audio-link-view"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      ease: [0.4, 0, 0.2, 1],
+                      opacity: { duration: 0.2 },
+                      height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                    }}
+                    style={{ overflow: 'hidden' }}
+                    className="flex-1 p-6 space-y-4 overflow-y-auto"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Title (optional)</Label>
+                      <Input
+                        id="title"
+                        placeholder="Enter title..."
+                        value={title}
+                        onChange={e => updateTitle(e.target.value)}
+                        disabled={isLoading}
                       />
-                    </motion.div>
-                  )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="content">
+                        {type === 'link' ? 'URL' : type === 'audio' ? 'Audio' : 'Media (image or videos)'}
+                      </Label>
+                      <AnimatePresence mode="wait" initial={false}>
+                        {type === 'link'
+                          ? (
+                            <motion.div
+                              key="link-preview"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{
+                                duration: 0.2,
+                                ease: [0.4, 0, 0.2, 1],
+                                opacity: { duration: 0.2 },
+                                height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                              }}
+                              style={{ overflow: 'hidden' }}
+                            >
+                              <LinkPreview
+                                content={content}
+                                parsedLinkData={parsedLinkData}
+                                linkParsing={linkParsing}
+                                isLoading={isLoading}
+                                onContentChange={updateContent}
+                                onParseLink={parseLink}
+                                onClearParsedData={clearParsedData}
+                              />
+                            </motion.div>
+                          )
+                          : (
+                            <motion.div
+                              key="media-dropzone"
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{
+                                duration: 0.2,
+                                ease: [0.4, 0, 0.2, 1],
+                                opacity: { duration: 0.2 },
+                                height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                              }}
+                              style={{ overflow: 'hidden' }}
+                            >
+                              <MediaDropZone
+                                dragActive={dragActive}
+                                isLoading={isLoading}
+                                selectedFiles={selectedFiles}
+                                previewUrls={previewUrls}
+                                onFileSelect={handleFileSelect}
+                                onDrag={handleDrag}
+                                onDrop={handleDrop}
+                                onRemoveFile={removeFile}
+                                onMoveFile={moveFile}
+                              />
+                            </motion.div>
+                          )}
+                      </AnimatePresence>
+                    </div>
+
+                    <AnimatePresence mode="wait" initial={false}>
+                      <motion.div
+                        key={type === 'audio' ? 'audio-track-toggle' : 'audio-track-toggle-hidden'}
+                        className="space-y-2"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={type === 'audio' ? { opacity: 1, height: 'auto' } : { opacity: 0, height: 0 }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{
+                          duration: 0.2,
+                          ease: [0.4, 0, 0.2, 1],
+                          opacity: { duration: 0.2 },
+                          height: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
+                        }}
+                        style={{ overflow: 'hidden' }}
+                      >
+                        {type === 'audio' && (
+                          <>
+                            <Label htmlFor="makeTrack">Save as track</Label>
+                            <div className="flex items-center gap-2">
+                              <input id="makeTrack" type="checkbox" className="w-4 h-4" checked={makeTrack} onChange={e => setMakeTrack(e.target.checked)} />
+                              <span className="text-sm text-muted-foreground">Use extended player if file contains metadata</span>
+                            </div>
+                          </>
+                        )}
+                      </motion.div>
+                    </AnimatePresence>
+
+                    <TagInput
+                      tags={tags}
+                      currentTag={currentTag}
+                      isLoading={isLoading}
+                      onCurrentTagChange={updateCurrentTag}
+                      onAddTag={addTag}
+                      onRemoveTag={removeTag}
+                      onKeyDown={handleTagKeyDown}
+                    />
+                  </motion.div>
+                )}
           </AnimatePresence>
 
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
@@ -383,7 +382,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded }: AddContentDia
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                Отмена
+                Discard
               </Button>
               <Button
                 type="submit"

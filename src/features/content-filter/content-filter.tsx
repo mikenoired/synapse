@@ -4,12 +4,9 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 
 const placeholders = [
-  'Помню как-то называлось...',
-  'Где-то я это уже сохранял...',
-  'О чём это было...',
-  'Точно помню, что это где-то тут...',
-  'Вспомнить всё',
-  'Может, по тегу найдётся...',
+  'Where it was saved...',
+  'How it was called...',
+  'Maybe I will search by tags...',
 ]
 
 interface ContentFilterProps {

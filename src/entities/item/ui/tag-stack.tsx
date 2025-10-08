@@ -66,7 +66,7 @@ function TagPreview({ item }: { item: Content }) {
         {imgSrc && !errored && (
           <Image
             src={imgSrc}
-            alt={item.title || (isVideo ? 'Видео' : 'Изображение')}
+            alt={item.title || (isVideo ? 'Video' : 'Image')}
             className="w-full h-full object-cover relative z-10 transition-opacity duration-200 ease-in-out"
             style={{ opacity: loaded ? 1 : 0 }}
             onLoad={() => setLoaded(true)}
@@ -136,7 +136,7 @@ function TagPreview({ item }: { item: Content }) {
   return (
     <div className="p-4 flex flex-col justify-center items-center h-full">
       <FileText className="size-8 text-muted-foreground" />
-      <p className="mt-2 text-sm">Контент</p>
+      <p className="mt-2 text-sm">Content</p>
     </div>
   )
 }

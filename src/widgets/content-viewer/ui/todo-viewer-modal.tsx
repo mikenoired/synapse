@@ -62,7 +62,7 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
   const handleDelete = () => {
     if (onDelete) {
       // eslint-disable-next-line no-alert
-      if (confirm('Вы уверены, что хотите удалить этот элемент?')) {
+      if (confirm('Are you sure you want to delete this item?')) {
         onDelete(item.id)
         onOpenChange(false)
       }
@@ -79,23 +79,20 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
         <div className="max-w-[750px] mx-auto h-full flex flex-col">
           <div className="flex-shrink-0 p-6 pb-0">
             <div className="space-y-4">
-              {/* Type indicator */}
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ListChecks className="w-4 h-4" />
-                <span>Список задач</span>
+                <span>Todo List</span>
               </div>
-              {/* Title */}
               {item.title && (
                 <h1 className="text-2xl font-bold tracking-tight leading-tight">
                   {item.title}
                 </h1>
               )}
-              {/* Metadata */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>
-                    {new Date(item.created_at).toLocaleDateString('ru-RU', {
+                    {new Date(item.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
                       day: 'numeric',
@@ -108,8 +105,8 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
                   <div className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     <span>
-                      Обновлено:
-                      {new Date(item.updated_at).toLocaleDateString('ru-RU', {
+                      Updated:
+                      {new Date(item.updated_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         hour: '2-digit',
@@ -119,7 +116,6 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
                   </div>
                 )}
               </div>
-              {/* Tags */}
               {item.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {item.tags.map((tag: string) => (
@@ -133,7 +129,6 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
                   ))}
                 </div>
               )}
-              {/* Action buttons */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: isHovered ? 1 : 0.7 }}
@@ -147,7 +142,7 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
                     className="text-xs"
                   >
                     <Pencil className="w-3 h-3 mr-1" />
-                    Редактировать
+                    Edit
                   </Button>
                 )}
                 {onDelete && (
@@ -158,17 +153,16 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
                     className="text-xs text-destructive hover:text-destructive"
                   >
                     <Trash2 className="w-3 h-3 mr-1" />
-                    Удалить
+                    Delete
                   </Button>
                 )}
               </motion.div>
             </div>
           </div>
-          {/* Content area with scroll */}
           <div className="flex-1 overflow-auto p-6 pt-4">
             <div className="prose prose-sm max-w-none dark:prose-invert">
               <div className="flex flex-col gap-3">
-                {todos.length === 0 && <div className="text-muted-foreground text-sm">Нет пунктов</div>}
+                {todos.length === 0 && <div className="text-muted-foreground text-sm">No items</div>}
                 {todos.map((todo, idx) => (
                   <div key={idx} className="flex items-center gap-2">
                     <Input type="checkbox" checked={todo.marked} onChange={() => handleToggle(idx)} className="w-5 h-5" />

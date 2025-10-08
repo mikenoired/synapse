@@ -69,12 +69,12 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 
   const updateContentMutation = trpc.content.update.useMutation({
     onSuccess: () => {
-      toast.success('Сохранено')
+      toast.success('Saved')
       onOpenChange(false)
       onContentUpdated?.()
     },
     onError: (error) => {
-      toast.error(`Ошибка обновления: ${error.message}`)
+      toast.error(`Update error: ${error.message}`)
     },
   })
 
@@ -94,7 +94,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
         setHasUnsaved(false)
       }
       catch (error) {
-        toast.error(`Ошибка сохранения: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        toast.error(`Update error: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
       return
     }
@@ -111,7 +111,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
       })
     }
     catch (error) {
-      toast.error(`Ошибка сохранения: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(`Update error: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -181,7 +181,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
         <div className="max-w-[700px] mx-auto w-full">
           <Input
             id="title"
-            placeholder="Заголовок (опционально)..."
+            placeholder="Title (optional)..."
             value={title}
             onChange={e => setTitle(e.target.value)}
             disabled={updateContentMutation.isPending}
@@ -203,7 +203,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
             ))}
             <Input
               id="tags"
-              placeholder="+ Добавить тег"
+              placeholder="+ Add tag"
               value={currentTag}
               onChange={e => setCurrentTag(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -217,7 +217,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
         <div className="max-w-[700px] mx-auto w-full flex flex-col gap-4">
           <div className="flex gap-2">
             <Input
-              placeholder="Добавить пункт..."
+              placeholder="Add item..."
               value={todoInput}
               onChange={e => setTodoInput(e.target.value)}
               onKeyDown={(e) => {
@@ -229,11 +229,11 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
             />
             <Button type="button" onClick={handleAddTodo} disabled={!todoInput.trim() || updateContentMutation.isPending} size="sm">
               <Plus className="w-4 h-4 mr-1" />
-              Добавить
+              Add
             </Button>
           </div>
           <div className="flex flex-col gap-2">
-            {todoItems.length === 0 && <div className="text-muted-foreground text-sm">Нет пунктов</div>}
+            {todoItems.length === 0 && <div className="text-muted-foreground text-sm">There's no items</div>}
             {todoItems.map((item, idx) => (
               <div key={idx} className="flex items-center gap-2 group">
                 <Input
@@ -273,7 +273,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
         onTouchEnd={handleTouchEnd}
       >
         <div className="p-4 border-b flex flex-row items-center justify-between">
-          <div className="text-lg font-semibold">{content.type === 'todo' ? 'Редактировать список' : 'Редактировать заметку'}</div>
+          <div className="text-lg font-semibold">{content.type === 'todo' ? 'Edit list' : 'Edit note'}</div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => setIsFullScreen(!isFullScreen)}>
               {isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
@@ -286,57 +286,57 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
         <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
           {content.type === 'todo'
             ? (
-                renderTodoForm()
-              )
+              renderTodoForm()
+            )
             : (
-                <div className="flex flex-col h-full">
-                  <div className="p-6 pb-4 border-b">
-                    <div className="max-w-[700px] mx-auto w-full">
+              <div className="flex flex-col h-full">
+                <div className="p-6 pb-4 border-b">
+                  <div className="max-w-[700px] mx-auto w-full">
+                    <Input
+                      id="title"
+                      placeholder="Title (optional)..."
+                      value={title}
+                      onChange={e => setTitle(e.target.value)}
+                      disabled={updateContentMutation.isPending}
+                      className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+                    />
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="flex items-center gap-1">
+                          {tag}
+                          <button
+                            type="button"
+                            onClick={() => removeTag(tag)}
+                            className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
+                            disabled={updateContentMutation.isPending}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </Badge>
+                      ))}
                       <Input
-                        id="title"
-                        placeholder="Заголовок (опционально)..."
-                        value={title}
-                        onChange={e => setTitle(e.target.value)}
+                        id="tags"
+                        placeholder="+ Add tag"
+                        value={currentTag}
+                        onChange={e => setCurrentTag(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
                         disabled={updateContentMutation.isPending}
-                        className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
-                      />
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {tags.map(tag => (
-                          <Badge key={tag} variant="secondary" className="flex items-center gap-1">
-                            {tag}
-                            <button
-                              type="button"
-                              onClick={() => removeTag(tag)}
-                              className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-                              disabled={updateContentMutation.isPending}
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                        <Input
-                          id="tags"
-                          placeholder="+ Добавить тег"
-                          value={currentTag}
-                          onChange={e => setCurrentTag(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                          className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
-                          disabled={updateContentMutation.isPending}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex-1 p-6 pt-2 overflow-y-auto">
-                    <div className="max-w-[700px] mx-auto w-full">
-                      <Editor
-                        data={editorData}
-                        onChange={setEditorData}
-                        readOnly={updateContentMutation.isPending}
                       />
                     </div>
                   </div>
                 </div>
-              )}
+                <div className="flex-1 p-6 pt-2 overflow-y-auto">
+                  <div className="max-w-[700px] mx-auto w-full">
+                    <Editor
+                      data={editorData}
+                      onChange={setEditorData}
+                      readOnly={updateContentMutation.isPending}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           <div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
             <div className="flex justify-end gap-3">
               <Button
@@ -345,7 +345,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
                 onClick={handleClose}
                 disabled={updateContentMutation.isPending}
               >
-                Отмена
+                Cancel
               </Button>
               <Button
                 type="submit"
@@ -356,7 +356,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
                     : !editorData || !editorData.content || editorData.content.length === 0)
                 }
               >
-                {updateContentMutation.isPending ? 'Сохранение...' : 'Сохранить'}
+                {updateContentMutation.isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
@@ -365,11 +365,11 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
       {showUnsavedModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-sm">
-            <div className="mb-4 text-lg font-semibold">Есть несохранённые изменения</div>
-            <div className="mb-6 text-sm text-muted-foreground">Вы не сохранили изменения. Сохранить или сбросить?</div>
+            <div className="mb-4 text-lg font-semibold">Unsaved changes</div>
+            <div className="mb-6 text-sm text-muted-foreground">You have unsaved changes. Save or discard changes?</div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={handleDiscard}>Сбросить</Button>
-              <Button onClick={handleSave}>Сохранить</Button>
+              <Button variant="outline" onClick={handleDiscard}>Discard</Button>
+              <Button onClick={handleSave}>Save</Button>
             </div>
           </div>
         </div>

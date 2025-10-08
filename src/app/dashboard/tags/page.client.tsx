@@ -67,7 +67,7 @@ export default function TagsClient() {
   if (isLoading) {
     return (
       <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-6">Теги</h1>
+        <h1 className="text-2xl font-semibold mb-6">Tags</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="space-y-4">
@@ -92,12 +92,12 @@ export default function TagsClient() {
         {dragActive && (
           <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
             <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-              Отпустите изображения для загрузки
+              Drop image for upload
             </div>
           </div>
         )}
-        <h1 className="text-2xl font-semibold mb-4">Теги</h1>
-        <p className="text-muted-foreground">У вас пока нет тегов. Добавьте их к своим записям.</p>
+        <h1 className="text-2xl font-semibold mb-4">Tags</h1>
+        <p className="text-muted-foreground">You don't have any tags. Create new one.</p>
       </div>
     )
   }
@@ -113,11 +113,11 @@ export default function TagsClient() {
       {dragActive && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
           <div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-            Отпустите изображения для загрузки
+            Drop image for uploading
           </div>
         </div>
       )}
-      <h1 className="text-2xl font-semibold mb-8">Теги</h1>
+      <h1 className="text-2xl font-semibold mb-8">Tags</h1>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-12">
         {tagsWithContent.map(({ id, title, items }) => (
           <Link key={id} href={`/dashboard/tag/${id}`} className="group">

@@ -25,7 +25,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
       Underline,
       CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({
-        placeholder: 'Начните писать...',
+        placeholder: 'Start writing...',
       }),
     ],
     editorProps: {

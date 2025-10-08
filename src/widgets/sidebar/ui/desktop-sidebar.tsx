@@ -31,29 +31,29 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
           <AnimatePresence mode="wait">
             {isSidebarExpanded
               ? (
-                  <motion.div
-                    key="logo-expanded"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="flex items-center gap-3"
-                  >
-                    <LogoIcon className="size-8 flex-shrink-0" fill={theme === 'dark' ? '#fff' : '#000'} />
-                  </motion.div>
-                )
+                <motion.div
+                  key="logo-expanded"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="flex items-center gap-3"
+                >
+                  <LogoIcon className="size-8 flex-shrink-0" fill={theme === 'dark' ? '#fff' : '#000'} />
+                </motion.div>
+              )
               : (
-                  <motion.div
-                    key="logo-collapsed"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2, ease: 'easeInOut' }}
-                    className="flex items-center justify-center w-full"
-                  >
-                    <LogoIcon className="size-8 flex-shrink-0" fill={theme === 'dark' ? '#fff' : '#000'} />
-                  </motion.div>
-                )}
+                <motion.div
+                  key="logo-collapsed"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeInOut' }}
+                  className="flex items-center justify-center w-full"
+                >
+                  <LogoIcon className="size-8 flex-shrink-0" fill={theme === 'dark' ? '#fff' : '#000'} />
+                </motion.div>
+              )}
           </AnimatePresence>
 
           <TooltipProvider delayDuration={0}>
@@ -76,7 +76,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                     <ChevronLeft className="size-4" />
                   </motion.div>
                   <span className="sr-only">
-                    {isSidebarExpanded ? 'Свернуть' : 'Развернуть'}
+                    {isSidebarExpanded ? 'Collapse' : 'Expand'}
                     {' '}
                     sidebar
                   </span>
@@ -90,7 +90,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                   isSidebarExpanded && 'opacity-0 pointer-events-none',
                 )}
               >
-                {isSidebarExpanded ? 'Свернуть' : 'Развернуть'}
+                {isSidebarExpanded ? 'Collapse' : 'Expand'}
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
@@ -129,11 +129,11 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                           exit={{ opacity: 0, width: 0 }}
                           transition={SIDEBAR_ANIMATION}
                         >
-                          Выйти
+                          Exit
                         </motion.span>
                       )}
                     </AnimatePresence>
-                    <span className="sr-only">Выйти</span>
+                    <span className="sr-only">Exit</span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent
@@ -144,7 +144,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
                     isSidebarExpanded && 'opacity-0 pointer-events-none',
                   )}
                 >
-                  Выйти
+                  Exit
                 </TooltipContent>
               </Tooltip>
             </div>
@@ -189,19 +189,19 @@ function SidebarItem({ item, pathname, isExpanded }: { item: NavItem, pathname: 
 
   const itemElement = item.href
     ? (
-        <Link href={item.href} className={buttonClassName}>
-          {buttonContent}
-        </Link>
-      )
+      <Link href={item.href} className={buttonClassName}>
+        {buttonContent}
+      </Link>
+    )
     : (
-        <button
-          onClick={item.action}
-          onMouseEnter={item.onMouseEnter}
-          className={cn(buttonClassName, 'cursor-pointer')}
-        >
-          {buttonContent}
-        </button>
-      )
+      <button
+        onClick={item.action}
+        onMouseEnter={item.onMouseEnter}
+        className={cn(buttonClassName, 'cursor-pointer')}
+      >
+        {buttonContent}
+      </button>
+    )
 
   return (
     <Tooltip>

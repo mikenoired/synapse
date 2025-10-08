@@ -47,9 +47,9 @@ export function UnifiedMediaModal({
   const imageUrls: string[] = (gallery.length > 0)
     ? gallery.map(g => g.url)
     : (() => {
-        const media = parseMediaJson(item.content)?.media
-        return media?.url ? [media.url] : [item.content]
-      })()
+      const media = parseMediaJson(item.content)?.media
+      return media?.url ? [media.url] : [item.content]
+    })()
 
   const isMultiple = imageUrls.length > 1
 
@@ -153,7 +153,7 @@ export function UnifiedMediaModal({
       return
 
     // eslint-disable-next-line no-alert
-    if (!confirm(`Разделить ${imageUrls.length} изображений на отдельные элементы?`))
+    if (!confirm(`Separate ${imageUrls.length} images into separate elements?`))
       return
 
     try {
@@ -176,7 +176,7 @@ export function UnifiedMediaModal({
     }
     catch {
       // eslint-disable-next-line no-alert
-      alert('Ошибка при разгруппировке')
+      alert('Error separating images into separate elements')
     }
   }
 
@@ -204,7 +204,7 @@ export function UnifiedMediaModal({
     }
     catch {
       // eslint-disable-next-line no-alert
-      alert('Ошибка при добавлении тега')
+      alert('Error adding tag')
     }
   }
 
@@ -232,7 +232,7 @@ export function UnifiedMediaModal({
 
   const handleDelete = () => {
     // eslint-disable-next-line no-alert
-    if (confirm('Удалить этот контент?')) {
+    if (confirm('Delete this content?')) {
       deleteContentMutation.mutate({ id: item.id })
     }
   }
@@ -281,13 +281,13 @@ export function UnifiedMediaModal({
                       <span>
                         {currentIndex + 1}
                         {' '}
-                        из
+                        of
                         {' '}
                         {imageUrls.length}
                       </span>
                       <div className="flex items-center gap-1">
                         <Layers className="w-3 h-3" />
-                        <span>Группа</span>
+                        <span>Group</span>
                       </div>
                     </>
                   )}
@@ -301,7 +301,7 @@ export function UnifiedMediaModal({
                     size="sm"
                     onClick={handleUngroup}
                     className="text-white hover:bg-white/20"
-                    title="Разгруппировать"
+                    title="Separate"
                   >
                     <Ungroup className="w-4 h-4" />
                   </Button>
@@ -311,7 +311,7 @@ export function UnifiedMediaModal({
                   size="sm"
                   onClick={() => setShowTags(!showTags)}
                   className="text-white hover:bg-white/20"
-                  title="Теги"
+                  title="Tags"
                 >
                   <Tag className="w-4 h-4" />
                 </Button>
@@ -321,7 +321,7 @@ export function UnifiedMediaModal({
                     size="sm"
                     onClick={handleEdit}
                     className="text-white hover:bg-white/20"
-                    title="Редактировать"
+                    title="Edit"
                   >
                     <Edit2 className="w-4 h-4" />
                   </Button>
@@ -332,7 +332,7 @@ export function UnifiedMediaModal({
                     size="sm"
                     onClick={handleDelete}
                     className="text-white hover:bg-white/20"
-                    title="Удалить"
+                    title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -353,7 +353,7 @@ export function UnifiedMediaModal({
             <div className="absolute top-16 left-2 right-2 md:left-4 md:right-4 z-20 bg-black/90 backdrop-blur rounded-lg p-3 md:p-4 text-white max-h-60 overflow-y-auto">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium">Теги</h3>
+                  <h3 className="font-medium">Tags</h3>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -376,7 +376,7 @@ export function UnifiedMediaModal({
 
                 <div className="flex flex-col sm:flex-row gap-2">
                   <Input
-                    placeholder="Добавить тег..."
+                    placeholder="Add tag..."
                     value={newTag}
                     onChange={e => setNewTag(e.target.value)}
                     onKeyDown={(e) => {
@@ -394,14 +394,14 @@ export function UnifiedMediaModal({
                     size="sm"
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    Добавить
+                    Add
                   </Button>
                 </div>
 
                 {isMultiple && (
                   <div className="pt-2 border-t border-white/20">
                     <p className="text-xs text-white/70">
-                      Теги применяются ко всей группе изображений
+                      Tags apply to all images in the group
                     </p>
                   </div>
                 )}
@@ -413,52 +413,52 @@ export function UnifiedMediaModal({
             <AnimatePresence initial={false} mode="sync" custom={direction}>
               {currentMedia.media_type === 'video'
                 ? (
-                    <motion.div
-                      key={currentIndex}
-                      custom={direction}
-                      variants={slideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{
-                        x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                        opacity: { duration: 0.2, ease: 'linear' },
-                      }}
-                      className="absolute inset-0 w-full h-full"
-                      style={{ borderRadius: 12, background: '#000' }}
-                    >
-                      <CustomVideoPlayer
-                        src={mediaSrc || ''}
-                        poster={currentMedia.thumbnail_url}
-                        autoPlay={true}
-                        className="w-full h-full"
-                      />
-                    </motion.div>
-                  )
-                : (
-                    <motion.img
-                      key={currentIndex}
-                      custom={direction}
-                      variants={slideVariants}
-                      initial="enter"
-                      animate="center"
-                      exit="exit"
-                      transition={{
-                        x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                        opacity: { duration: 0.2, ease: 'linear' },
-                      }}
-                      src={mediaSrc || undefined}
-                      alt={`${item.title || 'Изображение'} ${currentIndex + 1}`}
-                      className="absolute inset-0 w-full h-full object-contain cursor-pointer"
-                      draggable={false}
-                      onTouchStart={handleTouchStart}
-                      onTouchMove={handleTouchMove}
-                      onTouchEnd={handleTouchEnd}
-                      onError={(e) => {
-                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                      }}
+                  <motion.div
+                    key={currentIndex}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                      opacity: { duration: 0.2, ease: 'linear' },
+                    }}
+                    className="absolute inset-0 w-full h-full"
+                    style={{ borderRadius: 12, background: '#000' }}
+                  >
+                    <CustomVideoPlayer
+                      src={mediaSrc || ''}
+                      poster={currentMedia.thumbnail_url}
+                      autoPlay={true}
+                      className="w-full h-full"
                     />
-                  )}
+                  </motion.div>
+                )
+                : (
+                  <motion.img
+                    key={currentIndex}
+                    custom={direction}
+                    variants={slideVariants}
+                    initial="enter"
+                    animate="center"
+                    exit="exit"
+                    transition={{
+                      x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                      opacity: { duration: 0.2, ease: 'linear' },
+                    }}
+                    src={mediaSrc || undefined}
+                    alt={`${item.title || 'Image'} ${currentIndex + 1}`}
+                    className="absolute inset-0 w-full h-full object-contain cursor-pointer"
+                    draggable={false}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                    }}
+                  />
+                )}
             </AnimatePresence>
 
             {isMultiple && (
@@ -499,11 +499,11 @@ export function UnifiedMediaModal({
                     className={`flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-all relative ${index === currentIndex
                       ? 'border-white scale-110'
                       : 'border-white/30 hover:border-white/60'
-                    }`}
+                      }`}
                   >
                     <PreviewImage
                       src={previewSrc}
-                      alt={`Превью ${index + 1}`}
+                      alt={`Preview ${index + 1}`}
                       className="w-full h-full object-cover"
                       skeletonClassName="w-full h-full bg-white/10 animate-pulse rounded"
                     />

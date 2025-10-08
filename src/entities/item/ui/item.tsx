@@ -35,7 +35,7 @@ export default function Item({ item, index, onContentChanged, onItemClick, exclu
 
   const deleteMutation = trpc.content.delete.useMutation({
     onSuccess: () => {
-      toast.success('Элемент удален')
+      toast.success('Element was deleted')
       onContentChanged?.()
     },
   })
@@ -60,9 +60,9 @@ export default function Item({ item, index, onContentChanged, onItemClick, exclu
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onClick={() => onItemClick?.(item)}>Открыть</ContextMenuItem>
-          <ContextMenuItem onClick={handleEdit}>Редактировать</ContextMenuItem>
-          <ContextMenuItem onClick={handleDelete}>Удалить</ContextMenuItem>
+          <ContextMenuItem onClick={() => onItemClick?.(item)}>Open</ContextMenuItem>
+          <ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
+          <ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
       {editOpen && item.type === 'note' && (
@@ -129,7 +129,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
           /
           {todos.length}
           {' '}
-          выполнено
+          done
         </div>
         {todos.slice(0, 3).map((todo, idx) => (
           <div key={idx} className="flex items-center gap-2">
@@ -139,7 +139,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
         ))}
         {todos.length > 3 && (
           <div className="text-xs text-muted-foreground">
-            + ещё
+            +
             {todos.length - 3}
             ...
           </div>
@@ -185,7 +185,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
     return (
       <div className="space-y-3">
         <h3 className="font-semibold text-base leading-tight line-clamp-2">
-          {linkContent.title || item.title || 'Без названия'}
+          {linkContent.title || item.title || 'No title'}
         </h3>
 
         {previewText && (
@@ -219,39 +219,39 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
         <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
           {item.type === 'media' || item.type === 'audio'
             ? (
-                <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
-              )
+              <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
+            )
             : item.type === 'link'
               ? (
-                  <div>
-                    {renderLinkPreview()}
-                    {item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-3">
-                        {item.tags.map((tag: string) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )
+                <div>
+                  {renderLinkPreview()}
+                  {item.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-3">
+                      {item.tags.map((tag: string) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
               : item.type === 'todo'
                 ? (
-                    renderTodoPreview()
-                  )
+                  renderTodoPreview()
+                )
                 : (
-                    <>
-                      <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
-                      <div className="flex flex-wrap mt-3">
-                        {item.tags.map((tag: string) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                  <>
+                    <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
+                    <div className="flex flex-wrap mt-3">
+                      {item.tags.map((tag: string) => (
+                        <Badge key={tag} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </>
+                )}
         </div>
       </div>
     </motion.div>

@@ -8,7 +8,7 @@ export default class GraphRepository {
 
   async getNodes() {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const data = await this.ctx.db.query.nodes.findMany({
       where: eq(nodes.userId, this.ctx.user.id),
@@ -25,7 +25,7 @@ export default class GraphRepository {
 
   async getEdges() {
     if (!this.ctx.user)
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Не авторизован' })
+      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
     const data = await this.ctx.db.query.edges.findMany({
       where: eq(edges.userId, this.ctx.user.id),

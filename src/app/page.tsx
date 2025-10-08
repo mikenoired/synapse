@@ -17,8 +17,8 @@ interface FeatureHighlightProps {
 
 const features: FeatureHighlightProps[] = [
   {
-    title: 'Умные заметки',
-    description: 'Создавайте заметки с богатым форматированием и мгновенным поиском',
+    title: 'Smart notes',
+    description: 'Create notes with rich editor and fast search',
     accentGradient: 'from-blue-500/10 to-blue-500/5',
     icon: (
       <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -32,8 +32,8 @@ const features: FeatureHighlightProps[] = [
     ),
   },
   {
-    title: 'Система тегов',
-    description: 'Организуйте контент с помощью гибкой системы тегов и категорий',
+    title: 'Tag system',
+    description: 'Organize your content by using tags',
     accentGradient: 'from-green-500/10 to-green-500/5',
     icon: (
       <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,8 +47,8 @@ const features: FeatureHighlightProps[] = [
     ),
   },
   {
-    title: 'Медиа файлы',
-    description: 'Храните изображения, видео и документы с автоматическим превью',
+    title: 'Media files',
+    description: 'Save your photo, video and audio with fast preview',
     accentGradient: 'from-purple-500/10 to-purple-500/5',
     icon: (
       <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -62,8 +62,8 @@ const features: FeatureHighlightProps[] = [
     ),
   },
   {
-    title: 'Быстрый поиск',
-    description: 'Находите нужную информацию мгновенно с полнотекстовым поиском',
+    title: 'Fast search',
+    description: 'Find your content blazingly fast with full-text search',
     accentGradient: 'from-orange-500/10 to-orange-500/5',
     icon: (
       <svg className="w-6 h-6 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,8 +77,8 @@ const features: FeatureHighlightProps[] = [
     ),
   },
   {
-    title: 'Мобильная версия',
-    description: 'Доступ к вашим данным с любого устройства в любое время',
+    title: 'Mobile version',
+    description: 'Access to your data from any device',
     accentGradient: 'from-pink-500/10 to-pink-500/5',
     icon: (
       <svg className="w-6 h-6 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -92,8 +92,8 @@ const features: FeatureHighlightProps[] = [
     ),
   },
   {
-    title: 'Безопасность',
-    description: 'Ваши данные защищены современными методами шифрования',
+    title: 'Safe',
+    description: 'Your data is secured with modern methods of encrypting',
     accentGradient: 'from-cyan-500/10 to-cyan-500/5',
     icon: (
       <svg className="w-6 h-6 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,13 +201,13 @@ export default function HomePage() {
                 />
               </div>
               <p className="text-2xl md:text-3xl font-medium text-muted-foreground">
-                Ваш интерактивный
+                Your interactive
                 {' '}
-                <span className="text-primary font-bold">мозг</span>
+                <span className="text-primary font-bold">mind</span>
               </p>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-                Храните заметки, файлы и идеи в одном месте.
-                Организуйте свои мысли с помощью тегов и быстрого поиска.
+                Store your photo, video, notes in one place.
+                Organize your minds with tags and fast search.
               </p>
             </div>
           </div>
@@ -219,7 +219,7 @@ export default function HomePage() {
               onClick={() => handleAuthClick('login')}
               className="min-w-40 h-12 text-lg font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              Войти
+              Login
             </Button>
             <Button
               variant="outline"
@@ -227,7 +227,7 @@ export default function HomePage() {
               onClick={() => handleAuthClick('register')}
               className="min-w-40 h-12 text-lg font-medium border-2 hover:bg-primary/5 transition-all duration-300"
             >
-              Зарегистрироваться
+              Register
             </Button>
           </div>
         </div>
@@ -237,7 +237,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center space-y-4 mb-16">
             <div className="flex items-center justify-center gap-4">
-              <h2 className="text-3xl md:text-4xl font-bold">Возможности</h2>
+              <h2 className="text-3xl md:text-4xl font-bold">Features</h2>
               <Image
                 src="/logo-lettering.svg"
                 alt="Synapse"
@@ -247,7 +247,7 @@ export default function HomePage() {
               />
             </div>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Мощные инструменты для организации вашей информации
+              Useful tools for storage organizing
             </p>
           </div>
 
@@ -263,7 +263,7 @@ export default function HomePage() {
       <section className="py-20 px-4 bg-gradient-to-r from-primary/5 to-primary/10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <h2 className="text-3xl md:text-4xl font-bold">Готовы начать с</h2>
+            <h2 className="text-3xl md:text-4xl font-bold">Are you ready to go with</h2>
             <Image
               src="/logo-lettering.svg"
               alt="Synapse"
@@ -274,7 +274,7 @@ export default function HomePage() {
             <span className="text-3xl md:text-4xl font-bold">?</span>
           </div>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Присоединяйтесь к тысячам пользователей, которые уже организовали свою информацию с помощью Synapse
+            Join with thousands of users who already organized their information with Synapse
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -282,7 +282,7 @@ export default function HomePage() {
               onClick={() => handleAuthClick('register')}
               className="min-w-48 h-12 text-lg font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg hover:shadow-xl"
             >
-              Начать бесплатно
+              Continue free
             </Button>
           </div>
         </div>

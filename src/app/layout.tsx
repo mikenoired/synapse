@@ -75,9 +75,9 @@ const nonBureau = localFont({
 })
 
 export const metadata: Metadata = {
-  title: 'Synapse - Ваш интерактивный мозг',
-  description: 'Современное приложение для хранения заметок, файлов и идей',
-  keywords: 'заметки, файлы, идеи, организация, productivity',
+  title: 'Synapse - Your interactive mind',
+  description: 'App for media and notes management',
+  keywords: 'notes, files, ideas, organization, productivity',
   authors: [{ name: 'Mike Vetkal\'' }],
   other: {
     'resource-timing': 'navigation',
@@ -96,7 +96,7 @@ export default function RootLayout({
   children: ReactNode
 }) {
   return (
-    <html lang="ru" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <head>
         {process.env.NODE_ENV === 'development' && (
           <script

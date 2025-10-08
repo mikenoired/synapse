@@ -36,7 +36,7 @@ export function MediaDropZone({
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
           ? 'border-primary bg-primary/10 scale-[1.02]'
           : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20'
-        }`}
+          }`}
         onDragEnter={onDrag}
         onDragLeave={onDrag}
         onDragOver={onDrag}
@@ -48,13 +48,13 @@ export function MediaDropZone({
           </div>
           <div className="space-y-2">
             <p className="text-sm font-medium text-foreground">
-              Перетащите файлы сюда
+              Drag files there
             </p>
             <p className="text-xs text-muted-foreground">
-              или нажмите кнопку ниже для выбора
+              or click to choose
             </p>
             <p className="text-xs text-muted-foreground/70">
-              Максимум 10MB • JPG, PNG, GIF, WebP, MP4, MOV, AVI, MP3, M4A, FLAC, WAV, OGG
+              Max 10MB • JPG, PNG, GIF, WebP, MP4, MOV, AVI, MP3, M4A, FLAC, WAV, OGG
             </p>
           </div>
           <Input
@@ -75,7 +75,7 @@ export function MediaDropZone({
             className="mt-3 hover:bg-primary hover:text-primary-foreground transition-colors"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Выбрать файлы
+            Select files
           </Button>
         </div>
       </div>
@@ -84,7 +84,7 @@ export function MediaDropZone({
         <div>
           {selectedFiles.length > 1 && (
             <p className="text-xs text-muted-foreground mb-2">
-              Перетащите изображения для изменения порядка
+              Drag images to change placing
             </p>
           )}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -110,19 +110,19 @@ export function MediaDropZone({
               >
                 {selectedFiles[index].type.startsWith('audio/')
                   ? (
-                      <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
-                        {selectedFiles[index].name}
-                      </div>
-                    )
+                    <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
+                      {selectedFiles[index].name}
+                    </div>
+                  )
                   : (
-                      <Image
-                        src={url}
-                        alt={`Превью ${index + 1}`}
-                        className="w-full aspect-square object-cover rounded-lg border"
-                        width={200}
-                        height={200}
-                      />
-                    )}
+                    <Image
+                      src={url}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full aspect-square object-cover rounded-lg border"
+                      width={200}
+                      height={200}
+                    />
+                  )}
                 {selectedFiles.length > 1 && (
                   <div className="absolute top-1 left-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-xs font-medium">
                     {index + 1}

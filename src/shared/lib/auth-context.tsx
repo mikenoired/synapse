@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = result.result?.data?.json || result.result?.data
       if (!data?.token || !data?.refreshToken) {
         console.error('Invalid response structure:', result)
-        return { error: { message: 'Не получены токены авторизации' } }
+        return { error: { message: 'Can\'t get tokens' } }
       }
 
       const sessionResponse = await fetch('/api/session', {
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!sessionResponse.ok) {
         const errorData = await sessionResponse.json().catch(() => ({}))
         console.error('Failed to set session cookies:', errorData)
-        return { error: { message: 'Ошибка установки сессии' } }
+        return { error: { message: 'Session setting error' } }
       }
 
       setUser({ id: data.user.id, email: data.user.email })
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     catch (error: any) {
       console.error('Sign up error:', error)
-      return { error: { message: error.message || 'Ошибка регистрации' } }
+      return { error: { message: error.message || 'Register error' } }
     }
   }
 
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = result.result?.data?.json || result.result?.data
       if (!data?.token || !data?.refreshToken) {
         console.error('Invalid response structure:', result)
-        return { error: { message: 'Не получены токены авторизации' } }
+        return { error: { message: 'Can\'t get register tokens' } }
       }
 
       const sessionResponse = await fetch('/api/session', {
@@ -126,7 +126,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!sessionResponse.ok) {
         const errorData = await sessionResponse.json().catch(() => ({}))
         console.error('Failed to set session cookies:', errorData)
-        return { error: { message: 'Ошибка установки сессии' } }
+        return { error: { message: 'Session setting error' } }
       }
 
       setUser({ id: data.user.id, email: data.user.email })
@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     catch (error: any) {
       console.error('Sign in error:', error)
-      return { error: { message: error.message || 'Ошибка входа' } }
+      return { error: { message: error.message || 'Login error' } }
     }
   }
 

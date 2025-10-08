@@ -9,10 +9,6 @@ interface BackupData {
 const BACKUP_KEY = 'synapse_db_backup'
 const BACKUP_VERSION = 1
 
-/**
- * Создает резервную копию критически важных данных из SQLite в localStorage
- * Используется как механизм восстановления при сбоях OPFS
- */
 export async function createBackup(): Promise<void> {
   try {
     const db = await getDB()
@@ -22,21 +18,16 @@ export async function createBackup(): Promise<void> {
       version: BACKUP_VERSION,
     }
 
-    // Получаем список таблиц
     const tables = db.selectObjects(
       `SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'`,
     )
 
-    // Для каждой таблицы сохраняем данные
-    // Ограничиваем количество записей для экономии места
     for (const table of tables) {
       const tableName = table.name
 
-      // Пропускаем большие таблицы и временные данные
       if (tableName === 'content_fts')
         continue
 
-      // Для контента сохраняем только метаданные
       if (tableName === 'content') {
         backup.tables[tableName] = db.selectObjects(
           `SELECT id, type, title, created_at, updated_at, user_id FROM ${tableName} LIMIT 100`,
@@ -49,7 +40,6 @@ export async function createBackup(): Promise<void> {
       }
     }
 
-    // Сохраняем в localStorage
     localStorage.setItem(BACKUP_KEY, JSON.stringify(backup))
     console.warn(`[Backup] Created backup at ${new Date(backup.timestamp).toISOString()}`)
   }
@@ -58,9 +48,6 @@ export async function createBackup(): Promise<void> {
   }
 }
 
-/**
- * Восстанавливает данные из резервной копии в SQLite
- */
 export async function restoreFromBackup(): Promise<boolean> {
   try {
     const backupJson = localStorage.getItem(BACKUP_KEY)
@@ -77,12 +64,10 @@ export async function restoreFromBackup(): Promise<boolean> {
 
     const db = await getDB()
 
-    // Восстанавливаем данные для каждой таблицы
     for (const [tableName, rows] of Object.entries(backup.tables)) {
       if (!rows.length)
         continue
 
-      // Проверяем существование таблицы
       const tableExists = db.selectValue(
         `SELECT count(*) FROM sqlite_master WHERE type='table' AND name=?`,
         [tableName],
@@ -93,16 +78,13 @@ export async function restoreFromBackup(): Promise<boolean> {
         continue
       }
 
-      // Восстанавливаем данные транзакционно
       db.transaction(() => {
         for (const row of rows) {
           try {
-            // Получаем колонки и значения
             const columns = Object.keys(row)
             const placeholders = columns.map(() => '?').join(', ')
             const values = columns.map(col => row[col])
 
-            // Проверяем существование записи
             const idColumn = 'id' in row ? 'id' : columns[0]
             const idValue = row[idColumn]
 
@@ -112,7 +94,6 @@ export async function restoreFromBackup(): Promise<boolean> {
             )
 
             if (exists) {
-              // Обновляем существующую запись
               const setClause = columns
                 .map(col => `${col} = ?`)
                 .join(', ')
@@ -123,7 +104,6 @@ export async function restoreFromBackup(): Promise<boolean> {
               )
             }
             else {
-              // Вставляем новую запись
               db.run(
                 `INSERT INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`,
                 values,
@@ -146,9 +126,6 @@ export async function restoreFromBackup(): Promise<boolean> {
   }
 }
 
-/**
- * Планирует регулярное создание резервных копий
- */
 export function scheduleBackups(intervalMs = 5 * 60 * 1000): () => void {
   const intervalId = setInterval(createBackup, intervalMs)
   return () => clearInterval(intervalId)

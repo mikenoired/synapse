@@ -10,7 +10,7 @@ export default class UserRepository {
     if (!this.ctx.user) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
-        message: 'Пользователь не авторизован',
+        message: 'Unauthorized',
       })
     }
 
@@ -27,7 +27,7 @@ export default class UserRepository {
     if (!user) {
       throw new TRPCError({
         code: 'NOT_FOUND',
-        message: 'Пользователь не найден',
+        message: 'User not found',
       })
     }
 
