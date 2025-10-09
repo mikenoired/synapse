@@ -26,10 +26,10 @@ export function TodoList({
 
   const handleAddTodo = () => {
     const value = todoInput.trim()
-    if (value) {
-      onAddTodo(value)
-      setTodoInput('')
-    }
+    if (!value)
+      return
+    onAddTodo(value)
+    setTodoInput('')
   }
 
   return (

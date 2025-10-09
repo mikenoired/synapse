@@ -12,6 +12,14 @@ interface ContentTypeSelectorProps {
   onToggleFullScreen: () => void
 }
 
+const contentTypes = [
+  { key: 'note', icon: FileText, label: 'Note' },
+  { key: 'media', icon: ImageIcon, label: 'Media' },
+  { key: 'audio', icon: Music2, label: 'Audio' },
+  { key: 'link', icon: Link, label: 'Link' },
+  { key: 'todo', icon: ListChecks, label: 'To-Do' },
+] as const
+
 export function ContentTypeSelector({
   type,
   onTypeChange,
@@ -21,28 +29,18 @@ export function ContentTypeSelector({
   const containerRef = useRef<HTMLDivElement>(null)
   const activeTabElementRef = useRef<HTMLButtonElement>(null)
 
-  const contentTypes = [
-    { key: 'note', icon: FileText, label: 'Note' },
-    { key: 'media', icon: ImageIcon, label: 'Media' },
-    { key: 'audio', icon: Music2, label: 'Audio' },
-    { key: 'link', icon: Link, label: 'Link' },
-    { key: 'todo', icon: ListChecks, label: 'To-Do' },
-  ] as const
-
   useEffect(() => {
     const container = containerRef.current
 
-    if (type && container) {
+    if (type && container && activeTabElementRef.current) {
       const activeTabElement = activeTabElementRef.current
 
-      if (activeTabElement) {
-        const { offsetLeft, offsetWidth } = activeTabElement
+      const { offsetLeft, offsetWidth } = activeTabElement
 
-        const clipLeft = offsetLeft
-        const clipRight = offsetLeft + offsetWidth
+      const clipLeft = offsetLeft
+      const clipRight = offsetLeft + offsetWidth
 
-        container.style.clipPath = `inset(0 ${Number(100 - (clipRight / container.offsetWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / container.offsetWidth) * 100).toFixed(2)}% round 8px)`
-      }
+      container.style.clipPath = `inset(0 ${Number(100 - (clipRight / container.offsetWidth) * 100).toFixed(2)}% 0 ${Number((clipLeft / container.offsetWidth) * 100).toFixed(2)}% round 8px)`
     }
   }, [type])
 

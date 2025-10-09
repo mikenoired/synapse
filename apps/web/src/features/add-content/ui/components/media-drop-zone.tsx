@@ -30,7 +30,6 @@ export function MediaDropZone({
 }: MediaDropZoneProps) {
   return (
     <div className="space-y-4">
-      {/* Drop Zone */}
       <div
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
           ? 'border-primary bg-primary/10 scale-[1.02]'
@@ -52,6 +51,7 @@ export function MediaDropZone({
             <p className="text-xs text-muted-foreground">
               or click to choose
             </p>
+            {/** TODO: remove formats when we will support documents */}
             <p className="text-xs text-muted-foreground/70">
               Max 10MB • JPG, PNG, GIF, WebP, MP4, MOV, AVI, MP3, M4A, FLAC, WAV, OGG
             </p>
