@@ -217,7 +217,7 @@ export default function HomePage() {
             <Button
               size="lg"
               onClick={() => handleAuthClick('login')}
-              className="min-w-40 h-12 text-lg font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="min-w-40 h-12 text-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               Login
             </Button>
@@ -225,7 +225,7 @@ export default function HomePage() {
               variant="outline"
               size="lg"
               onClick={() => handleAuthClick('register')}
-              className="min-w-40 h-12 text-lg font-medium border-2 hover:bg-primary/5 transition-all duration-300"
+              className="min-w-40 h-12 text-lg font-medium border-2 transition-all duration-300"
             >
               Register
             </Button>
@@ -280,7 +280,7 @@ export default function HomePage() {
             <Button
               size="lg"
               onClick={() => handleAuthClick('register')}
-              className="min-w-48 h-12 text-lg font-medium bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300 shadow-lg hover:shadow-xl"
+              className="min-w-48 h-12 text-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl"
             >
               Continue free
             </Button>

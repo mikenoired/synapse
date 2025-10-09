@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { cn } from '@synapse/ui/cn'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
@@ -8,9 +9,10 @@ interface ModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   children: ReactNode
+  className?: string
 }
 
-export function Modal({ open, onOpenChange, children }: ModalProps) {
+export function Modal({ open, onOpenChange, children, className }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -96,7 +98,7 @@ export function Modal({ open, onOpenChange, children }: ModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ type: 'spring', duration: 0.3, bounce: 0.1 }}
-            className="relative z-10 max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg"
+            className={cn('relative z-10 max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg', className)}
             onClick={e => e.stopPropagation()}
           >
             {children}

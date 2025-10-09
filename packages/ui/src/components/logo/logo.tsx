@@ -1,5 +1,6 @@
+'use client'
+
 import type { Ref, SVGProps } from 'react'
-import * as React from 'react'
 import { forwardRef } from 'react'
 
 function LogoIcon(props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) {

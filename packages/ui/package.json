@@ -4,9 +4,9 @@
   "private": true,
   "sideEffects": false,
   "exports": {
-    "./cn": "./cn.ts",
-    "./prose": "./prose.ts",
-    "./components": "./components/index.ts"
+    "./cn": "./src/cn.ts",
+    "./prose": "./src/prose.ts",
+    "./components": "./src/components/index.ts"
   },
   "main": "index.js",
   "dependencies": {
@@ -16,9 +16,17 @@
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@synapse/tsconfig": "workspace:*",
+    "@synapse/ui": "workspace:*",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "motion": "^12.23.22",
     "react": "^19.2.0",
     "tailwind-merge": "^3.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.14",
+    "@tailwindcss/typography": "^0.5.19",
+    "tailwind": "^4.0.0",
+    "typescript": "^5.9.3"
   }
 }

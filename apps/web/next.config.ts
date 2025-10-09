@@ -18,11 +18,13 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
 
+  transpilePackages: ['@synapse/ui'],
+
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
       ? {
-          exclude: ['error', 'warn'],
-        }
+        exclude: ['error', 'warn'],
+      }
       : false,
   },
 

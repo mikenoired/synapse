@@ -1,4 +1,4 @@
-import { cn } from '../../cn'
+import { cn } from '@synapse/ui/cn'
 
 interface LoadingSpinnerProps {
   className?: string
