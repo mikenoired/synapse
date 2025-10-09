@@ -13,6 +13,7 @@ import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialo
 import { trpc } from '@/shared/api/trpc'
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 import { extractTextFromStructuredContent, parseLinkContent, parseMediaJson } from '@/shared/lib/schemas'
+import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import {
   ContextMenu,
@@ -20,7 +21,61 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from '@/shared/ui/context-menu'
+import proseClasses from '@/shared/ui/prose-classes'
 import MediaItem from './media-item'
+
+function extractTextFromHTML(html: string): string {
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = html
+  return tempDiv.textContent || ''
+}
+
+function truncateHTMLContent(html: string, maxLength: number = 250): { html: string, isTruncated: boolean } {
+  const textContent = extractTextFromHTML(html)
+
+  if (textContent.length <= maxLength) {
+    return { html, isTruncated: false }
+  }
+
+  const tempDiv = document.createElement('div')
+  tempDiv.innerHTML = html
+
+  let currentLength = 0
+  let truncated = false
+
+  const walkNodes = (node: Node): void => {
+    if (truncated)
+      return
+
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || ''
+      if (currentLength + text.length > maxLength) {
+        const remainingLength = maxLength - currentLength
+        node.textContent = `${text.substring(0, remainingLength)}...`
+        truncated = true
+        return
+      }
+      currentLength += text.length
+    }
+    else if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element
+      const children = Array.from(element.childNodes)
+      for (let i = 0; i < children.length; i++) {
+        walkNodes(children[i])
+        if (truncated) {
+          for (let j = i + 1; j < children.length; j++) {
+            element.removeChild(children[j])
+          }
+          break
+        }
+      }
+    }
+  }
+
+  walkNodes(tempDiv)
+
+  return { html: tempDiv.innerHTML, isTruncated: truncated }
+}
 
 interface ItemProps {
   item: Content
@@ -208,14 +263,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
       transition={{ delay: index * 0.1 }}
       className="group"
     >
-      <div className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative p-0 bg-muted/50">
-        {item.title && item.type !== 'link' && (
-          <div className="pt-3 px-3 transition-opacity duration-200 absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-background to-transparent text-foreground opacity-0 group-hover:opacity-100">
-            <span className="text-lg font-semibold leading-tight">
-              {item.title}
-            </span>
-          </div>
-        )}
+      <div className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative">
         <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
           {item.type === 'media' || item.type === 'audio'
             ? (
@@ -223,7 +271,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
             )
             : item.type === 'link'
               ? (
-                <div>
+                <>
                   {renderLinkPreview()}
                   {item.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-3">
@@ -234,7 +282,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
                       ))}
                     </div>
                   )}
-                </div>
+                </>
               )
               : item.type === 'todo'
                 ? (
@@ -242,8 +290,8 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
                 )
                 : (
                   <>
-                    <div className="prose max-w-none opacity-75" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(getTextContent || '') }} />
-                    <div className="flex flex-wrap mt-3">
+                    <TruncatedText html={getTextContent || ''} />
+                    <div className="flex flex-wrap mt-3 absolute bottom-0 left-0 right-0 z-10">
                       {item.tags.map((tag: string) => (
                         <Badge key={tag} variant="outline" className="text-xs">
                           {tag}
@@ -255,5 +303,39 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
         </div>
       </div>
     </motion.div>
+  )
+}
+
+interface TruncatedTextProps {
+  html: string
+  maxLength?: number
+  className?: string
+}
+
+function TruncatedText({ html, maxLength = 250, className = '' }: TruncatedTextProps) {
+  const { html: processedHTML, isTruncated } = truncateHTMLContent(html, maxLength)
+
+  if (!isTruncated) {
+    return (
+      <div
+        className={cn('max-w-none opacity-75', className, proseClasses)}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processedHTML) }}
+      />
+    )
+  }
+
+  return (
+    <div className={`${className}`}>
+      <div
+        className={cn('max-w-none opacity-75', className, proseClasses)}
+        dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processedHTML) }}
+      />
+      <div
+        className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-10"
+        style={{
+          background: 'linear-gradient(to bottom, transparent 10%, var(--background) 100%)',
+        }}
+      />
+    </div>
   )
 }

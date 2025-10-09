@@ -6,16 +6,18 @@ import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { calculateReadingTimeFromLinkContent, parseLinkContent } from '@/shared/lib/schemas'
+import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import Modal from '@/shared/ui/modal'
+import proseClasses from '@/shared/ui/prose-classes'
 
 function StructuredContentRenderer({ content }: { content: any }) {
   if (!content?.content)
     return null
 
   return (
-    <article className="prose prose-slate dark:prose-invert max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-p:leading-7 prose-p:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:bg-muted/50 prose-blockquote:px-4 prose-blockquote:py-2 prose-blockquote:rounded-r-md prose-pre:bg-muted prose-pre:border prose-img:rounded-lg prose-img:border">
+    <article className={cn('max-w-none', proseClasses)}>
       {content.content.map((block: any, index: number) => {
         switch (block.type) {
           case 'heading': {
@@ -89,23 +91,23 @@ function StructuredContentRenderer({ content }: { content: any }) {
 
             return isOrdered
               ? (
-                <ol key={index} className="my-4 space-y-2 list-decimal list-inside">
-                  {items?.map((item: string, itemIndex: number) => (
-                    <li key={itemIndex} className="text-foreground/90 leading-7">
-                      {item.trim()}
-                    </li>
-                  ))}
-                </ol>
-              )
+                  <ol key={index} className="my-4 space-y-2 list-decimal list-inside">
+                    {items?.map((item: string, itemIndex: number) => (
+                      <li key={itemIndex} className="text-foreground/90 leading-7">
+                        {item.trim()}
+                      </li>
+                    ))}
+                  </ol>
+                )
               : (
-                <ul key={index} className="my-4 space-y-2 list-disc list-inside">
-                  {items?.map((item: string, itemIndex: number) => (
-                    <li key={itemIndex} className="text-foreground/90 leading-7">
-                      {item.trim()}
-                    </li>
-                  ))}
-                </ul>
-              )
+                  <ul key={index} className="my-4 space-y-2 list-disc list-inside">
+                    {items?.map((item: string, itemIndex: number) => (
+                      <li key={itemIndex} className="text-foreground/90 leading-7">
+                        {item.trim()}
+                      </li>
+                    ))}
+                  </ul>
+                )
           }
 
           case 'divider':
@@ -188,7 +190,7 @@ export function LinkViewerModal({
         </motion.button>
 
         <div className="flex-1 flex flex-col min-h-0">
-          <div className="flex-shrink-0 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex-shrink-0 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="p-6 pb-4 space-y-4">
               {linkContent && (
                 <div className="flex items-start justify-between gap-4">
@@ -295,85 +297,85 @@ export function LinkViewerModal({
           <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
             {linkContent
               ? (
-                <div className="pb-6">
-                  {linkContent.metadata.image && (
-                    <div className="relative w-full mb-8">
-                      <img
-                        src={linkContent.metadata.image}
-                        alt={linkContent.title || 'Article image'}
-                        className="w-full h-64 md:h-80 object-cover"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
-                    </div>
-                  )}
-
-                  <div className="px-6 max-w-none">
-                    <StructuredContentRenderer content={linkContent.content} />
-                  </div>
-
-                  {linkContent.metadata.images && linkContent.metadata.images.length > 1 && (
-                    <div className="px-6 mt-8 space-y-3">
-                      <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4" />
-                        Extra images
-                      </h3>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        {linkContent.metadata.images.slice(1).map((img, index) => (
-                          <img
-                            key={index}
-                            src={img}
-                            alt={`Additional image ${index + 1}`}
-                            className="w-full h-24 object-cover rounded-lg border border-border"
-                            loading="lazy"
-                            onError={(e) => {
-                              e.currentTarget.style.display = 'none'
-                            }}
-                          />
-                        ))}
+                  <div className="pb-6">
+                    {linkContent.metadata.image && (
+                      <div className="relative w-full mb-8">
+                        <img
+                          src={linkContent.metadata.image}
+                          alt={linkContent.title || 'Article image'}
+                          className="w-full h-64 md:h-80 object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent" />
                       </div>
+                    )}
+
+                    <div className="px-6 max-w-none">
+                      <StructuredContentRenderer content={linkContent.content} />
                     </div>
-                  )}
-                </div>
-              )
+
+                    {linkContent.metadata.images && linkContent.metadata.images.length > 1 && (
+                      <div className="px-6 mt-8 space-y-3">
+                        <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4" />
+                          Extra images
+                        </h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                          {linkContent.metadata.images.slice(1).map((img, index) => (
+                            <img
+                              key={index}
+                              src={img}
+                              alt={`Additional image ${index + 1}`}
+                              className="w-full h-24 object-cover rounded-lg border border-border"
+                              loading="lazy"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none'
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
               : (
-                <div className="flex items-center justify-center py-8 px-6">
-                  <div className="text-center space-y-6 max-w-md">
-                    <div className="p-6 border border-border rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <ExternalLink className="w-5 h-5 text-primary" />
+                  <div className="flex items-center justify-center py-8 px-6">
+                    <div className="text-center space-y-6 max-w-md">
+                      <div className="p-6 border border-border rounded-lg bg-muted/20 hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <ExternalLink className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            External link
+                          </div>
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          External link
+
+                        <div className="space-y-3">
+                          <p className="text-sm font-mono text-left break-all bg-muted/50 p-3 rounded">
+                            {item.content}
+                          </p>
+
+                          <Button
+                            onClick={handleOpenLink}
+                            className="w-full"
+                            size="lg"
+                          >
+                            <ExternalLink className="w-4 h-4 mr-2" />
+                            Open link
+                          </Button>
                         </div>
                       </div>
 
-                      <div className="space-y-3">
-                        <p className="text-sm font-mono text-left break-all bg-muted/50 p-3 rounded">
-                          {item.content}
-                        </p>
-
-                        <Button
-                          onClick={handleOpenLink}
-                          className="w-full"
-                          size="lg"
-                        >
-                          <ExternalLink className="w-4 h-4 mr-2" />
-                          Open link
-                        </Button>
+                      <div className="text-xs text-muted-foreground">
+                        Link was saved in old format.
+                        Edit for another parse.
                       </div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">
-                      Link was saved in old format.
-                      Edit for another parse.
                     </div>
                   </div>
-                </div>
-              )}
+                )}
           </div>
 
           <div className="flex-shrink-0">

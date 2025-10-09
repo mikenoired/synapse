@@ -36,7 +36,7 @@ export function MediaDropZone({
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${dragActive
           ? 'border-primary bg-primary/10 scale-[1.02]'
           : 'border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20'
-          }`}
+        }`}
         onDragEnter={onDrag}
         onDragLeave={onDrag}
         onDragOver={onDrag}
@@ -110,19 +110,19 @@ export function MediaDropZone({
               >
                 {selectedFiles[index].type.startsWith('audio/')
                   ? (
-                    <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
-                      {selectedFiles[index].name}
-                    </div>
-                  )
+                      <div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
+                        {selectedFiles[index].name}
+                      </div>
+                    )
                   : (
-                    <Image
-                      src={url}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full aspect-square object-cover rounded-lg border"
-                      width={200}
-                      height={200}
-                    />
-                  )}
+                      <Image
+                        src={url}
+                        alt={`Preview ${index + 1}`}
+                        className="w-full aspect-square object-cover rounded-lg border"
+                        width={200}
+                        height={200}
+                      />
+                    )}
                 {selectedFiles.length > 1 && (
                   <div className="absolute top-1 left-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-xs font-medium">
                     {index + 1}

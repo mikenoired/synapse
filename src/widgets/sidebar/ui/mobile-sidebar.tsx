@@ -48,7 +48,7 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
   }
 
   return (
-    <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 border rounded-full bg-background/95 p-2 backdrop-blur sm:hidden">
+    <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 border rounded-full bg-background/95 p-2 backdrop-blur-sm sm:hidden">
       <div className="flex justify-between gap-2 mx-auto font-medium">
         {navItems.map(item => renderNavItem(item, true))}
       </div>

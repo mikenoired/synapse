@@ -7,6 +7,8 @@ import Underline from '@tiptap/extension-underline'
 import StarterKit from '@tiptap/starter-kit'
 import DOMPurify from 'dompurify'
 import { common, createLowlight } from 'lowlight'
+import { cn } from '@/shared/lib/utils'
+import proseClasses from '@/shared/ui/prose-classes'
 
 const lowlight = createLowlight(common)
 
@@ -25,6 +27,6 @@ export function EditorRenderer({ data }: EditorRendererProps) {
   ])
 
   return (
-    <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
+    <div className={cn('max-w-none', proseClasses)} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
   )
 }

@@ -46,14 +46,14 @@ export function LinkPreview({
           >
             {linkParsing
               ? (
-                <Clock className="w-4 h-4 animate-spin" />
-              )
+                  <Clock className="w-4 h-4 animate-spin" />
+                )
               : (
-                <>
-                  <Globe className="w-4 h-4 mr-1" />
-                  Parse
-                </>
-              )}
+                  <>
+                    <Globe className="w-4 h-4 mr-1" />
+                    Parse
+                  </>
+                )}
           </Button>
         </div>
 

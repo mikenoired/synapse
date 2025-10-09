@@ -2,10 +2,12 @@ import type { Content } from '@/shared/lib/schemas'
 import { Calendar, Clock, ListChecks, Pencil, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
+import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import Modal from '@/shared/ui/modal'
+import proseClasses from '@/shared/ui/prose-classes'
 
 interface TodoViewerModalProps {
   open: boolean
@@ -160,7 +162,7 @@ export function TodoViewerModal({ open, onOpenChange, item, onUpdate, onEdit, on
             </div>
           </div>
           <div className="flex-1 overflow-auto p-6 pt-4">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className={cn('max-w-none', proseClasses)}>
               <div className="flex flex-col gap-3">
                 {todos.length === 0 && <div className="text-muted-foreground text-sm">No items</div>}
                 {todos.map((todo, idx) => (

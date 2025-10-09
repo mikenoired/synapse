@@ -5,9 +5,11 @@ import { Calendar, Clock, FileText, Pencil, Trash2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import Modal from '@/shared/ui/modal'
+import proseClasses from '@/shared/ui/prose-classes'
 import { EditorRenderer } from '@/widgets/editor/ui/editor-renderer'
 
 interface NoteViewerModalProps {
@@ -95,20 +97,20 @@ export function NoteViewerModal({
           <div className="flex-shrink-0 p-6 pb-0">
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <FileText className="w-4 h-4" />
-                <span>Note</span>
+                <FileText className="size-4" />
+                <span className="text-sm leading-none">Note</span>
               </div>
 
               {item.title && (
-                <h1 className="text-2xl font-bold tracking-tight leading-tight">
+                <h1 className="text-3xl font-bold tracking-tight leading-tight">
                   {item.title}
                 </h1>
               )}
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  <span>
+                  <Calendar className="size-3" />
+                  <span className="text-sm leading-none">
                     {new Date(item.created_at).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'short',
@@ -120,7 +122,7 @@ export function NoteViewerModal({
                 </div>
                 {item.updated_at !== item.created_at && (
                   <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
+                    <Clock className="size-3" />
                     <span>
                       Updated:
                       {new Date(item.updated_at).toLocaleDateString('en-US', {
@@ -176,7 +178,7 @@ export function NoteViewerModal({
           </div>
 
           <div className="flex-1 overflow-auto p-6 pt-4">
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className={cn('max-w-none', proseClasses)}>
               {renderContent()}
             </div>
           </div>

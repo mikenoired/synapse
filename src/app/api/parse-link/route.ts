@@ -221,9 +221,9 @@ function convertHtmlToStructuredContent(document: Document): StructuredContent {
     content: blocks.length > 0
       ? blocks
       : [{
-        type: 'paragraph',
-        content: 'Can\'t get content',
-      }],
+          type: 'paragraph',
+          content: 'Can\'t get content',
+        }],
   }
 }
 
