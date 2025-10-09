@@ -1,0 +1,16 @@
+{
+  "extends": "@synapse/tsconfig/react-library.json",
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "**/node_modules/**"
+  ]
+}
