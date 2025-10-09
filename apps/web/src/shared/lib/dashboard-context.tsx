@@ -103,7 +103,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
   return (
     <DashboardContext.Provider value={value}>
       {children}
-      {isAddDialogOpen && <AddContentDialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen} initialTags={dialogOptions.initialTags} onContentAdded={dialogOptions.onContentAdded} />}
+      <AddContentDialog
+        open={isAddDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        initialTags={dialogOptions.initialTags}
+        onContentAdded={dialogOptions.onContentAdded}
+      />
     </DashboardContext.Provider>
   )
 }

@@ -81,29 +81,41 @@ export function Modal({ open, onOpenChange, children, className }: ModalProps) {
     return null
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <motion.div
+          key="modal-wrapper"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{
+            duration: 0.25,
+            ease: 'easeOut',
+          }}
+          onClick={() => onOpenChange(false)}
+        >
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={() => onOpenChange(false)}
-          />
-
-          <motion.div
+            key="modal"
             ref={modalRef}
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ type: 'spring', duration: 0.3, bounce: 0.1 }}
-            className={cn('relative z-10 max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg', className)}
+            exit={{ opacity: 0, scale: 0.97, y: 10 }}
+            transition={{
+              type: 'spring',
+              duration: 0.35,
+              bounce: 0.1,
+              opacity: { duration: 0.2, delay: 0.05 },
+            }}
+            className={cn(
+              'relative z-10 max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg',
+              className,
+            )}
             onClick={e => e.stopPropagation()}
           >
             {children}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   )
