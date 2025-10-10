@@ -1,18 +1,19 @@
 'use client'
 
+import type { HTMLMotionProps } from 'motion/react'
 import type { ReactNode } from 'react'
 import { cn } from '@synapse/ui/cn'
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 
-interface ModalProps {
+interface ModalProps extends Omit<HTMLMotionProps<'div'>, 'onClick'> {
   open: boolean
   onOpenChange: (open: boolean) => void
   children: ReactNode
   className?: string
 }
 
-export function Modal({ open, onOpenChange, children, className }: ModalProps) {
+export function Modal({ open, onOpenChange, children, className, ...props }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null)
   const [mounted, setMounted] = useState(false)
 
@@ -94,6 +95,7 @@ export function Modal({ open, onOpenChange, children, className }: ModalProps) {
             ease: 'easeOut',
           }}
           onClick={() => onOpenChange(false)}
+          {...props}
         >
           <motion.div
             key="modal"

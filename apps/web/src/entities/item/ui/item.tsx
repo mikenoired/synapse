@@ -262,39 +262,39 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
         <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
           {item.type === 'media' || item.type === 'audio'
             ? (
-              <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
-            )
+                <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
+              )
             : item.type === 'link'
               ? (
-                <>
-                  {renderLinkPreview()}
-                  {item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-3">
-                      {item.tags.map((tag: string) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </>
-              )
+                  <>
+                    {renderLinkPreview()}
+                    {item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-3">
+                        {item.tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )
               : item.type === 'todo'
                 ? (
-                  renderTodoPreview()
-                )
+                    renderTodoPreview()
+                  )
                 : (
-                  <>
-                    <TruncatedText html={getTextContent || ''} />
-                    <div className="flex flex-wrap mt-3 absolute bottom-0 left-0 right-0 z-10">
-                      {item.tags.map((tag: string) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  </>
-                )}
+                    <>
+                      <TruncatedText html={getTextContent || ''} />
+                      <div className="flex flex-wrap mt-3 absolute bottom-0 left-0 right-0 z-10">
+                        {item.tags.map((tag: string) => (
+                          <Badge key={tag} variant="outline" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </>
+                  )}
         </div>
       </div>
     </motion.div>
