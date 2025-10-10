@@ -1,9 +1,9 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import * as Dialog from '@radix-ui/react-dialog'
 import { cn } from '@synapse/ui/cn'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useRef, useState } from 'react'
 
 interface ModalProps {
   open: boolean
@@ -13,110 +13,52 @@ interface ModalProps {
 }
 
 export function Modal({ open, onOpenChange, children, className }: ModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null)
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => setMounted(true), [])
-
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden'
-      document.body.style.paddingRight = 'var(--removed-body-scroll-bar-size, 0px)'
-    }
-    else {
-      document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
-    }
-
-    return () => {
-      document.body.style.overflow = ''
-      document.body.style.paddingRight = ''
-    }
-  }, [open])
-
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => e.key === 'Escape' && open && onOpenChange(false)
-
-    if (open)
-      document.addEventListener('keydown', handleEscape)
-    return () => document.removeEventListener('keydown', handleEscape)
-  }, [open, onOpenChange])
-
-  useEffect(() => {
-    if (!open || !modalRef.current)
-      return
-
-    const modal = modalRef.current
-    const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    )
-    const firstElement = focusableElements[0] as HTMLElement
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement
-
-    const handleTabKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab')
-        return
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          e.preventDefault()
-          lastElement?.focus()
-        }
-      }
-      else {
-        if (document.activeElement === lastElement) {
-          e.preventDefault()
-          firstElement?.focus()
-        }
-      }
-    }
-
-    modal.addEventListener('keydown', handleTabKey)
-    firstElement?.focus()
-
-    return () => modal.removeEventListener('keydown', handleTabKey)
-  }, [open])
-
-  if (!mounted)
-    return null
-
   return (
-    <AnimatePresence mode="wait">
-      {open && (
-        <motion.div
-          key="modal-wrapper"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{
-            duration: 0.25,
-            ease: 'easeOut',
-          }}
-          onClick={() => onOpenChange(false)}
-        >
-          <motion.div
-            key="modal"
-            ref={modalRef}
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 10 }}
-            transition={{
-              type: 'spring',
-              duration: 0.35,
-              bounce: 0.1,
-              opacity: { duration: 0.2, delay: 0.05 },
-            }}
-            className={cn(
-              'relative z-10 max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg',
-              className,
-            )}
-            onClick={e => e.stopPropagation()}
-          >
-            {children}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <Dialog.Root open={open} onOpenChange={onOpenChange}>
+      <AnimatePresence>
+        {open && (
+          <Dialog.Portal forceMount>
+            {/* Overlay */}
+            <Dialog.Overlay asChild>
+              <motion.div
+                key="overlay"
+                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  duration: 0.25,
+                  ease: 'easeOut',
+                }}
+              />
+            </Dialog.Overlay>
+
+            {/* Content */}
+            <Dialog.Content asChild>
+              <motion.div
+                key="modal"
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: 10 }}
+                transition={{
+                  type: 'spring',
+                  duration: 0.35,
+                  bounce: 0.1,
+                  opacity: { duration: 0.2, delay: 0.05 },
+                }}
+                className={cn(
+                  'fixed z-50 top-[50%] left-[50%] -translate-x-1/2 -translate-y-1/2',
+                  'max-w-4xl max-h-[95vh] w-full bg-background border border-border shadow-2xl',
+                  'overflow-hidden flex flex-col rounded-lg m-4',
+                  className,
+                )}
+              >
+                {children}
+              </motion.div>
+            </Dialog.Content>
+          </Dialog.Portal>
+        )}
+      </AnimatePresence>
+    </Dialog.Root>
   )
 }
