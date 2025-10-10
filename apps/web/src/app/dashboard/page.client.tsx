@@ -12,7 +12,7 @@ const ContentFilter = lazy(() => import('@/features/content-filter/content-filte
 const ContentGrid = lazy(() => import('@/features/content-grid/content-grid').then(mod => ({ default: mod.ContentGrid })))
 const ContentModalManager = lazy(() => import('@/widgets/content-viewer/ui/content-modal-manager').then(mod => ({ default: mod.ContentModalManager })))
 
-export default function DashboardClient() {
+export default function DashboardClient({ initial }: { initial: { items: Content[], nextCursor: string | undefined } }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard()
@@ -32,6 +32,11 @@ export default function DashboardClient() {
     search: searchQuery || undefined,
     tagIds: selectedTags.length > 0 ? selectedTags : undefined,
     limit: 12,
+  }, {
+    enabled: !!user || initial.items.length > 0,
+    retry: false,
+    initialData: initial,
+    refetchOnMount: false,
   })
 
   const content: Content[] = contentData?.items ?? []
@@ -121,7 +126,7 @@ export default function DashboardClient() {
   const clearFilters = () => {
     setSearchQuery('')
     setSelectedTags([])
-    router.push('/dashboard')
+    router.push('/(dashboard)')
   }
 
   if (loading) {

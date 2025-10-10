@@ -126,7 +126,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!loading && user)
-      router.push('/dashboard')
+      router.push('/(dashboard)')
   }, [user, loading, router])
 
   const handleAuthClick = (mode: 'login' | 'register') => {
