@@ -4,7 +4,7 @@ import type { DragEvent } from 'react'
 import type { Content } from '@/shared/lib/schemas'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { lazy, useCallback, useEffect, useRef, useState } from 'react'
-import { useDeleteLocalContent, useLocalContent } from '@/shared/db/hooks/use-local-content'
+import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 
@@ -25,16 +25,16 @@ export default function DashboardClient() {
   const dragCounter = useRef(0)
 
   const {
-    data: localData,
+    data: contentData,
     isLoading: contentLoading,
     refetch: refetchContent,
-  } = useLocalContent({
+  } = trpc.content.getAll.useQuery({
     search: searchQuery || undefined,
     tagIds: selectedTags.length > 0 ? selectedTags : undefined,
     limit: 12,
   })
 
-  const content: Content[] = localData?.items ?? []
+  const content: Content[] = contentData?.items ?? []
 
   const handleContentChanged = useCallback(() => {
     refetchContent()
@@ -107,10 +107,10 @@ export default function DashboardClient() {
     setModalOpen(true)
   }
 
-  const deleteContentMutation = useDeleteLocalContent()
+  const deleteContentMutation = trpc.content.delete.useMutation()
 
   const handleModalDelete = (id: string) => {
-    deleteContentMutation.mutate(id, {
+    deleteContentMutation.mutate({ id }, {
       onSuccess: () => {
         handleContentChanged()
         setModalOpen(false)

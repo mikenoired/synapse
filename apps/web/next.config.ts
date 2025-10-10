@@ -16,7 +16,6 @@ const nextConfig: NextConfig = {
       '@tiptap/core',
     ],
     optimizeCss: true,
-    reactCompiler: true,
   },
 
   transpilePackages: ['@synapse/ui'],
@@ -132,18 +131,18 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  webpack: (config) => {
-    // Support for WASM
-    config.experiments = {
-      ...config.experiments,
-      asyncWebAssembly: true,
-      layers: true,
-    }
+  // webpack: (config) => {
+  //   // Support for WASM
+  //   config.experiments = {
+  //     ...config.experiments,
+  //     asyncWebAssembly: true,
+  //     layers: true,
+  //   }
 
-    config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm'
+  //   config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm'
 
-    return config
-  },
+  //   return config
+  // },
 }
 
 const bundleAnalyzer = withBundleAnalyzer({

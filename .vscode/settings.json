@@ -84,5 +84,5 @@
     "pcss",
     "postcss"
   ],
-  "typescript.experimental.useTsgo": true
+  "typescript.experimental.useTsgo": false
 }

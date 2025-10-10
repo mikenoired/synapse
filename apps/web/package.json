@@ -16,8 +16,7 @@
     "worker": "bun run src/server/workers/start-worker.ts"
   },
   "dependencies": {
-    "@next/bundle-analyzer": "^15.5.4",
-    "@sqlite.org/sqlite-wasm": "^3.50.4-build1",
+    "@next/bundle-analyzer": "16.0.0-beta.0",
     "@synapse/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.2",
     "@tiptap/core": "^3.6.5",
@@ -31,7 +30,6 @@
     "@trpc/next": "^11.6.0",
     "@trpc/react-query": "^11.6.0",
     "@trpc/server": "^11.6.0",
-    "babel-plugin-react-compiler": "^1.0.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.61.0",
     "clsx": "^2.1.1",
@@ -44,11 +42,11 @@
     "minio": "^8.0.6",
     "motion": "^12.23.22",
     "music-metadata": "^11.9.0",
-    "next": "^15.5.4",
+    "next": "16.0.0-beta.0",
     "next-themes": "^0.4.6",
     "postgres": "^3.4.7",
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "react-hook-form": "^7.64.0",
     "react-hot-toast": "^2.6.0",
     "react-masonry-css": "^1.0.16",
@@ -75,12 +73,12 @@
     "@types/lowlight": "^2.0.1",
     "@types/minio": "^7.1.1",
     "@types/node": "^24.7.0",
-    "@types/react": "^19.2.2",
-    "@types/react-dom": "^19.2.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.1",
     "critters": "^0.0.25",
     "drizzle-kit": "^0.31.5",
     "eslint": "^9.37.0",
-    "eslint-config-next": "^15.5.4",
+    "eslint-config-next": "16.0.0-beta.0",
     "eslint-plugin-react-refresh": "^0.4.23",
     "eslint-plugin-unused-imports": "^4.2.0",
     "tailwindcss": "^4.1.14",
@@ -89,5 +87,9 @@
   "trustedDependencies": [
     "@tailwindcss/oxide",
     "unrs-resolver"
-  ]
+  ],
+  "overrides": {
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.1"
+  }
 }

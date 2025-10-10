@@ -5,7 +5,7 @@ import { Skeleton } from '@synapse/ui/components'
 import Link from 'next/link'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TagStack } from '@/entities/item/ui/tag-stack'
-import { useLocalTagsWithContent } from '@/shared/db/hooks/use-local-tags'
+import { trpc } from '@/shared/api/trpc'
 import { useAuth } from '@/shared/lib/auth-context'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 
@@ -16,12 +16,14 @@ export default function TagsClient() {
   const dragCounter = useRef(0)
 
   const {
-    data: tagsWithContent,
+    data: tagsWithContentData,
     isLoading: tagsLoading,
     refetch: refetchContent,
-  } = useLocalTagsWithContent()
+  } = trpc.content.getTagsWithContent.useQuery()
 
-  const isLoading = (loading || tagsLoading) && !tagsWithContent?.length
+  const isLoading = (loading || tagsLoading) && !tagsWithContentData?.length
+
+  const tagsWithContent = tagsWithContentData ?? []
 
   const handleContentChanged = useCallback(() => {
     refetchContent()
@@ -80,7 +82,7 @@ export default function TagsClient() {
     )
   }
 
-  if (!tagsWithContent || !tagsWithContent.length) {
+  if (!tagsWithContentData || !tagsWithContentData.length) {
     return (
       <div
         className="p-6 text-center h-full"
