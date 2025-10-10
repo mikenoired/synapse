@@ -38,7 +38,7 @@ export default function DashboardClient() {
 
   const handleContentChanged = useCallback(() => {
     refetchContent()
-  }, [refetchContent])
+  }, [])
 
   useEffect(() => {
     if (!searchParams)

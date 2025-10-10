@@ -20,14 +20,14 @@ function TagPreview({ item }: { item: Content }) {
   useEffect(() => {
     let cancelled = false
 
-    const loadImages = async () => {
+    const loadImages = () => {
       setLoaded(false)
       setErrored(false)
       setImgSrc(null)
 
       const media = item.type === 'media' ? parseMediaJson(item.content)?.media : null
       if (media?.url) {
-        const url = await getPresignedMediaUrl(media.url)
+        const url = getPresignedMediaUrl(media.url)
         if (cancelled)
           return
 

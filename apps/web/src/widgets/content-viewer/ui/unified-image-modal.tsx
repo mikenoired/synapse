@@ -5,7 +5,7 @@ import { Badge, Button, Input, Modal, PreviewImage } from '@synapse/ui/component
 import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, Ungroup, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { trpc } from '@/shared/api/trpc'
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 import { parseMediaJson } from '@/shared/lib/schemas'
@@ -30,8 +30,7 @@ export function UnifiedMediaModal({
   onDelete,
   onContentChanged,
 }: UnifiedMediaModalProps) {
-  const initialIndex = (gallery.length > 0) ? gallery.findIndex(g => g.parentId === item.id) : 0
-  const [currentIndex, setCurrentIndex] = useState(initialIndex >= 0 ? initialIndex : 0)
+  const [currentIndex, setCurrentIndex] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const [direction, setDirection] = useState(0)
   const [showTags, setShowTags] = useState(false)
@@ -40,12 +39,14 @@ export function UnifiedMediaModal({
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
   const router = useRouter()
 
-  const imageUrls: string[] = (gallery.length > 0)
-    ? gallery.map(g => g.url)
-    : (() => {
+  const imageUrls: string[] = useMemo(() => {
+    return (gallery.length > 0)
+      ? gallery.map(g => g.url)
+      : (() => {
         const media = parseMediaJson(item.content)?.media
         return media?.url ? [media.url] : [item.content]
       })()
+  }, [gallery, item.content])
 
   const isMultiple = imageUrls.length > 1
 
@@ -74,7 +75,7 @@ export function UnifiedMediaModal({
       setCurrentIndex(newIndex >= 0 ? newIndex : 0)
       setShowTags(false)
     }
-  }, [open, item.id])
+  }, [open, item.id, gallery])
 
   const goToNext = () => {
     setDirection(1)
@@ -233,24 +234,27 @@ export function UnifiedMediaModal({
     }
   }
 
-  const currentMedia = gallery && gallery.length > 0
-    ? gallery[currentIndex]
-    : { url: item.media_url || imageUrls[currentIndex], media_type: item.media_type, thumbnail_url: item.thumbnail_url }
+  const currentMedia = useMemo(() => {
+    return gallery && gallery.length > 0
+      ? gallery[currentIndex]
+      : { url: item.media_url || imageUrls[currentIndex], media_type: item.media_type, thumbnail_url: item.thumbnail_url }
+  }, [gallery, currentIndex, item.media_url, item.media_type, item.thumbnail_url, imageUrls])
 
   const [mediaSrc, setMediaSrc] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
     setMediaSrc(null)
-    getPresignedMediaUrl(currentMedia.url)
-      .then((url) => {
-        if (!cancelled)
-          setMediaSrc(url)
-      })
-      .catch(() => {
-        if (!cancelled)
-          setMediaSrc(null)
-      })
+
+    const loadMedia = async () => {
+      const url = getPresignedMediaUrl(currentMedia.url)
+      if (!cancelled) {
+        setMediaSrc(url)
+      }
+    }
+
+    loadMedia()
+
     return () => {
       cancelled = true
     }
@@ -407,52 +411,52 @@ export function UnifiedMediaModal({
           <AnimatePresence initial={false} mode="sync" custom={direction}>
             {currentMedia.media_type === 'video'
               ? (
-                  <motion.div
-                    key={currentIndex}
-                    custom={direction}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                      x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                      opacity: { duration: 0.2, ease: 'linear' },
-                    }}
-                    className="absolute inset-0 w-full h-full"
-                    style={{ borderRadius: 12, background: '#000' }}
-                  >
-                    <CustomVideoPlayer
-                      src={mediaSrc || ''}
-                      poster={currentMedia.thumbnail_url}
-                      autoPlay={true}
-                      className="w-full h-full"
-                    />
-                  </motion.div>
-                )
-              : (
-                  <motion.img
-                    key={currentIndex}
-                    custom={direction}
-                    variants={slideVariants}
-                    initial="enter"
-                    animate="center"
-                    exit="exit"
-                    transition={{
-                      x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                      opacity: { duration: 0.2, ease: 'linear' },
-                    }}
-                    src={mediaSrc || undefined}
-                    alt={`${item.title || 'Image'} ${currentIndex + 1}`}
-                    className="absolute inset-0 w-full h-full object-contain cursor-pointer"
-                    draggable={false}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                    onError={(e) => {
-                      e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                    }}
+                <motion.div
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                    opacity: { duration: 0.2, ease: 'linear' },
+                  }}
+                  className="absolute inset-0 w-full h-full"
+                  style={{ borderRadius: 12, background: '#000' }}
+                >
+                  <CustomVideoPlayer
+                    src={mediaSrc || ''}
+                    poster={currentMedia.thumbnail_url}
+                    autoPlay={true}
+                    className="w-full h-full"
                   />
-                )}
+                </motion.div>
+              )
+              : (
+                <motion.img
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                    opacity: { duration: 0.2, ease: 'linear' },
+                  }}
+                  src={mediaSrc || undefined}
+                  alt={`${item.title || 'Image'} ${currentIndex + 1}`}
+                  className="absolute inset-0 w-full h-full object-contain cursor-pointer"
+                  draggable={false}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                  }}
+                />
+              )}
           </AnimatePresence>
 
           {isMultiple && (
@@ -489,13 +493,15 @@ function MiniatureCarousel({ gallery, currentIndex, setDirection, setCurrentInde
 }) {
   return (
     <div className="w-full p-4 bg-gradient-to-t from-black/50 to-transparent flex justify-center gap-2 max-w-full overflow-x-auto">
-      {gallery.map(async (media, index) => {
+      {gallery.map((media, index) => {
         if (!media.url)
           return null
         const isVideo = media.media_type?.startsWith('video')
         const previewSrc = isVideo ? media.thumbnail_url || media.url : media.url
         const distance = Math.abs(index - currentIndex)
-        const previewUrl = await getPresignedMediaUrl(previewSrc)
+        const previewUrl = previewSrc.startsWith('/api/files/')
+          ? previewSrc
+          : `/api/files/${previewSrc.replace(/^\/+/, '')}`
         if (distance > 15)
           return null
         return (
@@ -508,7 +514,7 @@ function MiniatureCarousel({ gallery, currentIndex, setDirection, setCurrentInde
             className={`flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-all relative ${index === currentIndex
               ? 'border-white scale-110'
               : 'border-white/30 hover:border-white/60'
-            }`}
+              }`}
           >
             <PreviewImage
               url={previewUrl}

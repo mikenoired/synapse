@@ -18,17 +18,8 @@ export function isImageContent(content: string): boolean {
   return content.includes('/images/') || content.startsWith('images/')
 }
 
-export async function getPresignedMediaUrl(apiPath: string): Promise<string> {
-  if (!apiPath)
-    throw new Error('Invalid media path')
-
-  if (apiPath.startsWith('http://') || apiPath.startsWith('https://')) {
-    return apiPath
-  }
-
-  const normalizedApiPath = apiPath.startsWith('/api/files/')
+export function getPresignedMediaUrl(apiPath: string): string {
+  return apiPath.startsWith('/api/files/')
     ? apiPath
     : `/api/files/${apiPath.replace(/^\/+/, '')}`
-
-  return normalizedApiPath
 }

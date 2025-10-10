@@ -1,6 +1,6 @@
 'use client'
 import type { Content } from '@/shared/lib/schemas'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialog'
 import { trpc } from '@/shared/api/trpc'
 import { parseMediaJson } from '@/shared/lib/schemas'
@@ -37,11 +37,10 @@ export function ContentModalManager({
     onSuccess: () => item && utils.content.getById.invalidate({ id: item.id }),
   })
 
-  if (!item)
-    return null
-
-  if (item.type === 'media') {
-    const imageGallery = allItems
+  const imageGallery = useMemo(() => {
+    if (!item || item.type !== 'media')
+      return []
+    return allItems
       .filter(i => i.type === 'media')
       .flatMap((i) => {
         const media = parseMediaJson(i.content)?.media
@@ -49,7 +48,12 @@ export function ContentModalManager({
           return [{ url: media.url, parentId: i.id, media_type: media.type, thumbnail_url: media.thumbnailUrl }]
         return []
       })
+  }, [allItems, item])
 
+  if (!item)
+    return null
+
+  if (item.type === 'media') {
     return (
       <UnifiedMediaModal
         open={open}
