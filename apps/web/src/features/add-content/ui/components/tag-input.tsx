@@ -30,7 +30,7 @@ export function TagInput({
           id="tags"
           placeholder="Add tag..."
           value={currentTag}
-          onChange={e => onCurrentTagChange(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => onCurrentTagChange(e.target.value)}
           onKeyDown={onKeyDown}
           className="flex-1"
           disabled={isLoading}

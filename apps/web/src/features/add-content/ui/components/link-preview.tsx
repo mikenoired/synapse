@@ -32,7 +32,7 @@ export function LinkPreview({
             type="url"
             placeholder="https://example.com"
             value={content}
-            onChange={e => onContentChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onContentChange(e.target.value)}
             required
             disabled={isLoading || linkParsing}
           />

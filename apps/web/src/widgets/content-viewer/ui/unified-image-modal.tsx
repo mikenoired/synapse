@@ -45,9 +45,9 @@ export function UnifiedMediaModal({
     return (gallery.length > 0)
       ? gallery.map(g => g.url)
       : (() => {
-        const media = parseMediaJson(item.content)?.media
-        return media?.url ? [media.url] : [item.content]
-      })()
+          const media = parseMediaJson(item.content)?.media
+          return media?.url ? [media.url] : [item.content]
+        })()
   }, [gallery, item.content])
 
   const isMultiple = imageUrls.length > 1
@@ -340,8 +340,8 @@ export function UnifiedMediaModal({
               <Input
                 placeholder="Add tag..."
                 value={newTag}
-                onChange={e => setNewTag(e.target.value)}
-                onKeyDown={(e) => {
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTag(e.target.value)}
+                onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                   if (e.key === 'Enter') {
                     handleAddTag(true)
                     e.preventDefault()
@@ -375,52 +375,52 @@ export function UnifiedMediaModal({
         <AnimatePresence initial={false} mode="sync" custom={direction}>
           {currentMedia.media_type === 'video'
             ? (
-              <motion.div
-                key={currentIndex}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                  opacity: { duration: 0.2, ease: 'linear' },
-                }}
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                style={{ borderRadius: 12, background: '#000' }}
-              >
-                <CustomVideoPlayer
-                  src={mediaSrc || ''}
-                  poster={currentMedia.thumbnail_url}
-                  autoPlay={true}
-                  className="w-full h-full pointer-events-auto"
-                />
-              </motion.div>
-            )
+                <motion.div
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                    opacity: { duration: 0.2, ease: 'linear' },
+                  }}
+                  className="absolute inset-0 w-full h-full pointer-events-none"
+                  style={{ borderRadius: 12, background: '#000' }}
+                >
+                  <CustomVideoPlayer
+                    src={mediaSrc || ''}
+                    poster={currentMedia.thumbnail_url}
+                    autoPlay={true}
+                    className="w-full h-full pointer-events-auto"
+                  />
+                </motion.div>
+              )
             : (
-              <motion.img
-                key={currentIndex}
-                custom={direction}
-                variants={slideVariants}
-                initial="enter"
-                animate="center"
-                exit="exit"
-                transition={{
-                  x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
-                  opacity: { duration: 0.2, ease: 'linear' },
-                }}
-                src={mediaSrc || undefined}
-                alt={`${item.title || 'Image'} ${currentIndex + 1}`}
-                className="absolute inset-0 w-full h-full object-contain pointer-events-none"
-                draggable={false}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
-                }}
-              />
-            )}
+                <motion.img
+                  key={currentIndex}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={{
+                    x: { type: 'tween', duration: 0.32, ease: [0.33, 1, 0.68, 1] },
+                    opacity: { duration: 0.2, ease: 'linear' },
+                  }}
+                  src={mediaSrc || undefined}
+                  alt={`${item.title || 'Image'} ${currentIndex + 1}`}
+                  className="absolute inset-0 w-full h-full object-contain pointer-events-none"
+                  draggable={false}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDIwMCAxMjgiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIyMDAiIGhlaWdodD0iMTI4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik04Ny41IDc0LjVMMTAwIDYyTDExMi41IDc0LjVMMTI1IDYyTDE0MCA3N1Y5NUg2MFY3N0w3NSA2Mkw4Ny41IDc0LjVaIiBmaWxsPSIjOUM5Q0EzIi8+CjxjaXJjbGUgY3g9Ijc1IiBjeT0iNTAiIHI9IjgiIGZpbGw9IiM5QzlDQTMiLz4KPFRLEHU+PC90ZXh0Pgo8L3N2Zz4K'
+                  }}
+                />
+              )}
         </AnimatePresence>
 
         {isMultiple && (
@@ -492,7 +492,7 @@ function MiniatureCarousel({ gallery, currentIndex, setDirection, setCurrentInde
             className={`flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-all relative ${index === currentIndex
               ? 'border-white scale-110'
               : 'border-white/30 hover:border-white/60'
-              }`}
+            }`}
           >
             <PreviewImage
               url={previewUrl}

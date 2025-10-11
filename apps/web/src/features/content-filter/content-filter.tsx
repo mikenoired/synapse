@@ -37,7 +37,7 @@ export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProp
           placeholder={placeholder}
           value={searchQuery}
           autoFocus
-          onChange={e => setSearchQuery(e.target.value)}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
           className="w-full bg-background px-4 py-3 text-2xl border-b focus:outline-none"
         />
       </div>

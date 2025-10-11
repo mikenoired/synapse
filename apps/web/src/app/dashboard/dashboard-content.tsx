@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode, RefObject } from 'react'
-import { motion } from 'framer-motion'
+import { motion } from 'motion/react'
 
 interface DashboardContentProps {
   children: ReactNode

@@ -181,7 +181,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
             id="title"
             placeholder="Title (optional)..."
             value={title}
-            onChange={e => setTitle(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
             disabled={updateContentMutation.isPending}
             className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
           />
@@ -203,7 +203,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
               id="tags"
               placeholder="+ Add tag"
               value={currentTag}
-              onChange={e => setCurrentTag(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentTag(e.target.value)}
               onKeyDown={handleKeyDown}
               className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
               disabled={updateContentMutation.isPending}
@@ -217,8 +217,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
             <Input
               placeholder="Add item..."
               value={todoInput}
-              onChange={e => setTodoInput(e.target.value)}
-              onKeyDown={(e) => {
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTodoInput(e.target.value)}
+              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
                 if (e.key === 'Enter')
                   handleAddTodo()
               }}
@@ -243,7 +243,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
                 />
                 <Input
                   value={item.text}
-                  onChange={e => handleEditTodo(idx, e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleEditTodo(idx, e.target.value)}
                   className="flex-1 px-2 py-1"
                   disabled={updateContentMutation.isPending}
                 />
@@ -294,7 +294,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
                         id="title"
                         placeholder="Title (optional)..."
                         value={title}
-                        onChange={e => setTitle(e.target.value)}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
                         disabled={updateContentMutation.isPending}
                         className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
                       />
@@ -316,7 +316,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
                           id="tags"
                           placeholder="+ Add tag"
                           value={currentTag}
-                          onChange={e => setCurrentTag(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentTag(e.target.value)}
                           onKeyDown={handleKeyDown}
                           className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
                           disabled={updateContentMutation.isPending}

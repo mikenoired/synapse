@@ -63,7 +63,7 @@ export function MediaDropZone({
             className="hidden"
             id="file-upload"
             disabled={isLoading}
-            onChange={e => e.target.files && onFileSelect(e.target.files)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => e.target.files && onFileSelect(e.target.files)}
           />
           <Button
             type="button"

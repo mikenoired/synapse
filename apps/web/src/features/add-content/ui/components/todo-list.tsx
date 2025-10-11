@@ -38,8 +38,8 @@ export function TodoList({
         <Input
           placeholder="Add item..."
           value={todoInput}
-          onChange={e => setTodoInput(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTodoInput(e.target.value)}
+          onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter')
               handleAddTodo()
           }}
@@ -71,7 +71,7 @@ export function TodoList({
             />
             <Input
               value={item.text}
-              onChange={e => onUpdateTodoText(idx, e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onUpdateTodoText(idx, e.target.value)}
               className="flex-1 px-2 py-1"
               disabled={isLoading}
             />

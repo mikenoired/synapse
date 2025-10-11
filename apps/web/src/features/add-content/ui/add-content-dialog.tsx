@@ -213,7 +213,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
                           id="title"
                           placeholder="Enter title..."
                           value={title}
-                          onChange={e => context.updateTitle(e.target.value)}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => context.updateTitle(e.target.value)}
                           disabled={isLoading}
                         />
                       </div>

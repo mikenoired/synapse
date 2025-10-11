@@ -30,7 +30,7 @@ export default function AddTodoView() {
             id="title"
             placeholder="Title (optional)..."
             value={title}
-            onChange={e => updateTitle(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTitle(e.target.value)}
             disabled={isSubmitting}
             className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
           />
@@ -52,7 +52,7 @@ export default function AddTodoView() {
               id="tags"
               placeholder="+ Add tag"
               value={currentTag}
-              onChange={e => updateCurrentTag(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCurrentTag(e.target.value)}
               onKeyDown={handleTagKeyDown}
               className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
               disabled={isSubmitting}
