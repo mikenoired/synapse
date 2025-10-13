@@ -126,7 +126,7 @@ export default function DashboardClient({ initial }: { initial: { items: Content
   const clearFilters = () => {
     setSearchQuery('')
     setSelectedTags([])
-    router.push('/(dashboard)')
+    router.push('/dashboard')
   }
 
   if (loading) {
