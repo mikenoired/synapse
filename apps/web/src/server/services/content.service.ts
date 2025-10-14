@@ -26,7 +26,7 @@ export default class ContentService {
 
   async getAll(
     search: string | undefined,
-    type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined,
+    type: 'note' | 'media' | 'link' | 'todo' | 'audio' | 'doc' | 'pdf' | 'docx' | 'epub' | 'xlsx' | 'csv' | undefined,
     tagIds: string[] | undefined,
     cursor: string | undefined,
     limit: number,
@@ -56,7 +56,7 @@ export default class ContentService {
     return contentDetailSchema.parse(this.mapContentRow(data as ContentRow, this.ctx.user!.id))
   }
 
-  private async getContentWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined, includeTags: boolean) {
+  private async getContentWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | 'doc' | 'pdf' | 'docx' | 'epub' | 'xlsx' | 'csv' | undefined, cursor: string | undefined, includeTags: boolean) {
     const data = await this.repo.getWithTagFilter(tagIds, limit, search, type, cursor)
 
     const contentMap = new Map<string, ContentRow>()
@@ -387,6 +387,8 @@ export default class ContentService {
       tag_ids: [],
       created_at: row.createdAt?.toISOString() ?? new Date().toISOString(),
       updated_at: row.updatedAt?.toISOString() ?? row.createdAt?.toISOString() ?? new Date().toISOString(),
+      thumbnail_base64: row.thumbnailBase64 ?? undefined,
+      document_images: Array.isArray(row.documentImages) ? row.documentImages : undefined,
     }
   }
 }

@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+export const contentTypeSchema = z.enum(['note', 'media', 'link', 'todo', 'audio', 'doc', 'pdf', 'docx', 'epub', 'xlsx', 'csv'])
+
 export const userSchema = z.object({
   id: z.string(),
   email: z.email(),
@@ -49,7 +51,7 @@ export const linkContentSchema = z.object({
 export const contentSchema = z.object({
   id: z.string(),
   user_id: z.string(),
-  type: z.enum(['note', 'media', 'link', 'todo', 'audio']),
+  type: contentTypeSchema,
   title: z.string().optional(),
   content: z.string(),
   // View-only tag titles derived from relations
@@ -64,6 +66,16 @@ export const contentSchema = z.object({
   thumbnail_base64: z.string().optional(),
   media_width: z.number().optional(),
   media_height: z.number().optional(),
+  document_images: z.array(z.object({
+    id: z.string(),
+    url: z.string(),
+    base64: z.string().optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    size: z.number().optional(),
+    minioUrl: z.string().optional(),
+    thumbnailBase64: z.string().optional(),
+  })).nullable().optional(),
 })
 
 export const contentListItemSchema = contentSchema.pick({
@@ -83,6 +95,7 @@ export const contentListItemSchema = contentSchema.pick({
   thumbnail_base64: true,
   media_width: true,
   media_height: true,
+  document_images: true,
 })
 
 export const contentDetailSchema = contentSchema
@@ -95,18 +108,28 @@ export const tagSchema = z.object({
 })
 
 export const createContentSchema = z.object({
-  type: z.enum(['note', 'media', 'link', 'todo', 'audio']),
+  type: contentTypeSchema,
   title: z.string().optional(),
   content: z.string(),
   tag_ids: z.array(z.string()).optional(),
   tags: z.array(z.string()).optional(),
   url: z.string().optional(),
   media_url: z.string().optional(),
-  media_type: z.enum(['image', 'video']).optional(),
+  media_type: z.enum(['image', 'video']).optional().default('image'),
   thumbnail_url: z.string().optional(),
   thumbnail_base64: z.string().optional(),
   media_width: z.number().optional(),
   media_height: z.number().optional(),
+  document_images: z.array(z.object({
+    id: z.string(),
+    url: z.string(),
+    base64: z.string().optional(),
+    width: z.number().optional(),
+    height: z.number().optional(),
+    size: z.number().optional(),
+    minioUrl: z.string().optional(),
+    thumbnailBase64: z.string().optional(),
+  })).nullable().optional(),
 })
 
 export const updateContentSchema = createContentSchema.partial().extend({

@@ -1,4 +1,5 @@
 export { ContentTypeSelector } from './content-type-selector'
+export { DocumentDropZone } from './document-drop-zone'
 export { LinkPreview } from './link-preview'
 export { MediaDropZone } from './media-drop-zone'
 export { TagInput } from './tag-input'

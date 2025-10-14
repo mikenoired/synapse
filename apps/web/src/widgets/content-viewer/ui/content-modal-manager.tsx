@@ -5,6 +5,7 @@ import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialo
 import { trpc } from '@/shared/api/trpc'
 import { parseMediaJson } from '@/shared/lib/schemas'
 import { AudioViewerModal } from './audio-viewer-modal'
+import { DocumentViewerModal } from './document-viewer-modal'
 import { LinkViewerModal } from './link-viewer-modal'
 import { NoteViewerModal } from './note-viewer-modal'
 import { TodoViewerModal } from './todo-viewer-modal'
@@ -73,6 +74,19 @@ export function ContentModalManager({
         open={open}
         onOpenChange={onOpenChange}
         item={item}
+      />
+    )
+  }
+
+  // Check if it's a document type
+  if (['pdf', 'docx', 'epub', 'xlsx', 'csv'].includes(item.type)) {
+    return (
+      <DocumentViewerModal
+        open={open}
+        onOpenChange={onOpenChange}
+        item={item}
+        onEdit={onEdit}
+        onDelete={onDelete}
       />
     )
   }

@@ -15,6 +15,7 @@ export const content = pgTable('content', {
   content: text('content').notNull(),
   title: text('title'),
   thumbnailBase64: text('thumbnail_base64'),
+  documentImages: jsonb('document_images'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),

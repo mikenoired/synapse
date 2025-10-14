@@ -22,6 +22,7 @@ import { EditContentDialog } from '@/features/edit-content/ui/edit-content-dialo
 import { trpc } from '@/shared/api/trpc'
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 import { extractTextFromStructuredContent, parseLinkContent, parseMediaJson } from '@/shared/lib/schemas'
+import DocumentItem from './document-item'
 import MediaItem from './media-item'
 
 function extractTextFromHTML(html: string): string {
@@ -207,6 +208,10 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
     )
   }
 
+  const isDocumentType = (type: string) => {
+    return ['doc', 'pdf', 'docx', 'epub', 'xlsx', 'csv'].includes(type)
+  }
+
   const renderLinkPreview = () => {
     const linkContent: LinkContent | null = parseLinkContent(item.content)
 
@@ -262,10 +267,14 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
         <div className={item.type === 'media' || item.type === 'audio' ? 'p-0' : item.type === 'note' ? 'p-3' : item.type === 'todo' ? 'p-3' : item.type === 'link' ? 'p-3' : ''}>
           {item.type === 'media' || item.type === 'audio'
             ? (
-                <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
-              )
-            : item.type === 'link'
+              <MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
+            )
+            : isDocumentType(item.type)
               ? (
+                <DocumentItem item={item} index={index} onItemClick={onItemClick} />
+              )
+              : item.type === 'link'
+                ? (
                   <>
                     {renderLinkPreview()}
                     {item.tags.length > 0 && (
@@ -279,11 +288,11 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
                     )}
                   </>
                 )
-              : item.type === 'todo'
-                ? (
+                : item.type === 'todo'
+                  ? (
                     renderTodoPreview()
                   )
-                : (
+                  : (
                     <>
                       <TruncatedText html={getTextContent || ''} />
                       <div className="flex flex-wrap mt-3 absolute bottom-0 left-0 right-0 z-10">

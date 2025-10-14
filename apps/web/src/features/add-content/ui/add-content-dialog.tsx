@@ -8,8 +8,10 @@ import React, { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useDashboard } from '@/shared/lib/dashboard-context'
 import { AddContentProvider, useAddContent } from '../model/add-content-context'
+import { useDocumentUpload } from '../model/use-document-upload'
 import {
   ContentTypeSelector,
+  DocumentDropZone,
   LinkPreview,
   MediaDropZone,
   TagInput,
@@ -36,6 +38,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
   const [uploading, setUploading] = useState(false)
 
   const context = useAddContent()
+  const documentUpload = useDocumentUpload()
 
   const { type, title, content, isFullScreen } = context.formState
   const [makeTrack, setMakeTrack] = useState(false)
@@ -67,28 +70,46 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
-    if (type === 'media' && context.selectedFiles.length > 0)
+    if ((type === 'media' && context.selectedFiles.length > 0) ||
+      (type === 'doc' && documentUpload.selectedFiles.length > 0))
       setUploading(true)
 
     try {
       let success = false
-      if (type === 'audio' && context.selectedFiles.length > 0) {
+
+      if (type === 'doc' && documentUpload.selectedFiles.length > 0) {
+        await documentUpload.uploadFiles()
+        success = true
+      }
+      else if (type === 'media' && context.selectedFiles.length > 0) {
+        const files = await context.uploadFiles(context.selectedFiles, title, context.tags)
+        if (files && files.length > 0) {
+          toast.success('Media files saved')
+          success = true
+        } else {
+          toast.error('Media files failed to load')
+          success = false
+        }
+      }
+      else if (type === 'audio' && context.selectedFiles.length > 0) {
         setUploading(true)
         const files = await context.uploadFiles(context.selectedFiles, title, context.tags, { makeTrack })
         if (files && files.length > 0) {
-          toast.success('Saved')
+          toast.success('Audio saved')
           success = true
         }
         else {
-          toast.error('File isn\'t loaded')
+          toast.error('Audio file isn\'t loaded')
           success = false
         }
       }
       else {
         success = await context.submitContent()
       }
+
       if (success) {
         context.resetForm()
+        documentUpload.resetFiles()
         onOpenChange(false)
         onContentAdded?.()
       }
@@ -112,6 +133,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
         return `${base} h-[90vh]`
       case 'media':
       case 'link':
+      case 'doc':
       default:
         return `${base} max-h-[80vh] h-auto`
     }
@@ -124,7 +146,16 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 
   const getSubmitButtonText = () => {
     if (uploading) {
-      return `Loading ${context.selectedFiles.length} file...`
+      if (type === 'doc') {
+        return `Importing ${documentUpload.selectedFiles.length} document...`
+      } else if (type === 'media') {
+        return `Loading ${context.selectedFiles.length} file...`
+      } else if (type === 'audio') {
+        return `Loading ${context.selectedFiles.length} file...`
+      }
+    }
+    if (documentUpload.isLoading) {
+      return `Importing ${documentUpload.selectedFiles.length} document...`
     }
     if (context.isSubmitting) {
       return 'Saving...'
@@ -133,18 +164,29 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
   }
 
   const isSubmitDisabled = () => {
-    if (isLoading || context.linkParsing)
+    if (isLoading || context.linkParsing || documentUpload.isLoading)
       return true
 
-    if (type === 'media' || type === 'audio') {
+    if (type === 'doc') {
+      return documentUpload.selectedFiles.length === 0
+    }
+
+    if (type === 'media') {
       return context.selectedFiles.length === 0
     }
+
+    if (type === 'audio') {
+      return context.selectedFiles.length === 0
+    }
+
     if (type === 'link') {
       return !content.trim() || !context.parsedLinkData
     }
+
     if (type === 'note' || type === 'todo') {
       return false
     }
+
     return !content.trim()
   }
 
@@ -171,8 +213,22 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
           <AnimatePresence mode="wait" initial={false}>
             {type === 'note'
               ? (
+                <motion.div
+                  key="note-view"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={baseTransition}
+                  style={{ overflow: 'hidden' }}
+                  className="flex-1"
+                >
+                  <AddNoteView />
+                </motion.div>
+              )
+              : type === 'todo'
+                ? (
                   <motion.div
-                    key="note-view"
+                    key="todo-view"
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
@@ -180,24 +236,56 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
                     style={{ overflow: 'hidden' }}
                     className="flex-1"
                   >
-                    <AddNoteView />
+                    <AddTodoView />
                   </motion.div>
                 )
-              : type === 'todo'
-                ? (
+                : type === 'doc'
+                  ? (
                     <motion.div
-                      key="todo-view"
+                      key="doc-view"
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={baseTransition}
                       style={{ overflow: 'hidden' }}
-                      className="flex-1"
+                      className="flex-1 p-6 space-y-4 overflow-y-auto"
                     >
-                      <AddTodoView />
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Title (optional)</Label>
+                        <Input
+                          id="title"
+                          placeholder="Enter title..."
+                          value={title}
+                          onChange={(e: React.ChangeEvent<HTMLInputElement>) => context.updateTitle(e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="content">Documents</Label>
+                        <DocumentDropZone
+                          dragActive={documentUpload.dragActive}
+                          isLoading={documentUpload.isLoading}
+                          selectedFiles={documentUpload.selectedFiles}
+                          onFileSelect={documentUpload.handleFileSelect}
+                          onDrag={documentUpload.handleDrag}
+                          onDrop={documentUpload.handleDrop}
+                          onRemoveFile={documentUpload.removeFile}
+                        />
+                      </div>
+
+                      <TagInput
+                        tags={context.tags}
+                        currentTag={context.currentTag}
+                        isLoading={isLoading}
+                        onCurrentTagChange={context.updateCurrentTag}
+                        onAddTag={context.addTag}
+                        onRemoveTag={context.removeTag}
+                        onKeyDown={context.handleTagKeyDown}
+                      />
                     </motion.div>
                   )
-                : (
+                  : (
                     <motion.div
                       key="media-audio-link-view"
                       initial={{ opacity: 0, height: 0 }}
@@ -220,31 +308,73 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 
                       <div className="space-y-2">
                         <Label htmlFor="content">
-                          {type === 'link' ? 'URL' : type === 'audio' ? 'Audio' : 'Media (image or videos)'}
+                          {type === 'link' ? 'URL' : type === 'audio' ? 'Audio' : 'Media (image, videos, or documents)'}
                         </Label>
                         <AnimatePresence mode="wait" initial={false}>
                           {type === 'link'
                             ? (
+                              <motion.div
+                                key="link-preview"
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: '100%' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={baseTransition}
+                                style={{ overflow: 'hidden' }}
+                              >
+                                <LinkPreview
+                                  content={content}
+                                  parsedLinkData={context.parsedLinkData}
+                                  linkParsing={context.linkParsing}
+                                  isLoading={isLoading}
+                                  onContentChange={context.updateContent}
+                                  onParseLink={context.parseLink}
+                                  onClearParsedData={context.clearParsedData}
+                                />
+                              </motion.div>
+                            )
+                            : type === 'media'
+                              ? (
                                 <motion.div
-                                  key="link-preview"
+                                  key="media-content"
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: '100%' }}
                                   exit={{ opacity: 0, height: 0 }}
                                   transition={baseTransition}
                                   style={{ overflow: 'hidden' }}
+                                  className="space-y-4"
                                 >
-                                  <LinkPreview
-                                    content={content}
-                                    parsedLinkData={context.parsedLinkData}
-                                    linkParsing={context.linkParsing}
-                                    isLoading={isLoading}
-                                    onContentChange={context.updateContent}
-                                    onParseLink={context.parseLink}
-                                    onClearParsedData={context.clearParsedData}
-                                  />
+                                  {/* Document Drop Zone */}
+                                  <div>
+                                    <h3 className="text-sm font-medium text-foreground mb-2">Documents</h3>
+                                    <DocumentDropZone
+                                      dragActive={documentUpload.dragActive}
+                                      isLoading={documentUpload.isLoading}
+                                      selectedFiles={documentUpload.selectedFiles}
+                                      onFileSelect={documentUpload.handleFileSelect}
+                                      onDrag={documentUpload.handleDrag}
+                                      onDrop={documentUpload.handleDrop}
+                                      onRemoveFile={documentUpload.removeFile}
+                                    />
+                                  </div>
+
+                                  {/* Media Drop Zone */}
+                                  <div>
+                                    <h3 className="text-sm font-medium text-foreground mb-2">Images & Videos</h3>
+                                    <MediaDropZone
+                                      dragActive={context.dragActive}
+                                      isLoading={isLoading}
+                                      selectedFiles={context.selectedFiles}
+                                      previewUrls={context.previewUrls}
+                                      onFileSelect={context.handleFileSelect}
+                                      onDrag={context.handleDrag}
+                                      onDrop={context.handleDrop}
+                                      onRemoveFile={context.removeFile}
+                                      onMoveFile={context.moveFile}
+                                    />
+                                  </div>
                                 </motion.div>
                               )
-                            : (
+                              : (
                                 <motion.div
                                   key="media-dropzone"
                                   initial={{ opacity: 0, height: 0 }}

@@ -293,3 +293,146 @@
   clip-path: inset(0px 100% 0px 0%);
   will-change: clip-path;
 }
+
+/* Document Content Styles */
+.document-content {
+  @apply text-foreground leading-relaxed;
+}
+
+.document-content h1,
+.document-content h2,
+.document-content h3,
+.document-content h4,
+.document-content h5,
+.document-content h6 {
+  @apply font-semibold text-foreground mt-6 mb-3;
+}
+
+.document-content h1 {
+  @apply text-2xl;
+}
+
+.document-content h2 {
+  @apply text-xl;
+}
+
+.document-content h3 {
+  @apply text-lg;
+}
+
+.document-content h4 {
+  @apply text-base;
+}
+
+.document-content h5,
+.document-content h6 {
+  @apply text-sm;
+}
+
+.document-content p {
+  @apply mb-4 text-foreground leading-relaxed;
+}
+
+.document-content ul,
+.document-content ol {
+  @apply mb-4 pl-6;
+}
+
+.document-content li {
+  @apply mb-1;
+}
+
+.document-content ul li {
+  @apply list-disc;
+}
+
+.document-content ol li {
+  @apply list-decimal;
+}
+
+.document-content blockquote {
+  @apply border-l-4 border-muted-foreground/30 pl-4 py-2 my-4 italic text-muted-foreground bg-muted/30 rounded-r;
+}
+
+.document-content table {
+  @apply w-full border-collapse border border-border my-4;
+}
+
+.document-content th,
+.document-content td {
+  @apply border border-border px-3 py-2 text-left;
+}
+
+.document-content th {
+  @apply bg-muted font-semibold;
+}
+
+.document-content tr:nth-child(even) {
+  @apply bg-muted/30;
+}
+
+.document-content img {
+  @apply max-w-full h-auto rounded-lg shadow-sm my-4 mx-auto block;
+}
+
+.document-content img[src*="data:image"] {
+  @apply max-w-md;
+}
+
+.document-content strong,
+.document-content b {
+  @apply font-semibold;
+}
+
+.document-content em,
+.document-content i {
+  @apply italic;
+}
+
+.document-content u {
+  @apply underline;
+}
+
+.document-content code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.document-content pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto my-4;
+}
+
+.document-content pre code {
+  @apply bg-transparent p-0;
+}
+
+.document-content hr {
+  @apply border-t border-border my-6;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+  .document-content {
+    @apply text-sm;
+  }
+
+  .document-content h1 {
+    @apply text-xl;
+  }
+
+  .document-content h2 {
+    @apply text-lg;
+  }
+
+  .document-content h3 {
+    @apply text-base;
+  }
+
+  .document-content table {
+    @apply text-xs;
+  }
+
+  .document-content th,
+  .document-content td {
+    @apply px-2 py-1;
+  }
+}

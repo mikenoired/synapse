@@ -8,7 +8,7 @@ import { content, contentTags, edges, nodes, tags } from '../db/schema'
 export default class ContentRepository {
   constructor(private readonly ctx: Context) { }
 
-  async getAll(search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined, limit: number) {
+  async getAll(search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | 'doc' | 'pdf' | 'docx' | 'epub' | 'xlsx' | 'csv' | undefined, cursor: string | undefined, limit: number) {
     if (!this.ctx.user)
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
@@ -49,7 +49,7 @@ export default class ContentRepository {
     return data
   }
 
-  async getWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | undefined, cursor: string | undefined) {
+  async getWithTagFilter(tagIds: string[], limit: number, search: string | undefined, type: 'note' | 'media' | 'link' | 'todo' | 'audio' | 'doc' | 'pdf' | 'docx' | 'epub' | 'xlsx' | 'csv' | undefined, cursor: string | undefined) {
     if (!this.ctx.user)
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Unauthorized' })
 
@@ -90,6 +90,7 @@ export default class ContentRepository {
         content: content.content,
         title: content.title,
         thumbnailBase64: content.thumbnailBase64,
+        documentImages: content.documentImages,
         createdAt: content.createdAt,
         updatedAt: content.updatedAt,
         userId: content.userId,
@@ -160,6 +161,7 @@ export default class ContentRepository {
       ...contentData,
       userId: this.ctx.user.id,
       thumbnailBase64: contentData.thumbnail_base64,
+      documentImages: contentData.document_images,
     }).returning()
 
     if (!data)

@@ -2,7 +2,7 @@
 
 import type { Content } from '@/shared/lib/schemas'
 import { cn } from '@synapse/ui/cn'
-import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Music2 } from 'lucide-react'
+import { FileText, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Music2, FileUp } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 
 interface ContentTypeSelectorProps {
@@ -18,6 +18,7 @@ const contentTypes = [
   { key: 'audio', icon: Music2, label: 'Audio' },
   { key: 'link', icon: Link, label: 'Link' },
   { key: 'todo', icon: ListChecks, label: 'To-Do' },
+  { key: 'doc', icon: FileUp, label: 'Documents' },
 ] as const
 
 export function ContentTypeSelector({
