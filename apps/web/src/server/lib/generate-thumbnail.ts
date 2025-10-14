@@ -5,13 +5,31 @@ import { unlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
+import { getThumbnailClient } from '@/shared/api/thumbnail-client'
 
 /**
  * Get image dimensions from buffer
  * @param buffer - image buffer
+ * @param mimeType - MIME type of the image
  * @returns object with width and height
  */
-export async function getImageDimensions(buffer: Buffer): Promise<{ width: number, height: number }> {
+export async function getImageDimensions(buffer: Buffer, mimeType?: string): Promise<{ width: number, height: number }> {
+  try {
+    const client = getThumbnailClient()
+    if (client.isServiceConnected()) {
+      const result = await client.getImageDimensions(buffer, mimeType || 'image/jpeg')
+      if (result.success) {
+        return {
+          width: result.width || 0,
+          height: result.height || 0,
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to use Go thumbnail service for dimensions, falling back to Sharp:', error)
+  }
+
+  // Fallback на Sharp
   const metadata = await sharp(buffer).metadata()
   return {
     width: metadata.width || 0,
@@ -27,6 +45,36 @@ export async function getImageDimensions(buffer: Buffer): Promise<{ width: numbe
  */
 export async function generateThumbnail(buffer: Buffer, type: string): Promise<string> {
   const fileType = type.split('/')[0]
+
+  try {
+    const client = getThumbnailClient()
+    if (client.isServiceConnected()) {
+      let result
+
+      if (fileType === 'image') {
+        result = await client.generateImageThumbnail(buffer, type, {
+          width: 20,
+          height: 0, // auto
+          quality: 40,
+          blur: true,
+        })
+      } else if (fileType === 'video') {
+        result = await client.generateVideoThumbnail(buffer, type, {
+          width: 20,
+          height: 0, // auto
+          quality: 40,
+          blur: true,
+          timestamp: '00:00:01.000',
+        })
+      }
+
+      if (result && result.success && result.thumbnailBase64) {
+        return result.thumbnailBase64
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to use Go thumbnail service, falling back to local processing:', error)
+  }
 
   const generateImageThumb = async () => {
     const thumb = await sharp(buffer)

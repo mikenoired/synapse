@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+package thumbnail;
+
+option go_package = "thumbnail-service/proto";
+
+// Сервис для генерации превью
+service ThumbnailService {
+  // Генерация превью для изображения
+  rpc GenerateImageThumbnail(ImageThumbnailRequest) returns (ThumbnailResponse);
+  
+  // Генерация превью для видео
+  rpc GenerateVideoThumbnail(VideoThumbnailRequest) returns (ThumbnailResponse);
+  
+  // Получение размеров изображения
+  rpc GetImageDimensions(ImageDimensionsRequest) returns (ImageDimensionsResponse);
+}
+
+// Запрос на генерацию превью изображения
+message ImageThumbnailRequest {
+  bytes image_data = 1;        // Данные изображения
+  string mime_type = 2;        // MIME тип
+  int32 width = 3;             // Ширина превью (опционально)
+  int32 height = 4;            // Высота превью (опционально)
+  int32 quality = 5;           // Качество JPEG (1-100, по умолчанию 40)
+  bool blur = 6;               // Применить размытие (по умолчанию true)
+}
+
+// Запрос на генерацию превью видео
+message VideoThumbnailRequest {
+  bytes video_data = 1;        // Данные видео
+  string mime_type = 2;        // MIME тип
+  int32 width = 3;             // Ширина превью (опционально)
+  int32 height = 4;            // Высота превью (опционально)
+  int32 quality = 5;           // Качество JPEG (1-100, по умолчанию 40)
+  bool blur = 6;               // Применить размытие (по умолчанию true)
+  string timestamp = 7;        // Временная метка для извлечения кадра (по умолчанию "00:00:01.000")
+}
+
+// Запрос на получение размеров изображения
+message ImageDimensionsRequest {
+  bytes image_data = 1;        // Данные изображения
+  string mime_type = 2;        // MIME тип
+}
+
+// Ответ с превью
+message ThumbnailResponse {
+  bool success = 1;            // Успешность операции
+  string error_message = 2;    // Сообщение об ошибке (если есть)
+  string thumbnail_base64 = 3; // Base64 превью
+  string mime_type = 4;        // MIME тип превью
+  int32 width = 5;             // Ширина превью
+  int32 height = 6;            // Высота превью
+  int64 size_bytes = 7;        // Размер превью в байтах
+}
+
+// Ответ с размерами изображения
+message ImageDimensionsResponse {
+  bool success = 1;            // Успешность операции
+  string error_message = 2;    // Сообщение об ошибке (если есть)
+  int32 width = 3;             // Ширина изображения
+  int32 height = 4;            // Высота изображения
+  int64 size_bytes = 5;        // Размер изображения в байтах
+}

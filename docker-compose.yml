@@ -15,7 +15,7 @@ services:
       - minio_config:/root/.minio
     command: server /data --console-address ":9001"
     healthcheck:
-      test: [CMD, curl, -f, 'http://localhost:9000/minio/health/live']
+      test: [ CMD, curl, -f, 'http://localhost:9000/minio/health/live' ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -48,10 +48,76 @@ services:
     networks:
       - postgres-network
     healthcheck:
-      test: [CMD-SHELL, pg_isready -U postgres]
+      test: [ CMD-SHELL, pg_isready -U postgres ]
       interval: 10s
       timeout: 5s
       retries: 5
+
+  # Go микросервис для генерации превью
+  thumbnail-service:
+    build:
+      context: ./services/thumbnail-service
+      dockerfile: Dockerfile
+    container_name: synapse-thumbnail-service
+    restart: unless-stopped
+    ports:
+      - '${THUMBNAIL_GRPC_PORT:-50051}:50051'
+    environment:
+      GRPC_PORT: 50051
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_USE_SSL: false
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-synapse}
+      MAX_CONCURRENT_JOBS: ${THUMBNAIL_MAX_JOBS:-10}
+      MAX_IMAGE_SIZE: ${THUMBNAIL_MAX_IMAGE_SIZE:-52428800}
+      MAX_VIDEO_SIZE: ${THUMBNAIL_MAX_VIDEO_SIZE:-524288000}
+      DEFAULT_THUMBNAIL_WIDTH: ${THUMBNAIL_WIDTH:-20}
+      DEFAULT_THUMBNAIL_HEIGHT: ${THUMBNAIL_HEIGHT:-0}
+      DEFAULT_JPEG_QUALITY: ${THUMBNAIL_JPEG_QUALITY:-40}
+    depends_on:
+      - redis
+      - minio
+    networks:
+      - synapse-network
+    healthcheck:
+      test: [ "CMD", "nc", "-z", "localhost", "50051" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Воркер для обработки задач генерации превью
+  thumbnail-worker:
+    build:
+      context: ./services/thumbnail-service
+      dockerfile: Dockerfile
+    container_name: synapse-thumbnail-worker
+    restart: unless-stopped
+    command: [ "./thumbnail-worker" ]
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_USE_SSL: false
+      MINIO_BUCKET_NAME: ${MINIO_BUCKET_NAME:-synapse}
+      MAX_CONCURRENT_JOBS: ${THUMBNAIL_MAX_JOBS:-10}
+      MAX_IMAGE_SIZE: ${THUMBNAIL_MAX_IMAGE_SIZE:-52428800}
+      MAX_VIDEO_SIZE: ${THUMBNAIL_MAX_VIDEO_SIZE:-524288000}
+      DEFAULT_THUMBNAIL_WIDTH: ${THUMBNAIL_WIDTH:-20}
+      DEFAULT_THUMBNAIL_HEIGHT: ${THUMBNAIL_HEIGHT:-0}
+      DEFAULT_JPEG_QUALITY: ${THUMBNAIL_JPEG_QUALITY:-40}
+    depends_on:
+      - redis
+      - minio
+      - thumbnail-service
+    networks:
+      - synapse-network
 
 volumes:
   minio_data:
