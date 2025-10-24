@@ -10,7 +10,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "clean": "rm -rf .next node_modules",
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "worker": "bun run src/server/workers/start-worker.ts"
@@ -18,7 +18,6 @@
   "dependencies": {
     "@grpc/grpc-js": "^1.9.14",
     "@grpc/proto-loader": "^0.7.10",
-    "@next/bundle-analyzer": "16.0.0-beta.0",
     "@synapse/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.2",
     "@tiptap/core": "^3.6.5",
@@ -32,6 +31,7 @@
     "@trpc/next": "^11.6.0",
     "@trpc/react-query": "^11.6.0",
     "@trpc/server": "^11.6.0",
+    "babel-plugin-react-compiler": "^1.0.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.61.0",
     "clsx": "^2.1.1",
@@ -48,7 +48,7 @@
     "minio": "^8.0.6",
     "motion": "^12.23.22",
     "music-metadata": "^11.9.0",
-    "next": "16.0.0-beta.0",
+    "next": "16.0.0",
     "next-themes": "^0.4.6",
     "papaparse": "^5.5.3",
     "pdf-parse": "^2.2.16",
@@ -83,11 +83,11 @@
     "@types/node": "^24.7.0",
     "@types/papaparse": "^5.3.16",
     "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.1",
+    "@types/react-dom": "19.2.2",
     "critters": "^0.0.25",
     "drizzle-kit": "^0.31.5",
     "eslint": "^9.37.0",
-    "eslint-config-next": "16.0.0-beta.0",
+    "eslint-config-next": "16.0.0",
     "eslint-plugin-react-refresh": "^0.4.23",
     "eslint-plugin-unused-imports": "^4.2.0",
     "tailwindcss": "^4.1.14",
@@ -99,6 +99,6 @@
   ],
   "overrides": {
     "@types/react": "19.2.2",
-    "@types/react-dom": "19.2.1"
+    "@types/react-dom": "19.2.2"
   }
 }

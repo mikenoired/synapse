@@ -8,7 +8,7 @@ const {
   MINIO_ENDPOINT,
   MINIO_ACCESS_KEY,
   MINIO_SECRET_KEY,
-  MINIO_BUCKET_NAME = 'synapse-files',
+  MINIO_BUCKET_NAME = 'synapse',
   MINIO_USE_SSL = 'false',
 } = process.env
 

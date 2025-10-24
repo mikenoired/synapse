@@ -28,6 +28,12 @@ async function processThumbnailJob(job: Job<ThumbnailJobData>) {
 
     const thumbnailBase64 = await generateThumbnail(fileBuffer, mimeType)
 
+    if (!thumbnailBase64) {
+      throw new Error('No thumbnail generated')
+    }
+
+    console.log(`✅ Generated thumbnail for ${contentId}`)
+
     const [existingContent] = await db
       .select()
       .from(content)

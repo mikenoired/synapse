@@ -8,6 +8,12 @@ import { useEffect, useState } from 'react'
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 import { parseMediaJson } from '@/shared/lib/schemas'
 
+function ensureDataUri(base64: string): string {
+  if (!base64) return ''
+  if (base64.startsWith('data:')) return base64
+  return `data:image/jpeg;base64,${base64}`
+}
+
 interface TagStackProps {
   items: Content[]
 }
@@ -54,7 +60,7 @@ function TagPreview({ item }: { item: Content }) {
       >
         {blurThumb && (
           <Image
-            src={blurThumb}
+            src={ensureDataUri(blurThumb)}
             alt="blur preview"
             className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-200 ease-in-out z-0"
             style={{ opacity: loaded && !errored ? 0 : 1 }}

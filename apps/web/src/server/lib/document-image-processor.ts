@@ -35,7 +35,7 @@ export async function uploadDocumentImagesToMinio(
       const fileName = `documents/${userId}/${documentId}/${image.id}.png`
 
       // Загружаем в MinIO
-      await minioClient.putObject(bucketName, fileName, imageBuffer, {
+      await minioClient.putObject(bucketName, fileName, imageBuffer, imageBuffer.length, {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=31536000',
       })
@@ -161,10 +161,10 @@ export function replaceImagePathsInHtml(
       )
 
       // Находим все data: URLs в HTML и заменяем их на MinIO URL
-      updatedHtml = updatedHtml.replace(dataUrlPattern, (match) => {
+      updatedHtml = updatedHtml.replace(dataUrlPattern, (match: string): string => {
         // Проверяем, соответствует ли этот data: URL нашему изображению
         if (image.url === match) {
-          return image.minioUrl
+          return image.minioUrl ?? ''
         }
         return match
       })

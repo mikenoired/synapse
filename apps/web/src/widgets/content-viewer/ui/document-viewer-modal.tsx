@@ -11,6 +11,12 @@ import React, { useState } from 'react'
 import { calculateReadingTime } from '@/shared/lib/schemas'
 import DOMPurify from 'dompurify'
 
+function ensureDataUri(base64: string): string {
+  if (!base64) return ''
+  if (base64.startsWith('data:')) return base64
+  return `data:image/jpeg;base64,${base64}`
+}
+
 interface DocumentViewerModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -205,7 +211,7 @@ export function DocumentViewerModal({
                 {item.thumbnail_base64 && (
                   <div className="mb-6">
                     <img
-                      src={item.thumbnail_base64}
+                      src={ensureDataUri(item.thumbnail_base64)}
                       alt="Document thumbnail"
                       className="w-full max-w-md mx-auto rounded-lg shadow-md"
                     />

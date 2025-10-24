@@ -27,14 +27,9 @@ const (
 // ThumbnailServiceClient is the client API for ThumbnailService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-//
-// Сервис для генерации превью
 type ThumbnailServiceClient interface {
-	// Генерация превью для изображения
 	GenerateImageThumbnail(ctx context.Context, in *ImageThumbnailRequest, opts ...grpc.CallOption) (*ThumbnailResponse, error)
-	// Генерация превью для видео
 	GenerateVideoThumbnail(ctx context.Context, in *VideoThumbnailRequest, opts ...grpc.CallOption) (*ThumbnailResponse, error)
-	// Получение размеров изображения
 	GetImageDimensions(ctx context.Context, in *ImageDimensionsRequest, opts ...grpc.CallOption) (*ImageDimensionsResponse, error)
 }
 
@@ -79,14 +74,9 @@ func (c *thumbnailServiceClient) GetImageDimensions(ctx context.Context, in *Ima
 // ThumbnailServiceServer is the server API for ThumbnailService service.
 // All implementations must embed UnimplementedThumbnailServiceServer
 // for forward compatibility.
-//
-// Сервис для генерации превью
 type ThumbnailServiceServer interface {
-	// Генерация превью для изображения
 	GenerateImageThumbnail(context.Context, *ImageThumbnailRequest) (*ThumbnailResponse, error)
-	// Генерация превью для видео
 	GenerateVideoThumbnail(context.Context, *VideoThumbnailRequest) (*ThumbnailResponse, error)
-	// Получение размеров изображения
 	GetImageDimensions(context.Context, *ImageDimensionsRequest) (*ImageDimensionsResponse, error)
 	mustEmbedUnimplementedThumbnailServiceServer()
 }

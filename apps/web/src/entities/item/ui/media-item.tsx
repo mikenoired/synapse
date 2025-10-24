@@ -6,12 +6,18 @@ import { useEffect, useState } from 'react'
 import { getPresignedMediaUrl } from '@/shared/lib/image-utils'
 import { parseAudioJson, parseMediaJson } from '@/shared/lib/schemas'
 
+function ensureDataUri(base64: string): string {
+  if (!base64) return ''
+  if (base64.startsWith('data:')) return base64
+  return `data:image/jpeg;base64,${base64}`
+}
+
 async function getAspectRatioFromBase64(base64: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new window.Image()
     img.onload = () => resolve(`${img.naturalWidth} / ${img.naturalHeight}`)
     img.onerror = () => reject(new Error('Failed to load image'))
-    img.src = base64
+    img.src = ensureDataUri(base64)
   })
 }
 
@@ -86,7 +92,7 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
     >
       {blurThumb && (
         <Image
-          src={blurThumb}
+          src={ensureDataUri(blurThumb)}
           alt="blur preview"
           className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-200 ease-in-out z-0"
           style={{ opacity: loaded && !errored ? 0 : 1 }}
@@ -192,53 +198,53 @@ export default function MediaItem({ item, onItemClick, thumbSrc }: MediaItemProp
     <div className="relative" onClick={() => onItemClick?.(item)}>
       {isVideo
         ? (
-            <div
-              className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
-              style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : blurAspectRatio }}
-            >
-              {blurThumb && (
-                <Image
-                  src={blurThumb}
-                  alt="blur preview"
-                  className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-500 ease-in-out z-0"
-                  style={{ opacity: thumbSrc ? 0 : 1 }}
-                  draggable={false}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
+          <div
+            className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
+            style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : blurAspectRatio }}
+          >
+            {blurThumb && (
+              <Image
+                src={ensureDataUri(blurThumb)}
+                alt="blur preview"
+                className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-500 ease-in-out z-0"
+                style={{ opacity: thumbSrc ? 0 : 1 }}
+                draggable={false}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
+              />
+            )}
+            {mainSrc && (
+              <Image
+                src={mainSrc}
+                alt={item.title || 'Video'}
+                className="w-full h-full object-cover relative z-10 transition-opacity duration-500 ease-in-out"
+                style={{ opacity: thumbSrc ? 1 : 0 }}
+                draggable={false}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
+              />
+            )}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+              <svg
+                width="64"
+                height="64"
+                viewBox="0 0 64 64"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-16 h-16 drop-shadow-lg"
+              >
+                <path
+                  d="M20 16C20 13.7909 22.2386 12.5532 24.0711 13.7574L50.1421 31.7574C51.8579 32.8921 51.8579 35.1079 50.1421 36.2426L24.0711 54.2426C22.2386 55.4468 20 54.2091 20 52V16Z"
+                  fill="white"
+                  fillOpacity="0.8"
                 />
-              )}
-              {mainSrc && (
-                <Image
-                  src={mainSrc}
-                  alt={item.title || 'Video'}
-                  className="w-full h-full object-cover relative z-10 transition-opacity duration-500 ease-in-out"
-                  style={{ opacity: thumbSrc ? 1 : 0 }}
-                  draggable={false}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
-                />
-              )}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-                <svg
-                  width="64"
-                  height="64"
-                  viewBox="0 0 64 64"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-16 h-16 drop-shadow-lg"
-                >
-                  <path
-                    d="M20 16C20 13.7909 22.2386 12.5532 24.0711 13.7574L50.1421 31.7574C51.8579 32.8921 51.8579 35.1079 50.1421 36.2426L24.0711 54.2426C22.2386 55.4468 20 54.2091 20 52V16Z"
-                    fill="white"
-                    fillOpacity="0.8"
-                  />
-                </svg>
-              </div>
+              </svg>
             </div>
-          )
+          </div>
+        )
         : (
-            mainSrc ? <RenderImage imageUrl={media?.url || ''} title={item.title || null} blurThumb={blurThumb} savedWidth={media?.width} savedHeight={media?.height} /> : null
-          )}
+          mainSrc ? <RenderImage imageUrl={media?.url || ''} title={item.title || null} blurThumb={blurThumb} savedWidth={media?.width} savedHeight={media?.height} /> : null
+        )}
       {item.tags.length > 0 && (
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
           <div className="flex flex-wrap gap-1">

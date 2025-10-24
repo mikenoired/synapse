@@ -69,9 +69,7 @@ func (s *ThumbnailServer) GenerateImageThumbnail(ctx context.Context, req *pb.Im
 		quality = s.config.DefaultJPEGQuality
 	}
 
-	blur := req.Blur
-
-	result, err := s.processor.ProcessImage(ctx, req.ImageData, req.MimeType, width, height, quality, blur)
+	result, err := s.processor.ProcessImage(ctx, req.ImageData, req.MimeType, width, height, quality)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to process image")
 		return &pb.ThumbnailResponse{
@@ -79,12 +77,6 @@ func (s *ThumbnailServer) GenerateImageThumbnail(ctx context.Context, req *pb.Im
 			ErrorMessage: err.Error(),
 		}, nil
 	}
-
-	s.logger.WithFields(logrus.Fields{
-		"thumbnail_width":  result.Width,
-		"thumbnail_height": result.Height,
-		"thumbnail_size":   result.SizeBytes,
-	}).Info("Successfully generated image thumbnail")
 
 	return &pb.ThumbnailResponse{
 		Success:         true,
@@ -97,15 +89,6 @@ func (s *ThumbnailServer) GenerateImageThumbnail(ctx context.Context, req *pb.Im
 }
 
 func (s *ThumbnailServer) GenerateVideoThumbnail(ctx context.Context, req *pb.VideoThumbnailRequest) (*pb.ThumbnailResponse, error) {
-	s.logger.WithFields(logrus.Fields{
-		"mime_type": req.MimeType,
-		"width":     req.Width,
-		"height":    req.Height,
-		"quality":   req.Quality,
-		"blur":      req.Blur,
-		"timestamp": req.Timestamp,
-	}).Info("Processing video thumbnail request")
-
 	if len(req.VideoData) == 0 {
 		return &pb.ThumbnailResponse{
 			Success:      false,
@@ -135,14 +118,12 @@ func (s *ThumbnailServer) GenerateVideoThumbnail(ctx context.Context, req *pb.Vi
 		quality = s.config.DefaultJPEGQuality
 	}
 
-	blur := req.Blur
-
 	timestamp := req.Timestamp
 	if timestamp == "" {
 		timestamp = "00:00:01.000"
 	}
 
-	result, err := s.processor.ProcessVideo(ctx, req.VideoData, req.MimeType, timestamp, width, height, quality, blur)
+	result, err := s.processor.ProcessVideo(ctx, req.VideoData, req.MimeType, timestamp, width, height, quality)
 	if err != nil {
 		s.logger.WithError(err).Error("Failed to process video")
 		return &pb.ThumbnailResponse{
@@ -150,12 +131,6 @@ func (s *ThumbnailServer) GenerateVideoThumbnail(ctx context.Context, req *pb.Vi
 			ErrorMessage: err.Error(),
 		}, nil
 	}
-
-	s.logger.WithFields(logrus.Fields{
-		"thumbnail_width":  result.Width,
-		"thumbnail_height": result.Height,
-		"thumbnail_size":   result.SizeBytes,
-	}).Info("Successfully generated video thumbnail")
 
 	return &pb.ThumbnailResponse{
 		Success:         true,
@@ -168,11 +143,6 @@ func (s *ThumbnailServer) GenerateVideoThumbnail(ctx context.Context, req *pb.Vi
 }
 
 func (s *ThumbnailServer) GetImageDimensions(ctx context.Context, req *pb.ImageDimensionsRequest) (*pb.ImageDimensionsResponse, error) {
-	s.logger.WithFields(logrus.Fields{
-		"mime_type": req.MimeType,
-		"data_size": len(req.ImageData),
-	}).Info("Getting image dimensions")
-
 	if len(req.ImageData) == 0 {
 		return &pb.ImageDimensionsResponse{
 			Success:      false,
@@ -189,12 +159,6 @@ func (s *ThumbnailServer) GetImageDimensions(ctx context.Context, req *pb.ImageD
 		}, nil
 	}
 
-	s.logger.WithFields(logrus.Fields{
-		"width":  dimensions.Width,
-		"height": dimensions.Height,
-		"size":   dimensions.Size,
-	}).Info("Successfully got image dimensions")
-
 	return &pb.ImageDimensionsResponse{
 		Success:   true,
 		Width:     int32(dimensions.Width),
@@ -206,6 +170,8 @@ func (s *ThumbnailServer) GetImageDimensions(ctx context.Context, req *pb.ImageD
 func StartGRPCServer(cfg *config.Config, logger *logrus.Logger) error {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(loggingInterceptor(logger)),
+		grpc.MaxRecvMsgSize(100*1024*1024), // 100MB
+		grpc.MaxSendMsgSize(100*1024*1024), // 100MB
 	)
 
 	thumbnailServer := NewThumbnailServer(cfg, logger)
@@ -218,7 +184,7 @@ func StartGRPCServer(cfg *config.Config, logger *logrus.Logger) error {
 }
 
 func loggingInterceptor(logger *logrus.Logger) grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		start := time.Now()
 
 		logger.WithFields(logrus.Fields{

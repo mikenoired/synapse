@@ -21,7 +21,6 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Запрос на генерацию превью изображения
 type ImageThumbnailRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ImageData     []byte                 `protobuf:"bytes,1,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"` // Данные изображения
@@ -106,7 +105,6 @@ func (x *ImageThumbnailRequest) GetBlur() bool {
 	return false
 }
 
-// Запрос на генерацию превью видео
 type VideoThumbnailRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	VideoData     []byte                 `protobuf:"bytes,1,opt,name=video_data,json=videoData,proto3" json:"video_data,omitempty"` // Данные видео
@@ -199,7 +197,6 @@ func (x *VideoThumbnailRequest) GetTimestamp() string {
 	return ""
 }
 
-// Запрос на получение размеров изображения
 type ImageDimensionsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ImageData     []byte                 `protobuf:"bytes,1,opt,name=image_data,json=imageData,proto3" json:"image_data,omitempty"` // Данные изображения
@@ -252,7 +249,6 @@ func (x *ImageDimensionsRequest) GetMimeType() string {
 	return ""
 }
 
-// Ответ с превью
 type ThumbnailResponse struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Success         bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`                                       // Успешность операции
@@ -345,7 +341,6 @@ func (x *ThumbnailResponse) GetSizeBytes() int64 {
 	return 0
 }
 
-// Ответ с размерами изображения
 type ImageDimensionsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`                              // Успешность операции

@@ -1,5 +1,4 @@
-# Stage 1: Build
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 RUN apk add --no-cache \
   git \
@@ -20,7 +19,12 @@ RUN go mod download
 
 COPY . .
 
-RUN make build
+RUN protoc --go_out=. --go_opt=paths=source_relative \
+  --go-grpc_out=. --go-grpc_opt=paths=source_relative \
+  proto/thumbnail.proto
+
+RUN go build -o bin/thumbnail-server cmd/server/main.go
+RUN go build -o bin/thumbnail-worker cmd/worker/main.go
 
 FROM alpine:latest
 

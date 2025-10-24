@@ -3,15 +3,19 @@ package thumbnail
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"image"
-	"image/color"
+	_ "image/gif"
 	"image/jpeg"
+	_ "image/png"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"time"
 
+	"github.com/disintegration/imaging"
 	"github.com/sirupsen/logrus"
 )
 
@@ -39,10 +43,12 @@ type ProcessImageResult struct {
 	MimeType        string
 }
 
-func (p *Processor) ProcessImage(ctx context.Context, data []byte, mimeType string, width, height int, quality int, blur bool) (*ProcessImageResult, error) {
+func (p *Processor) ProcessImage(ctx context.Context, data []byte, mimeType string, width, height int, quality int) (*ProcessImageResult, error) {
+	format := p.detectImageFormat(mimeType, data)
+
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
+		return nil, fmt.Errorf("failed to decode %s image: %w", format, err)
 	}
 
 	bounds := img.Bounds()
@@ -51,25 +57,19 @@ func (p *Processor) ProcessImage(ctx context.Context, data []byte, mimeType stri
 
 	thumbWidth, thumbHeight := p.calculateThumbnailSize(originalWidth, originalHeight, width, height)
 
-	thumbnail, err := p.resizeImage(img, thumbWidth, thumbHeight)
-	if err != nil {
-		return nil, fmt.Errorf("failed to resize image: %w", err)
-	}
+	thumbnail := imaging.Resize(img, thumbWidth, thumbHeight, imaging.Linear)
 
-	if blur {
-		thumbnail, err = p.applyBlur(thumbnail)
-		if err != nil {
-			p.logger.Warnf("Failed to apply blur: %v", err)
-		}
-	}
+	thumbnail = imaging.Blur(thumbnail, 2.0)
 
 	var buf bytes.Buffer
+	estimatedSize := thumbWidth * thumbHeight * 3 / 10
+	buf.Grow(estimatedSize)
 	err = jpeg.Encode(&buf, thumbnail, &jpeg.Options{Quality: quality})
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode thumbnail: %w", err)
 	}
 
-	thumbnailBase64 := fmt.Sprintf("data:image/jpeg;base64,%s", encodeBase64(buf.Bytes()))
+	thumbnailBase64 := base64.StdEncoding.EncodeToString(buf.Bytes())
 
 	return &ProcessImageResult{
 		ThumbnailBase64: thumbnailBase64,
@@ -80,7 +80,7 @@ func (p *Processor) ProcessImage(ctx context.Context, data []byte, mimeType stri
 	}, nil
 }
 
-func (p *Processor) ProcessVideo(ctx context.Context, data []byte, mimeType, timestamp string, width, height int, quality int, blur bool) (*ProcessImageResult, error) {
+func (p *Processor) ProcessVideo(ctx context.Context, data []byte, mimeType, timestamp string, width, height int, quality int) (*ProcessImageResult, error) {
 	tempDir := "/tmp"
 	videoFile := filepath.Join(tempDir, fmt.Sprintf("video_%d.mp4", time.Now().UnixNano()))
 	frameFile := filepath.Join(tempDir, fmt.Sprintf("frame_%d.jpg", time.Now().UnixNano()))
@@ -100,13 +100,15 @@ func (p *Processor) ProcessVideo(ctx context.Context, data []byte, mimeType, tim
 		return nil, fmt.Errorf("failed to read frame file: %w", err)
 	}
 
-	return p.ProcessImage(ctx, frameData, "image/jpeg", width, height, quality, blur)
+	return p.ProcessImage(ctx, frameData, "image/jpeg", width, height, quality)
 }
 
 func (p *Processor) GetImageDimensions(data []byte, mimeType string) (*ImageDimensions, error) {
+	format := p.detectImageFormat(mimeType, data)
+
 	img, _, err := image.Decode(bytes.NewReader(data))
 	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %w", err)
+		return nil, fmt.Errorf("failed to decode %s image: %w", format, err)
 	}
 
 	bounds := img.Bounds()
@@ -148,63 +150,6 @@ func (p *Processor) calculateThumbnailSize(originalWidth, originalHeight, target
 	return newWidth, newHeight
 }
 
-func (p *Processor) resizeImage(img image.Image, width, height int) (image.Image, error) {
-	bounds := img.Bounds()
-	if bounds.Dx() == width && bounds.Dy() == height {
-		return img, nil
-	}
-
-	resized := image.NewRGBA(image.Rect(0, 0, width, height))
-
-	for y := 0; y < height; y++ {
-		for x := 0; x < width; x++ {
-			srcX := x * bounds.Dx() / width
-			srcY := y * bounds.Dy() / height
-			resized.Set(x, y, img.At(srcX, srcY))
-		}
-	}
-
-	return resized, nil
-}
-
-func (p *Processor) applyBlur(img image.Image) (image.Image, error) {
-	bounds := img.Bounds()
-	blurred := image.NewRGBA(bounds)
-
-	radius := 1
-	for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
-		for x := bounds.Min.X; x < bounds.Max.X; x++ {
-			var r, g, b, a uint32
-			count := 0
-
-			for dy := -radius; dy <= radius; dy++ {
-				for dx := -radius; dx <= radius; dx++ {
-					nx, ny := x+dx, y+dy
-					if nx >= bounds.Min.X && nx < bounds.Max.X && ny >= bounds.Min.Y && ny < bounds.Max.Y {
-						pr, pg, pb, pa := img.At(nx, ny).RGBA()
-						r += pr
-						g += pg
-						b += pb
-						a += pa
-						count++
-					}
-				}
-			}
-
-			if count > 0 {
-				blurred.Set(x, y, color.RGBA{
-					R: uint8((r / uint32(count)) >> 8),
-					G: uint8((g / uint32(count)) >> 8),
-					B: uint8((b / uint32(count)) >> 8),
-					A: uint8((a / uint32(count)) >> 8),
-				})
-			}
-		}
-	}
-
-	return blurred, nil
-}
-
 func (p *Processor) extractFrame(videoFile, frameFile, timestamp string) error {
 	cmd := exec.Command("ffmpeg",
 		"-i", videoFile,
@@ -222,40 +167,6 @@ func (p *Processor) extractFrame(videoFile, frameFile, timestamp string) error {
 	return nil
 }
 
-func encodeBase64(data []byte) string {
-	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-
-	result := make([]byte, 0, (len(data)*4+2)/3)
-
-	for i := 0; i < len(data); i += 3 {
-		var b1, b2, b3 byte
-		b1 = data[i]
-		if i+1 < len(data) {
-			b2 = data[i+1]
-		}
-		if i+2 < len(data) {
-			b3 = data[i+2]
-		}
-
-		result = append(result, charset[b1>>2])
-		result = append(result, charset[((b1&0x03)<<4)|(b2>>4)])
-
-		if i+1 < len(data) {
-			result = append(result, charset[((b2&0x0f)<<2)|(b3>>6)])
-		} else {
-			result = append(result, '=')
-		}
-
-		if i+2 < len(data) {
-			result = append(result, charset[b3&0x3f])
-		} else {
-			result = append(result, '=')
-		}
-	}
-
-	return string(result)
-}
-
 func writeFile(filename string, data []byte) error {
 	return os.WriteFile(filename, data, 0644)
 }
@@ -266,4 +177,46 @@ func readFile(filename string) ([]byte, error) {
 
 func removeFile(filename string) {
 	os.Remove(filename)
+}
+
+func (p *Processor) detectImageFormat(mimeType string, data []byte) string {
+	switch strings.ToLower(mimeType) {
+	case "image/jpeg", "image/jpg":
+		return "JPEG"
+	case "image/png":
+		return "PNG"
+	case "image/gif":
+		return "GIF"
+	case "image/webp":
+		return "WebP"
+	case "image/bmp":
+		return "BMP"
+	case "image/tiff", "image/tif":
+		return "TIFF"
+	}
+
+	if len(data) >= 4 {
+		if data[0] == 0xFF && data[1] == 0xD8 && data[2] == 0xFF {
+			return "JPEG"
+		}
+		if data[0] == 0x89 && data[1] == 0x50 && data[2] == 0x4E && data[3] == 0x47 {
+			return "PNG"
+		}
+		if data[0] == 0x47 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x38 {
+			return "GIF"
+		}
+		if len(data) >= 12 && data[0] == 0x52 && data[1] == 0x49 && data[2] == 0x46 && data[3] == 0x46 &&
+			data[8] == 0x57 && data[9] == 0x45 && data[10] == 0x42 && data[11] == 0x50 {
+			return "WebP"
+		}
+		if data[0] == 0x42 && data[1] == 0x4D {
+			return "BMP"
+		}
+		if (data[0] == 0x49 && data[1] == 0x49 && data[2] == 0x2A && data[3] == 0x00) ||
+			(data[0] == 0x4D && data[1] == 0x4D && data[2] == 0x00 && data[3] == 0x2A) {
+			return "TIFF"
+		}
+	}
+
+	return "Unknown"
 }

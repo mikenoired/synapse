@@ -80,7 +80,7 @@ export function useDocumentUpload() {
             name: file.name,
             type: file.type,
             size: file.size,
-            buffer: Buffer.from(buffer),
+            buffer: Array.from(new Uint8Array(buffer))
           },
         })
       }

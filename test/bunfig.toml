@@ -1,0 +1,8 @@
+[test]
+# Настройки для тестов
+timeout = 60000  # 60 секунд на тест
+preload = ["./test-utils.js"]  # Предзагрузка утилит
+
+[test.reporter]
+# Настройки репортера
+verbose = true

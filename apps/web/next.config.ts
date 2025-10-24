@@ -1,7 +1,5 @@
 import type { NextConfig } from 'next'
 
-import withBundleAnalyzer from '@next/bundle-analyzer'
-
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [
@@ -18,59 +16,17 @@ const nextConfig: NextConfig = {
     optimizeCss: true,
   },
 
+  // reactCompiler: true,
+
   transpilePackages: ['@synapse/ui'],
 
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
       ? {
-          exclude: ['error', 'warn'],
-        }
+        exclude: ['error', 'warn'],
+      }
       : false,
   },
-
-  // webpack: (config, { dev }) => {
-  //   if (!dev) {
-  //     config.optimization = {
-  //       ...config.optimization,
-  //       splitChunks: {
-  //         ...config.optimization.splitChunks,
-  //         chunks: 'all',
-  //         cacheGroups: {
-  //           ...config.optimization.splitChunks.cacheGroups,
-  //           vendor: {
-  //             test: /[\\/]node_modules[\\/]/,
-  //             name: 'vendors',
-  //             chunks: 'initial',
-  //             priority: 10,
-  //             enforce: true,
-  //           },
-  //           framework: {
-  //             chunks: 'all',
-  //             name: 'framework',
-  //             test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
-  //             priority: 40,
-  //             enforce: true,
-  //           },
-  //           ui: {
-  //             test: /[\\/]node_modules[\\/](@radix-ui|lucide-react)[\\/]/,
-  //             name: 'ui-lib',
-  //             chunks: 'all',
-  //             priority: 30,
-  //             enforce: true,
-  //           },
-  //           common: {
-  //             name: 'common',
-  //             minChunks: 2,
-  //             chunks: 'async',
-  //             priority: 20,
-  //             reuseExistingChunk: true,
-  //           },
-  //         },
-  //       },
-  //     }
-  //   }
-  //   return config
-  // },
 
   images: {
     remotePatterns: [
@@ -108,15 +64,7 @@ const nextConfig: NextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
-          },
-          // {
-          //   key: 'Cross-Origin-Embedder-Policy',
-          //   value: 'require-corp',
-          // },
-          // {
-          //   key: 'Cross-Origin-Opener-Policy',
-          //   value: 'same-origin',
-          // },
+          }
         ],
       },
       {
@@ -129,24 +77,7 @@ const nextConfig: NextConfig = {
         ],
       },
     ]
-  },
-
-  // webpack: (config) => {
-  //   // Support for WASM
-  //   config.experiments = {
-  //     ...config.experiments,
-  //     asyncWebAssembly: true,
-  //     layers: true,
-  //   }
-
-  //   config.output.webassemblyModuleFilename = 'static/wasm/[modulehash].wasm'
-
-  //   return config
-  // },
+  }
 }
 
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})
-
-export default bundleAnalyzer(nextConfig)
+export default nextConfig

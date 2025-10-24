@@ -4,19 +4,12 @@ package thumbnail;
 
 option go_package = "thumbnail-service/proto";
 
-// Сервис для генерации превью
 service ThumbnailService {
-  // Генерация превью для изображения
   rpc GenerateImageThumbnail(ImageThumbnailRequest) returns (ThumbnailResponse);
-  
-  // Генерация превью для видео
   rpc GenerateVideoThumbnail(VideoThumbnailRequest) returns (ThumbnailResponse);
-  
-  // Получение размеров изображения
   rpc GetImageDimensions(ImageDimensionsRequest) returns (ImageDimensionsResponse);
 }
 
-// Запрос на генерацию превью изображения
 message ImageThumbnailRequest {
   bytes image_data = 1;        // Данные изображения
   string mime_type = 2;        // MIME тип
@@ -26,7 +19,6 @@ message ImageThumbnailRequest {
   bool blur = 6;               // Применить размытие (по умолчанию true)
 }
 
-// Запрос на генерацию превью видео
 message VideoThumbnailRequest {
   bytes video_data = 1;        // Данные видео
   string mime_type = 2;        // MIME тип
@@ -37,13 +29,11 @@ message VideoThumbnailRequest {
   string timestamp = 7;        // Временная метка для извлечения кадра (по умолчанию "00:00:01.000")
 }
 
-// Запрос на получение размеров изображения
 message ImageDimensionsRequest {
   bytes image_data = 1;        // Данные изображения
   string mime_type = 2;        // MIME тип
 }
 
-// Ответ с превью
 message ThumbnailResponse {
   bool success = 1;            // Успешность операции
   string error_message = 2;    // Сообщение об ошибке (если есть)
@@ -54,7 +44,6 @@ message ThumbnailResponse {
   int64 size_bytes = 7;        // Размер превью в байтах
 }
 
-// Ответ с размерами изображения
 message ImageDimensionsResponse {
   bool success = 1;            // Успешность операции
   string error_message = 2;    // Сообщение об ошибке (если есть)

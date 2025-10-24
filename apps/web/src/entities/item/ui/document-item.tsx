@@ -7,6 +7,12 @@ import { motion } from 'motion/react'
 import React from 'react'
 import { calculateReadingTime } from '@/shared/lib/schemas'
 
+function ensureDataUri(base64: string): string {
+  if (!base64) return ''
+  if (base64.startsWith('data:')) return base64
+  return `data:image/jpeg;base64,${base64}`
+}
+
 interface DocumentItemProps {
   item: Content
   index: number
@@ -79,7 +85,7 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
         {item.thumbnail_base64 && (
           <div className="h-32 w-full overflow-hidden">
             <img
-              src={item.thumbnail_base64}
+              src={ensureDataUri(item.thumbnail_base64)}
               alt="Document thumbnail"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
