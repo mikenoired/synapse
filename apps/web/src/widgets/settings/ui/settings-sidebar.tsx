@@ -26,7 +26,7 @@ export default function SettingsSidebar({ activeTab }: { activeTab?: string }) {
           >
             <Button
               variant={tab === tabItem.key ? 'default' : 'ghost'}
-              className="w-full cursor-pointer md:justify-start justify-center md:px-6 px-2 py-6 rounded-none md:rounded-l-lg text-base md:text-lg font-medium transition"
+              className="w-full cursor-pointer md:justify-start justify-center md:px-6 px-2 py-2 rounded-none md:rounded-l-lg text-base md:text-lg font-medium transition"
             >
               {tabItem.label}
             </Button>

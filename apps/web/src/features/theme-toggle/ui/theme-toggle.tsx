@@ -54,16 +54,11 @@ export function ThemeToggle() {
           <span className="sr-only">Switch theme</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent
-        side="right"
-        sideOffset={5}
-        className={cn(
-          'transition-opacity duration-200',
-          isSidebarExpanded && 'opacity-0 pointer-events-none',
-        )}
-      >
-        Switch theme
-      </TooltipContent>
+      {!isSidebarExpanded && (
+        <TooltipContent side="right" sideOffset={5}>
+          Switch theme
+        </TooltipContent>
+      )}
     </Tooltip>
   )
 }
