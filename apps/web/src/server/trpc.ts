@@ -2,6 +2,7 @@ import type { Context } from './context'
 import { initTRPC, TRPCError } from '@trpc/server'
 import superjson from 'superjson'
 import { handleAuthError } from '@/shared/lib/utils'
+import { RedisRateLimiter } from './lib/redis-rate-limiter'
 
 const t = initTRPC.context<Context>().create({
   transformer: superjson,
@@ -18,29 +19,37 @@ const t = initTRPC.context<Context>().create({
 
 export const router = t.router
 
-// FIXME: For production, use a proper rate limiter like Redis/Upstash.
-type RateKey = string
 const WINDOW_MS = Number(process.env.TRPC_RATE_WINDOW_MS ?? 60_000)
 const LIMIT_QUERY = Number(process.env.TRPC_RATE_LIMIT_QUERY ?? 60)
 const LIMIT_MUTATION = Number(process.env.TRPC_RATE_LIMIT_MUTATION ?? 20)
-const keyToHits: Map<RateKey, number[]> = new Map()
 
-function recordAndCheckLimit(key: RateKey, limit: number): boolean {
-  const now = Date.now()
-  const windowStart = now - WINDOW_MS
-  const arr = keyToHits.get(key) ?? []
-  const recent = arr.filter(ts => ts > windowStart)
-  recent.push(now)
-  keyToHits.set(key, recent)
-  return recent.length <= limit
-}
+const queryLimiter = new RedisRateLimiter({ windowMs: WINDOW_MS, limit: LIMIT_QUERY })
+const mutationLimiter = new RedisRateLimiter({ windowMs: WINDOW_MS, limit: LIMIT_MUTATION })
+
+const csrfProtection = t.middleware(async ({ ctx, type, next }) => {
+  if (type === 'mutation' && process.env.NODE_ENV === 'production') {
+    const origin = ctx.req?.headers.get('origin')
+    const host = ctx.req?.headers.get('host')
+
+    if (origin && host) {
+      const originHost = new URL(origin).host
+      if (originHost !== host) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Invalid origin',
+        })
+      }
+    }
+  }
+  return next()
+})
 
 const rateLimiter = t.middleware(async ({ ctx, type, next }) => {
   const identity = ctx.user?.id || ctx.ip || 'anonymous'
   const bucket = type === 'mutation' ? 'm' : 'q'
-  const key = `${identity}:${bucket}` as RateKey
-  const limit = type === 'mutation' ? LIMIT_MUTATION : LIMIT_QUERY
-  const allowed = recordAndCheckLimit(key, limit)
+  const key = `${identity}:${bucket}`
+  const limiter = type === 'mutation' ? mutationLimiter : queryLimiter
+  const allowed = await limiter.checkLimit(key)
   if (!allowed) {
     throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Rate limit exceeded' })
   }
@@ -64,7 +73,7 @@ const slowLogger = t.middleware(async ({ ctx, path, type, next }) => {
   return result
 })
 
-export const publicProcedure = t.procedure.use(rateLimiter).use(slowLogger)
+export const publicProcedure = t.procedure.use(csrfProtection).use(rateLimiter).use(slowLogger)
 
 const isAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.user)
@@ -73,11 +82,11 @@ const isAuthed = t.middleware(({ ctx, next }) => {
   return next({
     ctx: {
       ...ctx,
-      user: ctx.user,
+      user: ctx.user!,
     },
   })
 })
 
-export const protectedProcedure = t.procedure.use(rateLimiter).use(slowLogger).use(isAuthed)
+export const protectedProcedure = t.procedure.use(csrfProtection).use(rateLimiter).use(slowLogger).use(isAuthed)
 
 // getServerCaller moved to a separate module to avoid circular imports

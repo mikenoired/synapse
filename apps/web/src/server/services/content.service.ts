@@ -8,12 +8,7 @@ import ContentRepository from '../repositories/content.repository'
 
 type ContentRow = typeof contentTable.$inferSelect
 
-const tagsCache = new Map<string, CacheEntry<Array<{ id: string, title: string }>>>()
-const tagsWithContentCache = new Map<string, CacheEntry<Array<{ id: string, title: string, items: Content[] }>>>()
-
-interface CacheEntry<T> { data: T, expires: number }
-
-const TAGS_CACHE_TTL_MS = Number(process.env.TAGS_CACHE_TTL_MS ?? 30000)
+const TAGS_CACHE_TTL_SECONDS = Math.floor(Number(process.env.TAGS_CACHE_TTL_MS ?? 30000) / 1000)
 
 export default class ContentService {
   private repo: ContentRepository
@@ -83,71 +78,85 @@ export default class ContentService {
   async create(createContentData: z.infer<typeof createContentSchema>) {
     const { tag_ids: inputTagIds, tags: legacyTagTitles, ...contentData } = createContentData
 
-    const data = await this.repo.create(createContentData)
+    const result = await this.ctx.db.transaction(async (_tx) => {
+      const data = await this.repo.create(createContentData)
+      const contentId = (data as ContentRow).id
 
-    const contentId = (data as ContentRow).id
+      const contentNodeId = await this.repo.getOrCreateContentNode({
+        content_id: contentId,
+        title: contentData.title,
+        type: contentData.type,
+      })
 
-    const contentNodeId = await this.repo.getOrCreateContentNode({
-      content_id: contentId,
-      title: contentData.title,
-      type: contentData.type,
+      const tagIds = inputTagIds as string[] | undefined
+      const tagTitles = legacyTagTitles as string[] | undefined
+      if (tagIds && tagIds.length) {
+        const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds)
+        await this.upsertContentTags(contentId, tagIds, contentNodeId, tagNodeIds)
+      }
+      else if (tagTitles && tagTitles.length) {
+        const ids = await this.resolveTagTitlesToIds(tagTitles)
+        if (ids.length) {
+          const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids)
+          await this.upsertContentTags(contentId, ids, contentNodeId, tagNodeIds)
+        }
+      }
+
+      return data
     })
 
-    const tagIds = inputTagIds as string[] | undefined
-    const tagTitles = legacyTagTitles as string[] | undefined
-    if (tagIds && tagIds.length) {
-      const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds)
-      await this.upsertContentTags(contentId, tagIds, contentNodeId, tagNodeIds)
-    }
-    else if (tagTitles && tagTitles.length) {
-      const ids = await this.resolveTagTitlesToIds(tagTitles)
-      if (ids.length) {
-        const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids)
-        await this.upsertContentTags(contentId, ids, contentNodeId, tagNodeIds)
-      }
-    }
-
-    const [withTags] = await this.attachTagsToContent([data as ContentRow])
-    this.invalidateUserTags()
+    const [withTags] = await this.attachTagsToContent([result as ContentRow])
+    await this.invalidateUserTags()
     return contentDetailSchema.parse(withTags)
   }
 
   async update(input: z.infer<typeof updateContentSchema>) {
-    const data = await this.repo.updateContent(input)
-
     const { id, tag_ids: inputTagIds, tags: legacyTagTitles, ...updateData } = input
 
-    const tagIds = inputTagIds as string[] | undefined
-    const tagTitles = legacyTagTitles as string[] | undefined
-    const contentNodeId = await this.repo.getOrCreateContentNode({ content_id: id, title: updateData.title, type: updateData.type || 'note' })
-    if (tagIds) {
-      const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds)
-      await this.replaceContentTags(id, tagIds, contentNodeId, tagNodeIds)
-    }
-    else if (tagTitles) {
-      const ids = await this.resolveTagTitlesToIds(tagTitles)
-      const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids)
-      await this.replaceContentTags(id, ids, contentNodeId, tagNodeIds)
-    }
+    const result = await this.ctx.db.transaction(async (_tx) => {
+      const data = await this.repo.updateContent(input)
 
-    const [withTags] = await this.attachTagsToContent([data as ContentRow])
-    this.invalidateUserTags()
+      const tagIds = inputTagIds as string[] | undefined
+      const tagTitles = legacyTagTitles as string[] | undefined
+      const contentNodeId = await this.repo.getOrCreateContentNode({
+        content_id: id,
+        title: updateData.title,
+        type: updateData.type || 'note',
+      })
+
+      if (tagIds) {
+        const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds)
+        await this.replaceContentTags(id, tagIds, contentNodeId, tagNodeIds)
+      }
+      else if (tagTitles) {
+        const ids = await this.resolveTagTitlesToIds(tagTitles)
+        const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids)
+        await this.replaceContentTags(id, ids, contentNodeId, tagNodeIds)
+      }
+
+      return data
+    })
+
+    const [withTags] = await this.attachTagsToContent([result as ContentRow])
+    await this.invalidateUserTags()
     return contentDetailSchema.parse(withTags)
   }
 
   async delete(id: string) {
     const content = await this.repo.getById(id)
-    const node = await this.repo.getNodeByContentId(id)
 
-    const contentNodeId = (node as { id: string } | null)?.id
+    await this.ctx.db.transaction(async (_tx) => {
+      const node = await this.repo.getNodeByContentId(id)
+      const contentNodeId = (node as { id: string } | null)?.id
 
-    await this.repo.deleteContentTag(id)
-    if (contentNodeId) {
-      await this.repo.deleteEdge(contentNodeId)
-      await this.repo.deleteNode(contentNodeId)
-    }
+      await this.repo.deleteContentTag(id)
+      if (contentNodeId) {
+        await this.repo.deleteEdge(contentNodeId)
+        await this.repo.deleteNode(contentNodeId)
+      }
 
-    await this.repo.deleteContent(id)
+      await this.repo.deleteContent(id)
+    })
 
     let totalFileSize = 0
 
@@ -227,13 +236,13 @@ export default class ContentService {
       }
     }
 
-    this.invalidateUserTags()
+    await this.invalidateUserTags()
     return { success: true }
   }
 
   async getTags() {
-    const cacheKey = this.ctx.user!.id
-    const cached = this.getFromCache(tagsCache, cacheKey)
+    const cacheKey = `user:${this.ctx.user!.id}:tags`
+    const cached = await this.ctx.cache.getJSON<Array<{ id: string, title: string }>>(cacheKey)
     if (cached)
       return cached
 
@@ -244,7 +253,7 @@ export default class ContentService {
 
     const tags = await this.repo.getTags(tagIds)
     const result = (tags || []).map(t => ({ id: t.id, title: t.title }))
-    this.setCache(tagsCache, cacheKey, result)
+    await this.ctx.cache.setJSON(cacheKey, result, TAGS_CACHE_TTL_SECONDS)
     return result
   }
 
@@ -253,8 +262,8 @@ export default class ContentService {
   }
 
   async getTagsWithContent() {
-    const cacheKey = this.ctx.user!.id
-    const cached = this.getFromCache(tagsWithContentCache, cacheKey)
+    const cacheKey = `user:${this.ctx.user!.id}:tags_with_content`
+    const cached = await this.ctx.cache.getJSON<Array<{ id: string, title: string, items: Content[] }>>(cacheKey)
     if (cached)
       return cached
 
@@ -275,7 +284,7 @@ export default class ContentService {
     }
 
     const result = Array.from(tagsMap.values())
-    this.setCache(tagsWithContentCache, cacheKey, result)
+    await this.ctx.cache.setJSON(cacheKey, result, TAGS_CACHE_TTL_SECONDS)
     return result
   }
 
@@ -303,23 +312,11 @@ export default class ContentService {
   }
 
   private async invalidateUserTags() {
-    tagsCache.delete(this.ctx.user!.id)
-    tagsWithContentCache.delete(this.ctx.user!.id)
-  }
-
-  private getFromCache<T>(map: Map<string, CacheEntry<T>>, key: string): T | undefined {
-    const hit = map.get(key)
-    if (!hit)
-      return undefined
-    if (Date.now() > hit.expires) {
-      map.delete(key)
-      return undefined
-    }
-    return hit.data
-  }
-
-  private setCache<T>(map: Map<string, CacheEntry<T>>, key: string, data: T) {
-    map.set(key, { data, expires: Date.now() + TAGS_CACHE_TTL_MS })
+    const userId = this.ctx.user!.id
+    await Promise.all([
+      this.ctx.cache.del(`user:${userId}:tags`),
+      this.ctx.cache.del(`user:${userId}:tags_with_content`),
+    ])
   }
 
   private async attachTagsToContent(rows: ContentRow[]): Promise<Content[]> {

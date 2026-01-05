@@ -27,6 +27,23 @@ export class CacheRepository {
     return await redis.del(key)
   }
 
+  async setJSON<T>(key: string, value: T, ttlSeconds?: number) {
+    const serialized = JSON.stringify(value)
+    return await this.set(key, serialized, ttlSeconds)
+  }
+
+  async getJSON<T>(key: string): Promise<T | null> {
+    const value = await redis.get(key)
+    if (!value)
+      return null
+    try {
+      return JSON.parse(value) as T
+    }
+    catch {
+      return null
+    }
+  }
+
   async addFile(userId: string, fileSize: number, updateFileCount = true) {
     const operations = [redis.hincrby(`user:${userId}`, 'storage', fileSize)]
 

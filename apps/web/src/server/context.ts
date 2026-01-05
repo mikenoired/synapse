@@ -1,4 +1,5 @@
 import type { NextRequest } from 'next/server'
+import type { User } from '@/shared/lib/auth-context'
 import { cookies } from 'next/headers'
 import { db } from './db'
 import { verifyToken } from './lib/jwt'
@@ -11,7 +12,7 @@ export async function createContext({ req }: { req?: NextRequest }) {
   const refreshToken = cookieStore?.get('synapse_refresh_token')?.value
   const token = headerToken || cookieToken
 
-  let user = null
+  let user: User | null = null
   if (token) {
     try {
       const payload = verifyToken(token)

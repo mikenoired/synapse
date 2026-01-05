@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
       value: token,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 60 * 60 * 24,
       path: '/',
     })
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
           value: refreshToken,
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          sameSite: 'strict',
           maxAge: 60 * 60 * 24 * 7,
           path: '/',
         })
