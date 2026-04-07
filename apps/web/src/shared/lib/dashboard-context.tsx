@@ -45,7 +45,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 	const [preloadedFiles, setPreloadedFiles] = useState<File[]>([]);
 	const [dialogDefaults, setDialogDefaultsState] = useState<AddDialogConfig>({ initialTags: [] });
 	const [dialogOptions, setDialogOptions] = useState<AddDialogConfig>({ initialTags: [] });
-	const [sidebarWidth, setSidebarWidth] = useState(72); // 18 * 4 = 72px (w-18 в Tailwind)
+	const [sidebarWidth, setSidebarWidth] = useState(72);
 	const [isSidebarExpanded, setIsSidebarExpanded] = useState(false);
 
 	const setTriggerSearchFocus = useCallback((callback: () => void) => {
@@ -92,7 +92,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 
 	const toggleSidebar = useCallback(() => {
 		setIsSidebarExpanded((prev) => !prev);
-		setSidebarWidth((prev) => (prev === 72 ? 256 : 72)); // 72px collapsed, 256px expanded
+		setSidebarWidth((prev) => (prev === 72 ? 256 : 72));
 	}, []);
 
 	const value = useMemo(

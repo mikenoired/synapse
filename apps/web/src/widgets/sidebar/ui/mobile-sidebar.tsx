@@ -8,7 +8,7 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
 	const pathname = usePathname();
 
 	const renderNavItem = (item: NavItem, isMobile = false) => {
-		const isActive = item.href === pathname;
+		const isActive = item.isActive ?? item.href === pathname;
 		const commonClasses = "flex flex-col items-center justify-center gap-1 transition-colors";
 		const activeClasses = "text-foreground font-semibold";
 		const inactiveClasses = "text-muted-foreground hover:text-foreground";
@@ -18,6 +18,7 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
 				<Link
 					key={item.label}
 					href={item.href}
+					scroll={false}
 					className={cn(commonClasses, isActive ? activeClasses : inactiveClasses, "w-16 text-center", {
 						"pointer-events-none": isActive,
 					})}>

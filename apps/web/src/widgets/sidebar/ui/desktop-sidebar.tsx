@@ -84,7 +84,7 @@ function SidebarItem({
 	pathname?: string;
 	isExpanded: boolean;
 }) {
-	const isActive = item.href === pathname;
+	const isActive = item.isActive ?? item.href === pathname;
 	const isActionButton = !item.href;
 
 	const buttonContent = (
@@ -115,7 +115,7 @@ function SidebarItem({
 	);
 
 	const itemElement = item.href ? (
-		<Link href={item.href} className={buttonClassName}>
+		<Link href={item.href} scroll={false} className={buttonClassName}>
 			{buttonContent}
 		</Link>
 	) : (

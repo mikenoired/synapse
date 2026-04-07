@@ -1,42 +1,47 @@
 "use client";
 
 import { Skeleton } from "@synapse/ui/components";
+import { CalendarDays, Mail } from "lucide-react";
 
 import { trpc } from "@/shared/api/trpc";
+
+function formatRegistrationDate(date?: string | Date | null) {
+	if (!date) return "Дата недоступна";
+
+	return `С нами с ${new Intl.DateTimeFormat("ru-RU", {
+		day: "numeric",
+		month: "long",
+		year: "numeric",
+	}).format(new Date(date))}`;
+}
 
 export default function GeneralTab() {
 	const { data: user, isLoading } = trpc.user.getUser.useQuery();
 
 	if (isLoading) {
 		return (
-			<div className="p-6 space-y-6 bg-muted">
-				<h2 className="text-2xl font-semibold mb-4">Main info</h2>
-				<div className="space-y-4">
-					<div>
-						<label className="block mb-1 font-medium">Email</label>
-						<Skeleton className="h-5 w-1/2" />
-					</div>
-					<div>
-						<label className="block mb-1 font-medium">Thinking</label>
-						<Skeleton className="h-5 w-1/3 mt-1" />
-					</div>
+			<div className="space-y-4 py-1">
+				<Skeleton className="h-14 w-full rounded-2xl" />
+				<Skeleton className="h-10 w-52 rounded-full" />
+				<div className="space-y-2">
+					<Skeleton className="h-4 w-32" />
+					<Skeleton className="h-4 w-full max-w-md" />
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="p-6 space-y-6 bg-muted">
-			<h2 className="text-2xl font-semibold mb-4">Main info</h2>
-			<div className="space-y-4">
-				<div>
-					<label className="block mb-1 font-medium">Email</label>
-					<span>{user?.email}</span>
+		<div className="space-y-5 py-1">
+			<div className="flex flex-wrap gap-3">
+				<div className="inline-flex items-center gap-3 rounded-full bg-muted px-3 py-2 text-sm text-foreground align-middle">
+					<Mail className="size-4" />
+					<span className="truncate text-sm font-medium text-foreground">{user?.email}</span>
 				</div>
-				<div>
-					<label className="block mb-1 font-medium">
-						Thinking {new Date(user?.createdAt || "").toLocaleDateString()}
-					</label>
+
+				<div className="inline-flex items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm text-foreground">
+					<CalendarDays className="size-4 text-muted-foreground" />
+					<span>{formatRegistrationDate(user?.createdAt)}</span>
 				</div>
 			</div>
 		</div>
