@@ -7,8 +7,8 @@ import type { FormEvent, TouchEvent } from "react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-import type { Content } from "@/shared/lib/schemas";
 import { useDashboard } from "@/shared/lib/dashboard-context";
+import type { Content } from "@/shared/lib/schemas";
 
 import { AddContentProvider, useAddContent } from "../model/add-content-context";
 import { useDocumentUpload } from "../model/use-document-upload";

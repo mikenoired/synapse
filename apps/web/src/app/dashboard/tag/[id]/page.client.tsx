@@ -38,16 +38,10 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 	);
 	const deleteContentMutation = trpc.content.delete.useMutation();
 
-	const {
-		data: queryData,
-		isLoading: contentLoading,
-	} = trpc.content.getAll.useQuery(
-		queryInput,
-		{
-			retry: false,
-			initialData: initial,
-		}
-	);
+	const { data: queryData, isLoading: contentLoading } = trpc.content.getAll.useQuery(queryInput, {
+		retry: false,
+		initialData: initial,
+	});
 
 	const content: Content[] = queryData?.items ?? [];
 
@@ -62,11 +56,7 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 
 	const handleContentAdded = useCallback(
 		(nextContent?: Content | Content[]) => {
-			const contentList = Array.isArray(nextContent)
-				? nextContent
-				: nextContent
-					? [nextContent]
-					: [];
+			const contentList = Array.isArray(nextContent) ? nextContent : nextContent ? [nextContent] : [];
 
 			if (contentList.length === 0) {
 				void utils.content.getAll.invalidate(queryInput);
@@ -75,7 +65,9 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 			}
 
 			for (const content of contentList) {
-				utils.content.getAll.setData(queryInput, (current) => upsertContentInList(current, content, queryInput));
+				utils.content.getAll.setData(queryInput, (current) =>
+					upsertContentInList(current, content, queryInput)
+				);
 				utils.content.getById.setData({ id: content.id }, content);
 			}
 
@@ -86,7 +78,9 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 
 	const handleContentUpdated = useCallback(
 		(nextContent: Content) => {
-			utils.content.getAll.setData(queryInput, (current) => upsertContentInList(current, nextContent, queryInput));
+			utils.content.getAll.setData(queryInput, (current) =>
+				upsertContentInList(current, nextContent, queryInput)
+			);
 			utils.content.getById.setData({ id: nextContent.id }, nextContent);
 			invalidateRelatedQueries();
 		},

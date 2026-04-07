@@ -11,19 +11,23 @@ import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 
-export default function TagsClient({ initial }: { initial: { id: string; title: string; items: Content[] }[] }) {
+export default function TagsClient({
+	initial,
+}: {
+	initial: { id: string; title: string; items: Content[] }[];
+}) {
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
 	const utils = trpc.useUtils();
 
-	const {
-		data: tagsWithContentData,
-		isLoading: tagsLoading,
-	} = trpc.content.getTagsWithContent.useQuery(undefined, {
-		initialData: initial,
-		refetchOnMount: false,
-	});
+	const { data: tagsWithContentData, isLoading: tagsLoading } = trpc.content.getTagsWithContent.useQuery(
+		undefined,
+		{
+			initialData: initial,
+			refetchOnMount: false,
+		}
+	);
 
 	const isLoading = tagsLoading && !tagsWithContentData?.length;
 

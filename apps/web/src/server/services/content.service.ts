@@ -293,9 +293,7 @@ export default class ContentService {
 		const previewRows = await this.repo.getTagsWithContentPreview(3);
 		if (!previewRows.length) return [];
 
-		const uniqueRows = Array.from(
-			new Map(previewRows.map((row) => [row.id, row as ContentRow])).values()
-		);
+		const uniqueRows = Array.from(new Map(previewRows.map((row) => [row.id, row as ContentRow])).values());
 		const items = await this.attachTagsToContent(uniqueRows);
 		const itemById = new Map(items.map((item) => [item.id, item]));
 		const tagsMap = new Map<string, { id: string; title: string; items: Content[] }>();

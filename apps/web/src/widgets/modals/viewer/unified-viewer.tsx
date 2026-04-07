@@ -41,10 +41,10 @@ import { CustomVideoPlayer } from "@/widgets/content-viewer/ui/custom-video-play
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
 
 import { BaseModal } from "../base";
+import { TagManager, ViewerOverlayControls, type ViewerOverlayAction } from "../components";
 import { ConfirmDialog } from "../dialogs";
 import { useModalGestures, useModalKeyboard } from "../hooks";
 import { showToast } from "../utils";
-import { TagManager, ViewerOverlayControls, type ViewerOverlayAction } from "../components";
 
 interface UnifiedViewerModalProps {
 	open: boolean;
@@ -112,12 +112,41 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 			{content.content.map((block, index) => {
 				if (block.type === "heading") {
 					const level = Math.min(block.attrs?.level || 1, 6);
-					if (level === 1) return <h1 key={index} className="mb-4 mt-6 text-3xl font-semibold text-foreground first:mt-0">{block.content}</h1>;
-					if (level === 2) return <h2 key={index} className="mb-4 mt-6 text-2xl font-semibold text-foreground first:mt-0">{block.content}</h2>;
-					if (level === 3) return <h3 key={index} className="mb-4 mt-6 text-xl font-semibold text-foreground first:mt-0">{block.content}</h3>;
-					if (level === 4) return <h4 key={index} className="mb-4 mt-6 text-lg font-semibold text-foreground first:mt-0">{block.content}</h4>;
-					if (level === 5) return <h5 key={index} className="mb-4 mt-6 text-base font-semibold text-foreground first:mt-0">{block.content}</h5>;
-					return <h6 key={index} className="mb-4 mt-6 text-sm font-semibold text-foreground first:mt-0">{block.content}</h6>;
+					if (level === 1)
+						return (
+							<h1 key={index} className="mb-4 mt-6 text-3xl font-semibold text-foreground first:mt-0">
+								{block.content}
+							</h1>
+						);
+					if (level === 2)
+						return (
+							<h2 key={index} className="mb-4 mt-6 text-2xl font-semibold text-foreground first:mt-0">
+								{block.content}
+							</h2>
+						);
+					if (level === 3)
+						return (
+							<h3 key={index} className="mb-4 mt-6 text-xl font-semibold text-foreground first:mt-0">
+								{block.content}
+							</h3>
+						);
+					if (level === 4)
+						return (
+							<h4 key={index} className="mb-4 mt-6 text-lg font-semibold text-foreground first:mt-0">
+								{block.content}
+							</h4>
+						);
+					if (level === 5)
+						return (
+							<h5 key={index} className="mb-4 mt-6 text-base font-semibold text-foreground first:mt-0">
+								{block.content}
+							</h5>
+						);
+					return (
+						<h6 key={index} className="mb-4 mt-6 text-sm font-semibold text-foreground first:mt-0">
+							{block.content}
+						</h6>
+					);
 				}
 
 				if (block.type === "paragraph") {
@@ -130,7 +159,9 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 
 				if (block.type === "quote") {
 					return (
-						<blockquote key={index} className="my-5 rounded-r-md border-l-4 border-primary bg-muted/40 px-4 py-3">
+						<blockquote
+							key={index}
+							className="my-5 rounded-r-md border-l-4 border-primary bg-muted/40 px-4 py-3">
 							<p className="mb-0 italic text-foreground/80">{block.content}</p>
 						</blockquote>
 					);
@@ -138,7 +169,9 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 
 				if (block.type === "code") {
 					return (
-						<pre key={index} className="my-5 overflow-x-auto rounded-lg border border-border bg-muted p-4 text-sm">
+						<pre
+							key={index}
+							className="my-5 overflow-x-auto rounded-lg border border-border bg-muted p-4 text-sm">
 							<code>{block.content}</code>
 						</pre>
 					);
@@ -147,7 +180,11 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 				if (block.type === "image" && block.attrs?.src) {
 					return (
 						<figure key={index} className="my-6 space-y-2">
-							<img src={block.attrs.src} alt={block.attrs.alt || ""} className="w-full rounded-xl border border-border object-cover" />
+							<img
+								src={block.attrs.src}
+								alt={block.attrs.alt || ""}
+								className="w-full rounded-xl border border-border object-cover"
+							/>
 						</figure>
 					);
 				}
@@ -190,9 +227,18 @@ function TodoRenderer({ content }: { content: string }) {
 	return (
 		<div className="flex flex-col gap-3">
 			{todos.map((todo, index) => (
-				<div key={`${todo.text}-${index}`} className="flex items-start gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3">
-					<input type="checkbox" checked={todo.marked} readOnly className="mt-0.5 h-4 w-4 rounded border-border" />
-					<span className={cn("leading-6 text-foreground", todo.marked && "line-through opacity-60")}>{todo.text}</span>
+				<div
+					key={`${todo.text}-${index}`}
+					className="flex items-start gap-3 rounded-2xl border border-border/70 bg-background/80 px-4 py-3">
+					<input
+						type="checkbox"
+						checked={todo.marked}
+						readOnly
+						className="mt-0.5 h-4 w-4 rounded border-border"
+					/>
+					<span className={cn("leading-6 text-foreground", todo.marked && "line-through opacity-60")}>
+						{todo.text}
+					</span>
 				</div>
 			))}
 		</div>
@@ -241,7 +287,11 @@ function LinkRenderer({ item, linkContent }: { item: Content; linkContent: LinkC
 			</div>
 
 			{linkContent.metadata.image && (
-				<img src={linkContent.metadata.image} alt={linkContent.title} className="h-64 w-full rounded-2xl border border-border object-cover md:h-80" />
+				<img
+					src={linkContent.metadata.image}
+					alt={linkContent.title}
+					className="h-64 w-full rounded-2xl border border-border object-cover md:h-80"
+				/>
 			)}
 
 			<StructuredContentRenderer content={linkContent.content} />
@@ -264,12 +314,20 @@ function DocumentRenderer({ item }: { item: Content }) {
 		<div className="space-y-6">
 			{item.thumbnail_base64 && (
 				<div className="overflow-hidden rounded-2xl border border-border bg-muted/20 p-3">
-					<img src={ensureDataUri(item.thumbnail_base64)} alt="Document preview" className="mx-auto w-full max-w-2xl rounded-xl object-cover" />
+					<img
+						src={ensureDataUri(item.thumbnail_base64)}
+						alt="Document preview"
+						className="mx-auto w-full max-w-2xl rounded-xl object-cover"
+					/>
 				</div>
 			)}
 
 			<div className={cn("document-content max-w-none", prose)}>
-				{hasHtml ? <div dangerouslySetInnerHTML={{ __html: sanitized }} /> : <div className="whitespace-pre-wrap leading-7 text-foreground/90">{item.content}</div>}
+				{hasHtml ? (
+					<div dangerouslySetInnerHTML={{ __html: sanitized }} />
+				) : (
+					<div className="whitespace-pre-wrap leading-7 text-foreground/90">{item.content}</div>
+				)}
 			</div>
 		</div>
 	);
@@ -316,7 +374,15 @@ export function UnifiedViewerModal({
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [updatedItems, setUpdatedItems] = useState<Record<string, Content>>({});
 	const [isDownloading, setIsDownloading] = useState(false);
-	const [audioState, setAudioState] = useState({ currentTime: 0, duration: 0, isPlaying: false, muted: false, seeking: false, seekValue: 0, volume: 1 });
+	const [audioState, setAudioState] = useState({
+		currentTime: 0,
+		duration: 0,
+		isPlaying: false,
+		muted: false,
+		seeking: false,
+		seekValue: 0,
+		volume: 1,
+	});
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const { bind, isHovered } = useMouseActivity(1800);
 	const { isReady: preferencesReady, mediaAutoplayEnabled } = useUserPreferences();
@@ -328,10 +394,19 @@ export function UnifiedViewerModal({
 
 	const currentBaseItem = normalizedItems[currentIndex] ?? item;
 	const currentItem = updatedItems[currentBaseItem.id] ?? currentBaseItem;
-	const linkContent = useMemo(() => (currentItem.type === "link" ? parseLinkContent(currentItem.content) : null), [currentItem.content, currentItem.type]);
+	const linkContent = useMemo(
+		() => (currentItem.type === "link" ? parseLinkContent(currentItem.content) : null),
+		[currentItem.content, currentItem.type]
+	);
 	const readingTime = useMemo(() => getReadingTime(currentItem, linkContent), [currentItem, linkContent]);
-	const mediaData = useMemo(() => (currentItem.type === "media" ? parseMediaJson(currentItem.content)?.media ?? null : null), [currentItem.content, currentItem.type]);
-	const audioData = useMemo(() => (currentItem.type === "audio" ? parseAudioJson(currentItem.content) : null), [currentItem.content, currentItem.type]);
+	const mediaData = useMemo(
+		() => (currentItem.type === "media" ? (parseMediaJson(currentItem.content)?.media ?? null) : null),
+		[currentItem.content, currentItem.type]
+	);
+	const audioData = useMemo(
+		() => (currentItem.type === "audio" ? parseAudioJson(currentItem.content) : null),
+		[currentItem.content, currentItem.type]
+	);
 	const mediaUrl = mediaData?.url ? getPresignedMediaUrl(mediaData.url) : "";
 	const videoPosterUrl = mediaData?.thumbnailUrl ? getPresignedMediaUrl(mediaData.thumbnailUrl) : undefined;
 	const audioUrl = audioData?.audio?.url ? getPresignedMediaUrl(audioData.audio.url) : "";
@@ -339,7 +414,8 @@ export function UnifiedViewerModal({
 
 	const backgroundSrc = useMemo(() => {
 		if (currentItem.type === "media") {
-			if (mediaData?.type === "video" && mediaData.thumbnailUrl) return getPresignedMediaUrl(mediaData.thumbnailUrl);
+			if (mediaData?.type === "video" && mediaData.thumbnailUrl)
+				return getPresignedMediaUrl(mediaData.thumbnailUrl);
 			return mediaUrl;
 		}
 
@@ -356,7 +432,15 @@ export function UnifiedViewerModal({
 		}
 
 		return "";
-	}, [coverUrl, currentItem.thumbnail_base64, currentItem.type, linkContent?.metadata.image, mediaData?.thumbnailUrl, mediaData?.type, mediaUrl]);
+	}, [
+		coverUrl,
+		currentItem.thumbnail_base64,
+		currentItem.type,
+		linkContent?.metadata.image,
+		mediaData?.thumbnailUrl,
+		mediaData?.type,
+		mediaUrl,
+	]);
 
 	const downloadUrl = currentItem.type === "media" ? mediaUrl : currentItem.type === "audio" ? audioUrl : "";
 
@@ -393,7 +477,15 @@ export function UnifiedViewerModal({
 		}
 
 		if (currentItem.type !== "audio") {
-			setAudioState({ currentTime: 0, duration: 0, isPlaying: false, muted: false, seeking: false, seekValue: 0, volume: 1 });
+			setAudioState({
+				currentTime: 0,
+				duration: 0,
+				isPlaying: false,
+				muted: false,
+				seeking: false,
+				seekValue: 0,
+				volume: 1,
+			});
 		}
 	}, [currentItem.id, currentItem.type]);
 
@@ -402,22 +494,31 @@ export function UnifiedViewerModal({
 		if (!element || currentItem.type !== "audio") return;
 
 		const handleLoaded = () => {
-			setAudioState((current) => ({ ...current, duration: element.duration || 0, currentTime: element.currentTime || 0 }));
+			setAudioState((current) => ({
+				...current,
+				duration: element.duration || 0,
+				currentTime: element.currentTime || 0,
+			}));
 
 			if (!preferencesReady || !mediaAutoplayEnabled || element.currentTime > 0) {
 				setAudioState((current) => ({ ...current, isPlaying: false }));
 				return;
 			}
 
-			element.play().then(() => {
-				setAudioState((current) => ({ ...current, isPlaying: true }));
-			}).catch(() => {
-				setAudioState((current) => ({ ...current, isPlaying: false }));
-			});
+			element
+				.play()
+				.then(() => {
+					setAudioState((current) => ({ ...current, isPlaying: true }));
+				})
+				.catch(() => {
+					setAudioState((current) => ({ ...current, isPlaying: false }));
+				});
 		};
 
 		const handleTimeUpdate = () => {
-			setAudioState((current) => (current.seeking ? current : { ...current, currentTime: element.currentTime }));
+			setAudioState((current) =>
+				current.seeking ? current : { ...current, currentTime: element.currentTime }
+			);
 		};
 
 		const handleEnded = () => {
@@ -596,25 +697,42 @@ export function UnifiedViewerModal({
 			setAudioState((current) => ({ ...current, isPlaying: false }));
 			return;
 		}
-		element.play().then(() => {
-			setAudioState((current) => ({ ...current, isPlaying: true }));
-		}).catch(() => {
-			setAudioState((current) => ({ ...current, isPlaying: false }));
-		});
+		element
+			.play()
+			.then(() => {
+				setAudioState((current) => ({ ...current, isPlaying: true }));
+			})
+			.catch(() => {
+				setAudioState((current) => ({ ...current, isPlaying: false }));
+			});
 	};
 
 	const overlayActions = useMemo<ViewerOverlayAction[]>(() => {
 		const actions: ViewerOverlayAction[] = [
-			{ icon: Info, label: showDetails ? "Скрыть" : "Детали", onClick: () => setShowDetails((current) => !current) },
+			{
+				icon: Info,
+				label: showDetails ? "Скрыть" : "Детали",
+				onClick: () => setShowDetails((current) => !current),
+			},
 		];
 		if (downloadUrl) {
-			actions.push({ icon: Download, label: isDownloading ? "Скачивание..." : "Скачать", onClick: handleDownload, disabled: isDownloading });
+			actions.push({
+				icon: Download,
+				label: isDownloading ? "Скачивание..." : "Скачать",
+				onClick: handleDownload,
+				disabled: isDownloading,
+			});
 		}
 		if (onEdit) {
 			actions.push({ icon: Edit2, label: "Редактировать", onClick: handleEdit });
 		}
 		if (onDelete) {
-			actions.push({ icon: Trash2, label: "Удалить", onClick: () => setShowDeleteConfirm(true), destructive: true });
+			actions.push({
+				icon: Trash2,
+				label: "Удалить",
+				onClick: () => setShowDeleteConfirm(true),
+				destructive: true,
+			});
 		}
 		return actions;
 	}, [downloadUrl, handleDownload, isDownloading, onDelete, onEdit, showDetails]);
@@ -622,9 +740,23 @@ export function UnifiedViewerModal({
 	const renderContent = () => {
 		if (currentItem.type === "media") {
 			if (mediaData?.type === "video") {
-				return <CustomVideoPlayer src={mediaUrl} poster={videoPosterUrl} autoPlay={preferencesReady && mediaAutoplayEnabled} className="h-full w-full" />;
+				return (
+					<CustomVideoPlayer
+						src={mediaUrl}
+						poster={videoPosterUrl}
+						autoPlay={preferencesReady && mediaAutoplayEnabled}
+						className="h-full w-full"
+					/>
+				);
 			}
-			return <img src={mediaUrl} alt={currentItem.title || "media"} className="max-h-full max-w-full object-contain" draggable={false} />;
+			return (
+				<img
+					src={mediaUrl}
+					alt={currentItem.title || "media"}
+					className="max-h-full max-w-full object-contain"
+					draggable={false}
+				/>
+			);
 		}
 
 		if (currentItem.type === "audio") {
@@ -635,28 +767,53 @@ export function UnifiedViewerModal({
 					<div className="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-[28px] border border-white/10 bg-white/5 sm:max-w-[360px]">
 						{coverUrl ? (
 							<>
-								<Image src={coverUrl} alt={audioData?.track?.title || currentItem.title || "cover"} fill unoptimized className="absolute inset-0 scale-105 object-cover opacity-35 blur-2xl" />
-								<Image src={coverUrl} alt={audioData?.track?.title || currentItem.title || "cover"} fill unoptimized className="relative z-10 object-cover" />
+								<Image
+									src={coverUrl}
+									alt={audioData?.track?.title || currentItem.title || "cover"}
+									fill
+									unoptimized
+									className="absolute inset-0 scale-105 object-cover opacity-35 blur-2xl"
+								/>
+								<Image
+									src={coverUrl}
+									alt={audioData?.track?.title || currentItem.title || "cover"}
+									fill
+									unoptimized
+									className="relative z-10 object-cover"
+								/>
 							</>
 						) : (
-							<div className="flex h-full w-full items-center justify-center bg-white/5 text-sm text-white/50">Нет обложки</div>
+							<div className="flex h-full w-full items-center justify-center bg-white/5 text-sm text-white/50">
+								Нет обложки
+							</div>
 						)}
 					</div>
 
 					<div className="space-y-1 text-center text-white">
-						<p className="text-xl font-medium leading-tight">{audioData?.track?.title || currentItem.title || "Аудио"}</p>
-						{(audioData?.track?.artist || audioData?.track?.album) && <p className="text-sm text-white/60">{[audioData?.track?.artist, audioData?.track?.album].filter(Boolean).join(" • ")}</p>}
+						<p className="text-xl font-medium leading-tight">
+							{audioData?.track?.title || currentItem.title || "Аудио"}
+						</p>
+						{(audioData?.track?.artist || audioData?.track?.album) && (
+							<p className="text-sm text-white/60">
+								{[audioData?.track?.artist, audioData?.track?.album].filter(Boolean).join(" • ")}
+							</p>
+						)}
 					</div>
 
 					<div className="w-full max-w-[560px] rounded-[28px] border border-white/10 bg-black/48 px-4 py-4 text-white sm:px-5">
 						<div className="flex flex-col gap-4">
 							<div className="flex items-center justify-center">
-								<button type="button" onClick={toggleAudio} className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-colors hover:bg-white/90">
+								<button
+									type="button"
+									onClick={toggleAudio}
+									className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-black transition-colors hover:bg-white/90">
 									{audioState.isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
 								</button>
 							</div>
 							<div className="flex items-center gap-3">
-								<div className="w-11 text-right text-xs tabular-nums text-white/60">{formatDuration(audioState.currentTime)}</div>
+								<div className="w-11 text-right text-xs tabular-nums text-white/60">
+									{formatDuration(audioState.currentTime)}
+								</div>
 								<input
 									type="range"
 									min={0}
@@ -664,31 +821,57 @@ export function UnifiedViewerModal({
 									value={audioState.seeking ? audioState.seekValue : progress}
 									onMouseDown={() => setAudioState((current) => ({ ...current, seeking: true }))}
 									onTouchStart={() => setAudioState((current) => ({ ...current, seeking: true }))}
-									onChange={(e) => setAudioState((current) => ({ ...current, seekValue: Number(e.target.value) }))}
+									onChange={(e) =>
+										setAudioState((current) => ({ ...current, seekValue: Number(e.target.value) }))
+									}
 									onMouseUp={() => {
 										if (!audioRef.current) return;
 										const next = (audioState.seekValue / 100) * (audioState.duration || 0);
 										audioRef.current.currentTime = Number.isFinite(next) ? next : 0;
-										setAudioState((current) => ({ ...current, currentTime: audioRef.current?.currentTime || 0, seeking: false }));
+										setAudioState((current) => ({
+											...current,
+											currentTime: audioRef.current?.currentTime || 0,
+											seeking: false,
+										}));
 									}}
 									onTouchEnd={() => {
 										if (!audioRef.current) return;
 										const next = (audioState.seekValue / 100) * (audioState.duration || 0);
 										audioRef.current.currentTime = Number.isFinite(next) ? next : 0;
-										setAudioState((current) => ({ ...current, currentTime: audioRef.current?.currentTime || 0, seeking: false }));
+										setAudioState((current) => ({
+											...current,
+											currentTime: audioRef.current?.currentTime || 0,
+											seeking: false,
+										}));
 									}}
 									className="flex-1 cursor-pointer"
 								/>
-								<div className="w-11 text-xs tabular-nums text-white/60">{formatDuration(audioState.duration)}</div>
+								<div className="w-11 text-xs tabular-nums text-white/60">
+									{formatDuration(audioState.duration)}
+								</div>
 							</div>
 							<div className="flex items-center justify-center gap-3">
 								<button
 									type="button"
 									onClick={() => setAudioState((current) => ({ ...current, muted: !current.muted }))}
 									className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white">
-									{audioState.muted || audioState.volume === 0 ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+									{audioState.muted || audioState.volume === 0 ? (
+										<VolumeX className="size-4" />
+									) : (
+										<Volume2 className="size-4" />
+									)}
 								</button>
-								<input type="range" min={0} max={1} step={0.01} value={audioState.muted ? 0 : audioState.volume} onChange={(e) => setAudioState((current) => ({ ...current, volume: Number(e.target.value) }))} className="w-32 cursor-pointer" />
+								<input
+									type="range"
+									min={0}
+									max={1}
+									step={0.01}
+									value={audioState.muted ? 0 : audioState.volume}
+									onChange={(e) =>
+										setAudioState((current) => ({ ...current, volume: Number(e.target.value) }))
+									}
+									className="w-32 cursor-pointer"
+								/>
 							</div>
 						</div>
 					</div>
@@ -749,11 +932,22 @@ export function UnifiedViewerModal({
 
 	return (
 		<>
-			<BaseModal open={open} onOpenChange={onOpenChange} size="full" variant="fullscreen" className="border-0 bg-black/35 shadow-none backdrop-blur-xl" preventScroll>
+			<BaseModal
+				open={open}
+				onOpenChange={onOpenChange}
+				size="full"
+				variant="fullscreen"
+				className="border-0 bg-black/35 shadow-none backdrop-blur-xl"
+				preventScroll>
 				<div className="relative h-full w-full overflow-hidden bg-black" {...bind}>
 					{backgroundSrc && (
 						<div className="absolute inset-0 overflow-hidden">
-							<img src={backgroundSrc} alt="" className="h-full w-full scale-110 object-cover opacity-28 blur-3xl" draggable={false} />
+							<img
+								src={backgroundSrc}
+								alt=""
+								className="h-full w-full scale-110 object-cover opacity-28 blur-3xl"
+								draggable={false}
+							/>
 							<div className="absolute inset-0 bg-black/55" />
 						</div>
 					)}
@@ -798,18 +992,37 @@ export function UnifiedViewerModal({
 								<div className="space-y-4">
 									<div className="space-y-2">
 										<div className="flex items-center gap-2 text-sm text-white/70">
-											{currentItem.type === "media" ? <ImageIcon className="size-4" /> : currentItem.type === "audio" ? <Play className="size-4" /> : currentItem.type === "link" ? <Globe className="size-4" /> : currentItem.type === "todo" ? <ListChecks className="size-4" /> : <FileText className="size-4" />}
+											{currentItem.type === "media" ? (
+												<ImageIcon className="size-4" />
+											) : currentItem.type === "audio" ? (
+												<Play className="size-4" />
+											) : currentItem.type === "link" ? (
+												<Globe className="size-4" />
+											) : currentItem.type === "todo" ? (
+												<ListChecks className="size-4" />
+											) : (
+												<FileText className="size-4" />
+											)}
 											<span>{currentItem.type.toUpperCase()}</span>
 										</div>
 										<p className="text-base font-medium text-white">{currentItem.title || "Без названия"}</p>
 									</div>
 
 									<div className="space-y-2 text-sm text-white/65">
-										<div className="flex items-center gap-2"><Calendar className="size-4" />Создано {formatDate(currentItem.created_at)}</div>
+										<div className="flex items-center gap-2">
+											<Calendar className="size-4" />
+											Создано {formatDate(currentItem.created_at)}
+										</div>
 										{readingTime && <p>{readingTime}</p>}
-										{currentItem.updated_at !== currentItem.created_at && <p>Обновлено {formatDate(currentItem.updated_at)}</p>}
-										{currentItem.type === "link" && linkContent?.metadata.author && <p>Автор: {linkContent.metadata.author}</p>}
-										{currentItem.type === "audio" && audioData?.track?.artist && <p>Исполнитель: {audioData.track.artist}</p>}
+										{currentItem.updated_at !== currentItem.created_at && (
+											<p>Обновлено {formatDate(currentItem.updated_at)}</p>
+										)}
+										{currentItem.type === "link" && linkContent?.metadata.author && (
+											<p>Автор: {linkContent.metadata.author}</p>
+										)}
+										{currentItem.type === "audio" && audioData?.track?.artist && (
+											<p>Исполнитель: {audioData.track.artist}</p>
+										)}
 									</div>
 
 									<div className="space-y-2">
@@ -817,7 +1030,12 @@ export function UnifiedViewerModal({
 											<Tag className="size-3.5" />
 											Теги
 										</div>
-										<TagManager tags={currentItem.tags} onAddTag={handleAddTag} onRemoveTag={handleRemoveTag} inputPlaceholder="Добавить тег..." />
+										<TagManager
+											tags={currentItem.tags}
+											onAddTag={handleAddTag}
+											onRemoveTag={handleRemoveTag}
+											inputPlaceholder="Добавить тег..."
+										/>
 									</div>
 								</div>
 							</motion.div>
@@ -826,7 +1044,16 @@ export function UnifiedViewerModal({
 				</div>
 			</BaseModal>
 
-			<ConfirmDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm} title="Удалить контент?" description="Это действие нельзя отменить. Элемент будет удалён навсегда." confirmText="Удалить" cancelText="Отмена" variant="destructive" onConfirm={confirmDelete} />
+			<ConfirmDialog
+				open={showDeleteConfirm}
+				onOpenChange={setShowDeleteConfirm}
+				title="Удалить контент?"
+				description="Это действие нельзя отменить. Элемент будет удалён навсегда."
+				confirmText="Удалить"
+				cancelText="Отмена"
+				variant="destructive"
+				onConfirm={confirmDelete}
+			/>
 		</>
 	);
 }

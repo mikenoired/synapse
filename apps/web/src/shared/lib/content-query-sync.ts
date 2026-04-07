@@ -44,7 +44,9 @@ function matchesType(item: Content, type?: Content["type"]): boolean {
 }
 
 export function matchesContentListFilters(item: Content, input: ContentListQueryInput): boolean {
-	return matchesSearch(item, input.search) && matchesTags(item, input.tagIds) && matchesType(item, input.type);
+	return (
+		matchesSearch(item, input.search) && matchesTags(item, input.tagIds) && matchesType(item, input.type)
+	);
 }
 
 function sortByCreatedAtDesc(items: Content[]): Content[] {

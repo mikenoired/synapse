@@ -80,10 +80,7 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 	const textPreview = useMemo(() => getTextPreview(item.content), [item.content]);
 
 	return (
-		<motion.div
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.2 }}>
+		<motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
 			<div className="relative" onClick={() => onItemClick?.(item)}>
 				{item.thumbnail_base64 && (
 					<div className="h-32 w-full overflow-hidden">

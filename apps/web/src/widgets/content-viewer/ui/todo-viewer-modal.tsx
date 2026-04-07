@@ -85,9 +85,7 @@ export function TodoViewerModal({
 								<ListChecks className="w-4 h-4" />
 								<span>Todo List</span>
 							</div>
-							{item.title && (
-							<h1 className="text-2xl font-bold leading-tight">{item.title}</h1>
-							)}
+							{item.title && <h1 className="text-2xl font-bold leading-tight">{item.title}</h1>}
 							<div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
 								<div className="flex items-center gap-1">
 									<Calendar className="w-3 h-3" />

@@ -28,7 +28,9 @@ export async function processImageUpload(
 	const objectName = uploadResult.objectName;
 	const publicUrl = getPublicUrl(objectName);
 	const imageDimensions = await getImageDimensionsSafe(getImageDimensions, file.buffer);
-	const serializedContent = JSON.stringify(buildImageMediaContent({ imageDimensions, objectName, publicUrl }));
+	const serializedContent = JSON.stringify(
+		buildImageMediaContent({ imageDimensions, objectName, publicUrl })
+	);
 
 	const createdContent = await deps.persistContent({
 		content: serializedContent,

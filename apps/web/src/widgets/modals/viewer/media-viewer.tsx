@@ -351,20 +351,20 @@ export function MediaViewerModal({
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
 									exit={{ opacity: 0 }}
-								transition={{ duration: 0.16 }}
-								onClick={goToPrevious}
-								disabled={currentIndex === 0}
-								className="absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30">
+									transition={{ duration: 0.16 }}
+									onClick={goToPrevious}
+									disabled={currentIndex === 0}
+									className="absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30">
 									<ChevronLeft className="size-5" />
 								</motion.button>
 								<motion.button
 									initial={{ opacity: 0 }}
 									animate={{ opacity: 1 }}
 									exit={{ opacity: 0 }}
-								transition={{ duration: 0.16 }}
-								onClick={goToNext}
-								disabled={currentIndex === galleryEntries.length - 1}
-								className="absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30">
+									transition={{ duration: 0.16 }}
+									onClick={goToNext}
+									disabled={currentIndex === galleryEntries.length - 1}
+									className="absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30">
 									<ChevronRight className="size-5" />
 								</motion.button>
 							</>
@@ -451,7 +451,11 @@ export function MediaViewerModal({
 									<div className="min-w-0 space-y-2">
 										<div className="flex flex-wrap items-center gap-2 text-xs text-white/65">
 											<span className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1">
-												{currentEntry.media_type === "video" ? <Video className="size-3.5" /> : <ImageIcon className="size-3.5" />}
+												{currentEntry.media_type === "video" ? (
+													<Video className="size-3.5" />
+												) : (
+													<ImageIcon className="size-3.5" />
+												)}
 												{currentEntry.media_type === "video" ? "Видео" : "Изображение"}
 											</span>
 											<span className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1">

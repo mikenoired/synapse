@@ -1,8 +1,8 @@
 import { Buffer } from "node:buffer";
 
-import ContentService from "./content.service";
 import type { Context } from "../context";
 import { content } from "../db/schema";
+import ContentService from "./content.service";
 import { processAudioUpload } from "./upload/audio-handler";
 import { processImageUpload } from "./upload/image-handler";
 import type { UploadHandlerDeps } from "./upload/upload-handler-types";
@@ -110,12 +110,9 @@ export default class UploadService {
 				throw new Error("Content creation error");
 			}
 
-			await this.tagService.withDb(tx as unknown as Context["db"]).attachTags(
-				inserted.id,
-				input.tags,
-				input.type,
-				input.title
-			);
+			await this.tagService
+				.withDb(tx as unknown as Context["db"])
+				.attachTags(inserted.id, input.tags, input.type, input.title);
 
 			return inserted.id;
 		});

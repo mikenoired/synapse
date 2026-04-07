@@ -2,7 +2,17 @@
 
 import { cn } from "@synapse/ui/cn";
 import { Button } from "@synapse/ui/components";
-import { ArrowLeft, FileText, FileUp, Image as ImageIcon, Link, ListChecks, Maximize, Minimize, Music2 } from "lucide-react";
+import {
+	ArrowLeft,
+	FileText,
+	FileUp,
+	Image as ImageIcon,
+	Link,
+	ListChecks,
+	Maximize,
+	Minimize,
+	Music2,
+} from "lucide-react";
 
 import type { Content } from "@/shared/lib/schemas";
 
@@ -19,7 +29,12 @@ export const contentTypeOptions: ContentTypeOption[] = [
 	{ key: "audio", icon: Music2, label: "Аудио", description: "Файлы, треки и голосовые материалы" },
 	{ key: "link", icon: Link, label: "Ссылка", description: "Сохранённые ссылки с превью и метаданными" },
 	{ key: "todo", icon: ListChecks, label: "Задачи", description: "Короткие списки дел и контрольные пункты" },
-	{ key: "doc", icon: FileUp, label: "Документ", description: "PDF, DOCX, EPUB, XLSX, CSV и другие документы" },
+	{
+		key: "doc",
+		icon: FileUp,
+		label: "Документ",
+		description: "PDF, DOCX, EPUB, XLSX, CSV и другие документы",
+	},
 ];
 
 export function getContentTypeMeta(type: Content["type"]) {
@@ -84,7 +99,12 @@ interface ContentTypeHeaderProps {
 	onToggleFullScreen: () => void;
 }
 
-export function ContentTypeHeader({ type, onBack, isFullScreen, onToggleFullScreen }: ContentTypeHeaderProps) {
+export function ContentTypeHeader({
+	type,
+	onBack,
+	isFullScreen,
+	onToggleFullScreen,
+}: ContentTypeHeaderProps) {
 	const meta = getContentTypeMeta(type);
 	const Icon = meta.icon;
 
@@ -106,7 +126,11 @@ export function ContentTypeHeader({ type, onBack, isFullScreen, onToggleFullScre
 			</div>
 
 			{type === "note" && (
-				<Button variant="ghost" size="sm" onClick={onToggleFullScreen} className="h-9 gap-2 px-3 text-muted-foreground">
+				<Button
+					variant="ghost"
+					size="sm"
+					onClick={onToggleFullScreen}
+					className="h-9 gap-2 px-3 text-muted-foreground">
 					{isFullScreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
 					<span className="hidden sm:inline">{isFullScreen ? "Свернуть" : "На весь экран"}</span>
 				</Button>

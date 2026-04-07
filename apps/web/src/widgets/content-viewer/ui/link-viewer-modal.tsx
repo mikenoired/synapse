@@ -257,7 +257,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 							)}
 
 							<div className="space-y-2">
-							<h1 className="text-2xl md:text-3xl font-bold leading-tight text-foreground">
+								<h1 className="text-2xl md:text-3xl font-bold leading-tight text-foreground">
 									{linkContent?.title || item.title || "No title"}
 								</h1>
 								{/* {linkContent?.description && (

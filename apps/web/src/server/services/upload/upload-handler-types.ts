@@ -1,5 +1,6 @@
-import type { Context } from "../../context";
 import type { Content } from "@/shared/lib/schemas";
+
+import type { Context } from "../../context";
 import type { UploadContentType } from "./upload-types";
 
 export interface PersistUploadedContentInput {

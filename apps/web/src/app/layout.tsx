@@ -35,7 +35,6 @@ export const viewport: Viewport = {
 	viewportFit: "contain",
 };
 
-
 export default async function RootLayout({ children }: { children: ReactNode }) {
 	const { user } = await createContext({});
 

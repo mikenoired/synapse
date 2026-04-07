@@ -44,7 +44,14 @@ interface ItemProps {
 	excludedTag?: string;
 }
 
-export default function Item({ item, index, onContentUpdated, onContentDeleted, onItemClick, excludedTag }: ItemProps) {
+export default function Item({
+	item,
+	index,
+	onContentUpdated,
+	onContentDeleted,
+	onItemClick,
+	excludedTag,
+}: ItemProps) {
 	const [editOpen, setEditOpen] = useState(false);
 	const utils = trpc.useUtils();
 
@@ -197,9 +204,9 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 								? "p-3"
 								: item.type === "todo"
 									? "p-3"
-						: item.type === "link"
-							? "p-3"
-							: ""
+									: item.type === "link"
+										? "p-3"
+										: ""
 					}>
 					{item.type === "media" || item.type === "audio" ? (
 						<MediaItem item={item} onItemClick={onItemClick} />

@@ -128,7 +128,9 @@ export default class ContentRepository {
 	) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const conditions = this.buildContentConditions(search, type, cursor, [inArray(contentTags.tagId, tagIds)]);
+		const conditions = this.buildContentConditions(search, type, cursor, [
+			inArray(contentTags.tagId, tagIds),
+		]);
 
 		const data = await this.database
 			.select(contentListColumns)
@@ -344,10 +346,7 @@ export default class ContentRepository {
 				type: params.type,
 			})
 			.where(
-				and(
-					eq(nodes.userId, this.ctx.user.id),
-					sql`${nodes.metadata}->>'content_id' = ${params.content_id}`
-				)
+				and(eq(nodes.userId, this.ctx.user.id), sql`${nodes.metadata}->>'content_id' = ${params.content_id}`)
 			)
 			.returning({ id: nodes.id });
 

@@ -128,7 +128,9 @@ export default function MediaTab() {
 				<div className="flex items-start justify-between gap-4">
 					<div className="space-y-1">
 						<h3 className="text-base font-semibold text-foreground">Autoplay media on open</h3>
-						<p className="text-sm text-muted-foreground">Automatically starts audio and video when you open them in the viewer.</p>
+						<p className="text-sm text-muted-foreground">
+							Automatically starts audio and video when you open them in the viewer.
+						</p>
 					</div>
 					<button
 						type="button"
@@ -137,7 +139,9 @@ export default function MediaTab() {
 						disabled={!isReady}
 						onClick={() => setMediaAutoplayEnabled(!mediaAutoplayEnabled)}
 						className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition ${mediaAutoplayEnabled ? "border-foreground bg-foreground" : "border-border bg-muted"} ${!isReady ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
-						<span className={`inline-block size-5 rounded-full bg-background transition-transform ${mediaAutoplayEnabled ? "translate-x-6" : "translate-x-1"}`} />
+						<span
+							className={`inline-block size-5 rounded-full bg-background transition-transform ${mediaAutoplayEnabled ? "translate-x-6" : "translate-x-1"}`}
+						/>
 					</button>
 				</div>
 			</div>

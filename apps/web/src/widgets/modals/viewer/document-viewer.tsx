@@ -39,7 +39,13 @@ function formatDate(date: string) {
 	});
 }
 
-export function DocumentViewerModal({ open, onOpenChange, item, onEdit, onDelete }: DocumentViewerModalProps) {
+export function DocumentViewerModal({
+	open,
+	onOpenChange,
+	item,
+	onEdit,
+	onDelete,
+}: DocumentViewerModalProps) {
 	const [showDetails, setShowDetails] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const { bind, isHovered } = useMouseActivity(1800);

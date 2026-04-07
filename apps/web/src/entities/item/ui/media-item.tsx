@@ -92,7 +92,6 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 	}, [isVideo, media?.thumbnailUrl, media?.url]);
 	const videoAspectRatio = getAspectRatio(media?.width, media?.height, "16 / 9");
 
-
 	if (isAudio) {
 		const isTrack = Boolean(audioData?.track?.isTrack);
 		const coverUrl = audioData?.cover?.url;

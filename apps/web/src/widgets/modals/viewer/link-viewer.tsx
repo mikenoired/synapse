@@ -289,26 +289,26 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 									<div className="space-y-3 rounded-2xl border border-border bg-card p-5 sm:p-6">
 										<h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
 											<ImageIcon className="w-4 h-4" />
-										Дополнительные изображения
-									</h3>
-									<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-										{linkContent.metadata.images.slice(1).map((img, index) => (
-											<img
-												key={index}
-												src={img}
-												alt={`Additional image ${index + 1}`}
-												className="w-full h-24 object-cover rounded-lg border border-border"
-												loading="lazy"
-												onError={(e) => {
-													e.currentTarget.style.display = "none";
-												}}
-											/>
-										))}
-									</div>
+											Дополнительные изображения
+										</h3>
+										<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+											{linkContent.metadata.images.slice(1).map((img, index) => (
+												<img
+													key={index}
+													src={img}
+													alt={`Additional image ${index + 1}`}
+													className="w-full h-24 object-cover rounded-lg border border-border"
+													loading="lazy"
+													onError={(e) => {
+														e.currentTarget.style.display = "none";
+													}}
+												/>
+											))}
 										</div>
-									)}
-								</div>
-							) : (
+									</div>
+								)}
+							</div>
+						) : (
 							<div className="flex items-center justify-center py-8">
 								<div className="max-w-md space-y-6 text-center">
 									<div className="rounded-2xl border border-border bg-card p-6">
@@ -319,13 +319,13 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 											<Button onClick={handleOpenLink} className="w-full rounded-full" size="lg">
 												<ExternalLink className="w-4 h-4 mr-2" />
 												Открыть ссылку
-										</Button>
+											</Button>
+										</div>
 									</div>
+									<div className="text-xs text-muted-foreground">Ссылка была сохранена в старом формате</div>
 								</div>
-								<div className="text-xs text-muted-foreground">Ссылка была сохранена в старом формате</div>
 							</div>
-						</div>
-					)}
+						)}
 					</ModalBody>
 				</div>
 			</BaseModal>

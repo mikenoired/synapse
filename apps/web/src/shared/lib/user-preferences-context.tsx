@@ -56,33 +56,36 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		setIsReady(false);
 	}, [preferencesQuery.data, preferencesQuery.error, user]);
 
-	const setMediaAutoplayEnabled = useCallback((value: boolean) => {
-		const previousValue = mediaAutoplayEnabled;
-		setMediaAutoplayEnabledState(value);
+	const setMediaAutoplayEnabled = useCallback(
+		(value: boolean) => {
+			const previousValue = mediaAutoplayEnabled;
+			setMediaAutoplayEnabledState(value);
 
-		if (!user) {
-			return;
-		}
-
-		utils.user.getPreferences.setData(undefined, { mediaAutoplayEnabled: value });
-
-		updatePreferencesMutation.mutate(
-			{ mediaAutoplayEnabled: value },
-			{
-				onError: () => {
-					setMediaAutoplayEnabledState(previousValue);
-					utils.user.getPreferences.setData(undefined, {
-						mediaAutoplayEnabled: previousValue,
-					});
-					toast.error("Не удалось сохранить настройку автоплея");
-				},
-				onSuccess: (preferences) => {
-					setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
-					utils.user.getPreferences.setData(undefined, preferences);
-				},
+			if (!user) {
+				return;
 			}
-		);
-	}, [mediaAutoplayEnabled, updatePreferencesMutation, user, utils]);
+
+			utils.user.getPreferences.setData(undefined, { mediaAutoplayEnabled: value });
+
+			updatePreferencesMutation.mutate(
+				{ mediaAutoplayEnabled: value },
+				{
+					onError: () => {
+						setMediaAutoplayEnabledState(previousValue);
+						utils.user.getPreferences.setData(undefined, {
+							mediaAutoplayEnabled: previousValue,
+						});
+						toast.error("Не удалось сохранить настройку автоплея");
+					},
+					onSuccess: (preferences) => {
+						setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
+						utils.user.getPreferences.setData(undefined, preferences);
+					},
+				}
+			);
+		},
+		[mediaAutoplayEnabled, updatePreferencesMutation, user, utils]
+	);
 
 	const value = useMemo(
 		() => ({

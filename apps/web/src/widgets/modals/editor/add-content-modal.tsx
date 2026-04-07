@@ -92,10 +92,20 @@ export function AddContentModal({
 				return <AddTodoForm initialTags={initialTags} onSuccess={handleSuccess} />;
 			case "media":
 				return (
-					<AddMediaForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFilesForActiveType} />
+					<AddMediaForm
+						initialTags={initialTags}
+						onSuccess={handleSuccess}
+						preloadedFiles={preloadedFilesForActiveType}
+					/>
 				);
 			case "audio":
-				return <AddAudioForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFilesForActiveType} />;
+				return (
+					<AddAudioForm
+						initialTags={initialTags}
+						onSuccess={handleSuccess}
+						preloadedFiles={preloadedFilesForActiveType}
+					/>
+				);
 			case "link":
 				return <AddLinkForm initialTags={initialTags} onSuccess={handleSuccess} />;
 			case "doc":
@@ -104,7 +114,13 @@ export function AddContentModal({
 			case "epub":
 			case "xlsx":
 			case "csv":
-				return <AddDocumentForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFilesForActiveType} />;
+				return (
+					<AddDocumentForm
+						initialTags={initialTags}
+						onSuccess={handleSuccess}
+						preloadedFiles={preloadedFilesForActiveType}
+					/>
+				);
 			default:
 				return null;
 		}

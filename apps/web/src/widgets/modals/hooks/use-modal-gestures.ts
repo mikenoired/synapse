@@ -27,7 +27,11 @@ function isInteractiveTarget(target: EventTarget | null) {
 		return false;
 	}
 
-	return Boolean(target.closest("a, button, input, select, textarea, video, [role='button'], [role='switch'], [data-no-swipe='true']"));
+	return Boolean(
+		target.closest(
+			"a, button, input, select, textarea, video, [role='button'], [role='switch'], [data-no-swipe='true']"
+		)
+	);
 }
 
 export function useModalGestures({ enabled = true, swipe }: UseModalGesturesOptions = {}): GestureHandlers {

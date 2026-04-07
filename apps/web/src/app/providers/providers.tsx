@@ -71,7 +71,11 @@ export function Providers({ children, initialUser }: { children: ReactNode; init
 		<AuthProvider initialUser={initialUser}>
 			<TRPCProvider>
 				<UserPreferencesProvider>
-					<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+					<ThemeProvider
+						attribute="class"
+						defaultTheme="system"
+						enableSystem
+						disableTransitionOnChange={false}>
 						<ModalProvider>
 							{children}
 							<ModalManager />
