@@ -67,7 +67,8 @@ export default class ContentService {
 
 	async getById(id: string) {
 		const data = await this.repo.getById(id);
-		return contentDetailSchema.parse(this.mapContentRow(data as ContentRow, this.ctx.user!.id));
+		const [withTags] = await this.attachTagsToContent([data as ContentRow]);
+		return contentDetailSchema.parse(withTags);
 	}
 
 	private async getContentWithTagFilter(
@@ -91,15 +92,7 @@ export default class ContentService {
 		includeTags: boolean
 	) {
 		const data = await this.repo.getWithTagFilter(tagIds, limit, search, type, cursor);
-
-		const contentMap = new Map<string, ContentRow>();
-		for (const row of data || []) {
-			if (!contentMap.has(row.id)) {
-				contentMap.set(row.id, row);
-			}
-		}
-
-		const contentRows = Array.from(contentMap.values());
+		const contentRows = (data || []) as ContentRow[];
 		const last = contentRows[contentRows.length - 1];
 		const nextCursor = last ? `${last.createdAt}|${last.id}` : undefined;
 
@@ -116,11 +109,12 @@ export default class ContentService {
 	async create(createContentData: z.infer<typeof createContentSchema>) {
 		const { tag_ids: inputTagIds, tags: legacyTagTitles, ...contentData } = createContentData;
 
-		const result = await this.ctx.db.transaction(async (_tx) => {
-			const data = await this.repo.create(createContentData);
+		const result = await this.ctx.db.transaction(async (tx) => {
+			const repo = this.repo.withDb(tx as unknown as Context["db"]);
+			const data = await repo.create(createContentData);
 			const contentId = (data as ContentRow).id;
 
-			const contentNodeId = await this.repo.getOrCreateContentNode({
+			const contentNodeId = await repo.getOrCreateContentNode({
 				content_id: contentId,
 				title: contentData.title,
 				type: contentData.type,
@@ -129,13 +123,13 @@ export default class ContentService {
 			const tagIds = inputTagIds as string[] | undefined;
 			const tagTitles = legacyTagTitles as string[] | undefined;
 			if (tagIds && tagIds.length) {
-				const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds);
-				await this.upsertContentTags(contentId, tagIds, contentNodeId, tagNodeIds);
+				const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
+				await this.upsertContentTags(repo, contentId, tagIds, contentNodeId, tagNodeIds);
 			} else if (tagTitles && tagTitles.length) {
-				const ids = await this.resolveTagTitlesToIds(tagTitles);
+				const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
 				if (ids.length) {
-					const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids);
-					await this.upsertContentTags(contentId, ids, contentNodeId, tagNodeIds);
+					const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
+					await this.upsertContentTags(repo, contentId, ids, contentNodeId, tagNodeIds);
 				}
 			}
 
@@ -150,24 +144,30 @@ export default class ContentService {
 	async update(input: z.infer<typeof updateContentSchema>) {
 		const { id, tag_ids: inputTagIds, tags: legacyTagTitles, ...updateData } = input;
 
-		const result = await this.ctx.db.transaction(async (_tx) => {
-			const data = await this.repo.updateContent(input);
+		const result = await this.ctx.db.transaction(async (tx) => {
+			const repo = this.repo.withDb(tx as unknown as Context["db"]);
+			const data = await repo.updateContent(input);
 
 			const tagIds = inputTagIds as string[] | undefined;
 			const tagTitles = legacyTagTitles as string[] | undefined;
-			const contentNodeId = await this.repo.getOrCreateContentNode({
+			const contentNodeId = await repo.getOrCreateContentNode({
 				content_id: id,
 				title: updateData.title,
 				type: updateData.type || "note",
 			});
+			await repo.updateContentNode({
+				content_id: id,
+				title: updateData.title,
+				type: updateData.type || (data as ContentRow).type,
+			});
 
 			if (tagIds) {
-				const tagNodeIds = await this.repo.getOrCreateTagNodeIds(tagIds);
-				await this.replaceContentTags(id, tagIds, contentNodeId, tagNodeIds);
+				const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
+				await this.replaceContentTags(repo, id, tagIds, contentNodeId, tagNodeIds);
 			} else if (tagTitles) {
-				const ids = await this.resolveTagTitlesToIds(tagTitles);
-				const tagNodeIds = await this.repo.getOrCreateTagNodeIds(ids);
-				await this.replaceContentTags(id, ids, contentNodeId, tagNodeIds);
+				const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
+				const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
+				await this.replaceContentTags(repo, id, ids, contentNodeId, tagNodeIds);
 			}
 
 			return data;
@@ -181,17 +181,18 @@ export default class ContentService {
 	async delete(id: string) {
 		const content = await this.repo.getById(id);
 
-		await this.ctx.db.transaction(async (_tx) => {
-			const node = await this.repo.getNodeByContentId(id);
+		await this.ctx.db.transaction(async (tx) => {
+			const repo = this.repo.withDb(tx as unknown as Context["db"]);
+			const node = await repo.getNodeByContentId(id);
 			const contentNodeId = (node as { id: string } | null)?.id;
 
-			await this.repo.deleteContentTag(id);
+			await repo.deleteContentTag(id);
 			if (contentNodeId) {
-				await this.repo.deleteEdge(contentNodeId);
-				await this.repo.deleteNode(contentNodeId);
+				await repo.deleteEdge(contentNodeId);
+				await repo.deleteNode(contentNodeId);
 			}
 
-			await this.repo.deleteContent(id);
+			await repo.deleteContent(id);
 		});
 
 		let totalFileSize = 0;
@@ -289,17 +290,28 @@ export default class ContentService {
 			await this.ctx.cache.getJSON<Array<{ id: string; title: string; items: Content[] }>>(cacheKey);
 		if (cached) return cached;
 
-		const content = await this.repo.getAll("", undefined, undefined, 4);
-		if (!content) return [];
-		const items = await this.attachTagsToContent(content as ContentRow[]);
+		const previewRows = await this.repo.getTagsWithContentPreview(3);
+		if (!previewRows.length) return [];
+
+		const uniqueRows = Array.from(
+			new Map(previewRows.map((row) => [row.id, row as ContentRow])).values()
+		);
+		const items = await this.attachTagsToContent(uniqueRows);
+		const itemById = new Map(items.map((item) => [item.id, item]));
 		const tagsMap = new Map<string, { id: string; title: string; items: Content[] }>();
-		for (const item of items) {
-			item.tag_ids.forEach((tid, idx) => {
-				const tTitle = item.tags[idx] || "";
-				if (!tagsMap.has(tid)) tagsMap.set(tid, { id: tid, title: tTitle, items: [] });
-				const bucket = tagsMap.get(tid)!;
-				if (bucket.items.length < 3) bucket.items.push(item);
-			});
+
+		for (const row of previewRows) {
+			const item = itemById.get(row.id);
+			if (!item) continue;
+
+			if (!tagsMap.has(row.tagId)) {
+				tagsMap.set(row.tagId, { id: row.tagId, title: row.tagTitle, items: [] });
+			}
+
+			const bucket = tagsMap.get(row.tagId)!;
+			if (bucket.items.length < 3) {
+				bucket.items.push(item);
+			}
 		}
 
 		const result = Array.from(tagsMap.values());
@@ -321,14 +333,15 @@ export default class ContentService {
 	}
 
 	private async replaceContentTags(
+		repo: ContentRepository,
 		contentId: string,
 		tagIds: string[],
 		contentNodeId: string,
 		tagNodeIdByTagId: Record<string, string>
 	) {
-		await this.repo.deleteContentTag(contentId);
-		await this.repo.deleteTagEdge(contentNodeId);
-		await this.upsertContentTags(contentId, tagIds, contentNodeId, tagNodeIdByTagId);
+		await repo.deleteContentTag(contentId);
+		await repo.deleteTagEdge(contentNodeId);
+		await this.upsertContentTags(repo, contentId, tagIds, contentNodeId, tagNodeIdByTagId);
 	}
 
 	private async invalidateUserTags() {
@@ -364,15 +377,15 @@ export default class ContentService {
 		});
 	}
 
-	private async resolveTagTitlesToIds(titles: string[]): Promise<string[]> {
+	private async resolveTagTitlesToIds(repo: ContentRepository, titles: string[]): Promise<string[]> {
 		if (titles.length === 0) return [];
-		const existing = await this.repo.getTagsByTitle(titles);
+		const existing = await repo.getTagsByTitle(titles);
 		const existingMap = new Map((existing || []).map((t) => [t.title, t.id]));
 		const missing = titles.filter((t) => !existingMap.has(t));
 		if (missing.length) {
-			const inserted = await this.repo.createTags(missing.map((title) => ({ title })));
+			const inserted = await repo.createTags(missing.map((title) => ({ title })));
 			for (const t of inserted || []) {
-				await this.repo.createNode(t.title);
+				await repo.createNode(t.title);
 				existingMap.set(t.title, t.id);
 			}
 		}
@@ -381,13 +394,14 @@ export default class ContentService {
 	}
 
 	private async upsertContentTags(
+		repo: ContentRepository,
 		contentId: string,
 		tagIds: string[],
 		contentNodeId: string,
 		tagNodeIdByTagId: Record<string, string>
 	) {
 		if (!tagIds.length) return;
-		await this.repo.createContentTags(tagIds, contentId);
+		await repo.createContentTags(tagIds, contentId);
 		const edgeRows = tagIds
 			.map((tagId) => ({
 				from_node: contentNodeId,
@@ -396,7 +410,7 @@ export default class ContentService {
 				user_id: this.ctx.user!.id,
 			}))
 			.filter((r) => !!r.to_node);
-		if (edgeRows.length) await this.repo.createEdges(edgeRows);
+		if (edgeRows.length) await repo.createEdges(edgeRows);
 	}
 
 	private mapContentRow(row: ContentRow, fallbackUserId: string): Content {

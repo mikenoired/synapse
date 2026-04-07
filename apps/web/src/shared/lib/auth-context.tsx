@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState } from "react";
 
 export interface User {
 	id: string;
@@ -19,32 +19,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-	const [user, setUser] = useState<User | null>(null);
-	const [loading, setLoading] = useState(true);
+export function AuthProvider({
+	children,
+	initialUser = null,
+}: {
+	children: ReactNode;
+	initialUser?: User | null;
+}) {
+	const [user, setUser] = useState<User | null>(initialUser);
+	const [loading] = useState(false);
 	const router = useRouter();
-
-	useEffect(() => {
-		const initAuth = async () => {
-			try {
-				const response = await fetch("/api/user", {
-					credentials: "include",
-				});
-
-				if (response.ok) {
-					const data = await response.json();
-					if (data.id && data.email) {
-						setUser({ id: data.id, email: data.email });
-					}
-				}
-			} catch {
-			} finally {
-				setLoading(false);
-			}
-		};
-
-		initAuth();
-	}, []);
 
 	const signUp = async (email: string, password: string) => {
 		try {

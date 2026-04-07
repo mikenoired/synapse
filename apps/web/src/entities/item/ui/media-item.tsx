@@ -1,7 +1,7 @@
 import { Badge } from "@synapse/ui/components";
 import { Music2 } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content } from "@/shared/lib/schemas";
@@ -13,19 +13,17 @@ function ensureDataUri(base64: string): string {
 	return `data:image/jpeg;base64,${base64}`;
 }
 
-async function getAspectRatioFromBase64(base64: string): Promise<string> {
-	return new Promise((resolve, reject) => {
-		const img = new window.Image();
-		img.onload = () => resolve(`${img.naturalWidth} / ${img.naturalHeight}`);
-		img.onerror = () => reject(new Error("Failed to load image"));
-		img.src = ensureDataUri(base64);
-	});
+function getAspectRatio(width?: number, height?: number, fallback: string = "1 / 1"): string {
+	if (!width || !height) {
+		return fallback;
+	}
+
+	return `${width} / ${height}`;
 }
 
 interface MediaItemProps {
 	item: Content;
 	onItemClick?: (content: Content) => void;
-	thumbSrc: string | null;
 }
 
 interface RenderImageProps {
@@ -37,55 +35,15 @@ interface RenderImageProps {
 }
 
 function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: RenderImageProps) {
-	const [image, setImage] = useState<string>();
 	const [loaded, setLoaded] = useState(false);
 	const [errored, setErrored] = useState(false);
-	const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
-	const [blurAspectRatio, setBlurAspectRatio] = useState<string>("1 / 1");
-
-	useEffect(() => {
-		if (savedWidth && savedHeight) {
-			setBlurAspectRatio(`${savedWidth} / ${savedHeight}`);
-		} else if (naturalSize?.width && naturalSize?.height) {
-			setBlurAspectRatio(`${naturalSize.width} / ${naturalSize.height}`);
-		} else if (blurThumb) {
-			getAspectRatioFromBase64(blurThumb)
-				.then(setBlurAspectRatio)
-				.catch(() => setBlurAspectRatio("1 / 1"));
-		}
-	}, [blurThumb, naturalSize, savedWidth, savedHeight]);
-
-	useEffect(() => {
-		let cancelled = false;
-		const loadImages = () => {
-			setLoaded(false);
-			setErrored(false);
-			const url = getPresignedMediaUrl(imageUrl);
-			if (cancelled) return;
-			setImage(url || "");
-			if (url) {
-				const probe = new window.Image();
-				probe.src = url;
-				probe.onload = () => {
-					if (!cancelled) {
-						setNaturalSize({ width: probe.naturalWidth, height: probe.naturalHeight });
-					}
-				};
-				probe.onerror = () => {
-					if (!cancelled) setNaturalSize(null);
-				};
-			}
-		};
-		loadImages();
-		return () => {
-			cancelled = true;
-		};
-	}, [imageUrl]);
+	const resolvedImageUrl = useMemo(() => getPresignedMediaUrl(imageUrl), [imageUrl]);
+	const aspectRatio = getAspectRatio(savedWidth, savedHeight);
 
 	return (
 		<div
 			className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-md"
-			style={{ aspectRatio: naturalSize ? `${naturalSize.width} / ${naturalSize.height}` : blurAspectRatio }}>
+			style={{ aspectRatio }}>
 			{blurThumb && (
 				<Image
 					src={ensureDataUri(blurThumb)}
@@ -97,9 +55,9 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
 					sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
 				/>
 			)}
-			{image && !errored && (
+			{resolvedImageUrl && !errored && (
 				<Image
-					src={image}
+					src={resolvedImageUrl}
 					alt={title || "Image"}
 					className="w-full h-full object-cover relative z-10 transition-opacity duration-200 ease-in-out"
 					style={{ opacity: loaded ? 1 : 0 }}
@@ -118,44 +76,22 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
 	);
 }
 
-export default function MediaItem({ item, onItemClick, thumbSrc }: MediaItemProps) {
+export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 	const media = parseMediaJson(item.content)?.media;
 	const audioData = item.type === "audio" ? parseAudioJson(item.content) : null;
 	const audio = audioData?.audio;
 	const isAudio = item.type === "audio";
 	const blurThumb = media?.thumbnailBase64 || "";
 	const isVideo = media?.type === "video";
-	const mainSrc = isVideo ? thumbSrc || media?.thumbnailUrl || "" : media?.url || "";
-	const [thumbSize, setThumbSize] = useState<{ width: number; height: number } | null>(null);
-	const [blurAspectRatio, setBlurAspectRatio] = useState<string>("16 / 9");
-
-	useEffect(() => {
-		if (media?.width && media?.height) {
-			setBlurAspectRatio(`${media.width} / ${media.height}`);
-		} else if (blurThumb) {
-			getAspectRatioFromBase64(blurThumb)
-				.then(setBlurAspectRatio)
-				.catch(() => setBlurAspectRatio("16 / 9"));
+	const mainSrc = useMemo(() => {
+		if (isVideo) {
+			return media?.thumbnailUrl ? getPresignedMediaUrl(media.thumbnailUrl) : "";
 		}
-	}, [blurThumb, media?.width, media?.height]);
 
-	useEffect(() => {
-		let cancelled = false;
-		if (!mainSrc) return;
-		const probe = new window.Image();
-		probe.src = mainSrc;
-		probe.onload = () => {
-			if (!cancelled) setThumbSize({ width: probe.naturalWidth, height: probe.naturalHeight });
-		};
-		probe.onerror = () => {
-			if (!cancelled) setThumbSize(null);
-		};
-		return () => {
-			cancelled = true;
-		};
-	}, [mainSrc]);
+		return media?.url ? getPresignedMediaUrl(media.url) : "";
+	}, [isVideo, media?.thumbnailUrl, media?.url]);
+	const videoAspectRatio = getAspectRatio(media?.width, media?.height, "16 / 9");
 
-	// Audio tiles do not preload the audio; playback happens in the modal
 
 	if (isAudio) {
 		const isTrack = Boolean(audioData?.track?.isTrack);
@@ -165,7 +101,13 @@ export default function MediaItem({ item, onItemClick, thumbSrc }: MediaItemProp
 		if (isTrack && coverUrl) {
 			return (
 				<div className="relative group" onClick={() => onItemClick?.(item)}>
-					<RenderImage imageUrl={coverUrl} title={item.title || null} />
+					<RenderImage
+						imageUrl={coverUrl}
+						title={item.title || null}
+						blurThumb={audioData?.cover?.thumbnailBase64}
+						savedWidth={audioData?.cover?.width}
+						savedHeight={audioData?.cover?.height}
+					/>
 					<div className="absolute bottom-0 left-0 right-0 p-2 pt-3 bg-gradient-to-t from-black/70 to-transparent text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
 						<div className="text-sm font-medium truncate">
 							{audioData?.track?.title || item.title || fileName}
@@ -195,13 +137,13 @@ export default function MediaItem({ item, onItemClick, thumbSrc }: MediaItemProp
 			{isVideo ? (
 				<div
 					className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
-					style={{ aspectRatio: thumbSize ? `${thumbSize.width} / ${thumbSize.height}` : blurAspectRatio }}>
+					style={{ aspectRatio: videoAspectRatio }}>
 					{blurThumb && (
 						<Image
 							src={ensureDataUri(blurThumb)}
 							alt="blur preview"
 							className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-500 ease-in-out z-0"
-							style={{ opacity: thumbSrc ? 0 : 1 }}
+							style={{ opacity: mainSrc ? 0 : 1 }}
 							draggable={false}
 							fill
 							sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
@@ -212,9 +154,10 @@ export default function MediaItem({ item, onItemClick, thumbSrc }: MediaItemProp
 							src={mainSrc}
 							alt={item.title || "Video"}
 							className="w-full h-full object-cover relative z-10 transition-opacity duration-500 ease-in-out"
-							style={{ opacity: thumbSrc ? 1 : 0 }}
+							style={{ opacity: 1 }}
 							draggable={false}
 							fill
+							unoptimized
 							sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
 						/>
 					)}

@@ -5,13 +5,14 @@ import { Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
 
 import { ModalActions, ModalBody } from "../../layout";
 import { showToast } from "../../utils";
 
 interface AddMediaFormProps {
 	initialTags?: string[];
-	onSuccess: () => void;
+	onSuccess: (content?: Content | Content[]) => void;
 	preloadedFiles?: File[];
 }
 
@@ -26,8 +27,12 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 
 	const uploadMutation = trpc.upload.formData.useMutation({
 		onSuccess: () => {
-			utils.content.getTags.invalidate();
-			utils.content.getTagsWithContent.invalidate();
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
 		},
 	});
 
@@ -123,7 +128,7 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 				);
 			}
 
-			onSuccess();
+			onSuccess(result.contents);
 		} catch (error) {
 			showToast.error(
 				`Ошибка при загрузке файлов: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`

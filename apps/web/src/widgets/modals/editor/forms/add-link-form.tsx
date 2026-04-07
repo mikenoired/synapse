@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
 import type { LinkContent } from "@/shared/lib/schemas";
 
 import { ModalActions, ModalBody } from "../../layout";
@@ -12,7 +13,7 @@ import { showToast } from "../../utils";
 
 interface AddLinkFormProps {
 	initialTags?: string[];
-	onSuccess: () => void;
+	onSuccess: (content?: Content) => void;
 }
 
 export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
@@ -21,6 +22,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 	const [tags, setTags] = useState<string[]>(initialTags);
 	const [currentTag, setCurrentTag] = useState("");
 	const [parsing, setParsing] = useState(false);
+	const utils = trpc.useUtils();
 
 	const createMutation = trpc.content.create.useMutation();
 	const parseLink = async (targetUrl: string): Promise<LinkContent> => {
@@ -78,15 +80,21 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 		}
 
 		try {
-			await createMutation.mutateAsync({
+			const content = await createMutation.mutateAsync({
 				type: "link",
 				title: title || undefined,
 				content: url.trim(),
 				tags,
 			});
 
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+			]);
+
 			showToast.success("Ссылка сохранена");
-			onSuccess();
+			onSuccess(content);
 		} catch {
 			showToast.error("Ошибка при сохранении ссылки");
 		}

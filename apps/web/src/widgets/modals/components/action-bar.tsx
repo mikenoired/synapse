@@ -21,7 +21,12 @@ interface ActionBarProps {
 
 export function ActionBar({ actions, className, orientation = "horizontal" }: ActionBarProps) {
 	return (
-		<div className={cn("flex gap-2", orientation === "vertical" && "flex-col", className)}>
+		<div
+			className={cn(
+				"flex flex-wrap gap-2",
+				orientation === "vertical" && "flex-col items-stretch",
+				className
+			)}>
 			{actions.map((action, index) => (
 				<Button
 					key={index}
@@ -29,7 +34,7 @@ export function ActionBar({ actions, className, orientation = "horizontal" }: Ac
 					size="sm"
 					onClick={action.onClick}
 					disabled={action.disabled || action.loading}
-					className="flex items-center gap-2">
+					className="h-9 gap-2 rounded-full px-3.5 text-sm font-medium">
 					<action.icon className="w-4 h-4" />
 					<span>{action.loading ? "Загрузка..." : action.label}</span>
 				</Button>

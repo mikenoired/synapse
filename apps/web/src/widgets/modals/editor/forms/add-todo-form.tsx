@@ -5,13 +5,14 @@ import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
 
 import { ModalActions, ModalBody } from "../../layout";
 import { showToast } from "../../utils";
 
 interface AddTodoFormProps {
 	initialTags?: string[];
-	onSuccess: () => void;
+	onSuccess: (content?: Content) => void;
 }
 
 export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
@@ -20,6 +21,7 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 	const [currentTag, setCurrentTag] = useState("");
 	const [todos, setTodos] = useState<{ text: string; marked: boolean }[]>([{ text: "", marked: false }]);
 	const [currentTodo, setCurrentTodo] = useState("");
+	const utils = trpc.useUtils();
 
 	const createMutation = trpc.content.create.useMutation();
 
@@ -56,15 +58,21 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 		}
 
 		try {
-			await createMutation.mutateAsync({
+			const content = await createMutation.mutateAsync({
 				type: "todo",
 				title: title || undefined,
 				content: JSON.stringify(validTodos),
 				tags,
 			});
 
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+			]);
+
 			showToast.success("Список задач создан");
-			onSuccess();
+			onSuccess(content);
 		} catch {
 			showToast.error("Ошибка при создании списка");
 		}

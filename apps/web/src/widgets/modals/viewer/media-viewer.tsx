@@ -1,22 +1,25 @@
 "use client";
 
-import { Button, ScrollArea } from "@synapse/ui/components";
+import { Button } from "@synapse/ui/components";
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	Calendar,
 	ChevronLeft,
 	ChevronRight,
+	Download,
 	Edit2,
 	Image as ImageIcon,
-	Layers,
+	Info,
 	Tag,
 	Trash2,
 	Video,
+	X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import useMouseActivity from "@/shared/hooks/use-mouse-activity";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content } from "@/shared/lib/schemas";
 import { parseMediaJson } from "@/shared/lib/schemas";
@@ -29,14 +32,41 @@ import { ConfirmDialog } from "../dialogs";
 import { useModalGestures, useModalKeyboard } from "../hooks";
 import { showToast } from "../utils";
 
+interface GalleryEntry {
+	item?: Content;
+	media_type?: string;
+	parentId: string;
+	thumbnail_url?: string;
+	url: string;
+}
+
 interface MediaViewerModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	item: Content;
-	gallery?: { url: string; parentId: string; media_type?: string; thumbnail_url?: string }[];
+	gallery?: GalleryEntry[];
 	onEdit?: (id: string) => void;
-	onDelete?: (id: string) => void;
-	onContentChanged?: () => void;
+	onDelete?: (id: string) => void | Promise<void>;
+	onContentUpdated?: (content: Content) => void;
+}
+
+function formatDate(date: string | Date) {
+	return new Date(date).toLocaleDateString("ru-RU", {
+		day: "numeric",
+		month: "long",
+		year: "numeric",
+	});
+}
+
+function getDownloadFileName(item: Content, mediaPath: string) {
+	const extension = mediaPath.split("?")[0]?.split(".").pop()?.trim();
+	const safeTitle = (item.title || item.id).trim().replace(/[^a-zA-Z0-9-_]+/g, "-");
+
+	if (!extension) {
+		return safeTitle;
+	}
+
+	return `${safeTitle}.${extension}`;
 }
 
 export function MediaViewerModal({
@@ -46,59 +76,112 @@ export function MediaViewerModal({
 	gallery = [],
 	onEdit,
 	onDelete,
-	onContentChanged,
+	onContentUpdated,
 }: MediaViewerModalProps) {
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [direction, setDirection] = useState(0);
-	const [showTags, setShowTags] = useState(false);
+	const [showDetails, setShowDetails] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [isDownloading, setIsDownloading] = useState(false);
+	const [updatedItemsById, setUpdatedItemsById] = useState<Record<string, Content>>({});
 	const router = useRouter();
+	const utils = trpc.useUtils();
+	const { bind, isHovered } = useMouseActivity(1800);
 
-	const imageUrls: string[] = useMemo(() => {
-		return gallery.length > 0
-			? gallery.map((g) => g.url)
-			: (() => {
-					const media = parseMediaJson(item.content)?.media;
-					return media?.url ? [media.url] : [item.content];
-				})();
-	}, [gallery, item.content]);
+	const galleryEntries = useMemo<GalleryEntry[]>(() => {
+		if (gallery.length > 0) {
+			return gallery;
+		}
 
-	const isMultiple = imageUrls.length > 1;
+		return [
+			{
+				item,
+				parentId: item.id,
+				media_type: item.media_type,
+				thumbnail_url: item.thumbnail_url,
+				url: item.media_url || parseMediaJson(item.content)?.media?.url || item.content,
+			},
+		];
+	}, [gallery, item]);
+
+	const currentEntry = galleryEntries[currentIndex] ?? galleryEntries[0];
+	const activeItem = useMemo(() => {
+		const fallbackItem = currentEntry?.item ?? item;
+		return updatedItemsById[fallbackItem.id] ?? fallbackItem;
+	}, [currentEntry?.item, item, updatedItemsById]);
+
+	const isMultiple = galleryEntries.length > 1;
+	const mediaSrc = useMemo(() => getPresignedMediaUrl(currentEntry?.url || ""), [currentEntry?.url]);
+	const backgroundSrc = useMemo(() => {
+		if (currentEntry?.media_type === "video") {
+			return currentEntry.thumbnail_url ? getPresignedMediaUrl(currentEntry.thumbnail_url) : "";
+		}
+
+		return mediaSrc;
+	}, [currentEntry?.media_type, currentEntry?.thumbnail_url, mediaSrc]);
+
+	useEffect(() => {
+		setUpdatedItemsById({});
+	}, [item.id]);
+
+	useEffect(() => {
+		if (!open) {
+			setShowDetails(false);
+			return;
+		}
+
+		const nextIndex = galleryEntries.findIndex((entry) => entry.parentId === item.id);
+		setCurrentIndex(nextIndex >= 0 ? nextIndex : 0);
+		setShowDetails(false);
+	}, [galleryEntries, item.id, open]);
 
 	const updateContentMutation = trpc.content.update.useMutation({
-		onSuccess: () => onContentChanged?.(),
+		onSuccess: (updatedContent) => {
+			setUpdatedItemsById((current) => ({
+				...current,
+				[updatedContent.id]: updatedContent,
+			}));
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
+			onContentUpdated?.(updatedContent);
+		},
 	});
 
 	const deleteContentMutation = trpc.content.delete.useMutation({
 		onSuccess: () => {
-			onContentChanged?.();
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
 			onOpenChange(false);
 		},
 	});
 
-	useEffect(() => {
-		if (open) {
-			const newIndex = gallery.length > 0 ? gallery.findIndex((g) => g.parentId === item.id) : 0;
-			setCurrentIndex(newIndex >= 0 ? newIndex : 0);
-			setShowTags(false);
-		}
-	}, [open, item.id, gallery]);
-
 	const goToNext = () => {
 		setDirection(1);
-		setCurrentIndex((i) => (i < imageUrls.length - 1 ? i + 1 : i));
+		setCurrentIndex((index) => (index < galleryEntries.length - 1 ? index + 1 : index));
 	};
 
 	const goToPrevious = () => {
 		setDirection(-1);
-		setCurrentIndex((i) => (i > 0 ? i - 1 : i));
+		setCurrentIndex((index) => (index > 0 ? index - 1 : index));
 	};
 
 	useModalKeyboard({
-		enabled: open && !showTags,
+		enabled: open && !showDetails,
 		onEscape: () => {
-			if (showTags) setShowTags(false);
-			else onOpenChange(false);
+			if (showDetails) {
+				setShowDetails(false);
+				return;
+			}
+
+			onOpenChange(false);
 		},
 		shortcuts: [
 			{ key: "ArrowLeft", handler: goToPrevious, preventDefault: true },
@@ -117,7 +200,12 @@ export function MediaViewerModal({
 	});
 
 	const handleEdit = () => {
-		router.push(`/edit/${item.id}`);
+		if (onEdit) {
+			onEdit(activeItem.id);
+		} else {
+			router.push(`/edit/${activeItem.id}`);
+		}
+
 		onOpenChange(false);
 	};
 
@@ -127,7 +215,14 @@ export function MediaViewerModal({
 
 	const confirmDelete = async () => {
 		try {
-			await deleteContentMutation.mutateAsync({ id: item.id });
+			if (onDelete) {
+				await onDelete(activeItem.id);
+				onOpenChange(false);
+				showToast.success("Контент удален");
+				return;
+			}
+
+			await deleteContentMutation.mutateAsync({ id: activeItem.id });
 			showToast.success("Контент удален");
 		} catch {
 			showToast.error("Ошибка при удалении");
@@ -136,9 +231,9 @@ export function MediaViewerModal({
 
 	const handleAddTag = async (tag: string) => {
 		try {
-			const updatedTags = [...new Set([...(item.tags || []), tag])];
+			const updatedTags = [...new Set([...(activeItem.tags || []), tag])];
 			await updateContentMutation.mutateAsync({
-				id: item.id,
+				id: activeItem.id,
 				tags: updatedTags,
 			});
 			showToast.success("Тег добавлен");
@@ -149,9 +244,9 @@ export function MediaViewerModal({
 
 	const handleRemoveTag = async (tag: string) => {
 		try {
-			const updatedTags = item.tags.filter((t) => t !== tag);
+			const updatedTags = activeItem.tags.filter((value) => value !== tag);
 			await updateContentMutation.mutateAsync({
-				id: item.id,
+				id: activeItem.id,
 				tags: updatedTags,
 			});
 			showToast.success("Тег удален");
@@ -160,211 +255,244 @@ export function MediaViewerModal({
 		}
 	};
 
-	const currentMedia = useMemo(() => {
-		return gallery && gallery.length > 0
-			? gallery[currentIndex]
-			: {
-					url: item.media_url || imageUrls[currentIndex],
-					media_type: item.media_type,
-					thumbnail_url: item.thumbnail_url,
-				};
-	}, [gallery, currentIndex, item.media_url, item.media_type, item.thumbnail_url, imageUrls]);
+	const handleDownload = async () => {
+		if (!mediaSrc) {
+			return;
+		}
 
-	const [mediaSrc, setMediaSrc] = useState<string | null>(null);
+		setIsDownloading(true);
 
-	useEffect(() => {
-		let cancelled = false;
-		setMediaSrc(null);
+		try {
+			const response = await fetch(mediaSrc);
+			if (!response.ok) {
+				throw new Error("Download failed");
+			}
 
-		const loadMedia = async () => {
-			const url = getPresignedMediaUrl(currentMedia.url);
-			if (!cancelled) setMediaSrc(url);
-		};
-
-		loadMedia();
-
-		return () => {
-			cancelled = true;
-		};
-	}, [currentMedia.url]);
-
-	const formatDate = (date: string | Date) => {
-		return new Date(date).toLocaleDateString("ru-RU", {
-			day: "numeric",
-			month: "long",
-			year: "numeric",
-		});
+			const blob = await response.blob();
+			const objectUrl = window.URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = objectUrl;
+			link.download = getDownloadFileName(activeItem, currentEntry.url);
+			document.body.append(link);
+			link.click();
+			link.remove();
+			window.URL.revokeObjectURL(objectUrl);
+		} catch {
+			showToast.error("Не удалось скачать файл");
+		} finally {
+			setIsDownloading(false);
+		}
 	};
+
+	const controlsVisible = isHovered;
 
 	return (
 		<>
-			<BaseModal open={open} onOpenChange={onOpenChange} size="full" className="max-w-[95vw] h-[95vh]">
-				<div className="flex flex-col lg:flex-row h-full">
-					{/* Media Area */}
-					<div className="relative flex-1 bg-muted/30 flex items-center justify-center overflow-hidden">
-						<AnimatePresence initial={false} mode="sync" custom={direction}>
-							{currentMedia.media_type === "video" ? (
-								<motion.div
-									key={currentIndex}
-									custom={direction}
-									variants={modalAnimations.slide as any}
-									initial="enter"
-									animate="center"
-									exit="exit"
-									transition={modalAnimations.slide.transition}
-									className="absolute inset-0 w-full h-full">
-									<CustomVideoPlayer
-										src={mediaSrc || ""}
-										poster={currentMedia.thumbnail_url}
-										autoPlay={true}
-										className="w-full h-full"
-									/>
-								</motion.div>
-							) : (
-								<motion.img
-									key={currentIndex}
-									custom={direction}
-									variants={modalAnimations.slide as any}
-									initial="enter"
-									animate="center"
-									exit="exit"
-									transition={modalAnimations.slide.transition}
-									src={mediaSrc || undefined}
-									alt={`${item.title || "Image"} ${currentIndex + 1}`}
-									className="max-w-full max-h-full object-contain"
-									draggable={false}
-									{...gestures}
-								/>
-							)}
-						</AnimatePresence>
+			<BaseModal
+				open={open}
+				onOpenChange={onOpenChange}
+				size="full"
+				variant="fullscreen"
+				className="border-0 bg-black/35 shadow-none backdrop-blur-xl"
+				preventScroll>
+				<div className="relative h-full w-full overflow-hidden bg-black" {...bind}>
+					{backgroundSrc && (
+						<div className="absolute inset-0 overflow-hidden">
+							<img
+								src={backgroundSrc}
+								alt=""
+								className="h-full w-full scale-110 object-cover opacity-30 blur-3xl"
+								draggable={false}
+							/>
+							<div className="absolute inset-0 bg-black/55" />
+						</div>
+					)}
 
-						{/* Navigation Buttons */}
-						{isMultiple && (
+					<AnimatePresence initial={false} mode="sync" custom={direction}>
+						{currentEntry.media_type === "video" ? (
+							<motion.div
+								key={currentEntry.parentId}
+								custom={direction}
+								variants={modalAnimations.slide as any}
+								initial="enter"
+								animate="center"
+								exit="exit"
+								transition={modalAnimations.slide.transition}
+								className="absolute inset-0 h-full w-full">
+								<CustomVideoPlayer
+									src={mediaSrc}
+									poster={currentEntry.thumbnail_url}
+									autoPlay={true}
+									className="h-full w-full"
+								/>
+							</motion.div>
+						) : (
+							<motion.img
+								key={currentEntry.parentId}
+								custom={direction}
+								variants={modalAnimations.slide as any}
+								initial="enter"
+								animate="center"
+								exit="exit"
+								transition={modalAnimations.slide.transition}
+								src={mediaSrc}
+								alt={activeItem.title || "media"}
+								className="absolute inset-0 h-full w-full object-contain"
+								draggable={false}
+								{...gestures}
+							/>
+						)}
+					</AnimatePresence>
+
+					<AnimatePresence initial={false}>
+						{controlsVisible && isMultiple && (
 							<>
-								<button
-									onClick={goToPrevious}
-									disabled={currentIndex === 0}
-									className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-background/90 hover:bg-background border border-border shadow-lg rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed z-10">
-									<ChevronLeft className="w-5 h-5" />
-								</button>
-								<button
-									onClick={goToNext}
-									disabled={currentIndex === imageUrls.length - 1}
-									className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-background/90 hover:bg-background border border-border shadow-lg rounded-full flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed z-10">
-									<ChevronRight className="w-5 h-5" />
-								</button>
+								<motion.button
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									exit={{ opacity: 0 }}
+								transition={{ duration: 0.16 }}
+								onClick={goToPrevious}
+								disabled={currentIndex === 0}
+								className="absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30">
+									<ChevronLeft className="size-5" />
+								</motion.button>
+								<motion.button
+									initial={{ opacity: 0 }}
+									animate={{ opacity: 1 }}
+									exit={{ opacity: 0 }}
+								transition={{ duration: 0.16 }}
+								onClick={goToNext}
+								disabled={currentIndex === galleryEntries.length - 1}
+								className="absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70 disabled:cursor-not-allowed disabled:opacity-30">
+									<ChevronRight className="size-5" />
+								</motion.button>
 							</>
 						)}
+					</AnimatePresence>
 
-						{/* Counter Badge */}
-						{isMultiple && (
-							<div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/95 backdrop-blur-sm border border-border px-3 py-1.5 rounded-full text-sm font-medium shadow-lg">
-								<span className="text-foreground">
-									{currentIndex + 1} / {imageUrls.length}
-								</span>
-							</div>
-						)}
-					</div>
-
-					{/* Info Sidebar */}
-					<div className="w-full lg:w-[380px] flex flex-col border-t lg:border-t-0 lg:border-l border-border bg-background">
-						<ScrollArea className="flex-1">
-							<div className="p-6 space-y-6">
-								{/* Header with Type */}
-								<div className="flex items-center gap-2 text-sm text-muted-foreground">
-									{currentMedia.media_type === "video" ? (
-										<>
-											<Video className="w-4 h-4" />
-											<span>Видео</span>
-										</>
-									) : (
-										<>
-											<ImageIcon className="w-4 h-4" />
-											<span>Изображение</span>
-										</>
-									)}
-									{isMultiple && (
-										<>
-											<span className="text-muted-foreground/50">•</span>
-											<Layers className="w-4 h-4" />
-											<span>Группа</span>
-										</>
-									)}
-								</div>
-
-								{/* Title */}
-								{item.title && (
-									<div>
-										<h2 className="text-2xl font-semibold text-foreground leading-tight">{item.title}</h2>
-									</div>
-								)}
-
-								{/* Date */}
-								<div className="flex items-center gap-2 text-sm text-muted-foreground">
-									<Calendar className="w-4 h-4" />
-									<span>{formatDate(item.created_at)}</span>
-								</div>
-
-								{/* Tags Section */}
-								<div className="space-y-3">
-									<div className="flex items-center justify-between">
-										<h3 className="text-sm font-medium text-foreground">Теги</h3>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() => setShowTags(!showTags)}
-											className="h-auto py-1 px-2">
-											<Tag className="w-3 h-3 mr-1" />
-											{showTags ? "Скрыть" : "Управление"}
-										</Button>
-									</div>
-
-									{showTags ? (
-										<TagManager
-											tags={item.tags}
-											onAddTag={handleAddTag}
-											onRemoveTag={handleRemoveTag}
-											inputPlaceholder="Добавить тег..."
-										/>
-									) : item.tags.length > 0 ? (
-										<div className="flex flex-wrap gap-2">
-											{item.tags.map((tag) => (
-												<span key={tag} className="px-2.5 py-1 bg-muted rounded-md text-sm text-foreground">
-													{tag}
-												</span>
-											))}
-										</div>
-									) : (
-										<p className="text-sm text-muted-foreground italic">Теги не добавлены</p>
-									)}
-								</div>
-
-								{/* Metadata */}
-								{item.updated_at && item.updated_at !== item.created_at && (
-									<div className="pt-4 border-t border-border">
-										<p className="text-xs text-muted-foreground">Обновлено {formatDate(item.updated_at)}</p>
-									</div>
-								)}
-							</div>
-						</ScrollArea>
-
-						{/* Actions Footer */}
-						<div className="p-4 border-t border-border bg-muted/30">
-							<div className="flex gap-2">
+					<AnimatePresence initial={false}>
+						{controlsVisible && (
+							<motion.div
+								initial={{ opacity: 0, y: 16 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: 16 }}
+								transition={{ duration: 0.18 }}
+								className="absolute bottom-6 left-6 z-20 flex flex-wrap items-center gap-2">
+								<Button
+									variant="secondary"
+									size="sm"
+									onClick={() => setShowDetails((current) => !current)}
+									className="h-10 rounded-full border border-white/12 bg-black/55 px-4 text-white hover:bg-black/70">
+									<Info className="mr-2 size-4" />
+									{showDetails ? "Скрыть" : "Детали"}
+								</Button>
+								<Button
+									variant="secondary"
+									size="sm"
+									onClick={handleDownload}
+									disabled={isDownloading || !mediaSrc}
+									className="h-10 rounded-full border border-white/12 bg-black/55 px-4 text-white hover:bg-black/70">
+									<Download className="mr-2 size-4" />
+									{isDownloading ? "Скачивание..." : "Скачать"}
+								</Button>
 								{onEdit && (
-									<Button variant="outline" className="flex-1" onClick={handleEdit}>
-										<Edit2 className="w-4 h-4 mr-2" />
+									<Button
+										variant="secondary"
+										size="sm"
+										onClick={handleEdit}
+										className="h-10 rounded-full border border-white/12 bg-black/55 px-4 text-white hover:bg-black/70">
+										<Edit2 className="mr-2 size-4" />
 										Редактировать
 									</Button>
 								)}
 								{onDelete && (
-									<Button variant="destructive" onClick={handleDelete}>
-										<Trash2 className="w-4 h-4" />
+									<Button
+										variant="secondary"
+										size="sm"
+										onClick={handleDelete}
+										className="h-10 rounded-full border border-red-400/20 bg-red-500/20 px-4 text-white hover:bg-red-500/30">
+										<Trash2 className="mr-2 size-4" />
+										Удалить
 									</Button>
 								)}
-							</div>
-						</div>
-					</div>
+							</motion.div>
+						)}
+					</AnimatePresence>
+
+					<AnimatePresence initial={false}>
+						{controlsVisible && (
+							<motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								exit={{ opacity: 0 }}
+								transition={{ duration: 0.16 }}
+								className="absolute right-6 top-6 z-20">
+								<Button
+									variant="secondary"
+									size="icon"
+									onClick={() => onOpenChange(false)}
+									className="h-10 w-10 rounded-full border border-white/12 bg-black/55 text-white hover:bg-black/70">
+									<X className="size-4" />
+								</Button>
+							</motion.div>
+						)}
+					</AnimatePresence>
+
+					<AnimatePresence initial={false}>
+						{showDetails && (
+							<motion.div
+								initial={{ opacity: 0, y: 16 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: 16 }}
+								transition={{ duration: 0.18 }}
+								className="absolute bottom-20 left-6 z-20 w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-3xl border border-white/10 bg-black/78 p-4 text-white">
+								<div className="mb-4 flex items-start justify-between gap-3">
+									<div className="min-w-0 space-y-2">
+										<div className="flex flex-wrap items-center gap-2 text-xs text-white/65">
+											<span className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1">
+												{currentEntry.media_type === "video" ? <Video className="size-3.5" /> : <ImageIcon className="size-3.5" />}
+												{currentEntry.media_type === "video" ? "Видео" : "Изображение"}
+											</span>
+											<span className="inline-flex items-center gap-2 rounded-full bg-white/8 px-3 py-1">
+												<Calendar className="size-3.5" />
+												{formatDate(activeItem.created_at)}
+											</span>
+										</div>
+										<p className="text-base font-medium leading-6 text-white">
+											{activeItem.title || "Без названия"}
+										</p>
+									</div>
+									<Button
+										variant="ghost"
+										size="icon"
+										onClick={() => setShowDetails(false)}
+										className="h-8 w-8 rounded-full text-white/70 hover:bg-white/10 hover:text-white">
+										<X className="size-4" />
+									</Button>
+								</div>
+
+								<div className="space-y-4">
+									<div className="space-y-2">
+										<div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-white/45">
+											<Tag className="size-3.5" />
+											Теги
+										</div>
+										<TagManager
+											tags={activeItem.tags}
+											onAddTag={handleAddTag}
+											onRemoveTag={handleRemoveTag}
+											inputPlaceholder="Добавить тег..."
+										/>
+									</div>
+
+									{activeItem.updated_at && activeItem.updated_at !== activeItem.created_at && (
+										<p className="text-xs text-white/45">Обновлено {formatDate(activeItem.updated_at)}</p>
+									)}
+								</div>
+							</motion.div>
+						)}
+					</AnimatePresence>
 				</div>
 			</BaseModal>
 

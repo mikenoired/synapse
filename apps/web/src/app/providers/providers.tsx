@@ -11,6 +11,8 @@ import superjson from "superjson";
 import type { AppRouter } from "@/server/routers/_app";
 import { trpc } from "@/shared/api/trpc";
 import { AuthProvider } from "@/shared/lib/auth-context";
+import type { User } from "@/shared/lib/auth-context";
+import { UserPreferencesProvider } from "@/shared/lib/user-preferences-context";
 import { ModalManager, ModalProvider } from "@/widgets/modals";
 
 function getBaseUrl() {
@@ -64,23 +66,25 @@ function TRPCProvider({ children }: { children: ReactNode }) {
 	);
 }
 
-export function Providers({ children }: { children: ReactNode }) {
+export function Providers({ children, initialUser }: { children: ReactNode; initialUser: User | null }) {
 	return (
-		<AuthProvider>
+		<AuthProvider initialUser={initialUser}>
 			<TRPCProvider>
-				<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
-					<ModalProvider>
-						{children}
-						<ModalManager />
-						<Toaster
-							position="bottom-right"
-							toastOptions={{
-								duration: 3000,
-								className: "bg-background border border-border text-foreground shadow-lg",
-							}}
-						/>
-					</ModalProvider>
-				</ThemeProvider>
+				<UserPreferencesProvider>
+					<ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange={false}>
+						<ModalProvider>
+							{children}
+							<ModalManager />
+							<Toaster
+								position="bottom-right"
+								toastOptions={{
+									duration: 3000,
+									className: "bg-background border border-border text-foreground shadow-lg",
+								}}
+							/>
+						</ModalProvider>
+					</ThemeProvider>
+				</UserPreferencesProvider>
 			</TRPCProvider>
 		</AuthProvider>
 	);

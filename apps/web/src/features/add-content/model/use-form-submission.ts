@@ -2,24 +2,32 @@ import { useCallback } from "react";
 import toast from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
+
+interface UploadedFileInfo {
+	objectName: string;
+	url: string;
+	thumbnail?: string;
+	content?: Content;
+}
 
 import type { ContentFormState, ParsedLinkData, TodoItem } from "./types";
 
 interface UseFormSubmissionProps {
 	onSuccess: () => void;
-	onContentAdded?: () => void;
+	onContentAdded?: (content?: Content | Content[]) => void;
 }
 
 export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissionProps) {
 	const utils = trpc.useUtils();
 
 	const createContentMutation = trpc.content.create.useMutation({
-		onSuccess: () => {
+		onSuccess: (content) => {
 			toast.success("Saved");
 			utils.content.getTags.invalidate();
 			utils.content.getTagsWithContent.invalidate();
 			onSuccess();
-			onContentAdded?.();
+			onContentAdded?.(content);
 		},
 		onError: (error) => {
 			toast.error(`Error creating content: ${error.message}`);
@@ -39,7 +47,7 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 			title?: string,
 			tags?: string[],
 			extraFields?: Record<string, string | boolean>
-		): Promise<{ objectName: string; url: string; thumbnail?: string }[]> => {
+		): Promise<UploadedFileInfo[]> => {
 			const filesPayload = await Promise.all(
 				files.map(async (file) => ({
 					name: file.name,
@@ -95,10 +103,10 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 
 			try {
 				if ((type === "media" || type === "audio") && selectedFiles && selectedFiles.length > 0) {
-					await uploadMultipleFiles(selectedFiles, title, tags);
+					const uploadedFiles = await uploadMultipleFiles(selectedFiles, title, tags);
 					toast.success("Saved");
 					onSuccess();
-					onContentAdded?.();
+					onContentAdded?.(uploadedFiles.flatMap((file) => (file.content ? [file.content] : [])));
 					return true;
 				} else {
 					let finalContent = content;

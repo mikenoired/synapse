@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { ReactElement } from "react";
 
 import AiTab from "@/features/settings-ai/ui/ai-tab";
@@ -12,7 +12,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 	const { tab } = await searchParams;
 
 	const ctx = await createContext({});
-	if (!ctx.user) return null;
+	if (!ctx.user) redirect("/");
 
 	const tabComponents: Record<string, ReactElement> = {
 		general: <GeneralTab />,

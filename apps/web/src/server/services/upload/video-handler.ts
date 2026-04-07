@@ -5,7 +5,6 @@ import { join } from "node:path";
 
 import { getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { content } from "../../db/schema";
 import { getImageDimensions } from "../../lib/generate-thumbnail";
 import { enqueueThumbnailJob } from "../../lib/queue";
 import type { UploadHandlerDeps } from "./upload-handler-types";
@@ -64,44 +63,40 @@ export async function processVideoUpload(
 
 		const videoDimensions = await getImageDimensionsSafe(getImageDimensions, thumbBuffer);
 
-		await Promise.all([
-			deps.ctx.cache.addFile(params.userId, videoUpload.fileSize || 0),
-			deps.ctx.cache.addFile(params.userId, thumbUpload.fileSize || 0, false),
-		]);
-
 		const videoUrl = getPublicUrl(videoUpload.objectName);
 		const thumbnailUrl = getPublicUrl(thumbUpload.objectName);
-		const [inserted] = await deps.ctx.db
-			.insert(content)
-			.values({
-				content: JSON.stringify(
-					buildVideoMediaContent({
-						objectName: videoUpload.objectName,
-						publicUrl: videoUrl,
-						thumbnailUrl,
-						videoDimensions,
-					})
-				),
-				title: params.title || undefined,
-				type: "media",
-				userId: params.userId,
-			})
-			.returning({ id: content.id });
-
-		if (inserted?.id) {
-			await deps.attachTags(inserted.id, params.tags, "media", params.title || undefined);
-
-			await enqueueThumbnailJob({
-				contentId: inserted.id,
-				mimeType: videoOutputMimeType,
+		const serializedContent = JSON.stringify(
+			buildVideoMediaContent({
 				objectName: videoUpload.objectName,
-				type: "video",
-			});
-		}
+				publicUrl: videoUrl,
+				thumbnailUrl,
+				videoDimensions,
+			})
+		);
+		const createdContent = await deps.persistContent({
+			content: serializedContent,
+			tags: params.tags,
+			title: params.title || undefined,
+			type: "media",
+			userId: params.userId,
+		});
+
+		await deps.trackStorage(params.userId, [
+			{ size: videoUpload.fileSize || 0 },
+			{ size: thumbUpload.fileSize || 0, updateFileCount: false },
+		]);
+
+		await enqueueThumbnailJob({
+			contentId: createdContent.id,
+			mimeType: videoOutputMimeType,
+			objectName: videoUpload.objectName,
+			type: "video",
+		});
 
 		return {
 			errors,
 			result: {
+				content: createdContent,
 				fileName: file.name,
 				objectName: videoUpload.objectName,
 				size: file.size,

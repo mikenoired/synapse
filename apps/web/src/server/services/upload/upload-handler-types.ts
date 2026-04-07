@@ -1,10 +1,22 @@
 import type { Context } from "../../context";
+import type { Content } from "@/shared/lib/schemas";
+import type { UploadContentType } from "./upload-types";
 
-export interface UploadTagAttacher {
-	(contentId: string, tags: string[], type: "media" | "audio", title?: string): Promise<void>;
+export interface PersistUploadedContentInput {
+	content: string;
+	tags: string[];
+	title?: string;
+	type: UploadContentType;
+	userId: string;
+}
+
+export interface StorageDelta {
+	size: number;
+	updateFileCount?: boolean;
 }
 
 export interface UploadHandlerDeps {
-	attachTags: UploadTagAttacher;
 	ctx: Context;
+	persistContent: (input: PersistUploadedContentInput) => Promise<Content>;
+	trackStorage: (userId: string, deltas: StorageDelta[]) => Promise<void>;
 }

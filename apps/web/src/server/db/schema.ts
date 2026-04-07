@@ -1,10 +1,14 @@
 import { relations } from "drizzle-orm";
 import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
+import type { UserPreferences } from "@/shared/lib/user-preferences";
+import { DEFAULT_USER_PREFERENCES } from "@/shared/lib/user-preferences";
+
 export const users = pgTable("users", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	email: text("email").notNull().unique(),
 	passwordHash: text("password_hash").notNull(),
+	preferences: jsonb("preferences").$type<UserPreferences>().notNull().default(DEFAULT_USER_PREFERENCES),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

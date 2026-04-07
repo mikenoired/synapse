@@ -12,7 +12,7 @@ interface EditContentDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	content: Content;
-	onContentUpdated?: () => void;
+	onContentUpdated?: (content: Content) => void;
 }
 
 export function EditContentDialog({ open, onOpenChange, content, onContentUpdated }: EditContentDialogProps) {
@@ -28,6 +28,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	const [todoInput, setTodoInput] = useState("");
 	const [showUnsavedModal, setShowUnsavedModal] = useState(false);
 	const [hasUnsaved, setHasUnsaved] = useState(false);
+	const utils = trpc.useUtils();
 	const handleTouchStart = (e: React.TouchEvent) => {
 		setStartY(e.touches[0].clientY);
 	};
@@ -45,6 +46,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	useEffect(() => {
 		setTitle(content.title || "");
 		setTags(content.tags || []);
+		setEditorData(content.content ? JSON.parse(content.content) : { type: "doc", content: [] });
 	}, [content]);
 
 	useEffect(() => {
@@ -68,10 +70,16 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	}, [content]);
 
 	const updateContentMutation = trpc.content.update.useMutation({
-		onSuccess: () => {
+		onSuccess: (updatedContent) => {
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
 			toast.success("Saved");
 			onOpenChange(false);
-			onContentUpdated?.();
+			onContentUpdated?.(updatedContent);
 		},
 		onError: (error) => {
 			toast.error(`Update error: ${error.message}`);

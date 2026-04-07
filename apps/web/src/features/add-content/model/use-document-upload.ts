@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
 
 export function useDocumentUpload() {
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -63,20 +64,22 @@ export function useDocumentUpload() {
 		setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
 	};
 
-	const uploadFiles = async () => {
+	const uploadFiles = async (): Promise<Content[]> => {
 		if (selectedFiles.length === 0) {
 			toast.error("Выберите файлы для загрузки");
-			return;
+			return [];
 		}
 
 		setIsLoading(true);
 
 		try {
+			const createdContents: Content[] = [];
+
 			// Загружаем файлы по одному
 			for (const file of selectedFiles) {
 				const buffer = await file.arrayBuffer();
 
-				await importFileMutation.mutateAsync({
+				const result = await importFileMutation.mutateAsync({
 					file: {
 						name: file.name,
 						type: file.type,
@@ -84,9 +87,14 @@ export function useDocumentUpload() {
 						buffer: Array.from(new Uint8Array(buffer)),
 					},
 				});
+
+				createdContents.push(result.content);
 			}
+
+			return createdContents;
 		} catch (error) {
 			toast.error(`Ошибка при загрузке: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
+			return [];
 		}
 	};
 

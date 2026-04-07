@@ -3,7 +3,7 @@
 import { Badge } from "@synapse/ui/components";
 import { motion } from "framer-motion";
 import { Calendar, Clock } from "lucide-react";
-import React from "react";
+import { useMemo } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { calculateReadingTime } from "@/shared/lib/schemas";
@@ -21,6 +21,8 @@ interface DocumentItemProps {
 }
 
 export default function DocumentItem({ item, index, onItemClick }: DocumentItemProps) {
+	void index;
+
 	const getDocumentIcon = (type: string) => {
 		switch (type) {
 			case "pdf":
@@ -66,8 +68,6 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 		});
 	};
 
-	const readingTime = calculateReadingTime(item.content);
-
 	const getTextPreview = (content: string) => {
 		const textContent = content
 			.replace(/<[^>]*>/g, " ")
@@ -76,11 +76,14 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 		return textContent.length > 150 ? textContent.substring(0, 150) + "..." : textContent;
 	};
 
+	const readingTime = useMemo(() => calculateReadingTime(item.content), [item.content]);
+	const textPreview = useMemo(() => getTextPreview(item.content), [item.content]);
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay: index * 0.1 }}>
+			transition={{ duration: 0.2 }}>
 			<div className="relative" onClick={() => onItemClick?.(item)}>
 				{item.thumbnail_base64 && (
 					<div className="h-32 w-full overflow-hidden">
@@ -107,7 +110,7 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 
 					{/* Превью контента */}
 					<div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
-						{getTextPreview(item.content)}
+						{textPreview}
 					</div>
 
 					{/* Метаданные */}

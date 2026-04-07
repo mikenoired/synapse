@@ -1,11 +1,14 @@
 import { Buffer } from "node:buffer";
 
+import type { Content } from "@/shared/lib/schemas";
+
 export interface UploadedFileInfo {
 	objectName: string;
 	url: string;
 	fileName: string;
 	type: string;
 	size: number;
+	content?: Content;
 	thumbnailBase64?: string;
 	thumbnail?: string;
 	cover?: string;
@@ -13,6 +16,7 @@ export interface UploadedFileInfo {
 
 export interface UploadOutcome {
 	files: UploadedFileInfo[];
+	contents: Content[];
 	errors: string[];
 }
 

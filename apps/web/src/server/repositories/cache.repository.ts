@@ -11,8 +11,7 @@ export class CacheRepository {
 
 	async set(key: string, value: string, ttlSeconds?: number) {
 		if (ttlSeconds) {
-			await redis.set(key, value);
-			await redis.expire(key, ttlSeconds);
+			return await redis.set(key, value, "EX", ttlSeconds);
 		} else {
 			return await redis.set(key, value);
 		}

@@ -89,7 +89,7 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 							</div>
 
 							{item.title && (
-								<h1 className="text-3xl font-bold tracking-tight leading-tight">{item.title}</h1>
+							<h1 className="text-3xl font-bold leading-tight">{item.title}</h1>
 							)}
 
 							<div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">

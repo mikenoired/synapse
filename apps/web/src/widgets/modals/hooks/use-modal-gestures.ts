@@ -1,5 +1,5 @@
 import type { TouchEvent } from "react";
-import { useState } from "react";
+import { useRef } from "react";
 
 interface SwipeConfig {
 	direction: "horizontal" | "vertical" | "down" | "up" | "left" | "right";
@@ -22,31 +22,69 @@ interface GestureHandlers {
 	onTouchEnd: () => void;
 }
 
+function isInteractiveTarget(target: EventTarget | null) {
+	if (!(target instanceof Element)) {
+		return false;
+	}
+
+	return Boolean(target.closest("a, button, input, select, textarea, video, [role='button'], [role='switch'], [data-no-swipe='true']"));
+}
+
 export function useModalGestures({ enabled = true, swipe }: UseModalGesturesOptions = {}): GestureHandlers {
-	const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
-	const [touchEnd, setTouchEnd] = useState<{ x: number; y: number } | null>(null);
+	const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+	const touchEndRef = useRef<{ x: number; y: number } | null>(null);
+	const lockedAxisRef = useRef<"horizontal" | "vertical" | null>(null);
+	const ignoreGestureRef = useRef(false);
 
 	const handleTouchStart = (e: TouchEvent) => {
 		if (!enabled || !swipe) return;
 
-		setTouchEnd(null);
-		setTouchStart({
+		ignoreGestureRef.current = isInteractiveTarget(e.target);
+		lockedAxisRef.current = null;
+		touchEndRef.current = null;
+
+		if (ignoreGestureRef.current) {
+			touchStartRef.current = null;
+			return;
+		}
+
+		touchStartRef.current = {
 			x: e.targetTouches[0].clientX,
 			y: e.targetTouches[0].clientY,
-		});
+		};
 	};
 
 	const handleTouchMove = (e: TouchEvent) => {
-		if (!enabled || !swipe) return;
+		if (!enabled || !swipe || ignoreGestureRef.current || !touchStartRef.current) return;
 
-		setTouchEnd({
+		touchEndRef.current = {
 			x: e.targetTouches[0].clientX,
 			y: e.targetTouches[0].clientY,
-		});
+		};
+
+		const deltaX = Math.abs(touchStartRef.current.x - touchEndRef.current.x);
+		const deltaY = Math.abs(touchStartRef.current.y - touchEndRef.current.y);
+
+		if (!lockedAxisRef.current && (deltaX > 8 || deltaY > 8)) {
+			lockedAxisRef.current = deltaX > deltaY ? "horizontal" : "vertical";
+		}
+
+		if (lockedAxisRef.current === "horizontal") {
+			e.preventDefault();
+		}
 	};
 
 	const handleTouchEnd = () => {
-		if (!enabled || !swipe || !touchStart || !touchEnd) return;
+		const touchStart = touchStartRef.current;
+		const touchEnd = touchEndRef.current;
+
+		if (!enabled || !swipe || ignoreGestureRef.current || !touchStart || !touchEnd) {
+			touchStartRef.current = null;
+			touchEndRef.current = null;
+			lockedAxisRef.current = null;
+			ignoreGestureRef.current = false;
+			return;
+		}
 
 		const threshold = swipe.threshold || 50;
 		const deltaX = touchStart.x - touchEnd.x;
@@ -94,8 +132,10 @@ export function useModalGestures({ enabled = true, swipe }: UseModalGesturesOpti
 			swipe.onSwipe?.();
 		}
 
-		setTouchStart(null);
-		setTouchEnd(null);
+		touchStartRef.current = null;
+		touchEndRef.current = null;
+		lockedAxisRef.current = null;
+		ignoreGestureRef.current = false;
 	};
 
 	return {

@@ -103,23 +103,25 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 	return (
 		<>
 			<BaseModal open={open} onOpenChange={onOpenChange} size="lg">
-				<div className="flex flex-col h-full max-w-[750px] mx-auto w-full">
+				<div className="mx-auto flex h-full w-full max-w-4xl flex-col">
 					<ModalHeader>
 						<div className="space-y-4">
 							<ModalHeader.Meta icon={FileText} type="Заметка" />
 
-							{item.title && <ModalHeader.Title>{item.title}</ModalHeader.Title>}
+							<ModalHeader.Title>{item.title || "Без названия"}</ModalHeader.Title>
 
 							<ModalHeader.Info createdAt={item.created_at} updatedAt={item.updated_at} />
 
 							{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} />}
 
-							<ActionBar actions={actions} />
+							{actions.length > 0 && <ActionBar actions={actions} />}
 						</div>
 					</ModalHeader>
 
 					<ModalBody>
-						<div className={cn("max-w-none", prose)}>{renderContent()}</div>
+						<div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+							<div className={cn("max-w-none", prose)}>{renderContent()}</div>
+						</div>
 					</ModalBody>
 				</div>
 			</BaseModal>

@@ -1,4 +1,3 @@
-import { cn } from "@synapse/ui/cn";
 import {
 	Badge,
 	ContextMenu,
@@ -6,93 +5,59 @@ import {
 	ContextMenuItem,
 	ContextMenuTrigger,
 } from "@synapse/ui/components";
-import { prose } from "@synapse/ui/prose";
-import { generateHTML } from "@tiptap/core";
-import { CodeBlockLowlight } from "@tiptap/extension-code-block-lowlight";
-import Underline from "@tiptap/extension-underline";
-import StarterKit from "@tiptap/starter-kit";
-import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
-import { common, createLowlight } from "lowlight";
 import { ListChecks } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
 import { trpc } from "@/shared/api/trpc";
-import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content, LinkContent } from "@/shared/lib/schemas";
-import { extractTextFromStructuredContent, parseLinkContent, parseMediaJson } from "@/shared/lib/schemas";
+import { extractTextFromStructuredContent, parseLinkContent } from "@/shared/lib/schemas";
 
 import DocumentItem from "./document-item";
 import MediaItem from "./media-item";
 
-function extractTextFromHTML(html: string): string {
-	const tempDiv = document.createElement("div");
-	tempDiv.innerHTML = html;
-	return tempDiv.textContent || "";
-}
+function getNotePreview(content: string, maxLength: number = 280): string {
+	try {
+		const parsed = JSON.parse(content);
+		const text = parsed?.type === "doc" ? extractTextFromStructuredContent(parsed) : content;
+		const normalized = text.replace(/\s+/g, " ").trim();
 
-function truncateHTMLContent(html: string, maxLength: number = 250): { html: string; isTruncated: boolean } {
-	const textContent = extractTextFromHTML(html);
-
-	if (textContent.length <= maxLength) {
-		return { html, isTruncated: false };
-	}
-
-	const tempDiv = document.createElement("div");
-	tempDiv.innerHTML = html;
-
-	let currentLength = 0;
-	let truncated = false;
-
-	const walkNodes = (node: Node): void => {
-		if (truncated) return;
-
-		if (node.nodeType === Node.TEXT_NODE) {
-			const text = node.textContent || "";
-			if (currentLength + text.length > maxLength) {
-				const remainingLength = maxLength - currentLength;
-				node.textContent = `${text.substring(0, remainingLength)}...`;
-				truncated = true;
-				return;
-			}
-			currentLength += text.length;
-		} else if (node.nodeType === Node.ELEMENT_NODE) {
-			const element = node as Element;
-			const children = Array.from(element.childNodes);
-			for (let i = 0; i < children.length; i++) {
-				walkNodes(children[i]);
-				if (truncated) {
-					for (let j = i + 1; j < children.length; j++) {
-						element.removeChild(children[j]);
-					}
-					break;
-				}
-			}
+		if (normalized.length <= maxLength) {
+			return normalized;
 		}
-	};
 
-	walkNodes(tempDiv);
-
-	return { html: tempDiv.innerHTML, isTruncated: truncated };
+		return `${normalized.slice(0, maxLength).trimEnd()}...`;
+	} catch {
+		const normalized = content.replace(/\s+/g, " ").trim();
+		return normalized.length <= maxLength ? normalized : `${normalized.slice(0, maxLength).trimEnd()}...`;
+	}
 }
 
 interface ItemProps {
 	item: Content;
 	index: number;
-	onContentChanged?: () => void;
+	onContentUpdated?: (content: Content) => void;
+	onContentDeleted?: (contentId: string) => void;
 	onItemClick?: (content: Content) => void;
 	excludedTag?: string;
 }
 
-export default function Item({ item, index, onContentChanged, onItemClick, excludedTag }: ItemProps) {
+export default function Item({ item, index, onContentUpdated, onContentDeleted, onItemClick, excludedTag }: ItemProps) {
 	const [editOpen, setEditOpen] = useState(false);
+	const utils = trpc.useUtils();
 
 	const deleteMutation = trpc.content.delete.useMutation({
 		onSuccess: () => {
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
 			toast.success("Element was deleted");
-			onContentChanged?.();
+			onContentDeleted?.(item.id);
 		},
 	});
 
@@ -126,7 +91,7 @@ export default function Item({ item, index, onContentChanged, onItemClick, exclu
 					open={editOpen}
 					onOpenChange={setEditOpen}
 					content={item}
-					onContentUpdated={onContentChanged}
+					onContentUpdated={onContentUpdated}
 				/>
 			)}
 		</>
@@ -134,31 +99,9 @@ export default function Item({ item, index, onContentChanged, onItemClick, exclu
 }
 
 function ItemContent({ item, index, onItemClick }: ItemProps) {
-	const [thumbSrc, setThumbSrc] = useState<string | null>(null);
-	useEffect(() => {
-		let cancelled = false;
-		const media = item.type === "media" ? parseMediaJson(item.content)?.media : undefined;
-		const thumb = media?.thumbnailUrl;
-		if (media?.type === "video" && thumb) {
-			setThumbSrc(null);
-			const url = getPresignedMediaUrl(thumb);
-			if (!cancelled) {
-				setThumbSrc(url);
-			}
-		}
-		return () => {
-			cancelled = true;
-		};
-	}, [item.content, item.type]);
-
-	const getTextContent = useMemo(() => {
+	const notePreview = useMemo(() => {
 		if (item.type !== "note") return item.content;
-
-		const lowlight = createLowlight(common);
-		const data = JSON.parse(item.content);
-		if (data.type === "doc") {
-			return generateHTML(data, [StarterKit, Underline, CodeBlockLowlight.configure({ lowlight })]);
-		}
+		return getNotePreview(item.content);
 	}, [item.content, item.type]);
 
 	const renderTodoPreview = () => {
@@ -243,7 +186,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
-			transition={{ delay: index * 0.1 }}
+			transition={{ duration: 0.2 }}
 			className="group">
 			<div className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative">
 				<div
@@ -254,12 +197,12 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 								? "p-3"
 								: item.type === "todo"
 									? "p-3"
-									: item.type === "link"
-										? "p-3"
-										: ""
+						: item.type === "link"
+							? "p-3"
+							: ""
 					}>
 					{item.type === "media" || item.type === "audio" ? (
-						<MediaItem item={item} onItemClick={onItemClick} thumbSrc={thumbSrc} />
+						<MediaItem item={item} onItemClick={onItemClick} />
 					) : isDocumentType(item.type) ? (
 						<DocumentItem item={item} index={index} onItemClick={onItemClick} />
 					) : item.type === "link" ? (
@@ -279,7 +222,9 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 						renderTodoPreview()
 					) : (
 						<>
-							<TruncatedText html={getTextContent || ""} />
+							<p className="text-sm leading-6 text-muted-foreground whitespace-pre-wrap break-words">
+								{notePreview || item.title || "Empty note"}
+							</p>
 							<div className="flex flex-wrap mt-3 absolute bottom-0 left-0 right-0 z-10">
 								{item.tags.map((tag: string) => (
 									<Badge key={tag} variant="outline" className="text-xs">
@@ -292,39 +237,5 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 				</div>
 			</div>
 		</motion.div>
-	);
-}
-
-interface TruncatedTextProps {
-	html: string;
-	maxLength?: number;
-	className?: string;
-}
-
-function TruncatedText({ html, maxLength = 250, className = "" }: TruncatedTextProps) {
-	const { html: processedHTML, isTruncated } = truncateHTMLContent(html, maxLength);
-
-	if (!isTruncated) {
-		return (
-			<div
-				className={cn("max-w-none opacity-75", className, prose)}
-				dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processedHTML) }}
-			/>
-		);
-	}
-
-	return (
-		<div className={`${className}`}>
-			<div
-				className={cn("max-w-none opacity-75", className, prose)}
-				dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(processedHTML) }}
-			/>
-			<div
-				className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none z-10"
-				style={{
-					background: "linear-gradient(to bottom, transparent 10%, var(--background) 100%)",
-				}}
-			/>
-		</div>
 	);
 }

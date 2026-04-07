@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { createContext } from "@/server/context";
 import { getServerCaller } from "@/server/getServerCaller";
 
@@ -8,7 +10,7 @@ export default async function TagPage({ params }: { params: Promise<{ id: string
 
 	const ctx = await createContext({});
 	if (!ctx.user) {
-		return <TagClient tagId={id} tagTitle="" initial={{ items: [], nextCursor: undefined }} />;
+		redirect("/");
 	}
 
 	const caller = await getServerCaller();

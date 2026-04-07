@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
 import { Editor } from "@/widgets/editor/ui/editor";
 
 import { ModalActions, ModalBody } from "../../layout";
@@ -12,7 +13,7 @@ import { showToast } from "../../utils";
 
 interface AddNoteFormProps {
 	initialTags?: string[];
-	onSuccess: () => void;
+	onSuccess: (content?: Content) => void;
 	isFullScreen?: boolean;
 }
 
@@ -21,6 +22,7 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 	const [editorData, setEditorData] = useState<any>(null);
 	const [tags, setTags] = useState<string[]>(initialTags);
 	const [currentTag, setCurrentTag] = useState("");
+	const utils = trpc.useUtils();
 
 	const createMutation = trpc.content.create.useMutation();
 
@@ -52,15 +54,21 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 		}
 
 		try {
-			await createMutation.mutateAsync({
+			const content = await createMutation.mutateAsync({
 				type: "note",
 				title: title || undefined,
 				content: JSON.stringify(editorData),
 				tags,
 			});
 
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+			]);
+
 			showToast.success("Заметка создана");
-			onSuccess();
+			onSuccess(content);
 		} catch {
 			showToast.error("Ошибка при создании заметки");
 		}

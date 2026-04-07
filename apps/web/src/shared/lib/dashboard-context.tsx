@@ -3,21 +3,22 @@
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { createContext, useCallback, useContext, useMemo, useState } from "react";
 
+import type { Content } from "@/shared/lib/schemas";
 import { AddContentModal } from "@/widgets/modals";
 
 interface AddDialogOpenOptions {
 	initialTags?: string[];
-	onContentAdded?: () => void;
+	onContentAdded?: (content?: Content | Content[]) => void;
 }
 
 interface AddDialogConfig {
 	initialTags: string[];
-	onContentAdded?: () => void;
+	onContentAdded?: (content?: Content | Content[]) => void;
 }
 
 interface AddDialogDefaults {
 	initialTags?: string[];
-	onContentAdded?: (() => void) | null;
+	onContentAdded?: ((content?: Content | Content[]) => void) | null;
 }
 
 interface DashboardContextType {
@@ -130,7 +131,12 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 			{children}
 			<AddContentModal
 				open={isAddDialogOpen}
-				onOpenChange={setAddDialogOpen}
+				onOpenChange={(nextOpen) => {
+					setAddDialogOpen(nextOpen);
+					if (!nextOpen) {
+						setPreloadedFiles([]);
+					}
+				}}
 				initialTags={dialogOptions.initialTags}
 				onContentAdded={dialogOptions.onContentAdded}
 				preloadedFiles={preloadedFiles}

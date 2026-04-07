@@ -5,14 +5,17 @@ import { Button } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import { Edit2, ExternalLink, Globe, Image as ImageIcon, Trash2, User } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import type { Content, LinkContent } from "@/shared/lib/schemas";
 import { calculateReadingTimeFromLinkContent, parseLinkContent } from "@/shared/lib/schemas";
 
 import { BaseModal } from "../base";
 import { ActionBar } from "../components";
+import { ConfirmDialog } from "../dialogs";
 import { useModalKeyboard } from "../hooks";
 import { ModalBody, ModalHeader } from "../layout";
+import { showToast } from "../utils";
 
 function StructuredContentRenderer({ content }: { content: any }) {
 	if (!content?.content) return null;
@@ -167,7 +170,15 @@ interface LinkViewerModalProps {
 
 export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: LinkViewerModalProps) {
 	const router = useRouter();
-	const linkContent: LinkContent | null = item.type === "link" ? parseLinkContent(item.content) : null;
+	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const linkContent: LinkContent | null = useMemo(
+		() => (item.type === "link" ? parseLinkContent(item.content) : null),
+		[item.content, item.type]
+	);
+	const readingTime = useMemo(
+		() => (linkContent ? calculateReadingTimeFromLinkContent(linkContent) : undefined),
+		[linkContent]
+	);
 
 	useModalKeyboard({
 		enabled: open,
@@ -185,10 +196,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 
 	const handleDelete = () => {
 		if (onDelete) {
-			if (confirm("Вы уверены, что хотите удалить эту ссылку?")) {
-				onDelete(item.id);
-				onOpenChange(false);
-			}
+			setShowDeleteConfirm(true);
 		}
 	};
 
@@ -227,74 +235,60 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 	];
 
 	return (
-		<BaseModal open={open} onOpenChange={onOpenChange} size="xl">
-			<div className="flex flex-col h-full">
-				<ModalHeader>
-					<div className="space-y-4">
-						{linkContent && (
-							<div className="flex items-start gap-3">
-								{linkContent.metadata.favicon && (
-									<img
-										src={linkContent.metadata.favicon}
-										alt=""
-										className="w-5 h-5 rounded-sm flex-shrink-0"
-										onError={(e) => (e.currentTarget.style.display = "none")}
-									/>
-								)}
-								<div className="min-w-0 flex-1">
-									<div className="flex items-center gap-2 text-sm text-muted-foreground">
-										<Globe className="w-4 h-4 flex-shrink-0" />
-										<span className="truncate">
-											{linkContent.metadata.siteName || new URL(linkContent.url).hostname}
-										</span>
+		<>
+			<BaseModal open={open} onOpenChange={onOpenChange} size="xl">
+				<div className="flex flex-col h-full">
+					<ModalHeader>
+						<div className="space-y-4">
+							<ModalHeader.Meta icon={Globe} type={linkContent?.metadata.siteName || "Ссылка"} />
+							<ModalHeader.Title>{linkContent?.title || item.title || "Без названия"}</ModalHeader.Title>
+							<ModalHeader.Info createdAt={item.created_at} readingTime={readingTime} />
+							{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} />}
+							<ActionBar actions={actions} />
+						</div>
+					</ModalHeader>
+
+					<ModalBody scrollable>
+						{linkContent ? (
+							<div className="mx-auto flex w-full max-w-4xl flex-col gap-6 pb-6">
+								<div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+									<div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+										<div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1">
+											<Globe className="size-4" />
+											<span className="truncate max-w-[220px]">{new URL(linkContent.url).hostname}</span>
+										</div>
+										{linkContent.metadata.author && (
+											<div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1">
+												<User className="size-3.5" />
+												<span className="truncate max-w-[220px]">{linkContent.metadata.author}</span>
+											</div>
+										)}
 									</div>
-									{linkContent.metadata.author && (
-										<div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
-											<User className="w-3 h-3 flex-shrink-0" />
-											<span className="truncate">{linkContent.metadata.author}</span>
+
+									{linkContent.metadata.image && (
+										<div className="relative mt-5 w-full overflow-hidden rounded-2xl border border-border bg-muted/20">
+											<img
+												src={linkContent.metadata.image}
+												alt={linkContent.title || "Article image"}
+												className="h-64 w-full object-cover md:h-80"
+												onError={(e) => {
+													e.currentTarget.style.display = "none";
+												}}
+											/>
 										</div>
 									)}
 								</div>
-							</div>
-						)}
 
-						<ModalHeader.Title>{linkContent?.title || item.title || "No title"}</ModalHeader.Title>
-
-						<ModalHeader.Info
-							createdAt={item.created_at}
-							readingTime={linkContent ? calculateReadingTimeFromLinkContent(linkContent) : undefined}
-						/>
-
-						{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} />}
-
-						<ActionBar actions={actions} />
-					</div>
-				</ModalHeader>
-
-				<ModalBody scrollable>
-					{linkContent ? (
-						<div className="pb-6">
-							{linkContent.metadata.image && (
-								<div className="relative w-full mb-8">
-									<img
-										src={linkContent.metadata.image}
-										alt={linkContent.title || "Article image"}
-										className="w-full h-64 md:h-80 object-cover rounded-lg"
-										onError={(e) => {
-											e.currentTarget.style.display = "none";
-										}}
-									/>
+								<div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+									<div className="max-w-none">
+										<StructuredContentRenderer content={linkContent.content} />
+									</div>
 								</div>
-							)}
 
-							<div className="max-w-none">
-								<StructuredContentRenderer content={linkContent.content} />
-							</div>
-
-							{linkContent.metadata.images && linkContent.metadata.images.length > 1 && (
-								<div className="mt-8 space-y-3">
-									<h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-										<ImageIcon className="w-4 h-4" />
+								{linkContent.metadata.images && linkContent.metadata.images.length > 1 && (
+									<div className="space-y-3 rounded-2xl border border-border bg-card p-5 sm:p-6">
+										<h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+											<ImageIcon className="w-4 h-4" />
 										Дополнительные изображения
 									</h3>
 									<div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -311,20 +305,20 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 											/>
 										))}
 									</div>
+										</div>
+									)}
 								</div>
-							)}
-						</div>
-					) : (
-						<div className="flex items-center justify-center py-8">
-							<div className="text-center space-y-6 max-w-md">
-								<div className="p-6 border border-border rounded-lg bg-muted/20">
-									<div className="space-y-3">
-										<p className="text-sm font-mono text-left break-all bg-muted/50 p-3 rounded">
-											{item.content}
-										</p>
-										<Button onClick={handleOpenLink} className="w-full" size="lg">
-											<ExternalLink className="w-4 h-4 mr-2" />
-											Открыть ссылку
+							) : (
+							<div className="flex items-center justify-center py-8">
+								<div className="max-w-md space-y-6 text-center">
+									<div className="rounded-2xl border border-border bg-card p-6">
+										<div className="space-y-3">
+											<p className="rounded-xl bg-muted/50 p-3 text-left font-mono text-sm break-all">
+												{item.content}
+											</p>
+											<Button onClick={handleOpenLink} className="w-full rounded-full" size="lg">
+												<ExternalLink className="w-4 h-4 mr-2" />
+												Открыть ссылку
 										</Button>
 									</div>
 								</div>
@@ -332,8 +326,29 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 							</div>
 						</div>
 					)}
-				</ModalBody>
-			</div>
-		</BaseModal>
+					</ModalBody>
+				</div>
+			</BaseModal>
+
+			<ConfirmDialog
+				open={showDeleteConfirm}
+				onOpenChange={setShowDeleteConfirm}
+				title="Удалить ссылку?"
+				description="Это действие нельзя отменить. Ссылка будет удалена навсегда."
+				confirmText="Удалить"
+				cancelText="Отмена"
+				variant="destructive"
+				onConfirm={async () => {
+					if (!onDelete) return;
+					try {
+						await onDelete(item.id);
+						showToast.success("Ссылка удалена");
+						onOpenChange(false);
+					} catch {
+						showToast.error("Ошибка при удалении");
+					}
+				}}
+			/>
+		</>
 	);
 }

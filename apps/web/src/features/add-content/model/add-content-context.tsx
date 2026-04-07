@@ -62,7 +62,7 @@ interface AddContentContextType {
 		title?: string,
 		tags?: string[],
 		extra?: Record<string, string | boolean>
-	) => Promise<{ objectName: string; url: string; thumbnail?: string }[]>;
+	) => Promise<{ objectName: string; url: string; thumbnail?: string; content?: Content }[]>;
 
 	// Utils
 	resetForm: () => void;
@@ -74,7 +74,7 @@ interface AddContentProviderProps {
 	children: ReactNode;
 	initialTags?: string[];
 	onSuccess: () => void;
-	onContentAdded?: () => void;
+	onContentAdded?: (content?: Content | Content[]) => void;
 }
 
 export function AddContentProvider({

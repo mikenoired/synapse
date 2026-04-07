@@ -1,11 +1,20 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import type { Context } from "../../context";
 import { contentTags, edges, nodes, tags } from "../../db/schema";
 import type { UploadContentType } from "./upload-types";
 
+type DatabaseExecutor = Context["db"];
+
 export class UploadTagService {
-	constructor(private readonly ctx: Context) {}
+	constructor(
+		private readonly ctx: Context,
+		private readonly database: DatabaseExecutor = ctx.db
+	) {}
+
+	withDb(database: DatabaseExecutor) {
+		return new UploadTagService(this.ctx, database);
+	}
 
 	async attachTags(contentId: string, titles: string[], type: UploadContentType, title?: string) {
 		if (!titles.length) return;
@@ -22,18 +31,21 @@ export class UploadTagService {
 		const uniqueTitles = Array.from(new Set(titles.filter(Boolean)));
 		if (!uniqueTitles.length) return [];
 
-		const existingTags = await this.ctx.db.query.tags.findMany({
+		const existingTags = await this.database.query.tags.findMany({
 			columns: { id: true, title: true },
-			where: inArray(tags.title, uniqueTitles),
+			where: and(
+				inArray(tags.title, uniqueTitles),
+				or(eq(tags.userId, this.requireUserId()), isNull(tags.userId))!
+			),
 		});
 
 		const tagIdByTitle = new Map(existingTags.map((tag) => [tag.title, tag.id]));
 		const missingTitles = uniqueTitles.filter((title) => !tagIdByTitle.has(title));
 
 		if (missingTitles.length) {
-			const insertedTags = await this.ctx.db
+			const insertedTags = await this.database
 				.insert(tags)
-				.values(missingTitles.map((title) => ({ title })))
+				.values(missingTitles.map((title) => ({ title, userId: this.requireUserId() })))
 				.returning({ id: tags.id, title: tags.title });
 
 			for (const tag of insertedTags) tagIdByTitle.set(tag.title, tag.id);
@@ -49,7 +61,7 @@ export class UploadTagService {
 		title?: string;
 		type: UploadContentType;
 	}) {
-		const existingNode = await this.ctx.db.query.nodes.findFirst({
+		const existingNode = await this.database.query.nodes.findFirst({
 			columns: { id: true },
 			where: and(
 				eq(nodes.userId, this.requireUserId()),
@@ -59,7 +71,7 @@ export class UploadTagService {
 
 		if (existingNode?.id) return existingNode.id;
 
-		const [createdNode] = await this.ctx.db
+		const [createdNode] = await this.database
 			.insert(nodes)
 			.values({
 				content: params.title ?? "",
@@ -77,7 +89,7 @@ export class UploadTagService {
 		const uniqueTagIds = Array.from(new Set(tagIds));
 		if (!uniqueTagIds.length) return tagNodeIdByTagId;
 
-		const existingNodes = await this.ctx.db.query.nodes.findMany({
+		const existingNodes = await this.database.query.nodes.findMany({
 			where: and(
 				eq(nodes.userId, this.requireUserId()),
 				eq(nodes.type, "tag"),
@@ -93,13 +105,13 @@ export class UploadTagService {
 		const missingTagIds = uniqueTagIds.filter((tagId) => !tagNodeIdByTagId[tagId]);
 		if (!missingTagIds.length) return tagNodeIdByTagId;
 
-		const tagRows = await this.ctx.db.query.tags.findMany({
+		const tagRows = await this.database.query.tags.findMany({
 			where: inArray(tags.id, missingTagIds),
 		});
 
 		if (!tagRows.length) return tagNodeIdByTagId;
 
-		const createdNodes = await this.ctx.db
+		const createdNodes = await this.database
 			.insert(nodes)
 			.values(
 				tagRows.map((tag) => ({
@@ -129,7 +141,7 @@ export class UploadTagService {
 
 		const uniqueTagIds = Array.from(new Set(tagIds));
 
-		await this.ctx.db
+		await this.database
 			.insert(contentTags)
 			.values(uniqueTagIds.map((tagId) => ({ contentId, tagId, userId: this.requireUserId() })));
 
@@ -142,7 +154,7 @@ export class UploadTagService {
 			}))
 			.filter((edge) => Boolean(edge.toNode));
 
-		if (edgeRows.length) await this.ctx.db.insert(edges).values(edgeRows);
+		if (edgeRows.length) await this.database.insert(edges).values(edgeRows);
 	}
 
 	private requireUserId(): string {

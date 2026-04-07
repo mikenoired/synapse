@@ -69,6 +69,8 @@ export const contentRouter = router({
 	importFile: protectedProcedure
 		.input(
 			z.object({
+				title: z.string().optional(),
+				tags: z.array(z.string()).optional(),
 				file: z.object({
 					name: z.string(),
 					type: z.string(),
@@ -78,7 +80,7 @@ export const contentRouter = router({
 			})
 		)
 		.mutation(async ({ input, ctx }) => {
-			const { file } = input;
+			const { file, tags, title } = input;
 
 			// Проверяем, поддерживается ли тип файла
 			if (!isSupportedFileType(file.name, file.type)) {
@@ -127,8 +129,9 @@ export const contentRouter = router({
 				const service = new ContentService(ctx);
 				const content = await service.create({
 					type: parsed.type as any,
-					title: parsed.title || file.name,
+					title: title?.trim() || parsed.title || file.name,
 					content: parsed.content,
+					tags,
 					thumbnail_base64: parsed.thumbnailBase64,
 					media_type: "image", // По умолчанию для документов
 					document_images: processedImages,

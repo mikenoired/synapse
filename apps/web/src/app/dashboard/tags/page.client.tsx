@@ -7,33 +7,44 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { TagStack } from "@/entities/item/ui/tag-stack";
 import { trpc } from "@/shared/api/trpc";
-import { useAuth } from "@/shared/lib/auth-context";
 import { useDashboard } from "@/shared/lib/dashboard-context";
+import type { Content } from "@/shared/lib/schemas";
+import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 
-export default function TagsClient() {
-	const { loading } = useAuth();
+export default function TagsClient({ initial }: { initial: { id: string; title: string; items: Content[] }[] }) {
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
+	const utils = trpc.useUtils();
 
 	const {
 		data: tagsWithContentData,
 		isLoading: tagsLoading,
-		refetch: refetchContent,
-	} = trpc.content.getTagsWithContent.useQuery();
+	} = trpc.content.getTagsWithContent.useQuery(undefined, {
+		initialData: initial,
+		refetchOnMount: false,
+	});
 
-	const isLoading = (loading || tagsLoading) && !tagsWithContentData?.length;
+	const isLoading = tagsLoading && !tagsWithContentData?.length;
 
 	const tagsWithContent = tagsWithContentData ?? [];
 
-	const handleContentChanged = useCallback(() => {
-		refetchContent();
-	}, [refetchContent]);
+	const handleContentAdded = useCallback(
+		(_content?: Content | Content[]) => {
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
+		},
+		[utils]
+	);
 
 	useEffect(() => {
-		setAddDialogDefaults({ initialTags: [], onContentAdded: handleContentChanged });
+		setAddDialogDefaults({ initialTags: [], onContentAdded: handleContentAdded });
 		return () => setAddDialogDefaults({ initialTags: [], onContentAdded: null });
-	}, [setAddDialogDefaults, handleContentChanged]);
+	}, [setAddDialogDefaults, handleContentAdded]);
 
 	const handleDragEnter = (e: DragEvent) => {
 		e.preventDefault();
@@ -59,10 +70,10 @@ export default function TagsClient() {
 		e.stopPropagation();
 		setDragActive(false);
 		dragCounter.current = 0;
-		const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+		const { files } = normalizeDroppedFiles(Array.from(e.dataTransfer.files));
 		if (files.length > 0) {
 			setPreloadedFiles(files);
-			openAddDialog({ initialTags: [], onContentAdded: handleContentChanged });
+			openAddDialog({ initialTags: [], onContentAdded: handleContentAdded });
 		}
 	};
 
@@ -93,7 +104,7 @@ export default function TagsClient() {
 				{dragActive && (
 					<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
 						<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-							Drop image for upload
+							Drop files to add content
 						</div>
 					</div>
 				)}
@@ -113,7 +124,7 @@ export default function TagsClient() {
 			{dragActive && (
 				<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
 					<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-						Drop image for uploading
+						Drop files to add content
 					</div>
 				</div>
 			)}

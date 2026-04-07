@@ -1,3 +1,5 @@
+import type { UserPreferencesInput } from "@/shared/lib/user-preferences";
+
 import type { Context } from "../context";
 import UserRepository from "../repositories/user.repository";
 
@@ -14,5 +16,13 @@ export default class UserService {
 
 	async getStorageUsage() {
 		return await this.ctx.cache.getUserStorage(this.ctx.user!.id);
+	}
+
+	async getPreferences() {
+		return await this.repo.getPreferences();
+	}
+
+	async updatePreferences(preferences: UserPreferencesInput) {
+		return await this.repo.updatePreferences(preferences);
 	}
 }

@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 import { verifyToken } from "@/server/lib/jwt";
-import { getFileMetadata, getPresignedUrl } from "@/shared/api/minio";
+import { getPresignedUrl } from "@/shared/api/minio";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
 	try {
@@ -23,19 +23,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
 		const { path } = await context.params;
 		const objectName = path.join("/");
 
-		const metadata = await getFileMetadata(objectName);
-		if (!metadata) {
-			return NextResponse.json({ error: "File not found" }, { status: 404 });
-		}
-
 		const pathUserId = objectName.split("/")[1]; // images/userId/filename
-		if (metadata.userId !== payload.userId && pathUserId !== payload.userId) {
+		if (!pathUserId || pathUserId !== payload.userId) {
 			return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 		}
 
 		const presignedUrl = await getPresignedUrl(objectName, 60 * 60); // 1 час
 		const res = NextResponse.redirect(presignedUrl, { status: 302 });
-		res.headers.set("Cache-Control", "private, max-age=60");
+		res.headers.set("Cache-Control", "private, max-age=300");
 		return res;
 	} catch {
 		return NextResponse.json({ error: "File access failed" }, { status: 500 });

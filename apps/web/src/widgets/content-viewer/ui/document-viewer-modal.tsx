@@ -5,7 +5,7 @@ import { Badge, Button, Modal } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import DOMPurify from "dompurify";
 import { Calendar, Clock, Edit2, Trash2, X } from "lucide-react";
-import React, { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { calculateReadingTime } from "@/shared/lib/schemas";
@@ -96,13 +96,24 @@ export function DocumentViewerModal({
 		}
 	};
 
-	const readingTime = calculateReadingTime(item.content);
-
 	const isHtmlContent = (content: string): boolean => {
-		// Проверяем, содержит ли контент HTML теги
 		const htmlTagRegex = /<[^>]+>/g;
 		return htmlTagRegex.test(content);
 	};
+
+	const readingTime = useMemo(() => calculateReadingTime(item.content), [item.content]);
+	const hasHtmlContent = useMemo(() => isHtmlContent(item.content), [item.content]);
+	const sanitizedHtml = useMemo(() => {
+		if (!hasHtmlContent) {
+			return "";
+		}
+
+		return DOMPurify.sanitize(item.content, {
+			ADD_TAGS: ["img", "table", "thead", "tbody", "tr", "td", "th"],
+			ADD_ATTR: ["src", "alt", "title", "class", "style", "colspan", "rowspan"],
+			ALLOW_DATA_ATTR: false,
+		});
+	}, [hasHtmlContent, item.content]);
 
 	return (
 		<Modal open={open} onOpenChange={onOpenChange} className="max-w-4xl w-[95vw] h-[90vh] max-h-[90vh]">
@@ -191,14 +202,10 @@ export function DocumentViewerModal({
 								)}
 
 								<div className={cn("max-w-none document-content", prose)}>
-									{isHtmlContent(item.content) ? (
+									{hasHtmlContent ? (
 										<div
 											dangerouslySetInnerHTML={{
-												__html: DOMPurify.sanitize(item.content, {
-													ADD_TAGS: ["img", "table", "thead", "tbody", "tr", "td", "th"],
-													ADD_ATTR: ["src", "alt", "title", "class", "style", "colspan", "rowspan"],
-													ALLOW_DATA_ATTR: false,
-												}),
+												__html: sanitizedHtml,
 											}}
 										/>
 									) : (

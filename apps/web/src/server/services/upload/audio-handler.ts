@@ -2,7 +2,6 @@ import sharp from "sharp";
 
 import { getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { content } from "../../db/schema";
 import { getImageDimensions } from "../../lib/generate-thumbnail";
 import { enqueueThumbnailJob } from "../../lib/queue";
 import type { UploadHandlerDeps } from "./upload-handler-types";
@@ -67,51 +66,47 @@ export async function processAudioUpload(
 		} catch {}
 	}
 
-	await Promise.all([
-		deps.ctx.cache.addFile(params.userId, audioUpload.fileSize || 0),
-		deps.ctx.cache.addFile(params.userId, coverFileSize || 0, false),
+	const entityTitle = params.title || metadata?.common.title || undefined;
+	const serializedContent = JSON.stringify(
+		buildAudioContent({
+			audioObjectName: audioUpload.objectName,
+			audioUrl,
+			bufferLength: file.buffer.length,
+			coverDims,
+			coverObject,
+			coverUrl,
+			fileType: file.type,
+			makeTrack: params.makeTrack,
+			metadata,
+			title: params.title,
+		})
+	);
+	const createdContent = await deps.persistContent({
+		content: serializedContent,
+		tags: params.tags,
+		title: entityTitle,
+		type: "audio",
+		userId: params.userId,
+	});
+
+	await deps.trackStorage(params.userId, [
+		{ size: audioUpload.fileSize || 0 },
+		{ size: coverFileSize || 0, updateFileCount: false },
 	]);
 
-	const entityTitle = params.title || metadata?.common.title || undefined;
-	const [inserted] = await deps.ctx.db
-		.insert(content)
-		.values({
-			content: JSON.stringify(
-				buildAudioContent({
-					audioObjectName: audioUpload.objectName,
-					audioUrl,
-					bufferLength: file.buffer.length,
-					coverDims,
-					coverObject,
-					coverUrl,
-					fileType: file.type,
-					makeTrack: params.makeTrack,
-					metadata,
-					title: params.title,
-				})
-			),
-			title: entityTitle,
-			type: "audio",
-			userId: params.userId,
-		})
-		.returning({ id: content.id });
-
-	if (inserted?.id) {
-		await deps.attachTags(inserted.id, params.tags, "audio", entityTitle);
-
-		if (coverObject) {
-			await enqueueThumbnailJob({
-				contentId: inserted.id,
-				mimeType: jpegMimeType,
-				objectName: coverObject,
-				type: "audio-cover",
-			});
-		}
+	if (coverObject) {
+		await enqueueThumbnailJob({
+			contentId: createdContent.id,
+			mimeType: jpegMimeType,
+			objectName: coverObject,
+			type: "audio-cover",
+		});
 	}
 
 	return {
 		errors,
 		result: {
+			content: createdContent,
 			cover: coverUrl,
 			fileName: file.name,
 			objectName: audioUpload.objectName,

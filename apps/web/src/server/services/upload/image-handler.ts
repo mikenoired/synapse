@@ -1,6 +1,5 @@
 import { getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { content } from "../../db/schema";
 import { getImageDimensions } from "../../lib/generate-thumbnail";
 import { enqueueThumbnailJob } from "../../lib/queue";
 import type { UploadHandlerDeps } from "./upload-handler-types";
@@ -29,33 +28,29 @@ export async function processImageUpload(
 	const objectName = uploadResult.objectName;
 	const publicUrl = getPublicUrl(objectName);
 	const imageDimensions = await getImageDimensionsSafe(getImageDimensions, file.buffer);
+	const serializedContent = JSON.stringify(buildImageMediaContent({ imageDimensions, objectName, publicUrl }));
 
-	await deps.ctx.cache.addFile(params.userId, uploadResult.fileSize || 0);
+	const createdContent = await deps.persistContent({
+		content: serializedContent,
+		tags: params.tags,
+		title: params.title || undefined,
+		type: "media",
+		userId: params.userId,
+	});
 
-	const [inserted] = await deps.ctx.db
-		.insert(content)
-		.values({
-			content: JSON.stringify(buildImageMediaContent({ imageDimensions, objectName, publicUrl })),
-			title: params.title || undefined,
-			type: "media",
-			userId: params.userId,
-		})
-		.returning({ id: content.id });
+	await deps.trackStorage(params.userId, [{ size: uploadResult.fileSize || 0 }]);
 
-	if (inserted?.id) {
-		await deps.attachTags(inserted.id, params.tags, "media", params.title || undefined);
-
-		await enqueueThumbnailJob({
-			contentId: inserted.id,
-			mimeType: file.type,
-			objectName,
-			type: "image",
-		});
-	}
+	await enqueueThumbnailJob({
+		contentId: createdContent.id,
+		mimeType: file.type,
+		objectName,
+		type: "image",
+	});
 
 	return {
 		errors,
 		result: {
+			content: createdContent,
 			fileName: file.name,
 			objectName,
 			size: file.size,

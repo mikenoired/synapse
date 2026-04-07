@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
+import { inferContentTypeFromFiles } from "@/shared/lib/upload-file-kind";
 
 import { BaseModal } from "../base";
 import { useModalKeyboard } from "../hooks";
@@ -12,13 +13,13 @@ import { AddLinkForm } from "./forms/add-link-form";
 import { AddMediaForm } from "./forms/add-media-form";
 import { AddNoteForm } from "./forms/add-note-form";
 import { AddTodoForm } from "./forms/add-todo-form";
-import { ContentTypeSelector } from "./forms/content-type-selector";
+import { ContentTypeHeader, ContentTypePicker } from "./forms/content-type-selector";
 
 interface AddContentModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	initialTags?: string[];
-	onContentAdded?: () => void;
+	onContentAdded?: (content?: Content | Content[]) => void;
 	preloadedFiles?: File[];
 }
 
@@ -29,26 +30,59 @@ export function AddContentModal({
 	onContentAdded,
 	preloadedFiles = [],
 }: AddContentModalProps) {
-	const [contentType, setContentType] = useState<Content["type"]>("note");
+	const [contentType, setContentType] = useState<Content["type"] | null>(null);
 	const [isFullScreen, setIsFullScreen] = useState(false);
+	const inferredContentType = useMemo(() => inferContentTypeFromFiles(preloadedFiles), [preloadedFiles]);
+	const preloadedFilesForActiveType = useMemo(() => {
+		if (!contentType || contentType !== inferredContentType) {
+			return [];
+		}
+
+		return preloadedFiles;
+	}, [contentType, inferredContentType, preloadedFiles]);
 
 	useModalKeyboard({
 		enabled: open,
 		onEscape: () => onOpenChange(false),
 	});
 
-	const handleSuccess = () => {
-		onContentAdded?.();
+	useEffect(() => {
+		if (!open) {
+			setContentType(null);
+			setIsFullScreen(false);
+			return;
+		}
+
+		setContentType(inferredContentType);
+	}, [inferredContentType, open]);
+
+	const handleSuccess = (content?: Content | Content[]) => {
+		if (content !== undefined) {
+			onContentAdded?.(content);
+		}
 		onOpenChange(false);
 	};
 
+	const handleBack = () => {
+		setContentType(null);
+		setIsFullScreen(false);
+	};
+
 	const getSize = () => {
+		if (!contentType) {
+			return "md";
+		}
+
 		if (isFullScreen && contentType === "note") return "full";
 		if (contentType === "note" || contentType === "todo") return "xl";
 		return "lg";
 	};
 
 	const renderForm = () => {
+		if (!contentType) {
+			return <ContentTypePicker onSelect={setContentType} suggestedType={inferredContentType} />;
+		}
+
 		switch (contentType) {
 			case "note":
 				return (
@@ -58,10 +92,10 @@ export function AddContentModal({
 				return <AddTodoForm initialTags={initialTags} onSuccess={handleSuccess} />;
 			case "media":
 				return (
-					<AddMediaForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFiles} />
+					<AddMediaForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFilesForActiveType} />
 				);
 			case "audio":
-				return <AddAudioForm initialTags={initialTags} onSuccess={handleSuccess} />;
+				return <AddAudioForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFilesForActiveType} />;
 			case "link":
 				return <AddLinkForm initialTags={initialTags} onSuccess={handleSuccess} />;
 			case "doc":
@@ -70,7 +104,7 @@ export function AddContentModal({
 			case "epub":
 			case "xlsx":
 			case "csv":
-				return <AddDocumentForm initialTags={initialTags} onSuccess={handleSuccess} />;
+				return <AddDocumentForm initialTags={initialTags} onSuccess={handleSuccess} preloadedFiles={preloadedFilesForActiveType} />;
 			default:
 				return null;
 		}
@@ -82,13 +116,14 @@ export function AddContentModal({
 			onOpenChange={onOpenChange}
 			size={getSize()}
 			variant={isFullScreen ? "fullscreen" : "default"}>
-			<ContentTypeSelector
-				type={contentType}
-				onTypeChange={setContentType}
-				isFullScreen={isFullScreen}
-				onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
-			/>
-
+			{contentType && (
+				<ContentTypeHeader
+					type={contentType}
+					onBack={handleBack}
+					isFullScreen={isFullScreen}
+					onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
+				/>
+			)}
 			{renderForm()}
 		</BaseModal>
 	);

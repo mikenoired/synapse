@@ -10,7 +10,7 @@ interface CustomVideoPlayerProps {
 
 export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "" }: CustomVideoPlayerProps) {
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const [isPlaying, setIsPlaying] = useState(autoPlay);
+	const [isPlaying, setIsPlaying] = useState(false);
 	const [currentTime, setCurrentTime] = useState(0);
 	const [duration, setDuration] = useState(0);
 	const [buffered, setBuffered] = useState(0);
@@ -59,6 +59,40 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 			video.removeEventListener("pause", onPause);
 		};
 	}, []);
+
+	useEffect(() => {
+		setCurrentTime(0);
+		setDuration(0);
+		setBuffered(0);
+		setIsSeeking(false);
+		setIsPlaying(false);
+	}, [src]);
+
+	useEffect(() => {
+		if (!autoPlay) return;
+
+		const video = videoRef.current;
+		if (!video) return;
+
+		const playVideo = () => {
+			if (!video.paused || video.currentTime > 0) return;
+
+			video.play().catch(() => {
+				setIsPlaying(false);
+			});
+		};
+
+		if (video.readyState >= 1) {
+			playVideo();
+			return;
+		}
+
+		video.addEventListener("loadedmetadata", playVideo, { once: true });
+
+		return () => {
+			video.removeEventListener("loadedmetadata", playVideo);
+		};
+	}, [autoPlay, src]);
 
 	useEffect(() => {
 		const video = videoRef.current;

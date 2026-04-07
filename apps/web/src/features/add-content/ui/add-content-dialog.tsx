@@ -7,6 +7,7 @@ import type { FormEvent, TouchEvent } from "react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+import type { Content } from "@/shared/lib/schemas";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 
 import { AddContentProvider, useAddContent } from "../model/add-content-context";
@@ -18,7 +19,7 @@ import AddTodoView from "./todo";
 interface AddContentDialogProps {
 	open: boolean; // Used by parent component for conditional rendering
 	onOpenChange: (_open: any) => void;
-	onContentAdded?: () => void;
+	onContentAdded?: (content?: Content | Content[]) => void;
 	initialTags?: string[];
 }
 
@@ -74,12 +75,14 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 
 		try {
 			let success = false;
+			let createdContent: Content | Content[] | undefined;
 
 			if (type === "doc" && documentUpload.selectedFiles.length > 0) {
-				await documentUpload.uploadFiles();
+				createdContent = await documentUpload.uploadFiles();
 				success = true;
 			} else if (type === "media" && context.selectedFiles.length > 0) {
 				const files = await context.uploadFiles(context.selectedFiles, title, context.tags);
+				createdContent = files.flatMap((file) => (file.content ? [file.content] : []));
 				if (files && files.length > 0) {
 					toast.success("Media files saved");
 					success = true;
@@ -90,6 +93,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 			} else if (type === "audio" && context.selectedFiles.length > 0) {
 				setUploading(true);
 				const files = await context.uploadFiles(context.selectedFiles, title, context.tags, { makeTrack });
+				createdContent = files.flatMap((file) => (file.content ? [file.content] : []));
 				if (files && files.length > 0) {
 					toast.success("Audio saved");
 					success = true;
@@ -105,7 +109,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 				context.resetForm();
 				documentUpload.resetFiles();
 				onOpenChange(false);
-				onContentAdded?.();
+				onContentAdded?.(createdContent);
 			}
 		} finally {
 			setUploading(false);

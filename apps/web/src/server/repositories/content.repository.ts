@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, ilike, inArray, isNull, lt, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
 import type z from "zod";
 
 import type { createContentSchema, updateContentSchema } from "@/shared/lib/schemas";
@@ -7,8 +7,73 @@ import type { createContentSchema, updateContentSchema } from "@/shared/lib/sche
 import type { Context } from "../context";
 import { content, contentTags, edges, nodes, tags } from "../db/schema";
 
+type DatabaseExecutor = Context["db"];
+
+const contentListColumns = {
+	id: content.id,
+	type: content.type,
+	content: content.content,
+	title: content.title,
+	thumbnailBase64: content.thumbnailBase64,
+	documentImages: content.documentImages,
+	createdAt: content.createdAt,
+	updatedAt: content.updatedAt,
+	userId: content.userId,
+};
+
 export default class ContentRepository {
-	constructor(private readonly ctx: Context) {}
+	constructor(
+		private readonly ctx: Context,
+		private readonly database: DatabaseExecutor = ctx.db
+	) {}
+
+	withDb(database: DatabaseExecutor) {
+		return new ContentRepository(this.ctx, database);
+	}
+
+	private buildContentConditions(
+		search: string | undefined,
+		type:
+			| "note"
+			| "media"
+			| "link"
+			| "todo"
+			| "audio"
+			| "doc"
+			| "pdf"
+			| "docx"
+			| "epub"
+			| "xlsx"
+			| "csv"
+			| undefined,
+		cursor: string | undefined,
+		extraConditions: Array<ReturnType<typeof eq>> = []
+	) {
+		const conditions = [eq(content.userId, this.ctx.user!.id), ...extraConditions];
+
+		if (search && search.trim().length > 0) {
+			const term = `%${search.trim()}%`;
+			conditions.push(or(ilike(content.title, term), ilike(content.content, term))!);
+		}
+
+		if (type) {
+			conditions.push(eq(content.type, type));
+		}
+
+		if (cursor) {
+			const [ts, id] = cursor.split("|");
+			if (ts && id) {
+				conditions.push(
+					or(
+						lt(content.createdAt, new Date(ts)),
+						and(eq(content.createdAt, new Date(ts)), lt(content.id, id))!
+					)!
+				);
+			}
+		}
+
+		return conditions;
+	}
 
 	async getAll(
 		search: string | undefined,
@@ -30,29 +95,10 @@ export default class ContentRepository {
 	) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const conditions = [eq(content.userId, this.ctx.user.id)];
+		const conditions = this.buildContentConditions(search, type, cursor);
 
-		if (search && search.trim().length > 0) {
-			const term = `%${search.trim()}%`;
-			conditions.push(or(ilike(content.title, term), ilike(content.content, term))!);
-		}
-
-		if (type) conditions.push(eq(content.type, type));
-
-		if (cursor) {
-			const [ts, id] = cursor.split("|");
-			if (ts && id) {
-				conditions.push(
-					or(
-						lt(content.createdAt, new Date(ts)),
-						and(eq(content.createdAt, new Date(ts)), lt(content.id, id))!
-					)!
-				);
-			}
-		}
-
-		const data = await this.ctx.db
-			.select()
+		const data = await this.database
+			.select(contentListColumns)
 			.from(content)
 			.where(and(...conditions))
 			.orderBy(desc(content.createdAt))
@@ -82,42 +128,25 @@ export default class ContentRepository {
 	) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const conditions = [eq(content.userId, this.ctx.user.id), inArray(contentTags.tagId, tagIds)];
+		const conditions = this.buildContentConditions(search, type, cursor, [inArray(contentTags.tagId, tagIds)]);
 
-		if (search && search.trim().length > 0) {
-			const term = `%${search.trim()}%`;
-			conditions.push(or(ilike(content.title, term), ilike(content.content, term))!);
-		}
-
-		if (type) conditions.push(eq(content.type, type));
-
-		if (cursor) {
-			const [ts, id] = cursor.split("|");
-			if (ts && id) {
-				conditions.push(
-					or(
-						lt(content.createdAt, new Date(ts)),
-						and(eq(content.createdAt, new Date(ts)), lt(content.id, id))!
-					)!
-				);
-			}
-		}
-
-		const data = await this.ctx.db
-			.select({
-				id: content.id,
-				type: content.type,
-				content: content.content,
-				title: content.title,
-				thumbnailBase64: content.thumbnailBase64,
-				documentImages: content.documentImages,
-				createdAt: content.createdAt,
-				updatedAt: content.updatedAt,
-				userId: content.userId,
-			})
+		const data = await this.database
+			.select(contentListColumns)
 			.from(content)
 			.innerJoin(contentTags, eq(content.id, contentTags.contentId))
 			.where(and(...conditions))
+			.groupBy(
+				content.id,
+				content.type,
+				content.content,
+				content.title,
+				content.thumbnailBase64,
+				content.documentImages,
+				content.createdAt,
+				content.updatedAt,
+				content.userId
+			)
+			.having(sql`count(distinct ${contentTags.tagId}) = ${tagIds.length}`)
 			.orderBy(desc(content.createdAt))
 			.limit(limit);
 
@@ -127,7 +156,7 @@ export default class ContentRepository {
 	async contentTagsWithTitles(ids: string[]) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db
+		const data = await this.database
 			.select({
 				content_id: contentTags.contentId,
 				tag_ids: sql<string[]>`array_agg(${contentTags.tagId})`.as("tag_ids"),
@@ -147,10 +176,47 @@ export default class ContentRepository {
 		return data;
 	}
 
+	async getTagsWithContentPreview(limitPerTag: number) {
+		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const rankedContent = this.database
+			.select({
+				contentId: contentTags.contentId,
+				tagId: contentTags.tagId,
+				rowNumber:
+					sql<number>`row_number() over (partition by ${contentTags.tagId} order by ${content.createdAt} desc, ${content.id} desc)`.as(
+						"row_number"
+					),
+			})
+			.from(contentTags)
+			.innerJoin(content, eq(content.id, contentTags.contentId))
+			.where(and(eq(contentTags.userId, this.ctx.user.id), eq(content.userId, this.ctx.user.id)))
+			.as("ranked_content");
+
+		const data = await this.database
+			.select({
+				...contentListColumns,
+				tagId: rankedContent.tagId,
+				tagTitle: tags.title,
+			})
+			.from(rankedContent)
+			.innerJoin(content, eq(content.id, rankedContent.contentId))
+			.innerJoin(tags, eq(tags.id, rankedContent.tagId))
+			.where(
+				and(
+					lte(rankedContent.rowNumber, limitPerTag),
+					or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!
+				)
+			)
+			.orderBy(asc(tags.title), desc(content.createdAt), desc(content.id));
+
+		return data;
+	}
+
 	async getById(id: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db.query.content.findFirst({
+		const data = await this.database.query.content.findFirst({
 			where: and(eq(content.id, id), eq(content.userId, this.ctx.user.id)),
 		});
 
@@ -162,7 +228,7 @@ export default class ContentRepository {
 	async getNodeByContentId(id: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db.query.nodes.findFirst({
+		const data = await this.database.query.nodes.findFirst({
 			where: and(eq(nodes.userId, this.ctx.user.id), sql`${nodes.metadata}->>'content_id' = ${id}`),
 			columns: {
 				id: true,
@@ -175,7 +241,7 @@ export default class ContentRepository {
 	async create(contentData: z.infer<typeof createContentSchema>) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const [data] = await this.ctx.db
+		const [data] = await this.database
 			.insert(content)
 			.values({
 				...contentData,
@@ -197,7 +263,7 @@ export default class ContentRepository {
 		const uniqueIds = Array.from(new Set(tagIds));
 		if (uniqueIds.length === 0) return result;
 
-		const existingNodes = await this.ctx.db.query.nodes.findMany({
+		const existingNodes = await this.database.query.nodes.findMany({
 			where: and(
 				eq(nodes.userId, this.ctx.user.id),
 				eq(nodes.type, "tag"),
@@ -214,7 +280,7 @@ export default class ContentRepository {
 		const missing = uniqueIds.filter((id) => !result[id]);
 		if (!missing.length) return result;
 
-		const tagsList = await this.ctx.db.query.tags.findMany({
+		const tagsList = await this.database.query.tags.findMany({
 			where: inArray(tags.id, missing),
 		});
 
@@ -226,7 +292,7 @@ export default class ContentRepository {
 		}));
 
 		if (rows.length) {
-			const created = await this.ctx.db.insert(nodes).values(rows).returning();
+			const created = await this.database.insert(nodes).values(rows).returning();
 
 			for (const row of created) {
 				const meta = row.metadata as { tag_id?: string } | null;
@@ -241,7 +307,7 @@ export default class ContentRepository {
 	async getOrCreateContentNode(params: { content_id: string; title?: string; type: string }) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const existing = await this.ctx.db.query.nodes.findFirst({
+		const existing = await this.database.query.nodes.findFirst({
 			where: and(
 				eq(nodes.userId, this.ctx.user.id),
 				sql`${nodes.metadata}->>'content_id' = ${params.content_id}`
@@ -253,7 +319,7 @@ export default class ContentRepository {
 
 		if (existing?.id) return existing.id;
 
-		const [data] = await this.ctx.db
+		const [data] = await this.database
 			.insert(nodes)
 			.values({
 				content: params.title ?? "",
@@ -268,10 +334,30 @@ export default class ContentRepository {
 		return data.id;
 	}
 
+	async updateContentNode(params: { content_id: string; title?: string; type: string }) {
+		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const [data] = await this.database
+			.update(nodes)
+			.set({
+				content: params.title ?? "",
+				type: params.type,
+			})
+			.where(
+				and(
+					eq(nodes.userId, this.ctx.user.id),
+					sql`${nodes.metadata}->>'content_id' = ${params.content_id}`
+				)
+			)
+			.returning({ id: nodes.id });
+
+		return data ?? null;
+	}
+
 	async createContentTags(tagIds: string[], contentId: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db
+		const data = await this.database
 			.insert(contentTags)
 			.values(tagIds.map((id) => ({ contentId, tagId: id, userId: this.ctx.user!.id })));
 
@@ -286,7 +372,7 @@ export default class ContentRepository {
 			user_id: string;
 		}[]
 	) {
-		const data = await this.ctx.db.insert(edges).values(
+		const data = await this.database.insert(edges).values(
 			edgeRows.map((row) => ({
 				fromNode: row.from_node,
 				toNode: row.to_node,
@@ -301,7 +387,7 @@ export default class ContentRepository {
 	async createNode(content: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const [data] = await this.ctx.db
+		const [data] = await this.database
 			.insert(nodes)
 			.values({
 				content,
@@ -318,7 +404,7 @@ export default class ContentRepository {
 	async getTagsByTitle(titles: string[]) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db.query.tags.findMany({
+		const data = await this.database.query.tags.findMany({
 			where: and(inArray(tags.title, titles), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 			columns: {
 				id: true,
@@ -332,7 +418,7 @@ export default class ContentRepository {
 	async getTagById(id: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db.query.tags.findFirst({
+		const data = await this.database.query.tags.findFirst({
 			where: and(eq(tags.id, id), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 			columns: {
 				id: true,
@@ -348,7 +434,7 @@ export default class ContentRepository {
 	async getTags(ids: string[]) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db.query.tags.findMany({
+		const data = await this.database.query.tags.findMany({
 			where: and(inArray(tags.id, ids), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 			columns: {
 				id: true,
@@ -362,7 +448,7 @@ export default class ContentRepository {
 	async createTags(titles: { title: string }[]) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db
+		const data = await this.database
 			.insert(tags)
 			.values(
 				titles.map((tag) => ({
@@ -381,7 +467,7 @@ export default class ContentRepository {
 	async updateContent(updData: z.infer<typeof updateContentSchema>) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const [data] = await this.ctx.db
+		const [data] = await this.database
 			.update(content)
 			.set({
 				...updData,
@@ -399,7 +485,7 @@ export default class ContentRepository {
 	async deleteEdge(contentNodeId: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		await this.ctx.db
+		await this.database
 			.delete(edges)
 			.where(
 				and(
@@ -412,7 +498,7 @@ export default class ContentRepository {
 	async deleteNode(contentNodeId: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		await this.ctx.db
+		await this.database
 			.delete(nodes)
 			.where(and(eq(nodes.id, contentNodeId), eq(nodes.userId, this.ctx.user.id)));
 	}
@@ -420,7 +506,7 @@ export default class ContentRepository {
 	async getContentTags() {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		const data = await this.ctx.db
+		const data = await this.database
 			.select({
 				tag_id: contentTags.tagId,
 				content_id: contentTags.contentId,
@@ -434,13 +520,13 @@ export default class ContentRepository {
 	async deleteContent(id: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		await this.ctx.db.delete(content).where(and(eq(content.id, id), eq(content.userId, this.ctx.user.id)));
+		await this.database.delete(content).where(and(eq(content.id, id), eq(content.userId, this.ctx.user.id)));
 	}
 
 	async deleteTagEdge(contentNodeId: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		await this.ctx.db
+		await this.database
 			.delete(edges)
 			.where(
 				and(
@@ -454,7 +540,7 @@ export default class ContentRepository {
 	async deleteContentTag(contentId: string) {
 		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
 
-		await this.ctx.db
+		await this.database
 			.delete(contentTags)
 			.where(and(eq(contentTags.contentId, contentId), eq(contentTags.userId, this.ctx.user.id)));
 	}

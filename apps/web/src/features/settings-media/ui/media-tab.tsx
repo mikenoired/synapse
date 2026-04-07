@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import { useUserPreferences } from "@/shared/lib/user-preferences-context";
 import { formatSize } from "@/shared/lib/utils";
 
 export default function MediaTab() {
 	const { data: storageUsage } = trpc.user.getStorageUsage.useQuery();
+	const { isReady, mediaAutoplayEnabled, setMediaAutoplayEnabled } = useUserPreferences();
 	const { fileSize, files } = storageUsage || { fileSize: 0, files: 0 };
 
 	const totalSpaceBytes = 1000 * 1024 * 1024 * 1024; // 1000 GB in bytes
@@ -57,7 +59,7 @@ export default function MediaTab() {
 	};
 
 	return (
-		<div className="p-6 space-y-4 bg-muted">
+		<div className="space-y-4 bg-muted p-6">
 			<div className="flex items-center justify-between">
 				<h2 className="text-xl font-semibold text-foreground">Storage Usage</h2>
 				<span className="text-sm text-muted-foreground bg-muted px-2 py-1 rounded">
@@ -119,6 +121,24 @@ export default function MediaTab() {
 						<div className="h-px w-full bg-border flex-1"></div>
 						<span className="font-semibold text-foreground">{formatNumber(totalFiles)}</span>
 					</div>
+				</div>
+			</div>
+
+			<div className="rounded-2xl border border-border bg-background p-5">
+				<div className="flex items-start justify-between gap-4">
+					<div className="space-y-1">
+						<h3 className="text-base font-semibold text-foreground">Autoplay media on open</h3>
+						<p className="text-sm text-muted-foreground">Automatically starts audio and video when you open them in the viewer.</p>
+					</div>
+					<button
+						type="button"
+						role="switch"
+						aria-checked={mediaAutoplayEnabled}
+						disabled={!isReady}
+						onClick={() => setMediaAutoplayEnabled(!mediaAutoplayEnabled)}
+						className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full border transition ${mediaAutoplayEnabled ? "border-foreground bg-foreground" : "border-border bg-muted"} ${!isReady ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+						<span className={`inline-block size-5 rounded-full bg-background transition-transform ${mediaAutoplayEnabled ? "translate-x-6" : "translate-x-1"}`} />
+					</button>
 				</div>
 			</div>
 		</div>

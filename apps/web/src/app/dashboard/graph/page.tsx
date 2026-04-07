@@ -1,5 +1,7 @@
 "use server";
 
+import { redirect } from "next/navigation";
+
 import { createContext } from "@/server/context";
 import { getServerCaller } from "@/server/getServerCaller";
 
@@ -7,7 +9,7 @@ import GraphClient from "./pageClient";
 
 export default async function GraphPage() {
 	const ctx = await createContext({});
-	if (!ctx.user) return null;
+	if (!ctx.user) redirect("/");
 	const caller = await getServerCaller();
 	const { nodes, edges } = await caller.graph.getGraph();
 	return (

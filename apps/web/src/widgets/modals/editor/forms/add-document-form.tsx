@@ -2,16 +2,18 @@
 
 import { Badge, Button } from "@synapse/ui/components";
 import { Upload, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
+import type { Content } from "@/shared/lib/schemas";
 
 import { ModalActions, ModalBody } from "../../layout";
 
 interface AddDocumentFormProps {
 	initialTags?: string[];
-	onSuccess: () => void;
+	onSuccess: (content?: Content | Content[]) => void;
+	preloadedFiles?: File[];
 }
 
 const SUPPORTED_FORMATS = {
@@ -23,7 +25,7 @@ const SUPPORTED_FORMATS = {
 	"text/csv": { ext: "CSV", icon: "📈" },
 };
 
-export function AddDocumentForm({ initialTags: _initialTags, onSuccess }: AddDocumentFormProps) {
+export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = [] }: AddDocumentFormProps) {
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 	const [dragActive, setDragActive] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -32,15 +34,23 @@ export function AddDocumentForm({ initialTags: _initialTags, onSuccess }: AddDoc
 
 	const importFileMutation = trpc.content.importFile.useMutation({
 		onSuccess: () => {
-			toast.success("Документ импортирован!");
-			utils.content.getAll.invalidate();
-			utils.content.getTags.invalidate();
-			utils.content.getTagsWithContent.invalidate();
+			void Promise.all([
+				utils.content.getTags.invalidate(),
+				utils.content.getTagsWithContent.invalidate(),
+				utils.graph.getGraph.invalidate(),
+				utils.user.getStorageUsage.invalidate(),
+			]);
 		},
 		onError: (error) => {
 			toast.error(`Ошибка: ${error.message}`);
 		},
 	});
+
+	useEffect(() => {
+		if (preloadedFiles.length > 0) {
+			setSelectedFiles(preloadedFiles);
+		}
+	}, [preloadedFiles]);
 
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files) {
@@ -110,10 +120,13 @@ export function AddDocumentForm({ initialTags: _initialTags, onSuccess }: AddDoc
 		setIsLoading(true);
 
 		try {
+			const createdContents: Content[] = [];
+
 			for (const file of selectedFiles) {
 				const buffer = await file.arrayBuffer();
 
-				await importFileMutation.mutateAsync({
+				const result = await importFileMutation.mutateAsync({
+					tags: initialTags.length > 0 ? initialTags : undefined,
 					file: {
 						name: file.name,
 						type: file.type,
@@ -121,12 +134,14 @@ export function AddDocumentForm({ initialTags: _initialTags, onSuccess }: AddDoc
 						buffer: Array.from(new Uint8Array(buffer)),
 					},
 				});
+
+				createdContents.push(result.content);
 			}
 
 			toast.success(
 				`${selectedFiles.length} ${selectedFiles.length === 1 ? "документ импортирован" : "документов импортировано"}`
 			);
-			onSuccess();
+			onSuccess(createdContents);
 		} catch (error) {
 			toast.error(`Ошибка при загрузке: ${error instanceof Error ? error.message : "Неизвестная ошибка"}`);
 		} finally {

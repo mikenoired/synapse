@@ -2,13 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import type { DragEvent } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentGrid } from "@/features/content-grid/content-grid";
 import { trpc } from "@/shared/api/trpc";
-import { useAuth } from "@/shared/lib/auth-context";
+import {
+	removeContentFromList,
+	type ContentListQueryInput,
+	upsertContentInList,
+} from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
+import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 import { useModal } from "@/widgets/modals";
 
 interface Props {
@@ -22,21 +27,23 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 	const { openModal } = useModal();
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
-	const { user, loading } = useAuth();
 	const router = useRouter();
+	const utils = trpc.useUtils();
+	const queryInput = useMemo<ContentListQueryInput>(
+		() => ({
+			tagIds: [tagId],
+			limit: 20,
+		}),
+		[tagId]
+	);
 	const deleteContentMutation = trpc.content.delete.useMutation();
 
 	const {
 		data: queryData,
 		isLoading: contentLoading,
-		refetch: refetchContent,
 	} = trpc.content.getAll.useQuery(
+		queryInput,
 		{
-			tagIds: [tagId],
-			limit: 20,
-		},
-		{
-			enabled: !!user || initial.items.length > 0,
 			retry: false,
 			initialData: initial,
 		}
@@ -44,18 +51,61 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 
 	const content: Content[] = queryData?.items ?? [];
 
-	useEffect(() => {
-		if (!loading && !user && !initial.items.length) router.push("/");
-	}, [user, loading, router, initial.items.length]);
+	const invalidateRelatedQueries = useCallback(() => {
+		void Promise.all([
+			utils.content.getTags.invalidate(),
+			utils.content.getTagsWithContent.invalidate(),
+			utils.graph.getGraph.invalidate(),
+			utils.user.getStorageUsage.invalidate(),
+		]);
+	}, [utils]);
 
-	const handleContentChanged = useCallback(() => {
-		refetchContent();
-	}, [refetchContent]);
+	const handleContentAdded = useCallback(
+		(nextContent?: Content | Content[]) => {
+			const contentList = Array.isArray(nextContent)
+				? nextContent
+				: nextContent
+					? [nextContent]
+					: [];
+
+			if (contentList.length === 0) {
+				void utils.content.getAll.invalidate(queryInput);
+				invalidateRelatedQueries();
+				return;
+			}
+
+			for (const content of contentList) {
+				utils.content.getAll.setData(queryInput, (current) => upsertContentInList(current, content, queryInput));
+				utils.content.getById.setData({ id: content.id }, content);
+			}
+
+			invalidateRelatedQueries();
+		},
+		[invalidateRelatedQueries, queryInput, utils]
+	);
+
+	const handleContentUpdated = useCallback(
+		(nextContent: Content) => {
+			utils.content.getAll.setData(queryInput, (current) => upsertContentInList(current, nextContent, queryInput));
+			utils.content.getById.setData({ id: nextContent.id }, nextContent);
+			invalidateRelatedQueries();
+		},
+		[invalidateRelatedQueries, queryInput, utils]
+	);
+
+	const handleContentDeleted = useCallback(
+		(contentId: string) => {
+			utils.content.getAll.setData(queryInput, (current) => removeContentFromList(current, contentId));
+			void utils.content.getById.invalidate({ id: contentId });
+			invalidateRelatedQueries();
+		},
+		[invalidateRelatedQueries, queryInput, utils]
+	);
 
 	useEffect(() => {
-		setAddDialogDefaults({ initialTags: [tagTitle], onContentAdded: handleContentChanged });
+		setAddDialogDefaults({ initialTags: [tagTitle], onContentAdded: handleContentAdded });
 		return () => setAddDialogDefaults({ initialTags: [], onContentAdded: null });
-	}, [setAddDialogDefaults, tagTitle, handleContentChanged]);
+	}, [setAddDialogDefaults, tagTitle, handleContentAdded]);
 
 	const handleItemClick = (item: Content) => {
 		openModal({
@@ -63,39 +113,15 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 			contentType: item.type,
 			item: item,
 			props: {
-				gallery: content
-					.filter((i) => i.type === "media")
-					.flatMap((i) => {
-						try {
-							const parsed = JSON.parse(i.content);
-							const media = parsed?.media;
-							if (media?.url) {
-								return [
-									{
-										url: media.url,
-										parentId: i.id,
-										media_type: media.type,
-										thumbnail_url: media.thumbnailUrl,
-									},
-								];
-							}
-						} catch {}
-						return [];
-					}),
+				items: content,
 				onEdit: (id: string) => {
 					router.push(`/edit/${id}`);
 				},
-				onDelete: (id: string) => {
-					deleteContentMutation.mutate(
-						{ id },
-						{
-							onSuccess: () => {
-								handleContentChanged();
-							},
-						}
-					);
+				onDelete: async (id: string) => {
+					await deleteContentMutation.mutateAsync({ id });
+					handleContentDeleted(id);
 				},
-				onContentChanged: handleContentChanged,
+				onContentUpdated: handleContentUpdated,
 			},
 		});
 	};
@@ -124,20 +150,12 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 		e.stopPropagation();
 		setDragActive(false);
 		dragCounter.current = 0;
-		const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+		const { files } = normalizeDroppedFiles(Array.from(e.dataTransfer.files));
 		if (files.length > 0) {
 			setPreloadedFiles(files);
-			openAddDialog({ initialTags: [tagTitle], onContentAdded: handleContentChanged });
+			openAddDialog({ initialTags: [tagTitle], onContentAdded: handleContentAdded });
 		}
 	};
-
-	if (loading && initial.items.length!) {
-		return (
-			<div className="flex h-full items-center justify-center p-6">
-				<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-			</div>
-		);
-	}
 
 	return (
 		<div
@@ -149,7 +167,7 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 			{dragActive && (
 				<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
 					<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
-						Drop image for upload
+						Drop files to add content
 					</div>
 				</div>
 			)}
@@ -160,7 +178,8 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 				<ContentGrid
 					items={content}
 					isLoading={contentLoading && content.length === 0}
-					onContentChanged={handleContentChanged}
+					onContentUpdated={handleContentUpdated}
+					onContentDeleted={handleContentDeleted}
 					onItemClick={handleItemClick}
 					excludedTag={tagTitle}
 				/>

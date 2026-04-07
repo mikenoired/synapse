@@ -1,6 +1,8 @@
 import { Buffer } from "node:buffer";
 
+import ContentService from "./content.service";
 import type { Context } from "../context";
+import { content } from "../db/schema";
 import { processAudioUpload } from "./upload/audio-handler";
 import { processImageUpload } from "./upload/image-handler";
 import type { UploadHandlerDeps } from "./upload/upload-handler-types";
@@ -24,8 +26,9 @@ export default class UploadService {
 	constructor(private readonly ctx: Context) {
 		this.tagService = new UploadTagService(ctx);
 		this.handlerDeps = {
-			attachTags: this.tagService.attachTags.bind(this.tagService),
 			ctx,
+			persistContent: this.persistContent.bind(this),
+			trackStorage: this.trackStorage.bind(this),
 		};
 	}
 
@@ -65,10 +68,69 @@ export default class UploadService {
 			}
 		}
 
+		if (uploadResults.length > 0) {
+			await this.invalidateUserCaches();
+		}
+
 		return {
 			files: uploadResults,
+			contents: uploadResults.flatMap((file) => (file.content ? [file.content] : [])),
 			errors,
 		};
+	}
+
+	private async invalidateUserCaches() {
+		const userId = this.requireUserId();
+
+		await Promise.all([
+			this.ctx.cache.del(`user:${userId}:tags`),
+			this.ctx.cache.del(`user:${userId}:tags_with_content`),
+		]);
+	}
+
+	private async persistContent(input: {
+		content: string;
+		tags: string[];
+		title?: string;
+		type: "media" | "audio";
+		userId: string;
+	}) {
+		const contentId = await this.ctx.db.transaction(async (tx) => {
+			const [inserted] = await tx
+				.insert(content)
+				.values({
+					content: input.content,
+					title: input.title,
+					type: input.type,
+					userId: input.userId,
+				})
+				.returning({ id: content.id });
+
+			if (!inserted?.id) {
+				throw new Error("Content creation error");
+			}
+
+			await this.tagService.withDb(tx as unknown as Context["db"]).attachTags(
+				inserted.id,
+				input.tags,
+				input.type,
+				input.title
+			);
+
+			return inserted.id;
+		});
+
+		return await new ContentService(this.ctx).getById(contentId);
+	}
+
+	private async trackStorage(userId: string, deltas: { size: number; updateFileCount?: boolean }[]) {
+		try {
+			await Promise.all(
+				deltas
+					.filter((delta) => delta.size > 0)
+					.map((delta) => this.ctx.cache.addFile(userId, delta.size, delta.updateFileCount ?? true))
+			);
+		} catch {}
 	}
 
 	private normalizeTags(tags?: string[] | null): string[] {

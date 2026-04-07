@@ -15,7 +15,8 @@ interface ContentGridProps {
 	fetchNext?: () => void;
 	hasNext?: boolean;
 	isFetchingNext?: boolean;
-	onContentChanged: () => void;
+	onContentUpdated: (content: Content) => void;
+	onContentDeleted: (contentId: string) => void;
 	onItemClick: (item: Content) => void;
 	onItemHover?: () => void;
 	searchQuery?: string;
@@ -40,7 +41,8 @@ export const ContentGrid = memo(
 		isLoading,
 		fetchNext,
 		hasNext,
-		onContentChanged,
+		onContentUpdated,
+		onContentDeleted,
 		onItemClick,
 		onItemHover,
 		searchQuery,
@@ -136,7 +138,8 @@ export const ContentGrid = memo(
 						<Item
 							item={item}
 							index={index}
-							onContentChanged={onContentChanged}
+							onContentUpdated={onContentUpdated}
+							onContentDeleted={onContentDeleted}
 							onItemClick={onItemClick}
 							excludedTag={excludedTag}
 						/>

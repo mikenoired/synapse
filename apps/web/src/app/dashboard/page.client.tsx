@@ -2,12 +2,17 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DragEvent } from "react";
-import { lazy, useCallback, useEffect, useRef, useState } from "react";
+import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
-import { useAuth } from "@/shared/lib/auth-context";
+import {
+	removeContentFromList,
+	type ContentListQueryInput,
+	upsertContentInList,
+} from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
+import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 import { useModal } from "@/widgets/modals";
 
 const ContentFilter = lazy(() =>
@@ -26,24 +31,27 @@ export default function DashboardClient({
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const { openModal } = useModal();
-	const { user, loading } = useAuth();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
+	const utils = trpc.useUtils();
+
+	const queryInput = useMemo<ContentListQueryInput>(
+		() => ({
+			search: searchQuery || undefined,
+			tagIds: selectedTags.length > 0 ? selectedTags : undefined,
+			limit: 12,
+		}),
+		[searchQuery, selectedTags]
+	);
 
 	const {
 		data: contentData,
 		isLoading: contentLoading,
-		refetch: refetchContent,
 	} = trpc.content.getAll.useQuery(
+		queryInput,
 		{
-			search: searchQuery || undefined,
-			tagIds: selectedTags.length > 0 ? selectedTags : undefined,
-			limit: 12,
-		},
-		{
-			enabled: !!user || initial.items.length > 0,
 			retry: false,
 			initialData: initial,
 			refetchOnMount: false,
@@ -52,9 +60,56 @@ export default function DashboardClient({
 
 	const content: Content[] = contentData?.items ?? [];
 
-	const handleContentChanged = useCallback(() => {
-		refetchContent();
-	}, []);
+	const invalidateRelatedQueries = useCallback(() => {
+		void Promise.all([
+			utils.content.getTags.invalidate(),
+			utils.content.getTagsWithContent.invalidate(),
+			utils.graph.getGraph.invalidate(),
+			utils.user.getStorageUsage.invalidate(),
+		]);
+	}, [utils]);
+
+	const handleContentAdded = useCallback(
+		(nextContent?: Content | Content[]) => {
+			const contentList = Array.isArray(nextContent)
+				? nextContent
+				: nextContent
+					? [nextContent]
+					: [];
+
+			if (contentList.length === 0) {
+				void utils.content.getAll.invalidate(queryInput);
+				invalidateRelatedQueries();
+				return;
+			}
+
+			for (const content of contentList) {
+				utils.content.getAll.setData(queryInput, (current) => upsertContentInList(current, content, queryInput));
+				utils.content.getById.setData({ id: content.id }, content);
+			}
+
+			invalidateRelatedQueries();
+		},
+		[invalidateRelatedQueries, queryInput, utils]
+	);
+
+	const handleContentUpdated = useCallback(
+		(nextContent: Content) => {
+			utils.content.getAll.setData(queryInput, (current) => upsertContentInList(current, nextContent, queryInput));
+			utils.content.getById.setData({ id: nextContent.id }, nextContent);
+			invalidateRelatedQueries();
+		},
+		[invalidateRelatedQueries, queryInput, utils]
+	);
+
+	const handleContentDeleted = useCallback(
+		(contentId: string) => {
+			utils.content.getAll.setData(queryInput, (current) => removeContentFromList(current, contentId));
+			void utils.content.getById.invalidate({ id: contentId });
+			invalidateRelatedQueries();
+		},
+		[invalidateRelatedQueries, queryInput, utils]
+	);
 
 	useEffect(() => {
 		if (!searchParams) return;
@@ -63,13 +118,9 @@ export default function DashboardClient({
 	}, [searchParams]);
 
 	useEffect(() => {
-		if (!loading && !user) router.push("/");
-	}, [user, loading, router]);
-
-	useEffect(() => {
-		setAddDialogDefaults({ initialTags: [], onContentAdded: handleContentChanged });
+		setAddDialogDefaults({ initialTags: [], onContentAdded: handleContentAdded });
 		return () => setAddDialogDefaults({ initialTags: [], onContentAdded: null });
-	}, [setAddDialogDefaults, handleContentChanged]);
+	}, [setAddDialogDefaults, handleContentAdded]);
 
 	useEffect(() => {
 		const handleWindowDragEnter = (e: Event) => {
@@ -97,9 +148,7 @@ export default function DashboardClient({
 			event.stopPropagation();
 			setDragActive(false);
 			dragCounter.current = 0;
-			const files = Array.from(event.dataTransfer?.files ?? []).filter(
-				(f) => f.type.startsWith("image/") || f.type.startsWith("video/")
-			);
+			const { files } = normalizeDroppedFiles(Array.from(event.dataTransfer?.files ?? []));
 			if (files.length > 0) {
 				setPreloadedFiles(files);
 				openAddDialog();
@@ -125,39 +174,15 @@ export default function DashboardClient({
 			contentType: item.type,
 			item,
 			props: {
-				gallery: content
-					.filter((i) => i.type === "media")
-					.flatMap((i) => {
-						try {
-							const parsed = JSON.parse(i.content);
-							const media = parsed?.media;
-							if (media?.url) {
-								return [
-									{
-										url: media.url,
-										parentId: i.id,
-										media_type: media.type,
-										thumbnail_url: media.thumbnailUrl,
-									},
-								];
-							}
-						} catch {}
-						return [];
-					}),
+				items: content,
 				onEdit: (id: string) => {
 					router.push(`/edit/${id}`);
 				},
-				onDelete: (id: string) => {
-					deleteContentMutation.mutate(
-						{ id },
-						{
-							onSuccess: () => {
-								handleContentChanged();
-							},
-						}
-					);
+				onDelete: async (id: string) => {
+					await deleteContentMutation.mutateAsync({ id });
+					handleContentDeleted(id);
 				},
-				onContentChanged: handleContentChanged,
+				onContentUpdated: handleContentUpdated,
 			},
 		});
 	};
@@ -167,14 +192,6 @@ export default function DashboardClient({
 		setSelectedTags([]);
 		router.push("/dashboard");
 	};
-
-	if (loading) {
-		return (
-			<div className="flex h-full items-center justify-center p-6">
-				<div className="loading-placeholder h-8 w-8 rounded-full"></div>
-			</div>
-		);
-	}
 
 	return (
 		<div className="flex flex-col h-full relative">
@@ -198,9 +215,9 @@ export default function DashboardClient({
 							/>
 						</svg>
 						<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0 text-center">
-							Drop file for upload
+							Drop files to add content
 							<div className="text-base font-normal mt-2 text-muted-foreground">
-								Video, photo, audio supported
+								Images, video, audio and documents supported
 							</div>
 						</div>
 					</div>
@@ -212,7 +229,8 @@ export default function DashboardClient({
 					<ContentGrid
 						items={content}
 						isLoading={contentLoading && content.length === 0}
-						onContentChanged={handleContentChanged}
+						onContentUpdated={handleContentUpdated}
+						onContentDeleted={handleContentDeleted}
 						onItemClick={handleItemClick}
 						searchQuery={searchQuery}
 						selectedTags={selectedTags}
