@@ -1,8 +1,8 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import type { HTMLMotionProps } from "framer-motion";
-import { AnimatePresence, motion } from "framer-motion";
+import type { HTMLMotionProps } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 import React, { useEffect, useRef, useState } from "react";
 

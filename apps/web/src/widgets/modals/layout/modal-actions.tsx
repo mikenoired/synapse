@@ -2,7 +2,9 @@
 
 import { cn } from "@synapse/ui/cn";
 import { Button } from "@synapse/ui/components";
-import type { ReactNode } from "react";
+import type { ComponentProps, ReactNode } from "react";
+
+type ButtonVariant = ComponentProps<typeof Button>["variant"];
 
 interface ModalActionsProps {
 	children?: ReactNode;
@@ -26,7 +28,7 @@ export function ModalActions({ children, className, position = "right" }: ModalA
 interface ActionButtonProps {
 	children: ReactNode;
 	onClick?: () => void;
-	variant?: "default" | "primary" | "destructive" | "outline" | "ghost";
+	variant?: ButtonVariant;
 	disabled?: boolean;
 	loading?: boolean;
 	type?: "button" | "submit";
