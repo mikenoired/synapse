@@ -25,10 +25,10 @@ interface ViewerOverlayControlsProps {
 
 function getActionClassName(action: ViewerOverlayAction) {
 	if (action.destructive) {
-		return "h-10 rounded-full border border-red-400/20 bg-red-500/20 px-4 text-white hover:bg-red-500/30";
+		return "h-10 rounded-full border border-white/12 bg-red-950 px-4 text-red-500 cursor-pointer";
 	}
 
-	return "h-10 rounded-full border border-white/12 bg-black/55 px-4 text-white hover:bg-black/70";
+	return "h-10 rounded-full border border-white/12 bg-black px-4 text-white cursor-pointer";
 }
 
 export function ViewerOverlayControls({
@@ -45,9 +45,9 @@ export function ViewerOverlayControls({
 			<AnimatePresence initial={false}>
 				{visible && canGoPrevious && onPrevious && (
 					<motion.button
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
+						initial={{ opacity: 0, filter: "blur(10px)", x: -16 }}
+						animate={{ opacity: 1, filter: "blur(0px)", x: 0 }}
+						exit={{ opacity: 0, filter: "blur(0px)", x: -16 }}
 						transition={{ duration: 0.16 }}
 						onClick={onPrevious}
 						className="absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70">
@@ -59,9 +59,9 @@ export function ViewerOverlayControls({
 			<AnimatePresence initial={false}>
 				{visible && canGoNext && onNext && (
 					<motion.button
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
+						initial={{ opacity: 0, filter: "blur(10px)", x: 16 }}
+						animate={{ opacity: 1, filter: "blur(0px)", x: 0 }}
+						exit={{ opacity: 0, filter: "blur(0px)", x: 16 }}
 						transition={{ duration: 0.16 }}
 						onClick={onNext}
 						className="absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70">
@@ -73,9 +73,9 @@ export function ViewerOverlayControls({
 			<AnimatePresence initial={false}>
 				{visible && actions.length > 0 && (
 					<motion.div
-						initial={{ opacity: 0, y: 16 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 16 }}
+						initial={{ opacity: 0, y: 16, filter: "blur(10px)" }}
+						animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+						exit={{ opacity: 0, y: 16, filter: "blur(10px)" }}
 						transition={{ duration: 0.18 }}
 						className="absolute bottom-6 left-6 z-20 flex flex-wrap items-center gap-2">
 						{actions.map((action) => (
@@ -97,9 +97,9 @@ export function ViewerOverlayControls({
 			<AnimatePresence initial={false}>
 				{visible && (
 					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
+						initial={{ opacity: 0, x: 16, y: -16, filter: "blur(10px)" }}
+						animate={{ opacity: 1, x: 0, y: 0, filter: "blur(0px)" }}
+						exit={{ opacity: 0, x: 16, y: -16, filter: "blur(10px)" }}
 						transition={{ duration: 0.16 }}
 						className="absolute right-6 top-6 z-20">
 						<Button

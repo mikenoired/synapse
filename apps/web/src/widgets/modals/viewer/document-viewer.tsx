@@ -142,7 +142,7 @@ export function DocumentViewerModal({
 											onEdit(item.id);
 											onOpenChange(false);
 										}}
-										className="h-10 rounded-full border border-white/12 bg-black/55 px-4 text-white hover:bg-black/70">
+										className="h-10 rounded-full border border-white/12 bg-black px-4 text-white hover:bg-black/70">
 										<Edit2 className="mr-2 size-4" />
 										Редактировать
 									</Button>

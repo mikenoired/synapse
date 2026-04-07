@@ -4,6 +4,11 @@ import * as React from "react";
 
 import { cn } from "../../cn";
 
+const primaryButtonChrome = "[box-shadow:var(--button-primary-shadow)] hover:opacity-60";
+
+const secondaryButtonChrome =
+	"[border-color:var(--button-secondary-border)] [box-shadow:var(--button-secondary-shadow)] hover:opacity-60";
+
 type ButtonProps = React.ComponentProps<"button"> &
 	VariantProps<typeof buttonVariants> & {
 		asChild?: boolean;
@@ -15,11 +20,15 @@ const buttonVariants = cva(
 	{
 		variants: {
 			variant: {
-				default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
-				outline:
-					"border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
-				secondary:
-					"bg-secondary text-secondary-foreground hover:bg-secondary/80 aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+				default: cn("bg-primary text-primary-foreground", primaryButtonChrome),
+				outline: cn(
+					"border bg-background aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-input/30",
+					secondaryButtonChrome
+				),
+				secondary: cn(
+					"bg-secondary text-secondary-foreground aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
+					secondaryButtonChrome
+				),
 				ghost:
 					"hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
 				destructive:
