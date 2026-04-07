@@ -1,25 +1,20 @@
 export function getSecureImageUrl(objectName: string, token?: string): string {
-  if (!objectName)
-    return ''
+	if (!objectName) return "";
 
-  if (objectName.startsWith('http'))
-    return objectName
+	if (objectName.startsWith("http")) return objectName;
 
-  const baseUrl = '/api/files'
-  const url = `${baseUrl}/${objectName}`
+	const baseUrl = "/api/files";
+	const url = `${baseUrl}/${objectName}`;
 
-  if (token)
-    return `${url}?token=${encodeURIComponent(token)}`
+	if (token) return `${url}?token=${encodeURIComponent(token)}`;
 
-  return url
+	return url;
 }
 
 export function isImageContent(content: string): boolean {
-  return content.includes('/images/') || content.startsWith('images/')
+	return content.includes("/images/") || content.startsWith("images/");
 }
 
 export function getPresignedMediaUrl(apiPath: string): string {
-  return apiPath.startsWith('/api/files/')
-    ? apiPath
-    : `/api/files/${apiPath.replace(/^\/+/, '')}`
+	return apiPath.startsWith("/api/files/") ? apiPath : `/api/files/${apiPath.replace(/^\/+/, "")}`;
 }

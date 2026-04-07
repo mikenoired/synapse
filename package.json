@@ -1,18 +1,35 @@
 {
-  "name": "synapse",
-  "version": "0.1.0",
-  "private": true,
-  "packageManager": "bun@1.3.5",
-  "workspaces": [
-    "packages/*",
-    "apps/*"
-  ],
-  "dependencies": {
-    "@antfu/eslint-config": "^5.4.1",
-    "@grpc/grpc-js": "^1.14.0",
-    "@grpc/proto-loader": "^0.8.0"
-  },
-  "devDependencies": {
-    "@types/bun": "^1.3.0"
-  }
+	"name": "synapse",
+	"version": "0.1.0",
+	"private": true,
+	"packageManager": "bun@1.3.11",
+	"workspaces": [
+		"packages/*",
+		"apps/*"
+	],
+	"scripts": {
+		"check": "bun run lint && bun run format:check && bun run typecheck && bun run fmt:go:check && bun run test:go",
+		"format": "bun x oxfmt --config .oxfmtrc.json --write .",
+		"format:check": "bun x oxfmt --config .oxfmtrc.json --check .",
+		"fmt:go": "./scripts/go-format.sh",
+		"fmt:go:check": "./scripts/go-format-check.sh",
+		"lint": "bun run lint:js && bun run lint:go",
+		"lint:fix": "bun run lint:js:fix",
+		"lint:go": "./scripts/go-lint.sh",
+		"lint:js": "bun x oxlint . --config .oxlintrc.json --deny-warnings",
+		"lint:js:fix": "bun x oxlint . --config .oxlintrc.json --fix",
+		"test:go": "./scripts/go-test.sh",
+		"test:thumbnail": "bun test ./test",
+		"typecheck": "bun x tsc -p apps/web/tsconfig.json --noEmit && bun x tsc -p packages/ui/tsconfig.json --noEmit"
+	},
+	"dependencies": {
+		"@grpc/grpc-js": "^1.14.0",
+		"@grpc/proto-loader": "^0.8.0"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.3.0",
+		"oxfmt": "^0.44.0",
+		"oxlint": "^1.59.0",
+		"typescript": "^5.9.3"
+	}
 }

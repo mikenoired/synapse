@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -27,14 +28,14 @@ func main() {
 		"max_concurrent_jobs": cfg.MaxConcurrentJobs,
 	}).Info("Starting thumbnail service")
 
-	_, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	go func() {
-		if err := server.StartGRPCServer(cfg, logger); err != nil {
+		if err := server.StartGRPCServer(ctx, cfg, logger); err != nil && !errors.Is(err, context.Canceled) {
 			logger.WithError(err).Fatal("Failed to start gRPC server")
 		}
 	}()

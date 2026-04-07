@@ -2,6 +2,9 @@
 
 set -e
 
+PROTOC_GEN_GO_VERSION=v1.36.6
+PROTOC_GEN_GO_GRPC_VERSION=v1.5.1
+
 echo "🔧 Генерация proto файлов..."
 
 if ! command -v protoc &> /dev/null; then
@@ -13,12 +16,12 @@ fi
 
 if ! command -v protoc-gen-go &> /dev/null; then
     echo "📦 Устанавливаем protoc-gen-go..."
-    go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+    go install google.golang.org/protobuf/cmd/protoc-gen-go@${PROTOC_GEN_GO_VERSION}
 fi
 
 if ! command -v protoc-gen-go-grpc &> /dev/null; then
     echo "📦 Устанавливаем protoc-gen-go-grpc..."
-    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+    go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@${PROTOC_GEN_GO_GRPC_VERSION}
 fi
 
 if ! command -v protoc-gen-ts &> /dev/null; then

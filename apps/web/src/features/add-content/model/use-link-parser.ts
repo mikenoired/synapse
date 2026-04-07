@@ -1,67 +1,64 @@
-import type { LinkState } from './types'
-import { useCallback, useState } from 'react'
-import toast from 'react-hot-toast'
+import { useCallback, useState } from "react";
+import toast from "react-hot-toast";
+
+import type { LinkState } from "./types";
 
 export function useLinkParser() {
-  const [state, setState] = useState<LinkState>({
-    parsedData: null,
-    isLoading: false,
-  })
+	const [state, setState] = useState<LinkState>({
+		parsedData: null,
+		isLoading: false,
+	});
 
-  const parseLink = useCallback(async (url: string) => {
-    if (!url || !url.trim())
-      return
+	const parseLink = useCallback(async (url: string) => {
+		if (!url || !url.trim()) return;
 
-    try {
-      setState(prev => ({ ...prev, isLoading: true }))
+		try {
+			setState((prev) => ({ ...prev, isLoading: true }));
 
-      const response = await fetch('/api/parse-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ url: url.trim() }),
-      })
+			const response = await fetch("/api/parse-link", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				credentials: "include",
+				body: JSON.stringify({ url: url.trim() }),
+			});
 
-      const result = await response.json()
+			const result = await response.json();
 
-      if (!response.ok) {
-        toast.error(result.error || 'Failed to parse link')
-        return
-      }
+			if (!response.ok) {
+				toast.error(result.error || "Failed to parse link");
+				return;
+			}
 
-      if (result.success && result.data) {
-        setState(prev => ({ ...prev, parsedData: result.data }))
-        toast.success('Link parsed successfully!')
-        return result.data
-      }
-    }
-    catch (error) {
-      console.error('Error parsing link:', error)
-      toast.error('Failed to parse the link')
-    }
-    finally {
-      setState(prev => ({ ...prev, isLoading: false }))
-    }
-  }, [])
+			if (result.success && result.data) {
+				setState((prev) => ({ ...prev, parsedData: result.data }));
+				toast.success("Link parsed successfully!");
+				return result.data;
+			}
+		} catch {
+			toast.error("Failed to parse the link");
+		} finally {
+			setState((prev) => ({ ...prev, isLoading: false }));
+		}
+	}, []);
 
-  const clearParsedData = useCallback(() => {
-    setState(prev => ({ ...prev, parsedData: null }))
-  }, [])
+	const clearParsedData = useCallback(() => {
+		setState((prev) => ({ ...prev, parsedData: null }));
+	}, []);
 
-  const resetLink = useCallback(() => {
-    setState({
-      parsedData: null,
-      isLoading: false,
-    })
-  }, [])
+	const resetLink = useCallback(() => {
+		setState({
+			parsedData: null,
+			isLoading: false,
+		});
+	}, []);
 
-  return {
-    parsedData: state.parsedData,
-    isLoading: state.isLoading,
-    parseLink,
-    clearParsedData,
-    resetLink,
-  }
+	return {
+		parsedData: state.parsedData,
+		isLoading: state.isLoading,
+		parseLink,
+		clearParsedData,
+		resetLink,
+	};
 }

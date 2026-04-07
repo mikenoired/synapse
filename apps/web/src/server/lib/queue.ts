@@ -1,34 +1,37 @@
-import { Queue } from 'bullmq'
-import Redis from 'ioredis'
+import type Redis from "ioredis";
+import IORedis from "ioredis";
 
-const redisConnection = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: Number.parseInt(process.env.REDIS_PORT || '6379'),
-  password: process.env.REDIS_PASSWORD,
-  maxRetriesPerRequest: null,
-})
-
-export const thumbnailQueue = new Queue('thumbnail-generation', {
-  connection: redisConnection,
-  defaultJobOptions: {
-    attempts: 3,
-    backoff: {
-      type: 'exponential',
-      delay: 1000,
-    },
-    removeOnComplete: {
-      age: 3600, // Keep completed jobs for 1 hour
-      count: 100,
-    },
-    removeOnFail: {
-      age: 86400, // Keep failed jobs for 24 hours
-    },
-  },
-})
+export const thumbnailQueueName = "thumbnail-generation";
+const defaultThumbnailJobAttempts = 3;
 
 export interface ThumbnailJobData {
-  contentId: string
-  objectName: string
-  mimeType: string
-  type: 'image' | 'video' | 'audio-cover'
+	contentId: string;
+	objectName: string;
+	mimeType: string;
+	type: "image" | "video" | "audio-cover";
+	attempts?: number;
+}
+
+let redisConnection: Redis | null = null;
+
+function getRedisConnection(): Redis {
+	if (redisConnection) return redisConnection;
+
+	redisConnection = new IORedis({
+		host: process.env.REDIS_HOST || "localhost",
+		port: Number.parseInt(process.env.REDIS_PORT || "6379", 10),
+		password: process.env.REDIS_PASSWORD,
+		maxRetriesPerRequest: null,
+	});
+
+	return redisConnection;
+}
+
+export async function enqueueThumbnailJob(job: ThumbnailJobData): Promise<void> {
+	const payload: ThumbnailJobData = {
+		...job,
+		attempts: job.attempts ?? defaultThumbnailJobAttempts,
+	};
+
+	await getRedisConnection().rpush(thumbnailQueueName, JSON.stringify(payload));
 }

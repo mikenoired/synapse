@@ -8,6 +8,12 @@ import (
 type Config struct {
 	GRPCPort string
 
+	PostgresHost     string
+	PostgresPort     string
+	PostgresUser     string
+	PostgresPassword string
+	PostgresDatabase string
+
 	RedisHost     string
 	RedisPort     string
 	RedisPassword string
@@ -31,6 +37,12 @@ func Load() *Config {
 	return &Config{
 		GRPCPort: getEnv("GRPC_PORT", "50051"),
 
+		PostgresHost:     getEnv("POSTGRES_HOST", "localhost"),
+		PostgresPort:     getEnv("POSTGRES_PORT", "5432"),
+		PostgresUser:     getEnv("POSTGRES_USER", "postgres"),
+		PostgresPassword: getEnv("POSTGRES_PASSWORD", "postgres"),
+		PostgresDatabase: getEnv("POSTGRES_DB", "synapse"),
+
 		RedisHost:     getEnv("REDIS_HOST", "localhost"),
 		RedisPort:     getEnv("REDIS_PORT", "6379"),
 		RedisPassword: getEnv("REDIS_PASSWORD", ""),
@@ -49,6 +61,10 @@ func Load() *Config {
 		DefaultThumbnailHeight: getEnvInt("DEFAULT_THUMBNAIL_HEIGHT", 0), // 0 = auto
 		DefaultJPEGQuality:     getEnvInt("DEFAULT_JPEG_QUALITY", 40),
 	}
+}
+
+func (c *Config) PostgresConnectionString() string {
+	return "postgres://" + c.PostgresUser + ":" + c.PostgresPassword + "@" + c.PostgresHost + ":" + c.PostgresPort + "/" + c.PostgresDatabase
 }
 
 func getEnv(key, defaultValue string) string {

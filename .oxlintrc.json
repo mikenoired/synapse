@@ -1,0 +1,20 @@
+{
+	"$schema": "./node_modules/oxlint/configuration_schema.json",
+	"plugins": ["typescript", "oxc", "unicorn", "react"],
+	"env": {
+		"browser": true,
+		"node": true
+	},
+	"ignorePatterns": [
+		"**/.next/**",
+		"**/build/**",
+		"**/coverage/**",
+		"**/dist/**",
+		"**/node_modules/**",
+		"**/src/routeTree.gen.ts"
+	],
+	"rules": {
+		"no-console": "warn",
+		"react/exhaustive-deps": "off"
+	}
+}

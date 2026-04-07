@@ -1,1 +1,1 @@
-export { CustomScrollbar } from './custom-scrollbar'
+export { CustomScrollbar } from "./custom-scrollbar";

@@ -16,16 +16,19 @@
 ## Запуск тестов
 
 ### Все тесты
+
 ```bash
 bun test
 ```
 
 ### Конкретный тест
+
 ```bash
 bun test image-jpeg.test.js
 ```
 
 ### Тесты производительности
+
 ```bash
 bun test performance.test.js
 ```
@@ -35,13 +38,14 @@ bun test performance.test.js
 Тесты теперь выводят красивые сводные таблицы с результатами производительности:
 
 - **JPEG Processing Summary** - результаты обработки JPEG
-- **PNG Processing Summary** - результаты обработки PNG  
+- **PNG Processing Summary** - результаты обработки PNG
 - **GIF Processing Summary** - результаты обработки GIF
 - **Video Processing Summary** - результаты обработки видео
 - **Performance Summary** - общие показатели производительности
 - **Overall Test Summary** - общая сводка всех тестов
 
 ### Тесты с подробным выводом
+
 ```bash
 bun test --verbose
 ```
@@ -62,25 +66,25 @@ bun test --verbose
 ## Пример теста
 
 ```javascript
-import { test, expect, describe, beforeAll } from 'bun:test'
-import { ThumbnailTestUtils } from './test-utils.js'
+import { test, expect, describe, beforeAll } from "bun:test";
+import { ThumbnailTestUtils } from "./test-utils.js";
 
-describe('My Test', () => {
-  let testBuffer
+describe("My Test", () => {
+	let testBuffer;
 
-  beforeAll(() => {
-    testBuffer = ThumbnailTestUtils.loadTestFile('my-test-file.jpg')
-  })
+	beforeAll(() => {
+		testBuffer = ThumbnailTestUtils.loadTestFile("my-test-file.jpg");
+	});
 
-  test('should do something', async () => {
-    const { response, time } = await ThumbnailTestUtils.generateThumbnail(testBuffer, 'image/jpeg')
-    const validation = ThumbnailTestUtils.validateThumbnailResponse(response)
-    
-    expect(validation.success).toBe(true)
-    expect(validation.hasBase64).toBe(true)
-    expect(validation.sizeBytes).toBeGreaterThan(0)
-    
-    console.log(`Time: ${ThumbnailTestUtils.formatTime(time)}`)
-  })
-})
+	test("should do something", async () => {
+		const { response, time } = await ThumbnailTestUtils.generateThumbnail(testBuffer, "image/jpeg");
+		const validation = ThumbnailTestUtils.validateThumbnailResponse(response);
+
+		expect(validation.success).toBe(true);
+		expect(validation.hasBase64).toBe(true);
+		expect(validation.sizeBytes).toBeGreaterThan(0);
+
+		console.log(`Time: ${ThumbnailTestUtils.formatTime(time)}`);
+	});
+});
 ```

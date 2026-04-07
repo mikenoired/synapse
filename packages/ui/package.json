@@ -1,36 +1,44 @@
 {
-  "name": "@synapse/ui",
-  "version": "0.0.0",
-  "private": true,
-  "sideEffects": false,
-  "exports": {
-    "./cn": "./src/cn.ts",
-    "./prose": "./src/prose.ts",
-    "./components": "./src/components/index.ts"
-  },
-  "main": "index.js",
-  "dependencies": {
-    "@radix-ui/react-context-menu": "^2.2.16",
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-label": "^2.1.7",
-    "@radix-ui/react-slot": "^1.2.3",
-    "@radix-ui/react-tooltip": "^1.2.8",
-    "@synapse/tsconfig": "workspace:*",
-    "@synapse/ui": "workspace:*",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
-    "lucide-react": "^0.545.0",
-    "motion": "^12.23.22",
-    "next": "16.0.0-beta.0",
-    "react": "^19.2.0",
-    "react-hook-form": "^7.65.0",
-    "tailwind-merge": "^3.3.1"
-  },
-  "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.14",
-    "@tailwindcss/typography": "^0.5.19",
-    "@types/react": "^19.2.2",
-    "tailwind": "^4.0.0",
-    "typescript": "^5.9.3"
-  }
+	"name": "@synapse/ui",
+	"version": "0.0.0",
+	"private": true,
+	"sideEffects": false,
+	"exports": {
+		"./cn": "./src/cn.ts",
+		"./prose": "./src/prose.ts",
+		"./components": "./src/components/index.ts"
+	},
+	"main": "index.js",
+	"scripts": {
+		"format": "bun x oxfmt --config ../../.oxfmtrc.json --write .",
+		"format:check": "bun x oxfmt --config ../../.oxfmtrc.json --check .",
+		"lint": "bun x oxlint . --config ../../.oxlintrc.json --deny-warnings",
+		"lint:fix": "bun x oxlint . --config ../../.oxlintrc.json --fix",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@radix-ui/react-context-menu": "^2.2.16",
+		"@radix-ui/react-dialog": "^1.1.15",
+		"@radix-ui/react-label": "^2.1.7",
+		"@radix-ui/react-slot": "^1.2.3",
+		"@radix-ui/react-tooltip": "^1.2.8",
+		"@synapse/tsconfig": "workspace:*",
+		"@synapse/ui": "workspace:*",
+		"class-variance-authority": "^0.7.1",
+		"clsx": "^2.1.1",
+		"framer-motion": "^11.18.2",
+		"lucide-react": "^0.545.0",
+		"next": "16.0.0-beta.0",
+		"radix-ui": "^1.4.3",
+		"react": "^19.2.0",
+		"react-hook-form": "^7.65.0",
+		"tailwind-merge": "^3.3.1"
+	},
+	"devDependencies": {
+		"@tailwindcss/postcss": "^4.1.14",
+		"@tailwindcss/typography": "^0.5.19",
+		"@types/react": "^19.2.2",
+		"tailwind": "^4.0.0",
+		"typescript": "^5.9.3"
+	}
 }

@@ -20,21 +20,25 @@
 ### Local dev
 
 1. **Download deps:**
+
    ```bash
    make deps
    ```
 
 2. **Generate proto files:**
+
    ```bash
    make proto
    ```
 
 3. **Build:**
+
    ```bash
    make build
    ```
 
 4. **Run gRPC server:**
+
    ```bash
    make run-server
    ```
@@ -47,6 +51,7 @@
 ### Docker
 
 1. **Build Docker image:**
+
    ```bash
    make docker-build
    ```
@@ -60,23 +65,28 @@
 
 Service is configuring by using this values:
 
-| Variable | Default |
-|------------|--------------|
-| `GRPC_PORT` | `50051` |
-| `REDIS_HOST` | `localhost` |
-| `REDIS_PORT` | `6379` |
-| `REDIS_PASSWORD` | `` |
-| `MINIO_ENDPOINT` | `localhost:9000` |
-| `MINIO_ACCESS_KEY` | `minioadmin` |
-| `MINIO_SECRET_KEY` | `minioadmin` |
-| `MINIO_USE_SSL` | `false` |
-| `MINIO_BUCKET_NAME` | `synapse` |
-| `MAX_CONCURRENT_JOBS` | `10` |
-| `MAX_IMAGE_SIZE` | `52428800` |
-| `MAX_VIDEO_SIZE` | `524288000` |
-| `DEFAULT_THUMBNAIL_WIDTH` | `20` |
-| `DEFAULT_THUMBNAIL_HEIGHT` | `0` |
-| `DEFAULT_JPEG_QUALITY` | `40` |
+| Variable                   | Default          |
+| -------------------------- | ---------------- |
+| `GRPC_PORT`                | `50051`          |
+| `POSTGRES_HOST`            | `localhost`      |
+| `POSTGRES_PORT`            | `5432`           |
+| `POSTGRES_USER`            | `postgres`       |
+| `POSTGRES_PASSWORD`        | `postgres`       |
+| `POSTGRES_DB`              | `synapse`        |
+| `REDIS_HOST`               | `localhost`      |
+| `REDIS_PORT`               | `6379`           |
+| `REDIS_PASSWORD`           | ``               |
+| `MINIO_ENDPOINT`           | `localhost:9000` |
+| `MINIO_ACCESS_KEY`         | `minioadmin`     |
+| `MINIO_SECRET_KEY`         | `minioadmin`     |
+| `MINIO_USE_SSL`            | `false`          |
+| `MINIO_BUCKET_NAME`        | `synapse`        |
+| `MAX_CONCURRENT_JOBS`      | `10`             |
+| `MAX_IMAGE_SIZE`           | `52428800`       |
+| `MAX_VIDEO_SIZE`           | `524288000`      |
+| `DEFAULT_THUMBNAIL_WIDTH`  | `20`             |
+| `DEFAULT_THUMBNAIL_HEIGHT` | `0`              |
+| `DEFAULT_JPEG_QUALITY`     | `40`             |
 
 ## API
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
@@ -31,10 +32,13 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	worker := queue.NewWorker(cfg, logger)
+	worker, err := queue.NewWorker(ctx, cfg, logger)
+	if err != nil {
+		logger.WithError(err).Fatal("Failed to initialize worker")
+	}
 
 	go func() {
-		if err := worker.Start(ctx); err != nil {
+		if err := worker.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			logger.WithError(err).Fatal("Worker failed")
 		}
 	}()

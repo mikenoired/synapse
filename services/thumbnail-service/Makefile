@@ -1,10 +1,14 @@
-.PHONY: help build build-server build-worker run-server run-worker clean proto test docker-build docker-run
+.PHONY: help build build-server build-worker run-server run-worker clean proto test docker-build docker-run deps lint fmt fmt-check security
 
 BINARY_NAME=thumbnail-service
 SERVER_BINARY=thumbnail-server
 WORKER_BINARY=thumbnail-worker
 DOCKER_IMAGE=synapse/thumbnail-service
 DOCKER_TAG=latest
+PROTOC_GEN_GO_VERSION=v1.36.6
+PROTOC_GEN_GO_GRPC_VERSION=v1.5.1
+GOLANGCI_LINT_VERSION=v1.64.8
+GOIMPORTS_VERSION=v0.38.0
 
 help:
 	@echo "Available commands:"
@@ -21,6 +25,8 @@ help:
 
 proto:
 	@echo "Generating Go code from proto files..."
+	go install google.golang.org/protobuf/cmd/protoc-gen-go@$(PROTOC_GEN_GO_VERSION)
+	go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@$(PROTOC_GEN_GO_GRPC_VERSION)
 	protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		--plugin=protoc-gen-go=$(shell go env GOPATH)/bin/protoc-gen-go \
@@ -73,11 +79,17 @@ deps:
 
 lint:
 	@echo "Running linter..."
-	golangci-lint run
+	go run github.com/golangci/golangci-lint/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION) run --config ../../.golangci.yml ./...
 
 fmt:
 	@echo "Formatting code..."
-	go fmt ./...
+	gofmt -w .
+	go run golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION) -w .
+
+fmt-check:
+	@echo "Checking formatting..."
+	@test -z "$$(gofmt -l .)"
+	@test -z "$$(go run golang.org/x/tools/cmd/goimports@$(GOIMPORTS_VERSION) -l .)"
 
 security:
 	@echo "Running security check..."

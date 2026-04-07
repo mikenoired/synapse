@@ -1,2 +1,3 @@
 # Synapse
-*Private media/data manager w/ AI autosorting & context asking*
+
+_Private media/data manager w/ AI autosorting & context asking_

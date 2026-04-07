@@ -1,13 +1,16 @@
 FROM golang:1.24-alpine AS builder
 
+ARG PROTOC_GEN_GO_VERSION=v1.36.6
+ARG PROTOC_GEN_GO_GRPC_VERSION=v1.5.1
+
 RUN apk add --no-cache \
   git \
   make \
   protobuf \
   protobuf-dev
 
-RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
-RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+RUN go install google.golang.org/protobuf/cmd/protoc-gen-go@${PROTOC_GEN_GO_VERSION}
+RUN go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@${PROTOC_GEN_GO_GRPC_VERSION}
 
 RUN apk add --no-cache ffmpeg
 

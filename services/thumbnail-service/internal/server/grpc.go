@@ -21,6 +21,8 @@ type ThumbnailServer struct {
 	logger    *logrus.Logger
 }
 
+const maxGRPCMessageSize = 100 * 1024 * 1024
+
 func NewThumbnailServer(cfg *config.Config, logger *logrus.Logger) *ThumbnailServer {
 	processor := thumbnail.NewProcessor(logger)
 
@@ -167,11 +169,11 @@ func (s *ThumbnailServer) GetImageDimensions(ctx context.Context, req *pb.ImageD
 	}, nil
 }
 
-func StartGRPCServer(cfg *config.Config, logger *logrus.Logger) error {
+func StartGRPCServer(ctx context.Context, cfg *config.Config, logger *logrus.Logger) error {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(loggingInterceptor(logger)),
-		grpc.MaxRecvMsgSize(100*1024*1024), // 100MB
-		grpc.MaxSendMsgSize(100*1024*1024), // 100MB
+		grpc.MaxRecvMsgSize(maxGRPCMessageSize),
+		grpc.MaxSendMsgSize(maxGRPCMessageSize),
 	)
 
 	thumbnailServer := NewThumbnailServer(cfg, logger)
@@ -179,8 +181,18 @@ func StartGRPCServer(cfg *config.Config, logger *logrus.Logger) error {
 
 	addr := ":" + cfg.GRPCPort
 	logger.WithField("address", addr).Info("Starting gRPC server")
+	lis, err := listen(addr)
+	if err != nil {
+		return err
+	}
 
-	return grpcServer.Serve(listen(addr))
+	go func() {
+		<-ctx.Done()
+		logger.Info("Stopping gRPC server")
+		grpcServer.GracefulStop()
+	}()
+
+	return grpcServer.Serve(lis)
 }
 
 func loggingInterceptor(logger *logrus.Logger) grpc.UnaryServerInterceptor {
@@ -210,10 +222,10 @@ func loggingInterceptor(logger *logrus.Logger) grpc.UnaryServerInterceptor {
 	}
 }
 
-func listen(addr string) net.Listener {
+func listen(addr string) (net.Listener, error) {
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
-		panic(fmt.Sprintf("failed to listen on %s: %v", addr, err))
+		return nil, fmt.Errorf("failed to listen on %s: %w", addr, err)
 	}
-	return lis
+	return lis, nil
 }

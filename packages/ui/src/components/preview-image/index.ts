@@ -1,1 +1,1 @@
-export { PreviewImage } from './preview-image'
+export { PreviewImage } from "./preview-image";
