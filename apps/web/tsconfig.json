@@ -10,5 +10,6 @@
 		"strictNullChecks": true
 	},
 	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+	"types": ["bun"],
 	"exclude": ["node_modules"]
 }

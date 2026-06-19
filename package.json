@@ -5,22 +5,20 @@
 	"packageManager": "bun@1.3.11",
 	"workspaces": [
 		"packages/*",
-		"apps/*"
+		"apps/*",
+		"services/*"
 	],
 	"scripts": {
-		"check": "bun run lint && bun run format:check && bun run typecheck && bun run fmt:go:check && bun run test:go",
+		"check": "bun run lint && bun run format:check && bun run typecheck && bun run test:thumbnail",
 		"format": "bun x oxfmt --config .oxfmtrc.json --write .",
 		"format:check": "bun x oxfmt --config .oxfmtrc.json --check .",
-		"fmt:go": "./scripts/go-format.sh",
-		"fmt:go:check": "./scripts/go-format-check.sh",
-		"lint": "bun run lint:js && bun run lint:go",
+		"lint": "bun run lint:js",
 		"lint:fix": "bun run lint:js:fix",
-		"lint:go": "./scripts/go-lint.sh",
 		"lint:js": "bun x oxlint . --config .oxlintrc.json --deny-warnings",
 		"lint:js:fix": "bun x oxlint . --config .oxlintrc.json --fix",
-		"test:go": "./scripts/go-test.sh",
-		"test:thumbnail": "bun test ./test",
-		"typecheck": "bun x tsc -p apps/web/tsconfig.json --noEmit && bun x tsc -p packages/ui/tsconfig.json --noEmit"
+		"test:thumbnail": "bun --filter @synapse/thumbnail-service test",
+		"test:thumbnail:integration": "bun test ./test",
+		"typecheck": "bun x tsc -p apps/web/tsconfig.json --noEmit && bun x tsc -p packages/ui/tsconfig.json --noEmit && bun --filter @synapse/thumbnail-service typecheck"
 	},
 	"dependencies": {
 		"@grpc/grpc-js": "^1.14.0",
