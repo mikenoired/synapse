@@ -257,7 +257,7 @@ export default function HomePage() {
 			<section className="py-20 px-4 bg-gradient-to-r from-primary/5 to-primary/10">
 				<div className="max-w-4xl mx-auto text-center space-y-8">
 					<div className="flex items-center justify-center gap-4 flex-wrap">
-						<h2 className="text-3xl md:text-4xl font-bold">Are you ready to go with</h2>
+						<h2 className="text-3xl md:text-4xl font-bold">Ready to get started with</h2>
 						<Image
 							src="/logo-lettering.svg"
 							alt="Synapse"

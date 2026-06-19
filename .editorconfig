@@ -1,6 +1,6 @@
 root = true
 
-[*.{ts,tsx,js,jsx,json,jsonc,yml,yaml,md,go,proto,sh}]
+[*.{ts,tsx,js,jsx,json,jsonc,yml,yaml,md,proto,sh}]
 charset = utf-8
 end_of_line = lf
 indent_style = tab
