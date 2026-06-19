@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 interface KeyboardShortcut {
 	key: string;
-	handler: () => void;
+	handler: (event: KeyboardEvent) => void;
 	ctrl?: boolean;
 	shift?: boolean;
 	meta?: boolean;
@@ -34,7 +34,7 @@ export function useModalKeyboard({ enabled = true, onEscape, shortcuts = [] }: U
 				if (e.key === shortcut.key && ctrlMatch && shiftMatch && metaMatch) {
 					if (shortcut.preventDefault) e.preventDefault();
 
-					shortcut.handler();
+					shortcut.handler(e);
 					break;
 				}
 			}

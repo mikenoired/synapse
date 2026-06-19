@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { inferContentTypeFromFiles } from "@/shared/lib/upload-file-kind";
@@ -32,6 +32,7 @@ export function AddContentModal({
 }: AddContentModalProps) {
 	const [contentType, setContentType] = useState<Content["type"] | null>(null);
 	const [isFullScreen, setIsFullScreen] = useState(false);
+	const formContainerRef = useRef<HTMLDivElement>(null);
 	const inferredContentType = useMemo(() => inferContentTypeFromFiles(preloadedFiles), [preloadedFiles]);
 	const preloadedFilesForActiveType = useMemo(() => {
 		if (!contentType || contentType !== inferredContentType) {
@@ -44,6 +45,28 @@ export function AddContentModal({
 	useModalKeyboard({
 		enabled: open,
 		onEscape: () => onOpenChange(false),
+		shortcuts: [
+			{
+				key: "Enter",
+				handler: (event) => {
+					const target = event.target;
+					if (
+						event.defaultPrevented ||
+						event.isComposing ||
+						(target instanceof Element && target.closest("textarea, [contenteditable='true']"))
+					) {
+						return;
+					}
+
+					const form = formContainerRef.current?.querySelector("form");
+					const submitter = form?.querySelector<HTMLButtonElement>("button[type='submit']:not(:disabled)");
+					if (!form || !submitter) return;
+
+					event.preventDefault();
+					form.requestSubmit(submitter);
+				},
+			},
+		],
 	});
 
 	useEffect(() => {
@@ -140,7 +163,9 @@ export function AddContentModal({
 					onToggleFullScreen={() => setIsFullScreen(!isFullScreen)}
 				/>
 			)}
-			{renderForm()}
+			<div ref={formContainerRef} className="contents">
+				{renderForm()}
+			</div>
 		</BaseModal>
 	);
 }

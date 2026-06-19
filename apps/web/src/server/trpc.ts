@@ -1,5 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { ZodError } from "zod";
 
 import { handleAuthError } from "@/shared/lib/utils";
 
@@ -14,6 +15,7 @@ const t = initTRPC.context<Context>().create({
 			data: {
 				...shape.data,
 				code: error.code,
+				fieldErrors: error.cause instanceof ZodError ? error.cause.flatten().fieldErrors : null,
 			},
 		};
 	},

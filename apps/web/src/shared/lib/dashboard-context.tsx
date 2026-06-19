@@ -1,9 +1,10 @@
 "use client";
 
 import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
+import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 import { AddContentModal } from "@/widgets/modals";
 
 interface AddDialogOpenOptions {
@@ -94,6 +95,28 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		setIsSidebarExpanded((prev) => !prev);
 		setSidebarWidth((prev) => (prev === 72 ? 256 : 72));
 	}, []);
+
+	useEffect(() => {
+		const handlePaste = (event: ClipboardEvent) => {
+			const target = event.target;
+			if (
+				target instanceof HTMLElement &&
+				(target.isContentEditable || target.closest("input, textarea, [contenteditable='true']"))
+			) {
+				return;
+			}
+
+			const { files } = normalizeDroppedFiles(Array.from(event.clipboardData?.files ?? []));
+			if (files.length === 0) return;
+
+			event.preventDefault();
+			setPreloadedFiles(files);
+			openAddDialog();
+		};
+
+		window.addEventListener("paste", handlePaste);
+		return () => window.removeEventListener("paste", handlePaste);
+	}, [openAddDialog]);
 
 	const value = useMemo(
 		() => ({

@@ -18,12 +18,14 @@ interface ImageMediaContentParams {
 	objectName: string;
 	publicUrl: string;
 	imageDimensions?: MediaDimensions;
+	thumbnailBase64: string;
 }
 
 interface VideoMediaContentParams {
 	objectName: string;
 	publicUrl: string;
 	thumbnailUrl: string;
+	thumbnailBase64: string;
 	videoDimensions?: MediaDimensions;
 }
 
@@ -33,6 +35,7 @@ interface AudioContentParams {
 	bufferLength: number;
 	coverDims?: MediaDimensions;
 	coverObject?: string;
+	coverThumbnailBase64?: string;
 	coverUrl?: string;
 	fileType: string;
 	makeTrack: boolean;
@@ -40,11 +43,17 @@ interface AudioContentParams {
 	title?: string | null;
 }
 
-export function buildImageMediaContent({ objectName, publicUrl, imageDimensions }: ImageMediaContentParams) {
+export function buildImageMediaContent({
+	objectName,
+	publicUrl,
+	imageDimensions,
+	thumbnailBase64,
+}: ImageMediaContentParams) {
 	return {
 		media: {
 			height: imageDimensions?.height,
 			object: objectName,
+			thumbnailBase64,
 			type: "image" as const,
 			url: publicUrl,
 			width: imageDimensions?.width,
@@ -55,6 +64,7 @@ export function buildImageMediaContent({ objectName, publicUrl, imageDimensions 
 export function buildVideoMediaContent({
 	objectName,
 	publicUrl,
+	thumbnailBase64,
 	thumbnailUrl,
 	videoDimensions,
 }: VideoMediaContentParams) {
@@ -62,6 +72,7 @@ export function buildVideoMediaContent({
 		media: {
 			height: videoDimensions?.height,
 			object: objectName,
+			thumbnailBase64,
 			thumbnailUrl,
 			type: "video" as const,
 			url: publicUrl,
@@ -76,6 +87,7 @@ export function buildAudioContent({
 	bufferLength,
 	coverDims,
 	coverObject,
+	coverThumbnailBase64,
 	coverUrl,
 	fileType,
 	makeTrack,
@@ -97,6 +109,7 @@ export function buildAudioContent({
 			? {
 					height: coverDims?.height,
 					object: coverObject,
+					thumbnailBase64: coverThumbnailBase64,
 					url: coverUrl,
 					width: coverDims?.width,
 				}

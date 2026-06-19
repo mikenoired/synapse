@@ -2,8 +2,7 @@ import sharp from "sharp";
 
 import { getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { getImageDimensions } from "../../lib/generate-thumbnail";
-import { enqueueThumbnailJob } from "../../lib/queue";
+import { generateThumbnail, getImageDimensions } from "../../lib/generate-thumbnail";
 import type { UploadHandlerDeps } from "./upload-handler-types";
 import {
 	audioUploadMaxFileSizeBytes,
@@ -39,6 +38,7 @@ export async function processAudioUpload(
 	const audioUrl = getPublicUrl(audioUpload.objectName);
 	let coverUrl: string | undefined;
 	let coverObject: string | undefined;
+	let coverThumbnailBase64: string | undefined;
 	let coverDims: { height: number; width: number } | undefined;
 	let coverFileSize: number | undefined;
 
@@ -61,7 +61,10 @@ export async function processAudioUpload(
 				coverObject = coverUpload.objectName;
 				coverUrl = getPublicUrl(coverUpload.objectName);
 				coverFileSize = coverUpload.fileSize || 0;
-				coverDims = await getImageDimensionsSafe(getImageDimensions, jpeg);
+				[coverDims, coverThumbnailBase64] = await Promise.all([
+					getImageDimensionsSafe(getImageDimensions, jpeg),
+					generateThumbnail(jpeg),
+				]);
 			}
 		} catch {}
 	}
@@ -74,6 +77,7 @@ export async function processAudioUpload(
 			bufferLength: file.buffer.length,
 			coverDims,
 			coverObject,
+			coverThumbnailBase64,
 			coverUrl,
 			fileType: file.type,
 			makeTrack: params.makeTrack,
@@ -94,15 +98,6 @@ export async function processAudioUpload(
 		{ size: coverFileSize || 0, updateFileCount: false },
 	]);
 
-	if (coverObject) {
-		await enqueueThumbnailJob({
-			contentId: createdContent.id,
-			mimeType: jpegMimeType,
-			objectName: coverObject,
-			type: "audio-cover",
-		});
-	}
-
 	return {
 		errors,
 		result: {
@@ -111,6 +106,7 @@ export async function processAudioUpload(
 			fileName: file.name,
 			objectName: audioUpload.objectName,
 			size: file.size,
+			thumbnailBase64: coverThumbnailBase64,
 			type: file.type,
 			url: audioUrl,
 		},

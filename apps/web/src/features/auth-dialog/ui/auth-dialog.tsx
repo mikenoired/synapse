@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { useAuth } from "@/shared/lib/auth-context";
+import { authSchema } from "@/shared/lib/schemas";
 
 interface AuthDialogProps {
 	open: boolean;
@@ -17,21 +18,32 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
+	const [fieldErrors, setFieldErrors] = useState<Partial<Record<"email" | "password", string>>>({});
 	const { signIn, signUp } = useAuth();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		const validation = authSchema.safeParse({ email, password });
+
+		if (!validation.success) {
+			const errors = validation.error.flatten().fieldErrors;
+			setFieldErrors({ email: errors.email?.[0], password: errors.password?.[0] });
+			return;
+		}
+
+		setFieldErrors({});
 		setIsLoading(true);
 
 		try {
 			const result = mode === "login" ? await signIn(email, password) : await signUp(email, password);
 
 			if (result.error) {
-				toast.error(result.error.message);
-				setIsLoading(false);
+				if (result.error.fieldErrors) setFieldErrors(result.error.fieldErrors);
+				else toast.error(result.error.message);
 			}
 		} catch {
 			toast.error("Some error");
+		} finally {
 			setIsLoading(false);
 		}
 	};
@@ -53,9 +65,19 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 						type="email"
 						placeholder="example@mail.com"
 						value={email}
-						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+							setEmail(e.target.value);
+							setFieldErrors((errors) => ({ ...errors, email: undefined }));
+						}}
+						aria-invalid={Boolean(fieldErrors.email)}
+						aria-describedby={fieldErrors.email ? "email-error" : undefined}
 						required
 					/>
+					{fieldErrors.email && (
+						<p id="email-error" role="alert" className="text-xs text-destructive">
+							{fieldErrors.email}
+						</p>
+					)}
 				</div>
 
 				<div className="space-y-2">
@@ -65,15 +87,24 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 						type="password"
 						placeholder="••••••••"
 						value={password}
-						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
+						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+							setPassword(e.target.value);
+							setFieldErrors((errors) => ({ ...errors, password: undefined }));
+						}}
+						aria-invalid={Boolean(fieldErrors.password)}
+						aria-describedby={fieldErrors.password ? "password-error" : undefined}
 						required
 						minLength={8}
 					/>
-					{mode === "register" && (
+					{fieldErrors.password ? (
+						<p id="password-error" role="alert" className="text-xs text-destructive">
+							{fieldErrors.password}
+						</p>
+					) : mode === "register" ? (
 						<p className="text-xs text-muted-foreground">
 							Minimum 8 symbols, including up and down case, digitals
 						</p>
-					)}
+					) : null}
 				</div>
 
 				<div className="flex flex-col space-y-2">
@@ -84,7 +115,10 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 					<Button
 						type="button"
 						variant="ghost"
-						onClick={() => onModeChange(mode === "login" ? "register" : "login")}>
+						onClick={() => {
+							setFieldErrors({});
+							onModeChange(mode === "login" ? "register" : "login");
+						}}>
 						{mode === "login" ? "No account? Create a new one" : "Already registered? Login"}
 					</Button>
 				</div>

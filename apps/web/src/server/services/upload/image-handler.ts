@@ -1,7 +1,6 @@
 import { getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { getImageDimensions } from "../../lib/generate-thumbnail";
-import { enqueueThumbnailJob } from "../../lib/queue";
+import { generateThumbnail, getImageDimensions } from "../../lib/generate-thumbnail";
 import type { UploadHandlerDeps } from "./upload-handler-types";
 import { buildImageMediaContent, getImageDimensionsSafe, imageUploadMaxFileSizeBytes } from "./upload-media";
 import type { FilePayload, ProcessOutcome, UploadBaseParams } from "./upload-types";
@@ -14,6 +13,10 @@ export async function processImageUpload(
 	if (file.size > imageUploadMaxFileSizeBytes)
 		return { errors: [`File "${file.name}" is too large (max 10MB)`] };
 
+	const [imageDimensions, thumbnailBase64] = await Promise.all([
+		getImageDimensionsSafe(getImageDimensions, file.buffer),
+		generateThumbnail(file.buffer),
+	]);
 	const uploadResult = await uploadFile(file.buffer, file.name, file.type, params.userId);
 	const errors: string[] = [];
 
@@ -27,9 +30,8 @@ export async function processImageUpload(
 
 	const objectName = uploadResult.objectName;
 	const publicUrl = getPublicUrl(objectName);
-	const imageDimensions = await getImageDimensionsSafe(getImageDimensions, file.buffer);
 	const serializedContent = JSON.stringify(
-		buildImageMediaContent({ imageDimensions, objectName, publicUrl })
+		buildImageMediaContent({ imageDimensions, objectName, publicUrl, thumbnailBase64 })
 	);
 
 	const createdContent = await deps.persistContent({
@@ -42,13 +44,6 @@ export async function processImageUpload(
 
 	await deps.trackStorage(params.userId, [{ size: uploadResult.fileSize || 0 }]);
 
-	await enqueueThumbnailJob({
-		contentId: createdContent.id,
-		mimeType: file.type,
-		objectName,
-		type: "image",
-	});
-
 	return {
 		errors,
 		result: {
@@ -56,6 +51,7 @@ export async function processImageUpload(
 			fileName: file.name,
 			objectName,
 			size: file.size,
+			thumbnailBase64,
 			type: file.type,
 			url: publicUrl,
 		},

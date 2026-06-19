@@ -5,8 +5,7 @@ import { join } from "node:path";
 
 import { getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { getImageDimensions } from "../../lib/generate-thumbnail";
-import { enqueueThumbnailJob } from "../../lib/queue";
+import { generateThumbnail, getImageDimensions } from "../../lib/generate-thumbnail";
 import type { UploadHandlerDeps } from "./upload-handler-types";
 import {
 	buildVideoMediaContent,
@@ -61,7 +60,10 @@ export async function processVideoUpload(
 			return { errors };
 		}
 
-		const videoDimensions = await getImageDimensionsSafe(getImageDimensions, thumbBuffer);
+		const [videoDimensions, thumbnailBase64] = await Promise.all([
+			getImageDimensionsSafe(getImageDimensions, thumbBuffer),
+			generateThumbnail(thumbBuffer),
+		]);
 
 		const videoUrl = getPublicUrl(videoUpload.objectName);
 		const thumbnailUrl = getPublicUrl(thumbUpload.objectName);
@@ -69,6 +71,7 @@ export async function processVideoUpload(
 			buildVideoMediaContent({
 				objectName: videoUpload.objectName,
 				publicUrl: videoUrl,
+				thumbnailBase64,
 				thumbnailUrl,
 				videoDimensions,
 			})
@@ -86,13 +89,6 @@ export async function processVideoUpload(
 			{ size: thumbUpload.fileSize || 0, updateFileCount: false },
 		]);
 
-		await enqueueThumbnailJob({
-			contentId: createdContent.id,
-			mimeType: videoOutputMimeType,
-			objectName: videoUpload.objectName,
-			type: "video",
-		});
-
 		return {
 			errors,
 			result: {
@@ -101,6 +97,7 @@ export async function processVideoUpload(
 				objectName: videoUpload.objectName,
 				size: file.size,
 				thumbnail: thumbnailUrl,
+				thumbnailBase64,
 				type: file.type,
 				url: videoUrl,
 			},

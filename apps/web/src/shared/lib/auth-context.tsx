@@ -9,11 +9,16 @@ export interface User {
 	email: string;
 }
 
+export interface AuthError {
+	message: string;
+	fieldErrors?: Partial<Record<"email" | "password", string>>;
+}
+
 interface AuthContextType {
 	user: User | null;
 	loading: boolean;
-	signUp: (email: string, password: string) => Promise<{ error: any }>;
-	signIn: (email: string, password: string) => Promise<{ error: any }>;
+	signUp: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+	signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
 	signOut: () => Promise<void>;
 }
 
@@ -40,7 +45,18 @@ export function AuthProvider({
 			}).then((res) => res.json());
 
 			if (result.error) {
-				return { error: result.error };
+				const error = result.error.json;
+				return {
+					error: {
+						message: error?.message || "Register error",
+						fieldErrors: error?.data?.fieldErrors
+							? {
+									email: error.data.fieldErrors.email?.[0],
+									password: error.data.fieldErrors.password?.[0],
+								}
+							: undefined,
+					},
+				};
 			}
 
 			const data = result.result?.data?.json || result.result?.data;
@@ -65,8 +81,8 @@ export function AuthProvider({
 			setUser({ id: data.user.id, email: data.user.email });
 			router.push("/dashboard");
 			return { error: null };
-		} catch (error: any) {
-			return { error: { message: error.message || "Register error" } };
+		} catch (error) {
+			return { error: { message: error instanceof Error ? error.message : "Register error" } };
 		}
 	};
 
@@ -80,7 +96,18 @@ export function AuthProvider({
 			}).then((res) => res.json());
 
 			if (result.error) {
-				return { error: result.error };
+				const error = result.error.json;
+				return {
+					error: {
+						message: error?.message || "Login error",
+						fieldErrors: error?.data?.fieldErrors
+							? {
+									email: error.data.fieldErrors.email?.[0],
+									password: error.data.fieldErrors.password?.[0],
+								}
+							: undefined,
+					},
+				};
 			}
 
 			const data = result.result?.data?.json || result.result?.data;
@@ -105,8 +132,8 @@ export function AuthProvider({
 			setUser({ id: data.user.id, email: data.user.email });
 			router.push("/dashboard");
 			return { error: null };
-		} catch (error: any) {
-			return { error: { message: error.message || "Login error" } };
+		} catch (error) {
+			return { error: { message: error instanceof Error ? error.message : "Login error" } };
 		}
 	};
 
