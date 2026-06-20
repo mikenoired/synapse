@@ -283,8 +283,11 @@ export default class ContentRepository {
 		if (!missing.length) return result;
 
 		const tagsList = await this.database.query.tags.findMany({
-			where: inArray(tags.id, missing),
+			where: and(inArray(tags.id, missing), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 		});
+		if (tagsList.length !== missing.length) {
+			throw new TRPCError({ code: "NOT_FOUND", message: "Tag not found" });
+		}
 
 		const rows = tagsList.map((t) => ({
 			content: t.title ?? "",
