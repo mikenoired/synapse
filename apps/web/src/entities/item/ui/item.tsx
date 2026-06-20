@@ -195,13 +195,18 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.2 }}
 			className="group">
-			<div className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden relative">
+			<div
+				className={`cursor-pointer overflow-hidden relative transition-all ${
+					item.type === "note"
+						? "min-h-44 rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm hover:border-foreground/15 hover:shadow-md dark:border-white/10 dark:bg-card/80"
+						: "hover:shadow-lg"
+				}`}>
 				<div
 					className={
 						item.type === "media" || item.type === "audio"
 							? "p-0"
 							: item.type === "note"
-								? "p-3"
+								? "flex min-h-44 flex-col p-5"
 								: item.type === "todo"
 									? "p-3"
 									: item.type === "link"
@@ -229,12 +234,16 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 						renderTodoPreview()
 					) : (
 						<>
-							<p className="text-sm leading-6 text-muted-foreground whitespace-pre-wrap break-words">
-								{notePreview || item.title || "Empty note"}
+							<div className="mb-4 h-0.5 w-8 rounded-full bg-primary/70" />
+							<h3 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-foreground">
+								{item.title || "Без названия"}
+							</h3>
+							<p className="mt-3 line-clamp-5 whitespace-pre-wrap wrap-break-words text-sm leading-6 text-muted-foreground">
+								{notePreview || "Пустая заметка"}
 							</p>
-							<div className="flex flex-wrap mt-3 absolute bottom-0 left-0 right-0 z-10">
+							<div className="mt-auto flex flex-wrap gap-1 pt-5">
 								{item.tags.map((tag: string) => (
-									<Badge key={tag} variant="outline" className="text-xs">
+									<Badge key={tag} variant="secondary" className="text-xs font-normal">
 										{tag}
 									</Badge>
 								))}

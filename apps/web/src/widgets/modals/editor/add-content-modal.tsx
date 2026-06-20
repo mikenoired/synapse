@@ -154,7 +154,8 @@ export function AddContentModal({
 			open={open}
 			onOpenChange={onOpenChange}
 			size={getSize()}
-			variant={isFullScreen ? "fullscreen" : "default"}>
+			variant={isFullScreen ? "fullscreen" : "default"}
+			className={contentType === "note" && !isFullScreen ? "h-[min(840px,calc(100vh-2rem))]" : undefined}>
 			{contentType && (
 				<ContentTypeHeader
 					type={contentType}

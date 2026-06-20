@@ -883,8 +883,15 @@ export function UnifiedViewerModal({
 			return (
 				<div className="h-full w-full max-w-5xl overflow-hidden rounded-[30px] border border-white/10 bg-[rgba(16,16,16,0.82)]">
 					<div className="h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
-						<div className="mx-auto w-full max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-6">
-							<NoteRenderer item={currentItem} />
+						<div className="mx-auto w-full max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-8">
+							<header className="mb-7 border-b border-border/70 pb-6">
+								<h1 className="text-3xl font-semibold leading-tight tracking-tight text-card-foreground sm:text-4xl">
+									{currentItem.title || "Без названия"}
+								</h1>
+							</header>
+							<div className="text-card-foreground">
+								<NoteRenderer item={currentItem} />
+							</div>
 						</div>
 					</div>
 				</div>

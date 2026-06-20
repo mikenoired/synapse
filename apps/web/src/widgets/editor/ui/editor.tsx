@@ -5,9 +5,9 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Placeholder from "@tiptap/extension-placeholder";
 import type { JSONContent } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
-import { BubbleMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
+import { Bold, Code2, Heading2, Italic, List, ListOrdered, Underline } from "lucide-react";
 
 interface EditorProps {
 	data?: JSONContent | null;
@@ -19,16 +19,18 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 	const lowlight = createLowlight(common);
 	const editor = useEditor({
 		immediatelyRender: false,
+		shouldRerenderOnTransaction: true,
 		extensions: [
 			StarterKit.configure({ codeBlock: false }),
 			CodeBlockLowlight.configure({ lowlight }),
 			Placeholder.configure({
-				placeholder: "Start writing...",
+				placeholder: "Начните с мысли, идеи или наблюдения…",
 			}),
 		],
 		editorProps: {
 			attributes: {
-				class: "min-h-[300px] border rounded-md p-2 bg-background relative",
+				class:
+					"min-h-[420px] px-1 py-5 text-base leading-7 outline-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-muted-foreground/60 [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
 			},
 		},
 		content: data || "",
@@ -39,61 +41,74 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 	});
 
 	return (
-		<div>
-			{editor && (
-				<BubbleMenu editor={editor}>
-					<div className="flex gap-1 bg-popover border rounded shadow p-1">
-						<Button
-							size="icon"
-							variant={editor.isActive("bold") ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleBold().run()}
-							aria-label="Bold">
-							<b>B</b>
-						</Button>
-						<Button
-							size="icon"
-							variant={editor.isActive("italic") ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleItalic().run()}
-							aria-label="Italic">
-							<i>I</i>
-						</Button>
-						<Button
-							size="icon"
-							variant={editor.isActive("underline") ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleUnderline().run()}
-							aria-label="Underline">
-							<u>U</u>
-						</Button>
-						<Button
-							size="icon"
-							variant={editor.isActive("code") ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleCode().run()}
-							aria-label="Code">
-							{"</>"}
-						</Button>
-						<Button
-							size="icon"
-							variant={editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-							aria-label="H2">
-							H2
-						</Button>
-						<Button
-							size="icon"
-							variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleBulletList().run()}
-							aria-label="Bullet List">
-							•
-						</Button>
-						<Button
-							size="icon"
-							variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
-							onClick={() => editor.chain().focus().toggleOrderedList().run()}
-							aria-label="Ordered List">
-							1.
-						</Button>
-					</div>
-				</BubbleMenu>
+		<div className="w-full">
+			{editor && !readOnly && (
+				<div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-y border-border/70 bg-background/95 py-2 backdrop-blur">
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("bold") ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleBold().run()}
+						aria-label="Полужирный"
+						title="Полужирный">
+						<Bold className="size-4" />
+					</Button>
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("italic") ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleItalic().run()}
+						aria-label="Курсив"
+						title="Курсив">
+						<Italic className="size-4" />
+					</Button>
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("underline") ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleUnderline().run()}
+						aria-label="Подчёркнутый"
+						title="Подчёркнутый">
+						<Underline className="size-4" />
+					</Button>
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("code") ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleCode().run()}
+						aria-label="Код"
+						title="Код">
+						<Code2 className="size-4" />
+					</Button>
+					<div className="mx-1 h-5 w-px bg-border" />
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("heading", { level: 2 }) ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+						aria-label="Заголовок"
+						title="Заголовок">
+						<Heading2 className="size-4" />
+					</Button>
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("bulletList") ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleBulletList().run()}
+						aria-label="Маркированный список"
+						title="Маркированный список">
+						<List className="size-4" />
+					</Button>
+					<Button
+						type="button"
+						size="icon"
+						variant={editor.isActive("orderedList") ? "secondary" : "ghost"}
+						onClick={() => editor.chain().focus().toggleOrderedList().run()}
+						aria-label="Нумерованный список"
+						title="Нумерованный список">
+						<ListOrdered className="size-4" />
+					</Button>
+				</div>
 			)}
 			<EditorContent editor={editor} />
 		</div>

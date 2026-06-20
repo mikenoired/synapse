@@ -273,7 +273,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 			className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-center justify-center animate-in fade-in-0 transition-all duration-300 ease-in-out ${isFullScreen ? "p-5" : ""}`}
 			onClick={handleClose}>
 			<div
-				className={`bg-background shadow-lg relative ${isFullScreen ? "w-full h-full max-w-none rounded-none" : "max-w-3xl w-[95vw] h-[90vh] rounded-lg"} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
+				className={`bg-background shadow-lg relative ${isFullScreen ? "w-full h-full max-w-none rounded-none" : "max-w-5xl w-[95vw] h-[min(840px,calc(100vh-2rem))] rounded-lg"} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
 				onClick={(e) => e.stopPropagation()}
 				onTouchStart={handleTouchStart}
 				onTouchMove={handleTouchMove}
@@ -294,15 +294,15 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 						renderTodoForm()
 					) : (
 						<div className="flex flex-col h-full">
-							<div className="p-6 pb-4 border-b">
-								<div className="max-w-[700px] mx-auto w-full">
+							<div className="px-6 pt-8 pb-4">
+								<div className="max-w-3xl mx-auto w-full">
 									<Input
 										id="title"
-										placeholder="Title (optional)..."
+										placeholder="Заголовок заметки"
 										value={title}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
 										disabled={updateContentMutation.isPending}
-										className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+										className="!text-3xl font-semibold tracking-tight border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
 									/>
 									<div className="flex flex-wrap gap-2 mt-3">
 										{tags.map((tag) => (
@@ -329,8 +329,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 									</div>
 								</div>
 							</div>
-							<div className="flex-1 p-6 pt-2 overflow-y-auto">
-								<div className="max-w-[700px] mx-auto w-full">
+							<div className="flex-1 px-6 pb-8 overflow-y-auto">
+								<div className="max-w-3xl mx-auto w-full">
 									<Editor
 										data={editorData}
 										onChange={setEditorData}

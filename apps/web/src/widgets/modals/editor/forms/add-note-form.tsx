@@ -76,15 +76,15 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 
 	return (
 		<form onSubmit={handleSubmit} className="flex flex-col h-full">
-			<div className={`p-6 pb-4 border-b flex-shrink-0 ${isFullScreen ? "bg-background" : ""}`}>
-				<div className="max-w-[700px] mx-auto w-full">
+			<div className={`px-6 pt-8 pb-4 flex-shrink-0 ${isFullScreen ? "bg-background" : ""}`}>
+				<div className="max-w-3xl mx-auto w-full">
 					<Input
 						id="title"
-						placeholder="Заголовок (необязательно)..."
+						placeholder="Заголовок заметки"
 						value={title}
 						onChange={(e) => setTitle(e.target.value)}
 						disabled={createMutation.isPending}
-						className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+						className="!text-3xl font-semibold tracking-tight border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
 					/>
 					<div className="flex flex-wrap gap-2 mt-3">
 						{tags.map((tag) => (
@@ -113,8 +113,8 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 			</div>
 
 			<ModalBody scrollable noPadding>
-				<div className="p-6 pt-2">
-					<div className="max-w-[700px] mx-auto w-full">
+				<div className="px-6 pb-8">
+					<div className="max-w-3xl mx-auto w-full">
 						<Editor data={editorData} onChange={setEditorData} readOnly={createMutation.isPending} />
 					</div>
 				</div>
