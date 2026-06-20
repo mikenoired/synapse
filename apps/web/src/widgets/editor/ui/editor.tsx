@@ -3,7 +3,6 @@
 import { Button } from "@synapse/ui/components";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Placeholder from "@tiptap/extension-placeholder";
-import Underline from "@tiptap/extension-underline";
 import type { JSONContent } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
@@ -21,8 +20,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 	const editor = useEditor({
 		immediatelyRender: false,
 		extensions: [
-			StarterKit,
-			Underline,
+			StarterKit.configure({ codeBlock: false }),
 			CodeBlockLowlight.configure({ lowlight }),
 			Placeholder.configure({
 				placeholder: "Start writing...",
