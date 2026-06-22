@@ -11,10 +11,19 @@ interface ModalProps extends Omit<HTMLMotionProps<"div">, "onClick"> {
 	onOpenChange: (open: boolean) => void;
 	children: ReactNode;
 	className?: string;
+	ariaLabel?: string;
 }
 
-export function Modal({ open, onOpenChange, children, className, ...props }: ModalProps) {
+export function Modal({
+	open,
+	onOpenChange,
+	children,
+	className,
+	ariaLabel = "Диалог",
+	...props
+}: ModalProps) {
 	const modalRef = useRef<HTMLDivElement>(null);
+	const previousFocusRef = useRef<HTMLElement | null>(null);
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => setMounted(true), []);
@@ -43,6 +52,7 @@ export function Modal({ open, onOpenChange, children, className, ...props }: Mod
 
 	useEffect(() => {
 		if (!open || !modalRef.current) return;
+		previousFocusRef.current = document.activeElement as HTMLElement;
 
 		const modal = modalRef.current;
 		const focusableElements = modal.querySelectorAll(
@@ -70,7 +80,10 @@ export function Modal({ open, onOpenChange, children, className, ...props }: Mod
 		modal.addEventListener("keydown", handleTabKey);
 		firstElement?.focus();
 
-		return () => modal.removeEventListener("keydown", handleTabKey);
+		return () => {
+			modal.removeEventListener("keydown", handleTabKey);
+			previousFocusRef.current?.focus();
+		};
 	}, [open]);
 
 	if (!mounted) return null;
@@ -93,6 +106,9 @@ export function Modal({ open, onOpenChange, children, className, ...props }: Mod
 					<motion.div
 						key="modal"
 						ref={modalRef}
+						role="dialog"
+						aria-modal="true"
+						aria-label={ariaLabel}
 						initial={{ opacity: 0, scale: 0.95, y: 20 }}
 						animate={{ opacity: 1, scale: 1, y: 0 }}
 						exit={{ opacity: 0, scale: 0.97, y: 10 }}

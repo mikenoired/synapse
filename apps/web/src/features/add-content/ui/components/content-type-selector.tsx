@@ -23,12 +23,12 @@ interface ContentTypeSelectorProps {
 }
 
 const contentTypes = [
-	{ key: "note", icon: FileText, label: "Note" },
-	{ key: "media", icon: ImageIcon, label: "Media" },
-	{ key: "audio", icon: Music2, label: "Audio" },
-	{ key: "link", icon: Link, label: "Link" },
-	{ key: "todo", icon: ListChecks, label: "To-Do" },
-	{ key: "doc", icon: FileUp, label: "Documents" },
+	{ key: "note", icon: FileText, label: "Заметка" },
+	{ key: "media", icon: ImageIcon, label: "Медиа" },
+	{ key: "audio", icon: Music2, label: "Аудио" },
+	{ key: "link", icon: Link, label: "Ссылка" },
+	{ key: "todo", icon: ListChecks, label: "Задачи" },
+	{ key: "doc", icon: FileUp, label: "Документы" },
 ] as const;
 
 export function ContentTypeSelector({

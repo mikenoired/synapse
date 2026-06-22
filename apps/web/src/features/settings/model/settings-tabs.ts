@@ -1,14 +1,12 @@
-import { HardDrive, Palette, Settings2, Sparkles } from "lucide-react";
+import { HardDrive, Settings2 } from "lucide-react";
 
 export const SETTINGS_QUERY_PARAM = "settings";
 export const LEGACY_SETTINGS_QUERY_PARAM = "tab";
 export const DEFAULT_SETTINGS_TAB = "general";
 
 export const settingsTabs = [
-	{ key: "general", label: "General", icon: Settings2 },
-	{ key: "media", label: "Media", icon: HardDrive },
-	{ key: "ai", label: "AI", icon: Sparkles },
-	{ key: "theming", label: "Theming", icon: Palette },
+	{ key: "general", label: "Основное", icon: Settings2 },
+	{ key: "media", label: "Хранилище", icon: HardDrive },
 ] as const;
 
 export type SettingsTabKey = (typeof settingsTabs)[number]["key"];

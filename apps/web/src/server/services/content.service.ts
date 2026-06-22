@@ -11,6 +11,12 @@ import {
 
 import type { Context } from "../context";
 import type { content as contentTable } from "../db/schema";
+import {
+	deleteStoredNoteImages,
+	deleteUploadedNoteImages,
+	extractOwnedNoteImages,
+	prepareNoteImages,
+} from "../lib/note-images";
 import ContentRepository from "../repositories/content.repository";
 
 type ContentRow = typeof contentTable.$inferSelect;
@@ -107,73 +113,113 @@ export default class ContentService {
 	}
 
 	async create(createContentData: z.infer<typeof createContentSchema>) {
-		const { tag_ids: inputTagIds, tags: legacyTagTitles, ...contentData } = createContentData;
+		const prepared =
+			createContentData.type === "note"
+				? await prepareNoteImages(createContentData.content, this.ctx.user!.id)
+				: { content: createContentData.content, uploaded: [] };
+		const input = { ...createContentData, content: prepared.content };
+		const { tag_ids: inputTagIds, tags: legacyTagTitles, ...contentData } = input;
 
-		const result = await this.ctx.db.transaction(async (tx) => {
-			const repo = this.repo.withDb(tx as unknown as Context["db"]);
-			const data = await repo.create(createContentData);
-			const contentId = (data as ContentRow).id;
+		let result: ContentRow;
+		try {
+			result = (await this.ctx.db.transaction(async (tx) => {
+				const repo = this.repo.withDb(tx as unknown as Context["db"]);
+				const data = await repo.create(input);
+				const contentId = (data as ContentRow).id;
 
-			const contentNodeId = await repo.getOrCreateContentNode({
-				content_id: contentId,
-				title: contentData.title,
-				type: contentData.type,
-			});
+				const contentNodeId = await repo.getOrCreateContentNode({
+					content_id: contentId,
+					title: contentData.title,
+					type: contentData.type,
+				});
 
-			const tagIds = inputTagIds as string[] | undefined;
-			const tagTitles = legacyTagTitles as string[] | undefined;
-			if (tagIds && tagIds.length) {
-				const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
-				await this.upsertContentTags(repo, contentId, tagIds, contentNodeId, tagNodeIds);
-			} else if (tagTitles && tagTitles.length) {
-				const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
-				if (ids.length) {
-					const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
-					await this.upsertContentTags(repo, contentId, ids, contentNodeId, tagNodeIds);
+				const tagIds = inputTagIds as string[] | undefined;
+				const tagTitles = legacyTagTitles as string[] | undefined;
+				if (tagIds && tagIds.length) {
+					const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
+					await this.upsertContentTags(repo, contentId, tagIds, contentNodeId, tagNodeIds);
+				} else if (tagTitles && tagTitles.length) {
+					const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
+					if (ids.length) {
+						const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
+						await this.upsertContentTags(repo, contentId, ids, contentNodeId, tagNodeIds);
+					}
 				}
-			}
 
-			return data;
-		});
+				return data;
+			})) as ContentRow;
+		} catch (error) {
+			await deleteUploadedNoteImages(prepared.uploaded);
+			throw error;
+		}
 
-		const [withTags] = await this.attachTagsToContent([result as ContentRow]);
+		await this.trackAddedNoteImages(prepared.uploaded);
+		const [withTags] = await this.attachTagsToContent([result]);
 		await this.invalidateUserTags();
 		return contentDetailSchema.parse(withTags);
 	}
 
 	async update(input: z.infer<typeof updateContentSchema>) {
 		const { id, tag_ids: inputTagIds, tags: legacyTagTitles, ...updateData } = input;
+		const previous = (await this.repo.getById(id)) as ContentRow;
+		const nextType = updateData.type ?? previous.type;
+		const prepared =
+			nextType === "note" && updateData.content !== undefined
+				? await prepareNoteImages(updateData.content, this.ctx.user!.id)
+				: { content: updateData.content, uploaded: [] };
+		const preparedInput = {
+			...input,
+			...(prepared.content === undefined ? {} : { content: prepared.content }),
+		};
 
-		const result = await this.ctx.db.transaction(async (tx) => {
-			const repo = this.repo.withDb(tx as unknown as Context["db"]);
-			const data = await repo.updateContent(input);
+		let result: ContentRow;
+		try {
+			result = (await this.ctx.db.transaction(async (tx) => {
+				const repo = this.repo.withDb(tx as unknown as Context["db"]);
+				const data = await repo.updateContent(preparedInput);
 
-			const tagIds = inputTagIds as string[] | undefined;
-			const tagTitles = legacyTagTitles as string[] | undefined;
-			const contentNodeId = await repo.getOrCreateContentNode({
-				content_id: id,
-				title: updateData.title,
-				type: updateData.type || "note",
-			});
-			await repo.updateContentNode({
-				content_id: id,
-				title: updateData.title,
-				type: updateData.type || (data as ContentRow).type,
-			});
+				const tagIds = inputTagIds as string[] | undefined;
+				const tagTitles = legacyTagTitles as string[] | undefined;
+				const contentNodeId = await repo.getOrCreateContentNode({
+					content_id: id,
+					title: updateData.title,
+					type: updateData.type || "note",
+				});
+				await repo.updateContentNode({
+					content_id: id,
+					title: updateData.title,
+					type: updateData.type || (data as ContentRow).type,
+				});
 
-			if (tagIds) {
-				const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
-				await this.replaceContentTags(repo, id, tagIds, contentNodeId, tagNodeIds);
-			} else if (tagTitles) {
-				const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
-				const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
-				await this.replaceContentTags(repo, id, ids, contentNodeId, tagNodeIds);
-			}
+				if (tagIds) {
+					const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
+					await this.replaceContentTags(repo, id, tagIds, contentNodeId, tagNodeIds);
+				} else if (tagTitles) {
+					const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
+					const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
+					await this.replaceContentTags(repo, id, ids, contentNodeId, tagNodeIds);
+				}
 
-			return data;
-		});
+				return data;
+			})) as ContentRow;
+		} catch (error) {
+			await deleteUploadedNoteImages(prepared.uploaded);
+			throw error;
+		}
 
-		const [withTags] = await this.attachTagsToContent([result as ContentRow]);
+		const previousImages =
+			previous.type === "note" ? extractOwnedNoteImages(previous.content, this.ctx.user!.id) : [];
+		const nextImages = nextType === "note" ? extractOwnedNoteImages(result.content, this.ctx.user!.id) : [];
+		const nextImageSet = new Set(nextImages);
+		const removedSizes = await deleteStoredNoteImages(
+			previousImages.filter((image) => !nextImageSet.has(image))
+		);
+		await Promise.all([
+			this.trackAddedNoteImages(prepared.uploaded),
+			this.trackRemovedNoteImages(removedSizes),
+		]);
+
+		const [withTags] = await this.attachTagsToContent([result]);
 		await this.invalidateUserTags();
 		return contentDetailSchema.parse(withTags);
 	}
@@ -196,8 +242,13 @@ export default class ContentService {
 		});
 
 		let totalFileSize = 0;
+		const removedFileSizes: number[] = [];
 
-		if (content.type === "media") {
+		if (content.type === "note") {
+			removedFileSizes.push(
+				...(await deleteStoredNoteImages(extractOwnedNoteImages(content.content, this.ctx.user!.id)))
+			);
+		} else if (content.type === "media") {
 			const mediaJson = parseMediaJson(content.content);
 			const mainObject = mediaJson?.media?.object || this.extractObjectNameFromApiUrl(mediaJson?.media?.url);
 			const thumbObject = this.extractObjectNameFromApiUrl(mediaJson?.media?.thumbnailUrl);
@@ -255,11 +306,8 @@ export default class ContentService {
 			}
 		}
 
-		if (totalFileSize > 0) {
-			try {
-				await this.ctx.cache.removeFile(this.ctx.user!.id, totalFileSize);
-			} catch {}
-		}
+		if (totalFileSize > 0) removedFileSizes.push(totalFileSize);
+		await this.trackRemovedNoteImages(removedFileSizes);
 
 		await this.invalidateUserTags();
 		return { success: true };
@@ -425,5 +473,17 @@ export default class ContentService {
 			thumbnail_base64: row.thumbnailBase64 ?? undefined,
 			document_images: Array.isArray(row.documentImages) ? row.documentImages : undefined,
 		};
+	}
+
+	private async trackAddedNoteImages(images: { size: number }[]) {
+		try {
+			await Promise.all(images.map((image) => this.ctx.cache.addFile(this.ctx.user!.id, image.size)));
+		} catch {}
+	}
+
+	private async trackRemovedNoteImages(sizes: number[]) {
+		try {
+			await Promise.all(sizes.map((size) => this.ctx.cache.removeFile(this.ctx.user!.id, size)));
+		} catch {}
 	}
 }

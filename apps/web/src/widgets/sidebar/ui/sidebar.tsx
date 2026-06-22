@@ -44,17 +44,17 @@ export default function Sidebar() {
 		{
 			action: () => openAddDialog(),
 			icon: Plus,
-			label: "Add",
+			label: "Добавить",
 			onMouseEnter: preloadAddContentDialog,
 		},
-		{ href: "/dashboard", icon: Home, label: "Main" },
-		{ href: "/dashboard/tags", icon: Tag, label: "Tags" },
-		{ href: "/dashboard/graph", icon: Network, label: "Graph" },
+		{ href: "/dashboard", icon: Home, label: "Главная" },
+		{ href: "/dashboard/tags", icon: Tag, label: "Теги" },
+		{ href: "/dashboard/graph", icon: Network, label: "Связи" },
 		{
 			href: getSettingsHref(pathname, searchParams, DEFAULT_SETTINGS_TAB),
 			icon: Settings,
 			isActive: searchParams.has(SETTINGS_QUERY_PARAM),
-			label: "Settings",
+			label: "Настройки",
 		},
 	];
 

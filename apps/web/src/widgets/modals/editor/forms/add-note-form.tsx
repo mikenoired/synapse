@@ -75,7 +75,7 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col h-full">
+		<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
 			<div className={`px-6 pt-8 pb-4 flex-shrink-0 ${isFullScreen ? "bg-background" : ""}`}>
 				<div className="max-w-3xl mx-auto w-full">
 					<Input
@@ -112,7 +112,7 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 				</div>
 			</div>
 
-			<ModalBody scrollable noPadding>
+			<ModalBody scrollable noPadding className="min-h-0">
 				<div className="px-6 pb-8">
 					<div className="max-w-3xl mx-auto w-full">
 						<Editor data={editorData} onChange={setEditorData} readOnly={createMutation.isPending} />

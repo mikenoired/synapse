@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 
 import { useDashboard } from "@/shared/lib/dashboard-context";
-
-const placeholders = ["Where it was saved...", "How it was called...", "Maybe I will search by tags..."];
 
 interface ContentFilterProps {
 	searchQuery: string;
@@ -19,10 +17,6 @@ export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProp
 		if (searchInputRef.current) setTriggerSearchFocus(() => searchInputRef.current?.focus);
 	}, [setTriggerSearchFocus]);
 
-	const placeholder = useMemo(() => {
-		return placeholders[Math.floor(Math.random() * placeholders.length)];
-	}, []);
-
 	return (
 		<div className="space-y-6 sticky top-0 bg-background z-10">
 			<div className="relative">
@@ -30,11 +24,12 @@ export function ContentFilter({ searchQuery, setSearchQuery }: ContentFilterProp
 					ref={searchInputRef}
 					id="search"
 					type="text"
-					placeholder={placeholder}
+					placeholder="Поиск по названию и содержимому"
+					aria-label="Поиск по материалам"
 					value={searchQuery}
 					autoFocus
 					onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-					className="w-full bg-background px-4 py-3 text-2xl border-b focus:outline-none"
+					className="w-full bg-background px-4 py-3 text-lg sm:text-2xl border-b outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
 				/>
 			</div>
 		</div>

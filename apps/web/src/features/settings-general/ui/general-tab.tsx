@@ -1,9 +1,11 @@
 "use client";
 
-import { Skeleton } from "@synapse/ui/components";
-import { CalendarDays, Mail } from "lucide-react";
+import { Button, Skeleton } from "@synapse/ui/components";
+import { CalendarDays, LogOut, Mail } from "lucide-react";
+import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import { useAuth } from "@/shared/lib/auth-context";
 
 function formatRegistrationDate(date?: string | Date | null) {
 	if (!date) return "Дата недоступна";
@@ -17,6 +19,13 @@ function formatRegistrationDate(date?: string | Date | null) {
 
 export default function GeneralTab() {
 	const { data: user, isLoading } = trpc.user.getUser.useQuery();
+	const { signOut } = useAuth();
+	const [isSigningOut, setIsSigningOut] = useState(false);
+
+	const handleSignOut = async () => {
+		setIsSigningOut(true);
+		await signOut();
+	};
 
 	if (isLoading) {
 		return (
@@ -27,6 +36,8 @@ export default function GeneralTab() {
 					<Skeleton className="h-4 w-32" />
 					<Skeleton className="h-4 w-full max-w-md" />
 				</div>
+
+				<Skeleton className="h-[76px] w-full rounded-3xl" />
 			</div>
 		);
 	}
@@ -43,6 +54,21 @@ export default function GeneralTab() {
 					<CalendarDays className="size-4 text-muted-foreground" />
 					<span>{formatRegistrationDate(user?.createdAt)}</span>
 				</div>
+			</div>
+
+			<div className="flex items-center justify-between gap-4 rounded-3xl bg-muted px-5 py-4">
+				<div>
+					<h2 className="text-sm font-medium">Текущая сессия</h2>
+					<p className="mt-1 text-sm text-muted-foreground">Завершить работу на этом устройстве.</p>
+				</div>
+				<Button
+					variant="destructive"
+					className="h-11 shrink-0"
+					disabled={isSigningOut}
+					onClick={handleSignOut}>
+					<LogOut className="size-4" />
+					{isSigningOut ? "Выходим…" : "Выйти"}
+				</Button>
 			</div>
 		</div>
 	);

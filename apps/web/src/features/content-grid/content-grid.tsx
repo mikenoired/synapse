@@ -22,6 +22,7 @@ interface ContentGridProps {
 	searchQuery?: string;
 	selectedTags?: string[];
 	onClearFilters?: () => void;
+	onAddContent?: () => void;
 	excludedTag?: string;
 }
 
@@ -48,6 +49,7 @@ export const ContentGrid = memo(
 		searchQuery,
 		selectedTags,
 		onClearFilters,
+		onAddContent,
 		excludedTag,
 	}: ContentGridProps) => {
 		const hasContent = items.length > 0;
@@ -100,8 +102,9 @@ export const ContentGrid = memo(
 					<div className="w-full max-w-md p-8 space-y-4">
 						<FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
 						<div>
-							<h3 className="text-xl font-semibold mb-2">Your storage is empty</h3>
-							<p className="text-muted-foreground mb-6">Start by adding some notes, media, etc.</p>
+							<h3 className="text-xl font-semibold mb-2">Здесь пока пусто</h3>
+							<p className="text-muted-foreground mb-6">Добавьте первую заметку, документ или медиафайл.</p>
+							{onAddContent && <Button onClick={onAddContent}>Добавить материал</Button>}
 						</div>
 					</div>
 				</div>
@@ -113,11 +116,11 @@ export const ContentGrid = memo(
 				<div className="text-center py-12">
 					<div className="text-muted-foreground">
 						<Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-						<p className="text-lg mb-2">There's nothing</p>
-						<p className="text-sm">Try to change search params</p>
+						<p className="text-lg mb-2">Ничего не найдено</p>
+						<p className="text-sm">Измените запрос или сбросьте фильтры.</p>
 						{onClearFilters && (
 							<Button variant="outline" onClick={onClearFilters} className="mt-4">
-								Clear filters
+								Сбросить фильтры
 							</Button>
 						)}
 					</div>

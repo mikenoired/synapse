@@ -6,10 +6,8 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
-import AiTab from "@/features/settings-ai/ui/ai-tab";
 import GeneralTab from "@/features/settings-general/ui/general-tab";
 import MediaTab from "@/features/settings-media/ui/media-tab";
-import ThemingTab from "@/features/settings-theming/ui/theming-tab";
 import type { SettingsTabKey } from "@/features/settings/model/settings-tabs";
 
 import { SettingsModalNav } from "./settings-modal-nav";
@@ -24,8 +22,6 @@ interface SettingsModalProps {
 const tabComponentMap = {
 	general: GeneralTab,
 	media: MediaTab,
-	ai: AiTab,
-	theming: ThemingTab,
 };
 
 function useModalSideEffects(

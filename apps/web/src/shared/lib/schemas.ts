@@ -163,13 +163,13 @@ export const updateContentSchema = createContentSchema.partial().extend({
 });
 
 export const authSchema = z.object({
-	email: z.email("Incorrect E-Mail address"),
+	email: z.email("Введите корректный адрес электронной почты"),
 	password: z
 		.string()
-		.min(8, "Password must have 8 symbols minimum")
-		.regex(/[A-Z]/, "Password must have at least one uppercase letter")
-		.regex(/[a-z]/, "Password must have at least one lowercase letter")
-		.regex(/\d/, "Password must have at least one digit"),
+		.min(8, "Пароль должен содержать не менее 8 символов")
+		.regex(/[A-Z]/, "Добавьте хотя бы одну заглавную букву")
+		.regex(/[a-z]/, "Добавьте хотя бы одну строчную букву")
+		.regex(/\d/, "Добавьте хотя бы одну цифру"),
 });
 
 export type User = z.infer<typeof userSchema>;

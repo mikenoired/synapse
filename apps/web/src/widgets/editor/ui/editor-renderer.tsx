@@ -5,6 +5,7 @@ import { prose } from "@synapse/ui/prose";
 import type { JSONContent } from "@tiptap/core";
 import { generateHTML } from "@tiptap/core";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Image from "@tiptap/extension-image";
 import StarterKit from "@tiptap/starter-kit";
 import DOMPurify from "dompurify";
 import { common, createLowlight } from "lowlight";
@@ -21,6 +22,9 @@ export function EditorRenderer({ data }: EditorRendererProps) {
 	const html = generateHTML(data, [
 		StarterKit.configure({ codeBlock: false }),
 		CodeBlockLowlight.configure({ lowlight }),
+		Image.configure({
+			HTMLAttributes: { class: "h-auto max-w-full rounded-lg", loading: "lazy" },
+		}),
 	]);
 
 	return (

@@ -15,10 +15,10 @@ export default async function GraphPage() {
 	return (
 		<div>
 			<div className="p-4 pb-0 flex justify-between items-center">
-				<h1 className="text-2xl font-semibold">Graph</h1>
+				<h1 className="text-2xl font-semibold">Связи</h1>
 				<div className="flex gap-2 items-center">
-					<span className="text-sm text-muted-foreground">{nodes.length} nodes</span>
-					<span className="text-sm text-muted-foreground">{edges.length} edges</span>
+					<span className="text-sm text-muted-foreground">Узлов: {nodes.length}</span>
+					<span className="text-sm text-muted-foreground">Связей: {edges.length}</span>
 				</div>
 			</div>
 			<GraphClient nodes={nodes || []} edges={edges || []} />

@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
+import { Badge } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import DOMPurify from "dompurify";
 import { AnimatePresence, motion } from "framer-motion";
@@ -25,6 +26,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
 import { trpc } from "@/shared/api/trpc";
 import useMouseActivity from "@/shared/hooks/use-mouse-activity";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
@@ -372,6 +374,7 @@ export function UnifiedViewerModal({
 	const [direction, setDirection] = useState(0);
 	const [showDetails, setShowDetails] = useState(false);
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [editOpen, setEditOpen] = useState(false);
 	const [updatedItems, setUpdatedItems] = useState<Record<string, Content>>({});
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [audioState, setAudioState] = useState({
@@ -590,7 +593,7 @@ export function UnifiedViewerModal({
 	};
 
 	useModalKeyboard({
-		enabled: open,
+		enabled: open && !editOpen,
 		onEscape: () => {
 			if (showDetails) {
 				setShowDetails(false);
@@ -614,7 +617,7 @@ export function UnifiedViewerModal({
 	});
 
 	const gestures = useModalGestures({
-		enabled: open && normalizedItems.length > 1,
+		enabled: open && !editOpen && normalizedItems.length > 1,
 		swipe: {
 			direction: "horizontal",
 			threshold: 50,
@@ -644,6 +647,11 @@ export function UnifiedViewerModal({
 	};
 
 	const handleEdit = () => {
+		if (currentItem.type === "note") {
+			setEditOpen(true);
+			return;
+		}
+
 		if (onEdit) {
 			onEdit(currentItem.id);
 		} else {
@@ -723,7 +731,7 @@ export function UnifiedViewerModal({
 				disabled: isDownloading,
 			});
 		}
-		if (onEdit) {
+		if (currentItem.type === "note" || onEdit) {
 			actions.push({ icon: Edit2, label: "Редактировать", onClick: handleEdit });
 		}
 		if (onDelete) {
@@ -735,7 +743,7 @@ export function UnifiedViewerModal({
 			});
 		}
 		return actions;
-	}, [downloadUrl, handleDownload, isDownloading, onDelete, onEdit, showDetails]);
+	}, [currentItem.type, downloadUrl, handleDownload, isDownloading, onDelete, onEdit, showDetails]);
 
 	const renderContent = () => {
 		if (currentItem.type === "media") {
@@ -881,19 +889,26 @@ export function UnifiedViewerModal({
 
 		if (currentItem.type === "note") {
 			return (
-				<div className="h-full w-full max-w-5xl overflow-hidden rounded-[30px] border border-white/10 bg-[rgba(16,16,16,0.82)]">
-					<div className="h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
-						<div className="mx-auto w-full max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-8">
-							<header className="mb-7 border-b border-border/70 pb-6">
-								<h1 className="text-3xl font-semibold leading-tight tracking-tight text-card-foreground sm:text-4xl">
-									{currentItem.title || "Без названия"}
-								</h1>
-							</header>
-							<div className="text-card-foreground">
-								<NoteRenderer item={currentItem} />
-							</div>
+				<div className="h-full w-full overflow-y-auto bg-background text-foreground">
+					<article className="mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
+						<header className="mb-8 border-b border-border pb-7">
+							<h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
+								{currentItem.title || "Без названия"}
+							</h1>
+							{currentItem.tags.length > 0 && (
+								<div className="mt-5 flex flex-wrap gap-2">
+									{currentItem.tags.map((tag) => (
+										<Badge key={tag} variant="secondary">
+											{tag}
+										</Badge>
+									))}
+								</div>
+							)}
+						</header>
+						<div className="text-foreground">
+							<NoteRenderer item={currentItem} />
 						</div>
-					</div>
+					</article>
 				</div>
 			);
 		}
@@ -944,9 +959,17 @@ export function UnifiedViewerModal({
 				onOpenChange={onOpenChange}
 				size="full"
 				variant="fullscreen"
-				className="border-0 bg-black/35 shadow-none backdrop-blur-xl"
+				className={cn(
+					"border-0 shadow-none",
+					currentItem.type === "note" ? "bg-background" : "bg-black/35 backdrop-blur-xl"
+				)}
 				preventScroll>
-				<div className="relative h-full w-full overflow-hidden bg-black" {...bind}>
+				<div
+					className={cn(
+						"relative h-full w-full overflow-hidden",
+						currentItem.type === "note" ? "bg-background" : "bg-black"
+					)}
+					{...bind}>
 					{backgroundSrc && (
 						<div className="absolute inset-0 overflow-hidden">
 							<img
@@ -959,7 +982,11 @@ export function UnifiedViewerModal({
 						</div>
 					)}
 
-					<div className="relative z-10 h-full w-full overflow-hidden px-6 py-10">
+					<div
+						className={cn(
+							"relative z-10 h-full w-full overflow-hidden",
+							currentItem.type !== "note" && "px-6 py-10"
+						)}>
 						<div className="relative h-full w-full overflow-hidden">
 							<AnimatePresence initial={false} mode="sync" custom={direction}>
 								<motion.div
@@ -1050,6 +1077,18 @@ export function UnifiedViewerModal({
 					</AnimatePresence>
 				</div>
 			</BaseModal>
+
+			{currentItem.type === "note" && (
+				<EditContentDialog
+					open={editOpen}
+					onOpenChange={setEditOpen}
+					content={currentItem}
+					onContentUpdated={(updatedContent) => {
+						setUpdatedItems((current) => ({ ...current, [updatedContent.id]: updatedContent }));
+						onContentUpdated?.(updatedContent);
+					}}
+				/>
+			)}
 
 			<ConfirmDialog
 				open={showDeleteConfirm}

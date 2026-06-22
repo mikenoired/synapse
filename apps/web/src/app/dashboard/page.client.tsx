@@ -229,6 +229,7 @@ export default function DashboardClient({
 						searchQuery={searchQuery}
 						selectedTags={selectedTags}
 						onClearFilters={clearFilters}
+						onAddContent={openAddDialog}
 						fetchNext={undefined}
 						hasNext={false}
 						isFetchingNext={false}

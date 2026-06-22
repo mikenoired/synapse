@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Input, Label, Modal } from "@synapse/ui/components";
+import { X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -42,28 +43,40 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 				else toast.error(result.error.message);
 			}
 		} catch {
-			toast.error("Some error");
+			toast.error("Не удалось выполнить запрос");
 		} finally {
 			setIsLoading(false);
 		}
 	};
 
 	return (
-		<Modal open={open} onOpenChange={onOpenChange} className="p-4 w-full max-w-md">
+		<Modal
+			open={open}
+			onOpenChange={onOpenChange}
+			ariaLabel={mode === "login" ? "Вход в Synapse" : "Создание аккаунта"}
+			className="p-5 w-full max-w-md">
+			<button
+				type="button"
+				onClick={() => onOpenChange(false)}
+				aria-label="Закрыть"
+				className="absolute right-3 top-3 flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+				<X className="size-5" />
+			</button>
 			<div className="space-y-1 mb-4">
-				<h1 className="text-2xl font-bold">{mode === "login" ? "Login" : "Create account"}</h1>
+				<h1 className="pr-10 text-2xl font-bold">{mode === "login" ? "Вход" : "Создание аккаунта"}</h1>
 				<div className="text-muted-foreground">
-					{mode === "login" ? "Write your data for login" : "Create new account for using app"}
+					{mode === "login" ? "Введите данные аккаунта" : "Укажите почту и придумайте пароль"}
 				</div>
 			</div>
 
 			<form onSubmit={handleSubmit} className="space-y-4">
 				<div className="space-y-2">
-					<Label htmlFor="email">Email</Label>
+					<Label htmlFor="email">Электронная почта</Label>
 					<Input
 						id="email"
 						type="email"
 						placeholder="example@mail.com"
+						className="h-11"
 						value={email}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 							setEmail(e.target.value);
@@ -81,11 +94,12 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 				</div>
 
 				<div className="space-y-2">
-					<Label htmlFor="password">Password</Label>
+					<Label htmlFor="password">Пароль</Label>
 					<Input
 						id="password"
 						type="password"
 						placeholder="••••••••"
+						className="h-11"
 						value={password}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
 							setPassword(e.target.value);
@@ -102,24 +116,25 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 						</p>
 					) : mode === "register" ? (
 						<p className="text-xs text-muted-foreground">
-							Minimum 8 symbols, including up and down case, digitals
+							Не менее 8 символов: строчная и заглавная буквы, цифра
 						</p>
 					) : null}
 				</div>
 
 				<div className="flex flex-col space-y-2">
-					<Button type="submit" disabled={isLoading}>
-						{isLoading ? "Loading..." : mode === "login" ? "Login" : "Create account"}
+					<Button type="submit" disabled={isLoading} className="h-11">
+						{isLoading ? "Подождите…" : mode === "login" ? "Войти" : "Создать аккаунт"}
 					</Button>
 
 					<Button
 						type="button"
 						variant="ghost"
+						className="h-11"
 						onClick={() => {
 							setFieldErrors({});
 							onModeChange(mode === "login" ? "register" : "login");
 						}}>
-						{mode === "login" ? "No account? Create a new one" : "Already registered? Login"}
+						{mode === "login" ? "Нет аккаунта? Создать" : "Уже есть аккаунт? Войти"}
 					</Button>
 				</div>
 			</form>

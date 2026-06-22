@@ -19,16 +19,21 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
 					key={item.label}
 					href={item.href}
 					scroll={false}
-					className={cn(commonClasses, isActive ? activeClasses : inactiveClasses, "w-16 text-center", {
-						"pointer-events-none": isActive,
-					})}>
+					className={cn(
+						commonClasses,
+						isActive ? activeClasses : inactiveClasses,
+						"min-w-0 flex-1 text-center",
+						{
+							"pointer-events-none": isActive,
+						}
+					)}>
 					<item.icon className="size-6 mx-auto" />
 					{isMobile && <span className="text-xs truncate">{item.label}</span>}
 				</Link>
 			);
 		}
 
-		const isAddButton = item.label === "Add";
+		const isAddButton = item.label === "Добавить";
 
 		return (
 			<button
@@ -39,8 +44,8 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
 				className={cn(
 					commonClasses,
 					isAddButton && isMobile
-						? "w-16 h-16 -mt-8 rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-ring font-semibold"
-						: "w-16 text-center text-primary font-semibold"
+						? "min-w-0 flex-1 h-16 -mt-8 rounded-full bg-primary text-primary-foreground shadow-lg focus-visible:ring-2 focus-visible:ring-ring font-semibold"
+						: "min-w-0 flex-1 text-center text-primary font-semibold"
 				)}
 				style={isAddButton && isMobile ? { position: "relative", zIndex: 60 } : undefined}>
 				<item.icon className={cn(isAddButton && isMobile ? "size-7" : "size-6", "mx-auto")} />
@@ -50,8 +55,8 @@ export default function MobileSidebar({ navItems }: { navItems: NavItem[] }) {
 	};
 
 	return (
-		<nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 border rounded-full bg-background/95 p-2 backdrop-blur-sm sm:hidden">
-			<div className="flex justify-between gap-2 mx-auto font-medium">
+		<nav className="fixed bottom-[max(0.75rem,env(safe-area-inset-bottom))] left-3 right-3 z-50 border rounded-full bg-background/95 p-2 backdrop-blur-sm sm:hidden">
+			<div className="flex justify-between gap-1 mx-auto max-w-sm font-medium">
 				{navItems.map((item) => renderNavItem(item, true))}
 			</div>
 		</nav>
