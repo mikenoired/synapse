@@ -20,7 +20,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
 				animate={{ width: isSidebarExpanded ? 256 : 64 }}
 				initial={false}
 				transition={SIDEBAR_ANIMATION}
-				className="h-screen hidden flex-col sm:flex relative">
+				className="h-screen hidden shrink-0 flex-col sm:flex relative">
 				<div className="flex h-full flex-col">
 					<nav className="flex-1 overflow-y-auto py-4 px-3">
 						<div className="flex flex-col gap-2">

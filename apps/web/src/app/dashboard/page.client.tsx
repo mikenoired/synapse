@@ -5,11 +5,7 @@ import type { DragEvent } from "react";
 import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
-import {
-	removeContentFromList,
-	type ContentListQueryInput,
-	upsertContentInList,
-} from "@/shared/lib/content-query-sync";
+import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
@@ -46,13 +42,23 @@ export default function DashboardClient({
 		[searchQuery, selectedTags]
 	);
 
-	const { data: contentData, isLoading: contentLoading } = trpc.content.getAll.useQuery(queryInput, {
+	const {
+		data: contentData,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading: contentLoading,
+	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
+		getNextPageParam: (lastPage) => lastPage.nextCursor,
+		initialData:
+			queryInput.search || queryInput.tagIds
+				? undefined
+				: { pages: [initial], pageParams: [undefined] },
+		refetchOnMount: true,
 		retry: false,
-		initialData: initial,
-		refetchOnMount: false,
 	});
 
-	const content: Content[] = contentData?.items ?? [];
+	const content: Content[] = contentData?.pages.flatMap((page) => page.items) ?? [];
 
 	const invalidateRelatedQueries = useCallback(() => {
 		void Promise.all([
@@ -67,42 +73,32 @@ export default function DashboardClient({
 		(nextContent?: Content | Content[]) => {
 			const contentList = Array.isArray(nextContent) ? nextContent : nextContent ? [nextContent] : [];
 
-			if (contentList.length === 0) {
-				void utils.content.getAll.invalidate(queryInput);
-				invalidateRelatedQueries();
-				return;
-			}
-
 			for (const content of contentList) {
-				utils.content.getAll.setData(queryInput, (current) =>
-					upsertContentInList(current, content, queryInput)
-				);
 				utils.content.getById.setData({ id: content.id }, content);
 			}
 
+			void utils.content.getAll.invalidate();
 			invalidateRelatedQueries();
 		},
-		[invalidateRelatedQueries, queryInput, utils]
+		[invalidateRelatedQueries, utils]
 	);
 
 	const handleContentUpdated = useCallback(
 		(nextContent: Content) => {
-			utils.content.getAll.setData(queryInput, (current) =>
-				upsertContentInList(current, nextContent, queryInput)
-			);
 			utils.content.getById.setData({ id: nextContent.id }, nextContent);
+			void utils.content.getAll.invalidate();
 			invalidateRelatedQueries();
 		},
-		[invalidateRelatedQueries, queryInput, utils]
+		[invalidateRelatedQueries, utils]
 	);
 
 	const handleContentDeleted = useCallback(
 		(contentId: string) => {
-			utils.content.getAll.setData(queryInput, (current) => removeContentFromList(current, contentId));
+			void utils.content.getAll.invalidate();
 			void utils.content.getById.invalidate({ id: contentId });
 			invalidateRelatedQueries();
 		},
-		[invalidateRelatedQueries, queryInput, utils]
+		[invalidateRelatedQueries, utils]
 	);
 
 	useEffect(() => {
@@ -188,7 +184,7 @@ export default function DashboardClient({
 	};
 
 	return (
-		<div className="flex flex-col h-full relative">
+		<div className="flex min-w-0 flex-col h-full relative">
 			{dragActive && (
 				<div
 					className="fixed inset-0 z-[100] bg-black/60 flex flex-col items-center justify-center pointer-events-auto select-none transition-all animate-in fade-in-0"
@@ -217,7 +213,7 @@ export default function DashboardClient({
 					</div>
 				</div>
 			)}
-			<main className="flex-1 overflow-y-auto relative">
+			<main className="min-w-0 flex-1 overflow-y-auto relative">
 				<ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
 				<div className="p-4">
 					<ContentGrid
@@ -230,9 +226,9 @@ export default function DashboardClient({
 						selectedTags={selectedTags}
 						onClearFilters={clearFilters}
 						onAddContent={openAddDialog}
-						fetchNext={undefined}
-						hasNext={false}
-						isFetchingNext={false}
+						fetchNext={fetchNextPage}
+						hasNext={hasNextPage}
+						isFetchingNext={isFetchingNextPage}
 					/>
 				</div>
 			</main>

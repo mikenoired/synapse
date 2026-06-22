@@ -10,7 +10,7 @@ export default function DashboardWrapper({ children }: { children: ReactNode }) 
 	const scrollContainerRef = useRef<HTMLDivElement>(null);
 
 	return (
-		<div className="relative flex-1 min-h-0">
+		<div className="relative min-w-0 flex-1 min-h-0">
 			<DashboardContent scrollContainerRef={scrollContainerRef}>{children}</DashboardContent>
 			<CustomScrollbar scrollContainerRef={scrollContainerRef} />
 		</div>
