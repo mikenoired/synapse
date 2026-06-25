@@ -6,6 +6,7 @@ import type { createContentSchema, updateContentSchema } from "@/shared/lib/sche
 
 import type { Context } from "../context";
 import { content, contentTags, edges, nodes, tags } from "../db/schema";
+import { requireAuth } from "../lib/auth-guard";
 
 type DatabaseExecutor = Context["db"];
 
@@ -93,7 +94,7 @@ export default class ContentRepository {
 		cursor: string | undefined,
 		limit: number
 	) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const conditions = this.buildContentConditions(search, type, cursor);
 
@@ -125,7 +126,7 @@ export default class ContentRepository {
 		tagIds: string[] | undefined,
 		limit: number
 	) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const searchQuery = sql`replace(
 			plainto_tsquery('russian', ${search})::text,
@@ -177,7 +178,7 @@ export default class ContentRepository {
 			| undefined,
 		cursor: string | undefined
 	) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const conditions = this.buildContentConditions(search, type, cursor, [
 			inArray(contentTags.tagId, tagIds),
@@ -207,7 +208,7 @@ export default class ContentRepository {
 	}
 
 	async contentTagsWithTitles(ids: string[]) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database
 			.select({
@@ -230,7 +231,7 @@ export default class ContentRepository {
 	}
 
 	async getTagsWithContentPreview(limitPerTag: number) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const rankedContent = this.database
 			.select({
@@ -267,7 +268,7 @@ export default class ContentRepository {
 	}
 
 	async getById(id: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database.query.content.findFirst({
 			where: and(eq(content.id, id), eq(content.userId, this.ctx.user.id)),
@@ -279,7 +280,7 @@ export default class ContentRepository {
 	}
 
 	async getNodeByContentId(id: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database.query.nodes.findFirst({
 			where: and(eq(nodes.userId, this.ctx.user.id), sql`${nodes.metadata}->>'content_id' = ${id}`),
@@ -292,7 +293,7 @@ export default class ContentRepository {
 	}
 
 	async create(contentData: z.infer<typeof createContentSchema>) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const [data] = await this.database
 			.insert(content)
@@ -310,7 +311,7 @@ export default class ContentRepository {
 	}
 
 	async getOrCreateTagNodeIds(tagIds: string[]): Promise<Record<string, string>> {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const result: Record<string, string> = {};
 		const uniqueIds = Array.from(new Set(tagIds));
@@ -361,7 +362,7 @@ export default class ContentRepository {
 	}
 
 	async getOrCreateContentNode(params: { content_id: string; title?: string; type: string }) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const existing = await this.database.query.nodes.findFirst({
 			where: and(
@@ -391,7 +392,7 @@ export default class ContentRepository {
 	}
 
 	async updateContentNode(params: { content_id: string; title?: string; type: string }) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const [data] = await this.database
 			.update(nodes)
@@ -408,7 +409,7 @@ export default class ContentRepository {
 	}
 
 	async createContentTags(tagIds: string[], contentId: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database
 			.insert(contentTags)
@@ -438,7 +439,7 @@ export default class ContentRepository {
 	}
 
 	async createNode(content: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const [data] = await this.database
 			.insert(nodes)
@@ -455,7 +456,7 @@ export default class ContentRepository {
 	}
 
 	async getTagsByTitle(titles: string[]) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database.query.tags.findMany({
 			where: and(inArray(tags.title, titles), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
@@ -469,7 +470,7 @@ export default class ContentRepository {
 	}
 
 	async getTagById(id: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database.query.tags.findFirst({
 			where: and(eq(tags.id, id), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
@@ -485,7 +486,7 @@ export default class ContentRepository {
 	}
 
 	async getTags(ids: string[]) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database.query.tags.findMany({
 			where: and(inArray(tags.id, ids), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
@@ -499,7 +500,7 @@ export default class ContentRepository {
 	}
 
 	async createTags(titles: { title: string }[]) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database
 			.insert(tags)
@@ -518,7 +519,7 @@ export default class ContentRepository {
 	}
 
 	async updateContent(updData: z.infer<typeof updateContentSchema>) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const [data] = await this.database
 			.update(content)
@@ -536,7 +537,7 @@ export default class ContentRepository {
 	}
 
 	async updateSearchText(id: string, searchText: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		await this.database
 			.update(content)
@@ -545,7 +546,7 @@ export default class ContentRepository {
 	}
 
 	async deleteEdge(contentNodeId: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		await this.database
 			.delete(edges)
@@ -558,7 +559,7 @@ export default class ContentRepository {
 	}
 
 	async deleteNode(contentNodeId: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		await this.database
 			.delete(nodes)
@@ -566,7 +567,7 @@ export default class ContentRepository {
 	}
 
 	async getContentTags() {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.database
 			.select({
@@ -580,13 +581,13 @@ export default class ContentRepository {
 	}
 
 	async deleteContent(id: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		await this.database.delete(content).where(and(eq(content.id, id), eq(content.userId, this.ctx.user.id)));
 	}
 
 	async deleteTagEdge(contentNodeId: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		await this.database
 			.delete(edges)
@@ -600,7 +601,7 @@ export default class ContentRepository {
 	}
 
 	async deleteContentTag(contentId: string) {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		await this.database
 			.delete(contentTags)

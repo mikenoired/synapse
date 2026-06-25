@@ -6,17 +6,13 @@ import { normalizeUserPreferences } from "@/shared/lib/user-preferences";
 
 import type { Context } from "../context";
 import { users } from "../db/schema";
+import { requireAuth } from "../lib/auth-guard";
 
 export default class UserRepository {
 	constructor(private readonly ctx: Context) {}
 
 	async getUser() {
-		if (!this.ctx.user) {
-			throw new TRPCError({
-				code: "UNAUTHORIZED",
-				message: "Unauthorized",
-			});
-		}
+		requireAuth(this.ctx);
 
 		const user = await this.ctx.db.query.users.findFirst({
 			where: eq(users.id, this.ctx.user.id),
@@ -39,12 +35,7 @@ export default class UserRepository {
 	}
 
 	async getPreferences() {
-		if (!this.ctx.user) {
-			throw new TRPCError({
-				code: "UNAUTHORIZED",
-				message: "Unauthorized",
-			});
-		}
+		requireAuth(this.ctx);
 
 		const user = await this.ctx.db.query.users.findFirst({
 			where: eq(users.id, this.ctx.user.id),
@@ -64,12 +55,7 @@ export default class UserRepository {
 	}
 
 	async updatePreferences(preferences: UserPreferencesInput) {
-		if (!this.ctx.user) {
-			throw new TRPCError({
-				code: "UNAUTHORIZED",
-				message: "Unauthorized",
-			});
-		}
+		requireAuth(this.ctx);
 
 		const currentPreferences = await this.getPreferences();
 		const nextPreferences = normalizeUserPreferences({

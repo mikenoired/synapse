@@ -1,14 +1,14 @@
-import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
 import type { Context } from "../context";
 import { edges, nodes } from "../db/schema";
+import { requireAuth } from "../lib/auth-guard";
 
 export default class GraphRepository {
 	constructor(private readonly ctx: Context) {}
 
 	async getNodes() {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.ctx.db.query.nodes.findMany({
 			where: eq(nodes.userId, this.ctx.user.id),
@@ -24,7 +24,7 @@ export default class GraphRepository {
 	}
 
 	async getEdges() {
-		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+		requireAuth(this.ctx);
 
 		const data = await this.ctx.db.query.edges.findMany({
 			where: eq(edges.userId, this.ctx.user.id),
