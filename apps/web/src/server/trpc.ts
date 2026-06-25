@@ -60,17 +60,7 @@ const rateLimiter = t.middleware(async ({ ctx, type, next }) => {
 	return next();
 });
 
-const slowLogger = t.middleware(async ({ ctx, path, type, next }) => {
-	const start = Date.now();
-	const result = await next();
-	void ctx;
-	void path;
-	void type;
-	void start;
-	return result;
-});
-
-export const publicProcedure = t.procedure.use(csrfProtection).use(rateLimiter).use(slowLogger);
+export const publicProcedure = t.procedure.use(csrfProtection).use(rateLimiter);
 
 const isAuthed = t.middleware(({ ctx, next }) => {
 	if (!ctx.user) handleAuthError(null, "UNAUTHORIZED");
@@ -83,10 +73,6 @@ const isAuthed = t.middleware(({ ctx, next }) => {
 	});
 });
 
-export const protectedProcedure = t.procedure
-	.use(csrfProtection)
-	.use(rateLimiter)
-	.use(slowLogger)
-	.use(isAuthed);
+export const protectedProcedure = t.procedure.use(csrfProtection).use(rateLimiter).use(isAuthed);
 
 // getServerCaller moved to a separate module to avoid circular imports

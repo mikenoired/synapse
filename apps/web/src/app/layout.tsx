@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 });
 
-const geist = Geist()
+const geist = Geist();
 
 export const metadata: Metadata = {
 	title: "Synapse — личный архив",
