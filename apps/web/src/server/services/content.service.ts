@@ -1,10 +1,12 @@
+import { TRPCError } from "@trpc/server";
 import type z from "zod";
 
 import { deleteFile, getFileMetadata } from "@/shared/api/minio";
-import type { Content, createContentSchema, updateContentSchema } from "@/shared/lib/schemas";
+import type { Content, CreateContent, createContentSchema, updateContentSchema } from "@/shared/lib/schemas";
 import {
 	contentDetailSchema,
 	contentListItemSchema,
+	contentTypeSchema,
 	parseAudioJson,
 	parseMediaJson,
 } from "@/shared/lib/schemas";
@@ -18,6 +20,7 @@ import {
 	extractOwnedNoteImages,
 	prepareNoteImages,
 } from "../lib/note-images";
+import { isSupportedFileType, parseFile } from "../parsers";
 import ContentRepository from "../repositories/content.repository";
 
 type ContentSelect = typeof contentTable.$inferSelect;
@@ -25,6 +28,7 @@ type ContentRow = Omit<ContentSelect, "searchText" | "searchVector"> &
 	Partial<Pick<ContentSelect, "searchText" | "searchVector">>;
 
 const TAGS_CACHE_TTL_SECONDS = Math.floor(Number(process.env.TAGS_CACHE_TTL_MS ?? 30000) / 1000);
+const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024;
 
 export default class ContentService {
 	private repo: ContentRepository;
@@ -193,6 +197,51 @@ export default class ContentService {
 		await this.invalidateUserTags();
 		const content = contentDetailSchema.parse(withTags);
 		return content;
+	}
+
+	async importFile(input: {
+		title?: string;
+		tags?: string[];
+		file: { name: string; type: string; size: number; buffer: number[] };
+	}) {
+		const { file, tags, title } = input;
+
+		if (!isSupportedFileType(file.name, file.type)) {
+			throw new TRPCError({ code: "BAD_REQUEST", message: `Неподдерживаемый тип файла: ${file.name}` });
+		}
+		if (file.size > MAX_IMPORT_FILE_SIZE) {
+			throw new TRPCError({
+				code: "BAD_REQUEST",
+				message: "Файл слишком большой. Максимальный размер: 50MB",
+			});
+		}
+
+		const buffer = Buffer.from(file.buffer);
+		const parsed = await parseFile(
+			{ name: file.name, type: file.type, size: file.size, buffer },
+			{ extractThumbnail: true, maxContentLength: 1_000_000 }
+		);
+
+		let documentImages: CreateContent["document_images"];
+		if (parsed.images && parsed.images.length > 0) {
+			const { processDocumentImages, uploadDocumentImagesToMinio } =
+				await import("@/server/lib/document-image-processor");
+			const documentId = `doc-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+			const processed = await processDocumentImages(parsed.images);
+			documentImages = await uploadDocumentImagesToMinio(processed, this.ctx.user!.id, documentId);
+		}
+
+		const content = await this.create({
+			type: contentTypeSchema.parse(parsed.type),
+			title: title?.trim() || parsed.title || file.name,
+			content: parsed.content,
+			tags,
+			thumbnail_base64: parsed.thumbnailBase64,
+			media_type: "image",
+			document_images: documentImages,
+		});
+
+		return { success: true, content };
 	}
 
 	async update(input: z.infer<typeof updateContentSchema>) {

@@ -176,4 +176,25 @@ describe.serial("content service", () => {
 		).rejects.toMatchObject({ code: "NOT_FOUND", message: "Tag not found" });
 		expect(await db.select().from(content).where(eq(content.userId, userId))).toHaveLength(0);
 	});
+
+	test("imports a parsed file into content via importFile", async () => {
+		const csv = Buffer.from("name,age\nAlice,30\nBob,25\n", "utf-8");
+		const result = await createService().importFile({
+			file: {
+				name: "contacts.csv",
+				type: "text/csv",
+				size: csv.length,
+				buffer: Array.from(csv),
+			},
+		});
+
+		expect(result.success).toBe(true);
+		expect(result.content).toMatchObject({
+			user_id: userId,
+			type: "csv",
+			title: "name",
+		});
+		expect(result.content.content).toContain("Alice");
+		expect(await createService().getById(result.content.id)).toEqual(result.content);
+	});
 });
