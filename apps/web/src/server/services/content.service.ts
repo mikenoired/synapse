@@ -11,6 +11,7 @@ import {
 
 import type { Context } from "../context";
 import type { content as contentTable } from "../db/schema";
+import { buildContentSearchText } from "../lib/content-search";
 import {
 	deleteStoredNoteImages,
 	deleteUploadedNoteImages,
@@ -19,7 +20,9 @@ import {
 } from "../lib/note-images";
 import ContentRepository from "../repositories/content.repository";
 
-type ContentRow = typeof contentTable.$inferSelect;
+type ContentSelect = typeof contentTable.$inferSelect;
+type ContentRow = Omit<ContentSelect, "searchText" | "searchVector"> &
+	Partial<Pick<ContentSelect, "searchText" | "searchVector">>;
 
 const TAGS_CACHE_TTL_SECONDS = Math.floor(Number(process.env.TAGS_CACHE_TTL_MS ?? 30000) / 1000);
 
@@ -52,6 +55,9 @@ export default class ContentService {
 		limit: number,
 		includeTags: boolean
 	) {
+		if (search?.trim()) {
+			return await this.searchContent(search.trim(), type, tagIds, limit, includeTags);
+		}
 		if (tagIds && tagIds.length) {
 			return await this.getContentWithTagFilter(tagIds, limit, search, type, cursor, includeTags);
 		}
@@ -68,6 +74,24 @@ export default class ContentService {
 		return {
 			items: items.map((i) => contentListItemSchema.parse(i)),
 			nextCursor,
+		};
+	}
+
+	private async searchContent(
+		search: string,
+		type: Content["type"] | undefined,
+		tagIds: string[] | undefined,
+		limit: number,
+		includeTags: boolean
+	) {
+		const rows = (await this.repo.searchFtsFiltered(search, type, tagIds, limit)) as ContentRow[];
+		const items = includeTags
+			? await this.attachTagsToContent(rows)
+			: rows.map((row) => this.mapContentRow(row, this.ctx.user!.id));
+
+		return {
+			items: items.map((item) => contentListItemSchema.parse(item)),
+			nextCursor: undefined,
 		};
 	}
 
@@ -135,16 +159,27 @@ export default class ContentService {
 
 				const tagIds = inputTagIds as string[] | undefined;
 				const tagTitles = legacyTagTitles as string[] | undefined;
+				let searchTags: string[] = [];
 				if (tagIds && tagIds.length) {
 					const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
 					await this.upsertContentTags(repo, contentId, tagIds, contentNodeId, tagNodeIds);
+					searchTags = (await repo.getTags(tagIds)).map((tag) => tag.title);
 				} else if (tagTitles && tagTitles.length) {
 					const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
 					if (ids.length) {
 						const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
 						await this.upsertContentTags(repo, contentId, ids, contentNodeId, tagNodeIds);
+						searchTags = (await repo.getTags(ids)).map((tag) => tag.title);
 					}
 				}
+				await repo.updateSearchText(
+					contentId,
+					buildContentSearchText({
+						content: (data as ContentRow).content,
+						tags: searchTags,
+						title: (data as ContentRow).title,
+					})
+				);
 
 				return data;
 			})) as ContentRow;
@@ -156,7 +191,8 @@ export default class ContentService {
 		await this.trackAddedNoteImages(prepared.uploaded);
 		const [withTags] = await this.attachTagsToContent([result]);
 		await this.invalidateUserTags();
-		return contentDetailSchema.parse(withTags);
+		const content = contentDetailSchema.parse(withTags);
+		return content;
 	}
 
 	async update(input: z.infer<typeof updateContentSchema>) {
@@ -191,14 +227,28 @@ export default class ContentService {
 					type: updateData.type || (data as ContentRow).type,
 				});
 
+				let searchTags: string[] = [];
 				if (tagIds) {
 					const tagNodeIds = await repo.getOrCreateTagNodeIds(tagIds);
 					await this.replaceContentTags(repo, id, tagIds, contentNodeId, tagNodeIds);
+					searchTags = tagIds.length ? (await repo.getTags(tagIds)).map((tag) => tag.title) : [];
 				} else if (tagTitles) {
 					const ids = await this.resolveTagTitlesToIds(repo, tagTitles);
 					const tagNodeIds = await repo.getOrCreateTagNodeIds(ids);
 					await this.replaceContentTags(repo, id, ids, contentNodeId, tagNodeIds);
+					searchTags = ids.length ? (await repo.getTags(ids)).map((tag) => tag.title) : [];
+				} else {
+					const [existingTags] = await repo.contentTagsWithTitles([id]);
+					searchTags = existingTags?.tag_titles || [];
 				}
+				await repo.updateSearchText(
+					id,
+					buildContentSearchText({
+						content: (data as ContentRow).content,
+						tags: searchTags,
+						title: (data as ContentRow).title,
+					})
+				);
 
 				return data;
 			})) as ContentRow;
@@ -221,7 +271,8 @@ export default class ContentService {
 
 		const [withTags] = await this.attachTagsToContent([result]);
 		await this.invalidateUserTags();
-		return contentDetailSchema.parse(withTags);
+		const content = contentDetailSchema.parse(withTags);
+		return content;
 	}
 
 	async delete(id: string) {
@@ -330,6 +381,10 @@ export default class ContentService {
 
 	async getTagById(id: string) {
 		return await this.repo.getTagById(id);
+	}
+
+	async syncSearchText(content: Content) {
+		await this.repo.updateSearchText(content.id, buildContentSearchText(content));
 	}
 
 	async getTagsWithContent() {

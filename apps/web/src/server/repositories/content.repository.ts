@@ -107,6 +107,57 @@ export default class ContentRepository {
 		return data;
 	}
 
+	async searchFtsFiltered(
+		search: string,
+		type:
+			| "note"
+			| "media"
+			| "link"
+			| "todo"
+			| "audio"
+			| "doc"
+			| "pdf"
+			| "docx"
+			| "epub"
+			| "xlsx"
+			| "csv"
+			| undefined,
+		tagIds: string[] | undefined,
+		limit: number
+	) {
+		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		const searchQuery = sql`replace(
+			plainto_tsquery('russian', ${search})::text,
+			' & ',
+			' | '
+		)::tsquery`;
+		const score = sql<number>`ts_rank_cd(${content.searchVector}, ${searchQuery})`;
+		const conditions = [eq(content.userId, this.ctx.user.id), sql`${content.searchVector} @@ ${searchQuery}`];
+
+		if (type) conditions.push(eq(content.type, type));
+		if (tagIds?.length) {
+			const tagList = sql.join(
+				tagIds.map((tagId) => sql`${tagId}`),
+				sql`, `
+			);
+			conditions.push(sql`(
+				select count(distinct search_content_tags.tag_id)
+				from ${contentTags} search_content_tags
+				where search_content_tags.content_id = ${content.id}
+					and search_content_tags.user_id = ${this.ctx.user.id}
+					and search_content_tags.tag_id in (${tagList})
+			) = ${tagIds.length}`);
+		}
+
+		return await this.database
+			.select(contentListColumns)
+			.from(content)
+			.where(and(...conditions))
+			.orderBy(desc(score), desc(content.createdAt), desc(content.id))
+			.limit(limit);
+	}
+
 	async getWithTagFilter(
 		tagIds: string[],
 		limit: number,
@@ -482,6 +533,15 @@ export default class ContentRepository {
 		if (!data) throw new TRPCError({ code: "NOT_FOUND", message: "Content not found" });
 
 		return data;
+	}
+
+	async updateSearchText(id: string, searchText: string) {
+		if (!this.ctx.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "Unauthorized" });
+
+		await this.database
+			.update(content)
+			.set({ searchText, searchVector: sql`to_tsvector('russian', ${searchText})` })
+			.where(and(eq(content.id, id), eq(content.userId, this.ctx.user.id)));
 	}
 
 	async deleteEdge(contentNodeId: string) {

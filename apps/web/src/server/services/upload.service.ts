@@ -117,7 +117,10 @@ export default class UploadService {
 			return inserted.id;
 		});
 
-		return await new ContentService(this.ctx).getById(contentId);
+		const contentService = new ContentService(this.ctx);
+		const createdContent = await contentService.getById(contentId);
+		await contentService.syncSearchText(createdContent);
+		return createdContent;
 	}
 
 	private async trackStorage(userId: string, deltas: { size: number; updateFileCount?: boolean }[]) {

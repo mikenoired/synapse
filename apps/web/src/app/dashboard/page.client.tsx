@@ -24,6 +24,7 @@ export default function DashboardClient({
 	initial: { items: Content[]; nextCursor: string | undefined };
 }) {
 	const [searchQuery, setSearchQuery] = useState("");
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const { openModal } = useModal();
@@ -33,13 +34,22 @@ export default function DashboardClient({
 	const dragCounter = useRef(0);
 	const utils = trpc.useUtils();
 
+	useEffect(() => {
+		if (!searchQuery) {
+			setDebouncedSearchQuery("");
+			return;
+		}
+		const timeout = window.setTimeout(() => setDebouncedSearchQuery(searchQuery), 250);
+		return () => window.clearTimeout(timeout);
+	}, [searchQuery]);
+
 	const queryInput = useMemo<ContentListQueryInput>(
 		() => ({
-			search: searchQuery || undefined,
+			search: debouncedSearchQuery || undefined,
 			tagIds: selectedTags.length > 0 ? selectedTags : undefined,
 			limit: 12,
 		}),
-		[searchQuery, selectedTags]
+		[debouncedSearchQuery, selectedTags]
 	);
 
 	const {
@@ -51,9 +61,7 @@ export default function DashboardClient({
 	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		initialData:
-			queryInput.search || queryInput.tagIds
-				? undefined
-				: { pages: [initial], pageParams: [undefined] },
+			queryInput.search || queryInput.tagIds ? undefined : { pages: [initial], pageParams: [undefined] },
 		refetchOnMount: true,
 		retry: false,
 	});
@@ -222,7 +230,7 @@ export default function DashboardClient({
 						onContentUpdated={handleContentUpdated}
 						onContentDeleted={handleContentDeleted}
 						onItemClick={handleItemClick}
-						searchQuery={searchQuery}
+						searchQuery={debouncedSearchQuery}
 						selectedTags={selectedTags}
 						onClearFilters={clearFilters}
 						onAddContent={openAddDialog}

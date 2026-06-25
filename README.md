@@ -46,6 +46,7 @@ docker compose ps
 
 ```bash
 bun --filter @synapse/web db:push
+bun --filter @synapse/web search:backfill
 ```
 
 ### 5. Создайте bucket в MinIO

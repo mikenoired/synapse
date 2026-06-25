@@ -7,6 +7,7 @@
 		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
+		"search:backfill": "bun src/server/scripts/backfill-search-text.ts",
 		"format": "bun x oxfmt --config ../../.oxfmtrc.json --write .",
 		"format:check": "bun x oxfmt --config ../../.oxfmtrc.json --check .",
 		"lint": "bun x oxlint . --config ../../.oxlintrc.json --deny-warnings",

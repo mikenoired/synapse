@@ -1,8 +1,14 @@
-import { relations } from "drizzle-orm";
-import { index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { relations, sql } from "drizzle-orm";
+import { customType, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 
 import type { UserPreferences } from "@/shared/lib/user-preferences";
 import { DEFAULT_USER_PREFERENCES } from "@/shared/lib/user-preferences";
+
+const tsvector = customType<{ data: string }>({
+	dataType() {
+		return "tsvector";
+	},
+});
 
 export const users = pgTable("users", {
 	id: uuid("id").primaryKey().defaultRandom(),
@@ -19,6 +25,10 @@ export const content = pgTable(
 		id: uuid("id").primaryKey().defaultRandom(),
 		type: text("type").notNull(),
 		content: text("content").notNull(),
+		searchText: text("search_text").notNull().default(""),
+		searchVector: tsvector("search_vector")
+			.notNull()
+			.default(sql`''::tsvector`),
 		title: text("title"),
 		thumbnailBase64: text("thumbnail_base64"),
 		documentImages: jsonb("document_images"),
@@ -32,6 +42,7 @@ export const content = pgTable(
 		createdAtIdx: index("content_created_at_idx").on(table.createdAt),
 		userIdTypeIdx: index("content_user_id_type_idx").on(table.userId, table.type),
 		userIdCreatedAtIdx: index("content_user_id_created_at_idx").on(table.userId, table.createdAt),
+		searchVectorIdx: index("content_search_vector_idx").using("gin", table.searchVector),
 	})
 );
 
