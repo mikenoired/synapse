@@ -414,6 +414,14 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 									onAddTag={context.addTag}
 									onRemoveTag={context.removeTag}
 									onKeyDown={context.handleTagKeyDown}
+									aiGenerate={
+										type === "link" && context.parsedLinkData
+											? { type: "link", title, content: JSON.stringify(context.parsedLinkData) }
+											: null
+									}
+									onAiTags={(existing, newTags) =>
+										context.addTags([...existing.map((t) => t.name), ...newTags])
+									}
 								/>
 							</motion.div>
 						)}

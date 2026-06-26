@@ -23,6 +23,22 @@ export function useTagManager(initialTags: string[] = []) {
 		}
 	}, [state.currentTag, state.tags]);
 
+	const addTags = useCallback((names: string[]) => {
+		const cleaned = names.map((name) => name.trim()).filter((name) => name.length > 0);
+		if (cleaned.length === 0) return;
+		setState((prev) => {
+			const existing = new Set(prev.tags);
+			const merged = [...prev.tags];
+			for (const name of cleaned) {
+				if (!existing.has(name)) {
+					existing.add(name);
+					merged.push(name);
+				}
+			}
+			return { ...prev, tags: merged };
+		});
+	}, []);
+
 	const removeTag = useCallback((tagToRemove: string) => {
 		setState((prev) => ({
 			...prev,
@@ -56,6 +72,7 @@ export function useTagManager(initialTags: string[] = []) {
 		currentTag: state.currentTag,
 		updateCurrentTag,
 		addTag,
+		addTags,
 		removeTag,
 		resetTags,
 		handleKeyDown,

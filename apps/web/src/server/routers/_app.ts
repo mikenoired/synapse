@@ -1,4 +1,5 @@
 import { router } from "../trpc";
+import { aiRouter } from "./ai";
 import { authRouter } from "./auth";
 import { contentRouter } from "./content";
 import { graphRouter } from "./graph";
@@ -11,6 +12,7 @@ export const appRouter = router({
 	user: userRouter,
 	graph: graphRouter,
 	upload: uploadRouter,
+	ai: aiRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -39,6 +39,7 @@ import {
 	parseMediaJson,
 } from "@/shared/lib/schemas";
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
+import { GenerateTagsButton, type SuggestedTag } from "@/shared/ui/generate-tags-button";
 import { CustomVideoPlayer } from "@/widgets/content-viewer/ui/custom-video-player";
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
 
@@ -646,6 +647,16 @@ export function UnifiedViewerModal({
 		}
 	};
 
+	const handleAiTags = async (existing: SuggestedTag[], newTags: string[]) => {
+		try {
+			const names = [...existing.map((t) => t.name), ...newTags];
+			const updatedTags = [...new Set([...(currentItem.tags || []), ...names])];
+			await updateContentMutation.mutateAsync({ id: currentItem.id, tags: updatedTags });
+		} catch {
+			showToast.error("Ошибка при добавлении тегов");
+		}
+	};
+
 	const handleEdit = () => {
 		if (currentItem.type === "note") {
 			setEditOpen(true);
@@ -1069,6 +1080,17 @@ export function UnifiedViewerModal({
 											onAddTag={handleAddTag}
 											onRemoveTag={handleRemoveTag}
 											inputPlaceholder="Добавить тег..."
+										/>
+										<GenerateTagsButton
+											mode="existing"
+											contentId={currentItem.id}
+											disabled={
+												updateContentMutation.isPending ||
+												currentItem.type === "media" ||
+												currentItem.type === "audio"
+											}
+											onResult={handleAiTags}
+											className="mt-2"
 										/>
 									</div>
 								</div>

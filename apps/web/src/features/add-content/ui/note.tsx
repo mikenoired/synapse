@@ -3,6 +3,7 @@
 import { Badge, Input } from "@synapse/ui/components";
 import { X } from "lucide-react";
 
+import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
 import { Editor } from "@/widgets/editor/ui/editor";
 
 import { useAddContent } from "../model/add-content-context";
@@ -19,6 +20,7 @@ export default function AddNoteView() {
 		editorData,
 		setEditorData,
 		removeTag,
+		addTags,
 	} = useAddContent();
 
 	return (
@@ -54,6 +56,14 @@ export default function AddNoteView() {
 							onKeyDown={handleTagKeyDown}
 							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
 							disabled={isSubmitting}
+						/>
+						<GenerateTagsButton
+							mode="draft"
+							type="note"
+							title={title}
+							content={JSON.stringify(editorData ?? { type: "doc", content: [] })}
+							disabled={isSubmitting || !editorData?.content?.length}
+							onResult={(existing, newTags) => addTags([...existing.map((t) => t.name), ...newTags])}
 						/>
 					</div>
 				</div>

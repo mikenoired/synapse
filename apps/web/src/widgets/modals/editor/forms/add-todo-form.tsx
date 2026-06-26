@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
+import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
 
 import { ModalActions, ModalBody } from "../../layout";
 import { showToast } from "../../utils";
@@ -168,6 +169,18 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 								}}
 								className="flex-1 min-w-[120px]"
 								disabled={createMutation.isPending}
+							/>
+							<GenerateTagsButton
+								mode="draft"
+								type="todo"
+								title={title}
+								content={JSON.stringify(todos.filter((t) => t.text.trim()))}
+								disabled={createMutation.isPending || todos.filter((t) => t.text.trim()).length === 0}
+								onResult={(existing, newTags) =>
+									setTags((prev) =>
+										Array.from(new Set([...prev, ...existing.map((t) => t.name), ...newTags]))
+									)
+								}
 							/>
 						</div>
 					</div>

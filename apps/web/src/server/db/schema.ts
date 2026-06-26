@@ -1,5 +1,17 @@
 import { relations, sql } from "drizzle-orm";
-import { customType, index, jsonb, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	check,
+	customType,
+	index,
+	integer,
+	jsonb,
+	numeric,
+	pgTable,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 
 import type { UserPreferences } from "@/shared/lib/user-preferences";
 import { DEFAULT_USER_PREFERENCES } from "@/shared/lib/user-preferences";
@@ -111,11 +123,47 @@ export const edges = pgTable(
 	})
 );
 
+export const aiUsage = pgTable(
+	"ai_usage",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
+		provider: text("provider").notNull(),
+		model: text("model").notNull(),
+		feature: text("feature").notNull().default("tag_suggestion"),
+		inputTokens: integer("input_tokens").notNull().default(0),
+		outputTokens: integer("output_tokens").notNull().default(0),
+		inputCostUsd: numeric("input_cost_usd", { precision: 12, scale: 8 }).notNull().default("0"),
+		outputCostUsd: numeric("output_cost_usd", { precision: 12, scale: 8 }).notNull().default("0"),
+		totalCostUsd: numeric("total_cost_usd", { precision: 12, scale: 8 }).notNull().default("0"),
+		success: boolean("success").notNull(),
+		errorType: text("error_type"),
+		errorMessage: text("error_message"),
+		latencyMs: integer("latency_ms"),
+		// Plain uuid without FK: billing history must survive cascade content deletion
+		contentId: uuid("content_id"),
+		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+	},
+	(table) => ({
+		userIdCreatedAtIdx: index("ai_usage_user_id_created_at_idx").on(table.userId, table.createdAt),
+		userIdFeatureCreatedAtIdx: index("ai_usage_user_id_feature_created_at_idx").on(
+			table.userId,
+			table.feature,
+			table.createdAt
+		),
+		successTokensChk: check(
+			"ai_usage_success_tokens_chk",
+			sql`success = true OR (input_tokens = 0 AND output_tokens = 0)`
+		),
+	})
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
 	content: many(content),
 	tags: many(tags),
 	nodes: many(nodes),
 	edges: many(edges),
+	aiUsage: many(aiUsage),
 }));
 
 export const contentRelations = relations(content, ({ one, many }) => ({

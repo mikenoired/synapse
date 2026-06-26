@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
+import { GenerateTagsButton, type SuggestedTag } from "@/shared/ui/generate-tags-button";
 import { Editor } from "@/widgets/editor/ui/editor";
 
 interface EditContentDialogProps {
@@ -130,6 +131,11 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 		setTags(tags.filter((tag) => tag !== tagToRemove));
 	};
 
+	const handleAiTags = (existing: SuggestedTag[], newTags: string[]) => {
+		const names = [...existing.map((t) => t.name), ...newTags];
+		setTags((prev) => Array.from(new Set([...prev, ...names])));
+	};
+
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" && !e.shiftKey) {
 			e.preventDefault();
@@ -210,6 +216,12 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 							onKeyDown={handleKeyDown}
 							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
 							disabled={updateContentMutation.isPending}
+						/>
+						<GenerateTagsButton
+							mode="existing"
+							contentId={content.id}
+							disabled={updateContentMutation.isPending || todoItems.length === 0}
+							onResult={handleAiTags}
 						/>
 					</div>
 				</div>
@@ -325,6 +337,12 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 											onKeyDown={handleKeyDown}
 											className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
 											disabled={updateContentMutation.isPending}
+										/>
+										<GenerateTagsButton
+											mode="existing"
+											contentId={content.id}
+											disabled={updateContentMutation.isPending || !editorData?.content?.length}
+											onResult={handleAiTags}
 										/>
 									</div>
 								</div>

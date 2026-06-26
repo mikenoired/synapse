@@ -3,7 +3,7 @@ export function buildContentSearchText(content: { content: string; tags?: string
 	return parts.filter(Boolean).join("\n").replace(/\s+/g, " ").trim();
 }
 
-function extractContentText(raw: string) {
+export function extractContentText(raw: string) {
 	try {
 		const parsed = JSON.parse(raw) as unknown;
 		const parts: string[] = [];

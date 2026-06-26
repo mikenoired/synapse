@@ -499,6 +499,24 @@ export default class ContentRepository {
 		return data;
 	}
 
+	async getTagsForAi(limit = 60): Promise<Array<{ id: string; title: string }>> {
+		requireAuth(this.ctx);
+
+		const rows = await this.database
+			.select({
+				id: tags.id,
+				title: tags.title,
+			})
+			.from(tags)
+			.leftJoin(contentTags, and(eq(contentTags.tagId, tags.id), eq(contentTags.userId, this.ctx.user.id)))
+			.where(or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!)
+			.groupBy(tags.id, tags.title)
+			.orderBy(desc(sql`count(*)`), asc(tags.title))
+			.limit(limit);
+
+		return rows.map((row) => ({ id: row.id, title: row.title }));
+	}
+
 	async createTags(titles: { title: string }[]) {
 		requireAuth(this.ctx);
 

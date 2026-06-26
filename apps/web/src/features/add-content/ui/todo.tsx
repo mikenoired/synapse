@@ -3,6 +3,8 @@
 import { Badge, Input } from "@synapse/ui/components";
 import { X } from "lucide-react";
 
+import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
+
 import { useAddContent } from "../model/add-content-context";
 import { TodoList } from "./components/todo-list";
 
@@ -17,6 +19,7 @@ export default function AddTodoView() {
 		handleTagKeyDown,
 		todoItems,
 		removeTag,
+		addTags,
 		addTodo,
 		removeTodo,
 		toggleTodo,
@@ -56,6 +59,14 @@ export default function AddTodoView() {
 							onKeyDown={handleTagKeyDown}
 							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
 							disabled={isSubmitting}
+						/>
+						<GenerateTagsButton
+							mode="draft"
+							type="todo"
+							title={title}
+							content={JSON.stringify(todoItems)}
+							disabled={isSubmitting || todoItems.length === 0}
+							onResult={(existing, newTags) => addTags([...existing.map((t) => t.name), ...newTags])}
 						/>
 					</div>
 				</div>

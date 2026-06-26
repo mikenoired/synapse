@@ -7,6 +7,7 @@ import { useState } from "react";
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
 import type { LinkContent } from "@/shared/lib/schemas";
+import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
 
 import { ModalActions, ModalBody } from "../../layout";
 import { showToast } from "../../utils";
@@ -22,6 +23,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 	const [tags, setTags] = useState<string[]>(initialTags);
 	const [currentTag, setCurrentTag] = useState("");
 	const [parsing, setParsing] = useState(false);
+	const [parsedLink, setParsedLink] = useState<LinkContent | null>(null);
 	const utils = trpc.useUtils();
 
 	const createMutation = trpc.content.create.useMutation();
@@ -48,6 +50,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 		setParsing(true);
 		try {
 			const parsed = await parseLink(url.trim());
+			setParsedLink(parsed);
 			if (parsed.title && !title) {
 				setTitle(parsed.title);
 			}
@@ -167,6 +170,18 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 								}}
 								className="flex-1 min-w-[120px]"
 								disabled={createMutation.isPending}
+							/>
+							<GenerateTagsButton
+								mode="draft"
+								type="link"
+								title={title}
+								content={JSON.stringify(parsedLink ?? {})}
+								disabled={createMutation.isPending || !parsedLink}
+								onResult={(existing, newTags) =>
+									setTags((prev) =>
+										Array.from(new Set([...prev, ...existing.map((t) => t.name), ...newTags]))
+									)
+								}
 							/>
 						</div>
 					</div>

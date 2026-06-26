@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
+import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
 import { Editor } from "@/widgets/editor/ui/editor";
 
 import { ModalActions, ModalBody } from "../../layout";
@@ -107,6 +108,16 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 							onKeyDown={handleTagKeyDown}
 							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1 min-w-[120px]"
 							disabled={createMutation.isPending}
+						/>
+						<GenerateTagsButton
+							mode="draft"
+							type="note"
+							title={title}
+							content={JSON.stringify(editorData ?? { type: "doc", content: [] })}
+							disabled={createMutation.isPending || !editorData}
+							onResult={(existing, newTags) =>
+								setTags((prev) => Array.from(new Set([...prev, ...existing.map((t) => t.name), ...newTags])))
+							}
 						/>
 					</div>
 				</div>

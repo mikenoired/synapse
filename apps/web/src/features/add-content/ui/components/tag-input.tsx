@@ -3,6 +3,16 @@
 import { Badge, Button, Input, Label } from "@synapse/ui/components";
 import { X } from "lucide-react";
 
+import type { Content } from "@/shared/lib/schemas";
+import type { SuggestedTag } from "@/shared/ui/generate-tags-button";
+import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
+
+interface AiGenerateDraft {
+	type: Content["type"];
+	title?: string;
+	content: string;
+}
+
 interface TagInputProps {
 	tags: string[];
 	currentTag: string;
@@ -11,6 +21,8 @@ interface TagInputProps {
 	onAddTag: () => void;
 	onRemoveTag: (tag: string) => void;
 	onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+	aiGenerate?: AiGenerateDraft | null;
+	onAiTags?: (existing: SuggestedTag[], newTags: string[]) => void;
 }
 
 export function TagInput({
@@ -21,6 +33,8 @@ export function TagInput({
 	onAddTag,
 	onRemoveTag,
 	onKeyDown,
+	aiGenerate,
+	onAiTags,
 }: TagInputProps) {
 	return (
 		<div className="space-y-3">
@@ -38,6 +52,16 @@ export function TagInput({
 				<Button type="button" onClick={onAddTag} disabled={!currentTag.trim() || isLoading} size="sm">
 					Add
 				</Button>
+				{aiGenerate && onAiTags && (
+					<GenerateTagsButton
+						mode="draft"
+						type={aiGenerate.type}
+						title={aiGenerate.title}
+						content={aiGenerate.content}
+						disabled={isLoading}
+						onResult={(existing, newTags) => onAiTags(existing, newTags)}
+					/>
+				)}
 			</div>
 			{tags.length > 0 && (
 				<div className="flex flex-wrap gap-2">
