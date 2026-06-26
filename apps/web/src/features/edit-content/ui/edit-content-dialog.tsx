@@ -16,11 +16,28 @@ interface EditContentDialogProps {
 	onContentUpdated?: (content: Content) => void;
 }
 
+function parseEditorContent(content: string | undefined): JSONContent {
+	if (!content) return { type: "doc", content: [] };
+
+	try {
+		const parsed = JSON.parse(content) as JSONContent;
+		return parsed?.type === "doc" ? parsed : { type: "doc", content: [] };
+	} catch {
+		return {
+			type: "doc",
+			content: [
+				{
+					type: "paragraph",
+					content: [{ type: "text", text: content }],
+				},
+			],
+		};
+	}
+}
+
 export function EditContentDialog({ open, onOpenChange, content, onContentUpdated }: EditContentDialogProps) {
 	const [title, setTitle] = useState(content.title || "");
-	const [editorData, setEditorData] = useState<JSONContent>(
-		content.content ? JSON.parse(content.content) : { type: "doc", content: [] }
-	);
+	const [editorData, setEditorData] = useState<JSONContent>(parseEditorContent(content.content));
 	const [tags, setTags] = useState<string[]>(content.tags || []);
 	const [isFullScreen, setIsFullScreen] = useState(false);
 	const [startY, setStartY] = useState<number | null>(null);
@@ -46,7 +63,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	useEffect(() => {
 		setTitle(content.title || "");
 		setTags(content.tags || []);
-		setEditorData(content.content ? JSON.parse(content.content) : { type: "doc", content: [] });
+		setEditorData(parseEditorContent(content.content));
 	}, [content]);
 
 	useEffect(() => {

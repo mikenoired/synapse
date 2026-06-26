@@ -397,7 +397,15 @@ export function UnifiedViewerModal({
 	}, [item, items]);
 
 	const currentBaseItem = normalizedItems[currentIndex] ?? item;
-	const currentItem = updatedItems[currentBaseItem.id] ?? currentBaseItem;
+	const currentDetailQuery = trpc.content.getById.useQuery(
+		{ id: currentBaseItem.id },
+		{
+			enabled: open,
+			refetchOnMount: "always",
+			retry: false,
+		}
+	);
+	const currentItem = updatedItems[currentBaseItem.id] ?? currentDetailQuery.data ?? currentBaseItem;
 	const linkContent = useMemo(
 		() => (currentItem.type === "link" ? parseLinkContent(currentItem.content) : null),
 		[currentItem.content, currentItem.type]
@@ -659,6 +667,11 @@ export function UnifiedViewerModal({
 
 	const handleEdit = () => {
 		if (currentItem.type === "note") {
+			if (!currentDetailQuery.data && currentDetailQuery.isFetching) {
+				showToast.info("Загружаем полную заметку");
+				return;
+			}
+
 			setEditOpen(true);
 			return;
 		}
@@ -743,7 +756,12 @@ export function UnifiedViewerModal({
 			});
 		}
 		if (currentItem.type === "note" || onEdit) {
-			actions.push({ icon: Edit2, label: "Редактировать", onClick: handleEdit });
+			actions.push({
+				icon: Edit2,
+				label: currentItem.type === "note" && currentDetailQuery.isFetching ? "Загрузка..." : "Редактировать",
+				onClick: handleEdit,
+				disabled: currentItem.type === "note" && !currentDetailQuery.data && currentDetailQuery.isFetching,
+			});
 		}
 		if (onDelete) {
 			actions.push({
@@ -754,7 +772,17 @@ export function UnifiedViewerModal({
 			});
 		}
 		return actions;
-	}, [currentItem.type, downloadUrl, handleDownload, isDownloading, onDelete, onEdit, showDetails]);
+	}, [
+		currentDetailQuery.data,
+		currentDetailQuery.isFetching,
+		currentItem.type,
+		downloadUrl,
+		handleDownload,
+		isDownloading,
+		onDelete,
+		onEdit,
+		showDetails,
+	]);
 
 	const renderContent = () => {
 		if (currentItem.type === "media") {

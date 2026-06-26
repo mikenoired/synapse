@@ -10,6 +10,8 @@ import { requireAuth } from "../lib/auth-guard";
 
 type DatabaseExecutor = Context["db"];
 
+const LIST_CONTENT_PREVIEW_CHARS = 6_000;
+
 function normalizeTagTitle(title: string) {
 	return title.trim().toLowerCase();
 }
@@ -17,10 +19,13 @@ function normalizeTagTitle(title: string) {
 const contentListColumns = {
 	id: content.id,
 	type: content.type,
-	content: content.content,
+	content: sql<string>`case
+		when ${content.type} in ('media', 'audio', 'todo') then ${content.content}
+		else left(${content.content}, ${LIST_CONTENT_PREVIEW_CHARS})
+	end`.as("content"),
 	title: content.title,
 	thumbnailBase64: content.thumbnailBase64,
-	documentImages: content.documentImages,
+	documentImages: sql<null>`null`.as("document_images"),
 	createdAt: content.createdAt,
 	updatedAt: content.updatedAt,
 	userId: content.userId,
@@ -199,7 +204,6 @@ export default class ContentRepository {
 				content.content,
 				content.title,
 				content.thumbnailBase64,
-				content.documentImages,
 				content.createdAt,
 				content.updatedAt,
 				content.userId

@@ -7,6 +7,7 @@ import {
 	contentDetailSchema,
 	contentListItemSchema,
 	contentTypeSchema,
+	extractTextFromStructuredContent,
 	parseAudioJson,
 	parseMediaJson,
 } from "@/shared/lib/schemas";
@@ -29,6 +30,7 @@ type ContentRow = Omit<ContentSelect, "searchText" | "searchVector"> &
 
 const TAGS_CACHE_TTL_SECONDS = Math.floor(Number(process.env.TAGS_CACHE_TTL_MS ?? 30000) / 1000);
 const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024;
+const LIST_TEXT_PREVIEW_CHARS = 1_200;
 
 function normalizeTagTitle(title: string) {
 	return title.trim().toLowerCase();
@@ -76,8 +78,8 @@ export default class ContentService {
 		const nextCursor = last ? `${last.createdAt}|${last.id}` : undefined;
 
 		const items = includeTags
-			? await this.attachTagsToContent(contentRows)
-			: contentRows.map((r) => this.mapContentRow(r, this.ctx.user!.id));
+			? await this.attachTagsToContent(contentRows, { previewContent: true })
+			: contentRows.map((r) => this.mapContentRow(r, this.ctx.user!.id, { previewContent: true }));
 
 		return {
 			items: items.map((i) => contentListItemSchema.parse(i)),
@@ -94,8 +96,8 @@ export default class ContentService {
 	) {
 		const rows = (await this.repo.searchFtsFiltered(search, type, tagIds, limit)) as ContentRow[];
 		const items = includeTags
-			? await this.attachTagsToContent(rows)
-			: rows.map((row) => this.mapContentRow(row, this.ctx.user!.id));
+			? await this.attachTagsToContent(rows, { previewContent: true })
+			: rows.map((row) => this.mapContentRow(row, this.ctx.user!.id, { previewContent: true }));
 
 		return {
 			items: items.map((item) => contentListItemSchema.parse(item)),
@@ -135,8 +137,8 @@ export default class ContentService {
 		const nextCursor = last ? `${last.createdAt}|${last.id}` : undefined;
 
 		const items = includeTags
-			? await this.attachTagsToContent(contentRows)
-			: contentRows.map((r) => this.mapContentRow(r, this.ctx.user!.id));
+			? await this.attachTagsToContent(contentRows, { previewContent: true })
+			: contentRows.map((r) => this.mapContentRow(r, this.ctx.user!.id, { previewContent: true }));
 
 		return {
 			items: items.map((i) => contentListItemSchema.parse(i)),
@@ -450,7 +452,7 @@ export default class ContentService {
 		if (!previewRows.length) return [];
 
 		const uniqueRows = Array.from(new Map(previewRows.map((row) => [row.id, row as ContentRow])).values());
-		const items = await this.attachTagsToContent(uniqueRows);
+		const items = await this.attachTagsToContent(uniqueRows, { previewContent: true });
 		const itemById = new Map(items.map((item) => [item.id, item]));
 		const tagsMap = new Map<string, { id: string; title: string; items: Content[] }>();
 
@@ -506,8 +508,11 @@ export default class ContentService {
 		]);
 	}
 
-	private async attachTagsToContent(rows: ContentRow[]): Promise<Content[]> {
-		const items = rows.map((r) => this.mapContentRow(r, this.ctx.user!.id));
+	private async attachTagsToContent(
+		rows: ContentRow[],
+		options: { previewContent?: boolean } = {}
+	): Promise<Content[]> {
+		const items = rows.map((r) => this.mapContentRow(r, this.ctx.user!.id, options));
 		if (!items.length) return items;
 
 		const ids = rows.map((r) => r.id);
@@ -571,13 +576,20 @@ export default class ContentService {
 		if (edgeRows.length) await repo.createEdges(edgeRows);
 	}
 
-	private mapContentRow(row: ContentRow, fallbackUserId: string): Content {
+	private mapContentRow(
+		row: ContentRow,
+		fallbackUserId: string,
+		options: { previewContent?: boolean } = {}
+	): Content {
+		const type = row.type as Content["type"];
 		return {
 			id: row.id,
 			user_id: row.userId ?? fallbackUserId,
-			type: row.type as Content["type"],
+			type,
 			title: row.title ?? undefined,
-			content: row.content,
+			content: options.previewContent
+				? this.buildListPreviewContent(type, row.content, row.title)
+				: row.content,
 			tags: [],
 			tag_ids: [],
 			created_at: row.createdAt?.toISOString() ?? new Date().toISOString(),
@@ -585,6 +597,99 @@ export default class ContentService {
 			thumbnail_base64: row.thumbnailBase64 ?? undefined,
 			document_images: Array.isArray(row.documentImages) ? row.documentImages : undefined,
 		};
+	}
+
+	private buildListPreviewContent(type: Content["type"], content: string, title?: string | null) {
+		if (type === "media" || type === "audio" || type === "todo") return content;
+		if (type === "link") return this.buildLinkPreviewContent(content, title);
+		if (type === "note") return this.extractTextPreview(content);
+		return this.truncateText(content.replace(/<[^>]*>/g, " "));
+	}
+
+	private buildLinkPreviewContent(content: string, title?: string | null) {
+		const parsed = this.safeParseJson<Record<string, unknown>>(content);
+		const url = typeof parsed?.url === "string" ? parsed.url : this.extractJsonStringField(content, "url");
+		if (!url) return this.truncateText(title || content);
+
+		const linkTitle =
+			typeof parsed?.title === "string"
+				? parsed.title
+				: this.extractJsonStringField(content, "title") || title || url;
+		const description =
+			typeof parsed?.description === "string"
+				? parsed.description
+				: this.extractJsonStringField(content, "description") || "";
+		const rawText = this.truncateText(
+			typeof parsed?.rawText === "string" ? parsed.rawText : this.extractTextPreview(content)
+		);
+		const metadata = parsed?.metadata && typeof parsed.metadata === "object" ? parsed.metadata : {};
+		const image =
+			"image" in metadata && typeof metadata.image === "string"
+				? metadata.image
+				: this.extractJsonStringField(content, "image");
+
+		return JSON.stringify({
+			url,
+			title: linkTitle,
+			description,
+			content: {
+				type: "doc",
+				content: rawText ? [{ type: "paragraph", content: rawText }] : [],
+			},
+			rawText,
+			metadata: {
+				image: image || undefined,
+				extractedAt:
+					"extractedAt" in metadata && typeof metadata.extractedAt === "string" ? metadata.extractedAt : "",
+				contentBlocks: 1,
+			},
+			parsing: {
+				method: "preview",
+				userAgent: "",
+				success: true,
+			},
+		});
+	}
+
+	private extractTextPreview(content: string) {
+		const parsed = this.safeParseJson<unknown>(content);
+		if (parsed) {
+			const text = extractTextFromStructuredContent(parsed);
+			if (text) return this.truncateText(text);
+		}
+
+		const textMatches = [...content.matchAll(/"(?:text|content)"\s*:\s*"((?:\\.|[^"\\])*)"/g)]
+			.map((match) => this.parseJsonStringLiteral(match[1] || ""))
+			.filter(Boolean);
+
+		return this.truncateText(textMatches.length ? textMatches.join(" ") : content);
+	}
+
+	private truncateText(content: string) {
+		const normalized = content.replace(/\s+/g, " ").trim();
+		if (normalized.length <= LIST_TEXT_PREVIEW_CHARS) return normalized;
+		return `${normalized.slice(0, LIST_TEXT_PREVIEW_CHARS).trimEnd()}...`;
+	}
+
+	private safeParseJson<T>(content: string): T | null {
+		try {
+			return JSON.parse(content) as T;
+		} catch {
+			return null;
+		}
+	}
+
+	private extractJsonStringField(content: string, field: string) {
+		const match = content.match(new RegExp(`"${field}"\\s*:\\s*"((?:\\\\.|[^"\\\\])*)"`));
+		return match ? this.parseJsonStringLiteral(match[1] || "") : undefined;
+	}
+
+	private parseJsonStringLiteral(value: string) {
+		try {
+			return JSON.parse(`"${value}"`) as string;
+		} catch {
+			return value;
+		}
 	}
 
 	private async trackAddedNoteImages(images: { size: number }[]) {
