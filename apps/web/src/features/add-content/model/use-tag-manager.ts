@@ -3,6 +3,10 @@ import { useCallback, useState } from "react";
 
 import type { TagState } from "./types";
 
+function normalizeTagTitle(title: string) {
+	return title.trim().toLowerCase();
+}
+
 export function useTagManager(initialTags: string[] = []) {
 	const [state, setState] = useState<TagState>({
 		tags: initialTags,
@@ -15,7 +19,8 @@ export function useTagManager(initialTags: string[] = []) {
 
 	const addTag = useCallback(() => {
 		const trimmedTag = state.currentTag.trim();
-		if (trimmedTag && !state.tags.includes(trimmedTag)) {
+		const existing = new Set(state.tags.map(normalizeTagTitle));
+		if (trimmedTag && !existing.has(normalizeTagTitle(trimmedTag))) {
 			setState((prev) => ({
 				tags: [...prev.tags, trimmedTag],
 				currentTag: "",
@@ -27,11 +32,28 @@ export function useTagManager(initialTags: string[] = []) {
 		const cleaned = names.map((name) => name.trim()).filter((name) => name.length > 0);
 		if (cleaned.length === 0) return;
 		setState((prev) => {
-			const existing = new Set(prev.tags);
+			const existing = new Set(prev.tags.map(normalizeTagTitle));
 			const merged = [...prev.tags];
 			for (const name of cleaned) {
-				if (!existing.has(name)) {
-					existing.add(name);
+				const key = normalizeTagTitle(name);
+				if (!existing.has(key)) {
+					existing.add(key);
+					merged.push(name);
+				}
+			}
+			return { ...prev, tags: merged };
+		});
+	}, []);
+
+	const setTags = useCallback((names: string[]) => {
+		const cleaned = names.map((name) => name.trim()).filter((name) => name.length > 0);
+		setState((prev) => {
+			const merged: string[] = [];
+			const existing = new Set<string>();
+			for (const name of cleaned) {
+				const key = normalizeTagTitle(name);
+				if (!existing.has(key)) {
+					existing.add(key);
 					merged.push(name);
 				}
 			}
@@ -73,6 +95,7 @@ export function useTagManager(initialTags: string[] = []) {
 		updateCurrentTag,
 		addTag,
 		addTags,
+		setTags,
 		removeTag,
 		resetTags,
 		handleKeyDown,

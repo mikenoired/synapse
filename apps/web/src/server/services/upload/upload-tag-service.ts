@@ -6,6 +6,10 @@ import type { UploadContentType } from "./upload-types";
 
 type DatabaseExecutor = Context["db"];
 
+function normalizeTagTitle(title: string) {
+	return title.trim().toLowerCase();
+}
+
 export class UploadTagService {
 	constructor(
 		private readonly ctx: Context,
@@ -28,31 +32,41 @@ export class UploadTagService {
 	}
 
 	private async resolveTagTitlesToIds(titles: string[]): Promise<string[]> {
-		const uniqueTitles = Array.from(new Set(titles.filter(Boolean)));
+		const uniqueTitles = Array.from(
+			new Map(titles.map((title) => [normalizeTagTitle(title), title.trim()])).values()
+		).filter(Boolean);
 		if (!uniqueTitles.length) return [];
 
 		const existingTags = await this.database.query.tags.findMany({
 			columns: { id: true, title: true },
 			where: and(
-				inArray(tags.title, uniqueTitles),
+				inArray(sql`lower(btrim(${tags.title}))`, uniqueTitles.map(normalizeTagTitle)),
 				or(eq(tags.userId, this.requireUserId()), isNull(tags.userId))!
 			),
 		});
 
-		const tagIdByTitle = new Map(existingTags.map((tag) => [tag.title, tag.id]));
-		const missingTitles = uniqueTitles.filter((title) => !tagIdByTitle.has(title));
+		const tagIdByTitle = new Map(existingTags.map((tag) => [normalizeTagTitle(tag.title), tag.id]));
+		const missingTitles = uniqueTitles.filter((title) => !tagIdByTitle.has(normalizeTagTitle(title)));
 
 		if (missingTitles.length) {
-			const insertedTags = await this.database
+			await this.database
 				.insert(tags)
 				.values(missingTitles.map((title) => ({ title, userId: this.requireUserId() })))
-				.returning({ id: tags.id, title: tags.title });
+				.onConflictDoNothing();
 
-			for (const tag of insertedTags) tagIdByTitle.set(tag.title, tag.id);
+			const insertedTags = await this.database.query.tags.findMany({
+				columns: { id: true, title: true },
+				where: and(
+					inArray(sql`lower(btrim(${tags.title}))`, missingTitles.map(normalizeTagTitle)),
+					eq(tags.userId, this.requireUserId())
+				),
+			});
+
+			for (const tag of insertedTags) tagIdByTitle.set(normalizeTagTitle(tag.title), tag.id);
 		}
 
 		return uniqueTitles
-			.map((title) => tagIdByTitle.get(title))
+			.map((title) => tagIdByTitle.get(normalizeTagTitle(title)))
 			.filter((tagId): tagId is string => typeof tagId === "string" && tagId.length > 0);
 	}
 
@@ -143,7 +157,8 @@ export class UploadTagService {
 
 		await this.database
 			.insert(contentTags)
-			.values(uniqueTagIds.map((tagId) => ({ contentId, tagId, userId: this.requireUserId() })));
+			.values(uniqueTagIds.map((tagId) => ({ contentId, tagId, userId: this.requireUserId() })))
+			.onConflictDoNothing();
 
 		const edgeRows = uniqueTagIds
 			.map((tagId) => ({

@@ -23,6 +23,7 @@ interface TagInputProps {
 	onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 	aiGenerate?: AiGenerateDraft | null;
 	onAiTags?: (existing: SuggestedTag[], newTags: string[]) => void;
+	suggestions?: string[];
 }
 
 export function TagInput({
@@ -35,13 +36,18 @@ export function TagInput({
 	onKeyDown,
 	aiGenerate,
 	onAiTags,
+	suggestions = [],
 }: TagInputProps) {
+	const selectedTags = new Set(tags.map((tag) => tag.trim().toLowerCase()));
+	const availableSuggestions = suggestions.filter((tag) => !selectedTags.has(tag.trim().toLowerCase()));
+
 	return (
 		<div className="space-y-3">
 			<Label htmlFor="tags">Tags</Label>
 			<div className="flex gap-2">
 				<Input
 					id="tags"
+					list="tag-input-suggestions"
 					placeholder="Add tag..."
 					value={currentTag}
 					onChange={(e: React.ChangeEvent<HTMLInputElement>) => onCurrentTagChange(e.target.value)}
@@ -49,6 +55,11 @@ export function TagInput({
 					className="flex-1"
 					disabled={isLoading}
 				/>
+				<datalist id="tag-input-suggestions">
+					{availableSuggestions.map((tag) => (
+						<option key={tag} value={tag} />
+					))}
+				</datalist>
 				<Button type="button" onClick={onAddTag} disabled={!currentTag.trim() || isLoading} size="sm">
 					Add
 				</Button>

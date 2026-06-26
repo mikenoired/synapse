@@ -1,12 +1,11 @@
 "use client";
 
-import { Badge, Button, Input } from "@synapse/ui/components";
-import { X } from "lucide-react";
+import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
-import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
+import { TagEditor } from "@/shared/ui/tag-editor";
 import { Editor } from "@/widgets/editor/ui/editor";
 
 import { ModalActions, ModalBody } from "../../layout";
@@ -22,29 +21,9 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 	const [title, setTitle] = useState("");
 	const [editorData, setEditorData] = useState<any>(null);
 	const [tags, setTags] = useState<string[]>(initialTags);
-	const [currentTag, setCurrentTag] = useState("");
 	const utils = trpc.useUtils();
 
 	const createMutation = trpc.content.create.useMutation();
-
-	const handleAddTag = () => {
-		const tag = currentTag.trim();
-		if (tag && !tags.includes(tag)) {
-			setTags([...tags, tag]);
-			setCurrentTag("");
-		}
-	};
-
-	const handleRemoveTag = (tag: string) => {
-		setTags(tags.filter((t) => t !== tag));
-	};
-
-	const handleTagKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter") {
-			e.preventDefault();
-			handleAddTag();
-		}
-	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -87,37 +66,19 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 						disabled={createMutation.isPending}
 						className="!text-3xl font-semibold tracking-tight border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
 					/>
-					<div className="flex flex-wrap gap-2 mt-3">
-						{tags.map((tag) => (
-							<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() => handleRemoveTag(tag)}
-									className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-									disabled={createMutation.isPending}>
-									<X className="w-3 h-3" />
-								</button>
-							</Badge>
-						))}
-						<Input
-							id="tags"
-							placeholder="+ Добавить тег"
-							value={currentTag}
-							onChange={(e) => setCurrentTag(e.target.value)}
-							onKeyDown={handleTagKeyDown}
-							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1 min-w-[120px]"
+					<div className="mt-3">
+						<TagEditor
+							tags={tags}
+							onTagsChange={setTags}
 							disabled={createMutation.isPending}
-						/>
-						<GenerateTagsButton
-							mode="draft"
-							type="note"
-							title={title}
-							content={JSON.stringify(editorData ?? { type: "doc", content: [] })}
-							disabled={createMutation.isPending || !editorData}
-							onResult={(existing, newTags) =>
-								setTags((prev) => Array.from(new Set([...prev, ...existing.map((t) => t.name), ...newTags])))
-							}
+							inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1 min-w-[120px]"
+							aiGenerate={{
+								mode: "draft",
+								type: "note",
+								title,
+								content: JSON.stringify(editorData ?? { type: "doc", content: [] }),
+								disabled: !editorData,
+							}}
 						/>
 					</div>
 				</div>

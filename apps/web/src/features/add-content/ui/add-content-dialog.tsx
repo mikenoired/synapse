@@ -7,6 +7,7 @@ import type { FormEvent, TouchEvent } from "react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
+import { trpc } from "@/shared/api/trpc";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 
@@ -33,6 +34,9 @@ const baseTransition: Transition = {
 function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddContentDialogProps) {
 	const { preloadedFiles, setPreloadedFiles } = useDashboard();
 	const [uploading, setUploading] = useState(false);
+	const { data: tagSuggestions = [] } = trpc.content.getTags.useQuery(undefined, {
+		refetchOnMount: false,
+	});
 
 	const context = useAddContent();
 	const documentUpload = useDocumentUpload();
@@ -117,6 +121,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 	};
 
 	const isLoading = context.isSubmitting || uploading;
+	const tagSuggestionTitles = tagSuggestions.map((tag) => tag.title);
 
 	const getDialogSize = () => {
 		if (isFullScreen && type === "note") {
@@ -265,6 +270,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 									onAddTag={context.addTag}
 									onRemoveTag={context.removeTag}
 									onKeyDown={context.handleTagKeyDown}
+									suggestions={tagSuggestionTitles}
 								/>
 							</motion.div>
 						) : (
@@ -414,6 +420,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 									onAddTag={context.addTag}
 									onRemoveTag={context.removeTag}
 									onKeyDown={context.handleTagKeyDown}
+									suggestions={tagSuggestionTitles}
 									aiGenerate={
 										type === "link" && context.parsedLinkData
 											? { type: "link", title, content: JSON.stringify(context.parsedLinkData) }

@@ -156,6 +156,23 @@ describe.serial("content service", () => {
 		).toHaveLength(0);
 	});
 
+	test("reuses existing tags by normalized title", async () => {
+		const [existingTag] = await db.insert(tags).values({ title: "Work", userId }).returning();
+
+		const created = await createService().create({
+			type: "note",
+			media_type: "image",
+			title: "Normalized tags",
+			content: "Tagged body",
+			tags: [" work ", "WORK"],
+		});
+
+		expect(created.tag_ids).toEqual([existingTag!.id]);
+		expect(created.tags).toEqual(["Work"]);
+		expect(await db.select().from(tags).where(eq(tags.userId, userId))).toHaveLength(1);
+		expect(await db.select().from(contentTags).where(eq(contentTags.contentId, created.id))).toHaveLength(1);
+	});
+
 	test("rejects relations to another user's tag without leaving partial content", async () => {
 		const [foreignUser] = await db
 			.insert(users)

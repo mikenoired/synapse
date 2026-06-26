@@ -28,6 +28,7 @@ interface AddContentContextType {
 	updateCurrentTag: (tag: string) => void;
 	addTag: () => void;
 	addTags: (names: string[]) => void;
+	setTags: (names: string[]) => void;
 	removeTag: (tag: string) => void;
 	handleTagKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 
@@ -124,6 +125,7 @@ export function AddContentProvider({
 		updateCurrentTag: tags.updateCurrentTag,
 		addTag: tags.addTag,
 		addTags: tags.addTags,
+		setTags: tags.setTags,
 		removeTag: tags.removeTag,
 		handleTagKeyDown: tags.handleKeyDown,
 

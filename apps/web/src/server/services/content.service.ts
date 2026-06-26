@@ -30,6 +30,10 @@ type ContentRow = Omit<ContentSelect, "searchText" | "searchVector"> &
 const TAGS_CACHE_TTL_SECONDS = Math.floor(Number(process.env.TAGS_CACHE_TTL_MS ?? 30000) / 1000);
 const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024;
 
+function normalizeTagTitle(title: string) {
+	return title.trim().toLowerCase();
+}
+
 export default class ContentService {
 	private repo: ContentRepository;
 	private ctx: Context;
@@ -528,18 +532,22 @@ export default class ContentService {
 	}
 
 	private async resolveTagTitlesToIds(repo: ContentRepository, titles: string[]): Promise<string[]> {
-		if (titles.length === 0) return [];
-		const existing = await repo.getTagsByTitle(titles);
-		const existingMap = new Map((existing || []).map((t) => [t.title, t.id]));
-		const missing = titles.filter((t) => !existingMap.has(t));
+		const uniqueTitles = Array.from(
+			new Map(titles.map((title) => [normalizeTagTitle(title), title.trim()])).values()
+		).filter(Boolean);
+		if (uniqueTitles.length === 0) return [];
+
+		const existing = await repo.getTagsByTitle(uniqueTitles);
+		const existingMap = new Map((existing || []).map((t) => [normalizeTagTitle(t.title), t.id]));
+		const missing = uniqueTitles.filter((title) => !existingMap.has(normalizeTagTitle(title)));
 		if (missing.length) {
 			const inserted = await repo.createTags(missing.map((title) => ({ title })));
 			for (const t of inserted || []) {
 				await repo.createNode(t.title);
-				existingMap.set(t.title, t.id);
+				existingMap.set(normalizeTagTitle(t.title), t.id);
 			}
 		}
-		const ids = titles.map((t) => existingMap.get(t));
+		const ids = uniqueTitles.map((title) => existingMap.get(normalizeTagTitle(title)));
 		return ids.filter((v): v is string => typeof v === "string" && v.length > 0);
 	}
 

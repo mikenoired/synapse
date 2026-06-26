@@ -1,13 +1,12 @@
 "use client";
 
-import { Badge, Button, Input } from "@synapse/ui/components";
-import { X } from "lucide-react";
+import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
 import type { LinkContent } from "@/shared/lib/schemas";
-import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
+import { TagEditor } from "@/shared/ui/tag-editor";
 
 import { ModalActions, ModalBody } from "../../layout";
 import { showToast } from "../../utils";
@@ -21,7 +20,6 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 	const [url, setUrl] = useState("");
 	const [title, setTitle] = useState("");
 	const [tags, setTags] = useState<string[]>(initialTags);
-	const [currentTag, setCurrentTag] = useState("");
 	const [parsing, setParsing] = useState(false);
 	const [parsedLink, setParsedLink] = useState<LinkContent | null>(null);
 	const utils = trpc.useUtils();
@@ -60,18 +58,6 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 		} finally {
 			setParsing(false);
 		}
-	};
-
-	const handleAddTag = () => {
-		const tag = currentTag.trim();
-		if (tag && !tags.includes(tag)) {
-			setTags([...tags, tag]);
-			setCurrentTag("");
-		}
-	};
-
-	const handleRemoveTag = (tag: string) => {
-		setTags(tags.filter((t) => t !== tag));
 	};
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -145,45 +131,18 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 
 					<div className="space-y-2">
 						<label className="text-sm font-medium">Теги</label>
-						<div className="flex flex-wrap gap-2">
-							{tags.map((tag) => (
-								<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-									{tag}
-									<button
-										type="button"
-										onClick={() => handleRemoveTag(tag)}
-										className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-										disabled={createMutation.isPending}>
-										<X className="w-3 h-3" />
-									</button>
-								</Badge>
-							))}
-							<Input
-								placeholder="+ Добавить тег"
-								value={currentTag}
-								onChange={(e) => setCurrentTag(e.target.value)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
-										e.preventDefault();
-										handleAddTag();
-									}
-								}}
-								className="flex-1 min-w-[120px]"
-								disabled={createMutation.isPending}
-							/>
-							<GenerateTagsButton
-								mode="draft"
-								type="link"
-								title={title}
-								content={JSON.stringify(parsedLink ?? {})}
-								disabled={createMutation.isPending || !parsedLink}
-								onResult={(existing, newTags) =>
-									setTags((prev) =>
-										Array.from(new Set([...prev, ...existing.map((t) => t.name), ...newTags]))
-									)
-								}
-							/>
-						</div>
+						<TagEditor
+							tags={tags}
+							onTagsChange={setTags}
+							disabled={createMutation.isPending}
+							aiGenerate={{
+								mode: "draft",
+								type: "link",
+								title,
+								content: JSON.stringify(parsedLink ?? {}),
+								disabled: !parsedLink,
+							}}
+						/>
 					</div>
 				</div>
 			</ModalBody>

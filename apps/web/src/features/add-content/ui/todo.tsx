@@ -1,9 +1,8 @@
 "use client";
 
-import { Badge, Input } from "@synapse/ui/components";
-import { X } from "lucide-react";
+import { Input } from "@synapse/ui/components";
 
-import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
+import { TagEditor } from "@/shared/ui/tag-editor";
 
 import { useAddContent } from "../model/add-content-context";
 import { TodoList } from "./components/todo-list";
@@ -14,12 +13,8 @@ export default function AddTodoView() {
 		updateTitle,
 		isSubmitting,
 		tags,
-		currentTag,
-		updateCurrentTag,
-		handleTagKeyDown,
 		todoItems,
-		removeTag,
-		addTags,
+		setTags,
 		addTodo,
 		removeTodo,
 		toggleTodo,
@@ -38,35 +33,20 @@ export default function AddTodoView() {
 						disabled={isSubmitting}
 						className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
 					/>
-					<div className="flex flex-wrap gap-2 mt-3">
-						{tags.map((tag) => (
-							<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() => removeTag(tag)}
-									className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-									disabled={isSubmitting}>
-									<X className="w-3 h-3" />
-								</button>
-							</Badge>
-						))}
-						<Input
-							id="tags"
-							placeholder="+ Add tag"
-							value={currentTag}
-							onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateCurrentTag(e.target.value)}
-							onKeyDown={handleTagKeyDown}
-							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+					<div className="mt-3">
+						<TagEditor
+							tags={tags}
+							onTagsChange={setTags}
 							disabled={isSubmitting}
-						/>
-						<GenerateTagsButton
-							mode="draft"
-							type="todo"
-							title={title}
-							content={JSON.stringify(todoItems)}
-							disabled={isSubmitting || todoItems.length === 0}
-							onResult={(existing, newTags) => addTags([...existing.map((t) => t.name), ...newTags])}
+							inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+							placeholder="+ Add tag"
+							aiGenerate={{
+								mode: "draft",
+								type: "todo",
+								title,
+								content: JSON.stringify(todoItems),
+								disabled: todoItems.length === 0,
+							}}
 						/>
 					</div>
 				</div>

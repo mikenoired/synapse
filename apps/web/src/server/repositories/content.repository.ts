@@ -10,6 +10,10 @@ import { requireAuth } from "../lib/auth-guard";
 
 type DatabaseExecutor = Context["db"];
 
+function normalizeTagTitle(title: string) {
+	return title.trim().toLowerCase();
+}
+
 const contentListColumns = {
 	id: content.id,
 	type: content.type,
@@ -411,9 +415,13 @@ export default class ContentRepository {
 	async createContentTags(tagIds: string[], contentId: string) {
 		requireAuth(this.ctx);
 
+		const uniqueTagIds = Array.from(new Set(tagIds));
+		if (!uniqueTagIds.length) return;
+
 		const data = await this.database
 			.insert(contentTags)
-			.values(tagIds.map((id) => ({ contentId, tagId: id, userId: this.ctx.user!.id })));
+			.values(uniqueTagIds.map((id) => ({ contentId, tagId: id, userId: this.ctx.user!.id })))
+			.onConflictDoNothing();
 
 		return data;
 	}
@@ -458,8 +466,14 @@ export default class ContentRepository {
 	async getTagsByTitle(titles: string[]) {
 		requireAuth(this.ctx);
 
+		const normalizedTitles = Array.from(new Set(titles.map(normalizeTagTitle).filter(Boolean)));
+		if (!normalizedTitles.length) return [];
+
 		const data = await this.database.query.tags.findMany({
-			where: and(inArray(tags.title, titles), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
+			where: and(
+				inArray(sql`lower(btrim(${tags.title}))`, normalizedTitles),
+				or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!
+			),
 			columns: {
 				id: true,
 				title: true,
@@ -520,20 +534,22 @@ export default class ContentRepository {
 	async createTags(titles: { title: string }[]) {
 		requireAuth(this.ctx);
 
-		const data = await this.database
+		const cleanTitles = Array.from(
+			new Map(titles.map((tag) => [normalizeTagTitle(tag.title), tag.title.trim()])).values()
+		).filter(Boolean);
+		if (!cleanTitles.length) return [];
+
+		await this.database
 			.insert(tags)
 			.values(
-				titles.map((tag) => ({
-					...tag,
+				cleanTitles.map((title) => ({
+					title,
 					userId: this.ctx.user!.id,
 				}))
 			)
-			.returning({
-				id: tags.id,
-				title: tags.title,
-			});
+			.onConflictDoNothing();
 
-		return data;
+		return await this.getTagsByTitle(cleanTitles);
 	}
 
 	async updateContent(updData: z.infer<typeof updateContentSchema>) {

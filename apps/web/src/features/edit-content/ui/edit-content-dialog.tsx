@@ -1,4 +1,4 @@
-import { Badge, Button, Input } from "@synapse/ui/components";
+import { Button, Input } from "@synapse/ui/components";
 import type { JSONContent } from "@tiptap/core";
 import { Maximize, Minimize, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
-import { GenerateTagsButton, type SuggestedTag } from "@/shared/ui/generate-tags-button";
+import { TagEditor } from "@/shared/ui/tag-editor";
 import { Editor } from "@/widgets/editor/ui/editor";
 
 interface EditContentDialogProps {
@@ -22,7 +22,6 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 		content.content ? JSON.parse(content.content) : { type: "doc", content: [] }
 	);
 	const [tags, setTags] = useState<string[]>(content.tags || []);
-	const [currentTag, setCurrentTag] = useState("");
 	const [isFullScreen, setIsFullScreen] = useState(false);
 	const [startY, setStartY] = useState<number | null>(null);
 	const [todoItems, setTodoItems] = useState<{ text: string; marked: boolean }[]>([]);
@@ -120,29 +119,6 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 		}
 	};
 
-	const addTag = () => {
-		if (currentTag.trim() && !tags.includes(currentTag.trim())) {
-			setTags([...tags, currentTag.trim()]);
-			setCurrentTag("");
-		}
-	};
-
-	const removeTag = (tagToRemove: string) => {
-		setTags(tags.filter((tag) => tag !== tagToRemove));
-	};
-
-	const handleAiTags = (existing: SuggestedTag[], newTags: string[]) => {
-		const names = [...existing.map((t) => t.name), ...newTags];
-		setTags((prev) => Array.from(new Set([...prev, ...names])));
-	};
-
-	const handleKeyDown = (e: React.KeyboardEvent) => {
-		if (e.key === "Enter" && !e.shiftKey) {
-			e.preventDefault();
-			addTag();
-		}
-	};
-
 	const handleAddTodo = () => {
 		const value = todoInput.trim();
 		if (value) {
@@ -195,33 +171,18 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 						disabled={updateContentMutation.isPending}
 						className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
 					/>
-					<div className="flex flex-wrap gap-2 mt-3">
-						{tags.map((tag) => (
-							<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-								{tag}
-								<button
-									type="button"
-									onClick={() => removeTag(tag)}
-									className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-									disabled={updateContentMutation.isPending}>
-									<X className="w-3 h-3" />
-								</button>
-							</Badge>
-						))}
-						<Input
-							id="tags"
-							placeholder="+ Add tag"
-							value={currentTag}
-							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentTag(e.target.value)}
-							onKeyDown={handleKeyDown}
-							className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+					<div className="mt-3">
+						<TagEditor
+							tags={tags}
+							onTagsChange={setTags}
 							disabled={updateContentMutation.isPending}
-						/>
-						<GenerateTagsButton
-							mode="existing"
-							contentId={content.id}
-							disabled={updateContentMutation.isPending || todoItems.length === 0}
-							onResult={handleAiTags}
+							inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+							placeholder="+ Add tag"
+							aiGenerate={{
+								mode: "existing",
+								contentId: content.id,
+								disabled: todoItems.length === 0,
+							}}
 						/>
 					</div>
 				</div>
@@ -316,33 +277,18 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 										disabled={updateContentMutation.isPending}
 										className="!text-3xl font-semibold tracking-tight border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
 									/>
-									<div className="flex flex-wrap gap-2 mt-3">
-										{tags.map((tag) => (
-											<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-												{tag}
-												<button
-													type="button"
-													onClick={() => removeTag(tag)}
-													className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-													disabled={updateContentMutation.isPending}>
-													<X className="w-3 h-3" />
-												</button>
-											</Badge>
-										))}
-										<Input
-											id="tags"
-											placeholder="+ Add tag"
-											value={currentTag}
-											onChange={(e: React.ChangeEvent<HTMLInputElement>) => setCurrentTag(e.target.value)}
-											onKeyDown={handleKeyDown}
-											className="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+									<div className="mt-3">
+										<TagEditor
+											tags={tags}
+											onTagsChange={setTags}
 											disabled={updateContentMutation.isPending}
-										/>
-										<GenerateTagsButton
-											mode="existing"
-											contentId={content.id}
-											disabled={updateContentMutation.isPending || !editorData?.content?.length}
-											onResult={handleAiTags}
+											inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
+											placeholder="+ Add tag"
+											aiGenerate={{
+												mode: "existing",
+												contentId: content.id,
+												disabled: !editorData?.content?.length,
+											}}
 										/>
 									</div>
 								</div>
