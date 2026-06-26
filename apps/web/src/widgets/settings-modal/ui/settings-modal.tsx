@@ -24,6 +24,8 @@ const tabComponentMap = {
 	media: MediaTab,
 };
 
+const settingsModalBackdropColor = "rgba(32, 29, 26, 0.26)";
+
 function useModalSideEffects(
 	open: boolean,
 	onClose: () => void,
@@ -71,12 +73,21 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 		<AnimatePresence>
 			{open && (
 				<motion.div
-					initial={{ backgroundColor: "rgba(15, 23, 42, 0)", backdropFilter: "blur(0px)" }}
-					animate={{ backgroundColor: "rgba(15, 23, 42, 0.28)", backdropFilter: "blur(10px)" }}
-					exit={{ backgroundColor: "rgba(15, 23, 42, 0)", backdropFilter: "blur(0px)" }}
+					initial={{ backdropFilter: "blur(0px)" }}
+					animate={{ backdropFilter: "blur(10px)" }}
+					exit={{ backdropFilter: "blur(0px)" }}
 					transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
 					onClick={onClose}
-					className="fixed inset-0 z-[90] flex items-center justify-center p-4 sm:p-6">
+					className="fixed inset-0 z-90 flex items-center justify-center p-4 sm:p-6">
+					<motion.div
+						aria-hidden="true"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+						className="absolute inset-0"
+						style={{ backgroundColor: settingsModalBackdropColor }}
+					/>
 					<motion.div
 						ref={modalRef}
 						tabIndex={-1}
@@ -87,13 +98,13 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 						exit={{ filter: "blur(10px)", opacity: 0, scale: 0.985, y: 12 }}
 						transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
 						onClick={(event) => event.stopPropagation()}
-						className="relative grid h-[min(760px,calc(100vh-2rem))] w-full max-w-[920px] overflow-hidden rounded-xl border border-border bg-background md:grid-cols-[220px_minmax(0,1fr)]">
+						className="relative grid h-[min(760px,calc(100vh-2rem))] w-full max-w-230 overflow-hidden rounded-xl border border-border bg-background md:grid-cols-[220px_minmax(0,1fr)]">
 						<Link
 							href={closeHref}
 							scroll={false}
 							className="absolute right-3 top-3 z-20 flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
 							aria-label="Close settings">
-							<X className="size-[18px]" />
+							<X className="size-4.5" />
 						</Link>
 						<div className="flex flex-col p-3 pt-12 md:border-r md:border-border md:p-3 md:pt-3">
 							<SettingsModalNav activeTab={activeTab} pathname={pathname} search={searchParams.toString()} />
