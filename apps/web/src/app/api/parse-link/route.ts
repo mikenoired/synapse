@@ -1,12 +1,12 @@
 import { JSDOM } from "jsdom";
-import { cookies } from "next/headers";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { verifyToken } from "@/server/lib/jwt";
+import { getUserFromTokens } from "@/server/lib/auth-session";
 import type { LinkContent } from "@/shared/lib/schemas";
 
 const ACCESS_TOKEN_COOKIE = "synapse_token";
+const REFRESH_TOKEN_COOKIE = "synapse_refresh_token";
 
 interface ContentBlock {
 	type: "paragraph" | "heading" | "image" | "list" | "quote" | "code" | "divider";
@@ -265,17 +265,15 @@ function makeAbsoluteUrl(url: string | undefined, baseUrl: string): string | und
 export async function POST(request: NextRequest) {
 	try {
 		const authHeader = request.headers.get("authorization");
-		const cookieStore = await cookies();
-		const cookieToken = cookieStore.get(ACCESS_TOKEN_COOKIE)?.value;
+		const middlewareAccessToken = request.headers.get("x-synapse-access-token");
+		const middlewareRefreshToken = request.headers.get("x-synapse-refresh-token");
+		const cookieToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+		const refreshToken = middlewareRefreshToken || request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
-		const token = authHeader?.replace("Bearer ", "") || cookieToken;
+		const token = authHeader?.replace("Bearer ", "") || middlewareAccessToken || cookieToken;
+		const user = getUserFromTokens(token, refreshToken);
 
-		if (!token) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-		}
-
-		const payload = verifyToken(token);
-		if (!payload) {
+		if (!user) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 

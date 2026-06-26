@@ -101,10 +101,12 @@ export function convertSize(bytes: number, targetUnit: string): number {
 	return parsed ? bytes / parsed : 0;
 }
 
-export function handleAuthError(error: any, code: "BAD_REQUEST" | "UNAUTHORIZED" = "BAD_REQUEST"): never {
+export function handleAuthError(error: unknown, code: "BAD_REQUEST" | "UNAUTHORIZED" = "BAD_REQUEST"): never {
+	const message = error instanceof Error && error.message ? error.message : "Authentication required";
+
 	throw new TRPCError({
 		code,
-		message: `Authentication error: ${error?.message}`,
+		message,
 	});
 }
 

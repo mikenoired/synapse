@@ -1,22 +1,24 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { verifyToken } from "@/server/lib/jwt";
+import { getUserFromTokens } from "@/server/lib/auth-session";
 import { getPresignedUrl } from "@/shared/api/minio";
+
+const ACCESS_TOKEN_COOKIE = "synapse_token";
+const REFRESH_TOKEN_COOKIE = "synapse_refresh_token";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
 	try {
 		const headerToken = request.headers.get("authorization")?.replace("Bearer ", "");
-		const cookieToken = request.cookies.get("synapse_token")?.value;
+		const middlewareAccessToken = request.headers.get("x-synapse-access-token");
+		const middlewareRefreshToken = request.headers.get("x-synapse-refresh-token");
+		const cookieToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+		const refreshToken = middlewareRefreshToken || request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 		const queryToken = request.nextUrl.searchParams.get("token");
-		const token = headerToken || cookieToken || queryToken;
+		const token = headerToken || middlewareAccessToken || cookieToken || queryToken;
+		const user = getUserFromTokens(token, refreshToken);
 
-		if (!token) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-		}
-
-		const payload = verifyToken(token);
-		if (!payload) {
+		if (!user) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
 		const objectName = path.join("/");
 
 		const pathUserId = objectName.split("/")[1]; // images/userId/filename
-		if (!pathUserId || pathUserId !== payload.userId) {
+		if (!pathUserId || pathUserId !== user.id) {
 			return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 		}
 

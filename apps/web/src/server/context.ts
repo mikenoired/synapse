@@ -1,31 +1,22 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { NextRequest } from "next/server";
 
-import type { User } from "@/shared/lib/auth-context";
-
 import { db } from "./db";
-import { verifyToken } from "./lib/jwt";
+import { getUserFromTokens } from "./lib/auth-session";
 import { CacheRepository } from "./repositories/cache.repository";
 
 export async function createContext({ req }: { req?: NextRequest }) {
-	const headerToken = req?.headers.get("authorization")?.replace("Bearer ", "");
+	const requestHeaders = req ? undefined : await headers().catch(() => undefined);
+	const authHeader = req?.headers.get("authorization") || requestHeaders?.get("authorization");
+	const middlewareAccessToken = req?.headers.get("x-synapse-access-token") || requestHeaders?.get("x-synapse-access-token");
+	const middlewareRefreshToken = req?.headers.get("x-synapse-refresh-token") || requestHeaders?.get("x-synapse-refresh-token");
+	const headerToken = authHeader?.replace("Bearer ", "") || middlewareAccessToken;
 	const cookieStore = await cookies().catch(() => undefined);
 	const cookieToken = cookieStore?.get("synapse_token")?.value;
-	const refreshToken = cookieStore?.get("synapse_refresh_token")?.value;
+	const refreshToken = middlewareRefreshToken || cookieStore?.get("synapse_refresh_token")?.value;
 	const token = headerToken || cookieToken;
 
-	let user: User | null = null;
-	if (token) {
-		try {
-			const payload = verifyToken(token);
-			if (payload) {
-				user = {
-					id: payload.userId,
-					email: payload.email,
-				};
-			}
-		} catch {}
-	}
+	const user = getUserFromTokens(token, refreshToken);
 
 	return {
 		cache: new CacheRepository(),
