@@ -7,6 +7,7 @@ import { useMemo } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { calculateReadingTime } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 function ensureDataUri(base64: string): string {
 	if (!base64) return "";
@@ -127,13 +128,13 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 					{/* Теги */}
 					{item.tags.length > 0 && (
 						<div className="flex flex-wrap gap-1 pt-2 border-t border-slate-200 dark:border-slate-700">
-							{item.tags.slice(0, 3).map((tag: string) => (
-								<Badge
+							{item.tags.slice(0, 3).map((tag: string, tagIndex) => (
+								<ContentTag
 									key={tag}
-									variant="secondary"
-									className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60 hover:bg-slate-300/60 dark:hover:bg-slate-600/60">
-									{tag}
-								</Badge>
+									tag={tag}
+									tagId={item.tag_ids[tagIndex]}
+									className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60 hover:bg-slate-300/60 dark:hover:bg-slate-600/60"
+								/>
 							))}
 							{item.tags.length > 3 && (
 								<Badge variant="secondary" className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60">

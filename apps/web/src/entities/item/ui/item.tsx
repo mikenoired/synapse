@@ -1,10 +1,4 @@
-import {
-	Badge,
-	ContextMenu,
-	ContextMenuContent,
-	ContextMenuItem,
-	ContextMenuTrigger,
-} from "@synapse/ui/components";
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@synapse/ui/components";
 import { motion } from "framer-motion";
 import { ListChecks } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -14,6 +8,7 @@ import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialo
 import { trpc } from "@/shared/api/trpc";
 import type { Content, LinkContent } from "@/shared/lib/schemas";
 import { extractTextFromStructuredContent, parseLinkContent } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 import DocumentItem from "./document-item";
 import MediaItem from "./media-item";
@@ -71,7 +66,10 @@ export default function Item({
 	const handleDelete = () => deleteMutation.mutate({ id: item.id });
 	const handleEdit = () => setEditOpen(true);
 
-	const displayTags = excludedTag ? item.tags.filter((t) => t !== excludedTag) : item.tags;
+	const displayTags = excludedTag ? item.tags.filter((tag) => tag !== excludedTag) : item.tags;
+	const displayTagIds = excludedTag
+		? item.tag_ids.filter((_, tagIndex) => item.tags[tagIndex] !== excludedTag)
+		: item.tag_ids;
 
 	return (
 		<>
@@ -82,6 +80,7 @@ export default function Item({
 							item={{
 								...item,
 								tags: displayTags,
+								tag_ids: displayTagIds,
 							}}
 							index={index}
 						/>
@@ -137,10 +136,14 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 				)}
 				{item.tags && (
 					<div className="flex flex-wrap gap-1 mt-3">
-						{item.tags.map((tag: string) => (
-							<Badge key={tag} variant="outline" className="text-xs">
-								{tag}
-							</Badge>
+						{item.tags.map((tag: string, tagIndex) => (
+							<ContentTag
+								key={tag}
+								tag={tag}
+								tagId={item.tag_ids[tagIndex]}
+								variant="outline"
+								className="text-xs"
+							/>
 						))}
 					</div>
 				)}
@@ -222,10 +225,14 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 							{renderLinkPreview()}
 							{item.tags.length > 0 && (
 								<div className="flex flex-wrap gap-1 mt-3">
-									{item.tags.map((tag: string) => (
-										<Badge key={tag} variant="outline" className="text-xs">
-											{tag}
-										</Badge>
+									{item.tags.map((tag: string, tagIndex) => (
+										<ContentTag
+											key={tag}
+											tag={tag}
+											tagId={item.tag_ids[tagIndex]}
+											variant="outline"
+											className="text-xs"
+										/>
 									))}
 								</div>
 							)}
@@ -242,10 +249,13 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 								{notePreview || "Пустая заметка"}
 							</p>
 							<div className="mt-auto flex flex-wrap gap-1 pt-5">
-								{item.tags.map((tag: string) => (
-									<Badge key={tag} variant="secondary" className="text-xs font-normal">
-										{tag}
-									</Badge>
+								{item.tags.map((tag: string, tagIndex) => (
+									<ContentTag
+										key={tag}
+										tag={tag}
+										tagId={item.tag_ids[tagIndex]}
+										className="text-xs font-normal"
+									/>
 								))}
 							</div>
 						</>

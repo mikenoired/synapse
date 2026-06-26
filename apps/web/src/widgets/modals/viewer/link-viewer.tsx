@@ -243,7 +243,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 							<ModalHeader.Meta icon={Globe} type={linkContent?.metadata.siteName || "Ссылка"} />
 							<ModalHeader.Title>{linkContent?.title || item.title || "Без названия"}</ModalHeader.Title>
 							<ModalHeader.Info createdAt={item.created_at} readingTime={readingTime} />
-							{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} />}
+							{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} tagIds={item.tag_ids} />}
 							<ActionBar actions={actions} />
 						</div>
 					</ModalHeader>

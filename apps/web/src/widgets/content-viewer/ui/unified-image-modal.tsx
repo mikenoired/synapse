@@ -1,6 +1,6 @@
 "use client";
 import { cn } from "@synapse/ui/cn";
-import { Badge, Button, Input, Modal, PreviewImage } from "@synapse/ui/components";
+import { Button, Input, Modal, PreviewImage } from "@synapse/ui/components";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Edit2, Layers, Play, Plus, Tag, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -12,6 +12,7 @@ import useMouseActivity from "@/shared/hooks/use-mouse-activity";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content } from "@/shared/lib/schemas";
 import { parseMediaJson } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 import { CustomVideoPlayer } from "./custom-video-player";
 
@@ -313,13 +314,13 @@ export function UnifiedMediaModal({
 
 						{item.tags && item.tags.length > 0 && (
 							<div className="flex flex-wrap gap-2">
-								{item.tags.map((tag: string) => (
-									<Badge
+								{item.tags.map((tag: string, tagIndex) => (
+									<ContentTag
 										key={tag}
-										variant="secondary"
-										className="bg-white/20 text-white border-white/30 text-sm">
-										{tag}
-									</Badge>
+										tag={tag}
+										tagId={item.tag_ids[tagIndex]}
+										className="bg-white/20 text-white border-white/30 text-sm"
+									/>
 								))}
 							</div>
 						)}

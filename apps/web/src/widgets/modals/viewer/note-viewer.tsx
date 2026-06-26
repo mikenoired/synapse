@@ -112,7 +112,7 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 
 							<ModalHeader.Info createdAt={item.created_at} updatedAt={item.updated_at} />
 
-							{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} />}
+							{item.tags.length > 0 && <ModalHeader.Tags tags={item.tags} tagIds={item.tag_ids} />}
 
 							{actions.length > 0 && <ActionBar actions={actions} />}
 						</div>

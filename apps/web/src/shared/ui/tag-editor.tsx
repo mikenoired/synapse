@@ -1,11 +1,11 @@
 "use client";
 
-import { Badge, Input } from "@synapse/ui/components";
-import { X } from "lucide-react";
+import { Input } from "@synapse/ui/components";
 import { useId, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import type { Content } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 import { GenerateTagsButton, type SuggestedTag } from "./generate-tags-button";
 
@@ -95,16 +95,7 @@ export function TagEditor({
 	return (
 		<div className="flex flex-wrap gap-2">
 			{tags.map((tag) => (
-				<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-					{tag}
-					<button
-						type="button"
-						onClick={() => removeTag(tag)}
-						className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-						disabled={disabled}>
-						<X className="w-3 h-3" />
-					</button>
-				</Badge>
+				<ContentTag key={tag} tag={tag} onRemove={removeTag} disabled={disabled} />
 			))}
 			<Input
 				list={listId}

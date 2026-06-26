@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import { Badge, Button, Modal } from "@synapse/ui/components";
+import { Button, Modal } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import DOMPurify from "dompurify";
 import { Calendar, Clock, Edit2, Trash2, X } from "lucide-react";
@@ -9,6 +9,7 @@ import { useMemo, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { calculateReadingTime } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 function ensureDataUri(base64: string): string {
 	if (!base64) return "";
@@ -175,13 +176,13 @@ export function DocumentViewerModal({
 
 								{item.tags.length > 0 && (
 									<div className="flex flex-wrap gap-1">
-										{item.tags.map((tag: string) => (
-											<Badge
+										{item.tags.map((tag: string, tagIndex) => (
+											<ContentTag
 												key={tag}
-												variant="secondary"
-												className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted">
-												{tag}
-											</Badge>
+												tag={tag}
+												tagId={item.tag_ids[tagIndex]}
+												className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+											/>
 										))}
 									</div>
 								)}

@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import { Badge, Button, Modal } from "@synapse/ui/components";
+import { Button, Modal } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import { motion } from "framer-motion";
 import { Calendar, Clock, FileText, Pencil, Trash2 } from "lucide-react";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
 
 interface NoteViewerModalProps {
@@ -121,13 +122,13 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 
 							{item.tags.length > 0 && (
 								<div className="flex flex-wrap gap-1">
-									{item.tags.map((tag: string) => (
-										<Badge
+									{item.tags.map((tag: string, tagIndex) => (
+										<ContentTag
 											key={tag}
-											variant="secondary"
-											className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted">
-											{tag}
-										</Badge>
+											tag={tag}
+											tagId={item.tag_ids[tagIndex]}
+											className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+										/>
 									))}
 								</div>
 							)}

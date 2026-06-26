@@ -1,11 +1,14 @@
 "use client";
 
-import { Badge, Button, Input } from "@synapse/ui/components";
-import { Plus, X } from "lucide-react";
+import { Button, Input } from "@synapse/ui/components";
+import { Plus } from "lucide-react";
 import { useState } from "react";
+
+import { ContentTag } from "@/shared/ui/content-tag";
 
 interface TagManagerProps {
 	tags: string[];
+	tagIds?: string[];
 	onAddTag?: (tag: string) => void | Promise<void>;
 	onRemoveTag?: (tag: string) => void | Promise<void>;
 	editable?: boolean;
@@ -15,6 +18,7 @@ interface TagManagerProps {
 
 export function TagManager({
 	tags,
+	tagIds,
 	onAddTag,
 	onRemoveTag,
 	editable = true,
@@ -48,21 +52,14 @@ export function TagManager({
 			{/* Existing tags */}
 			{tags.length > 0 && (
 				<div className="flex flex-wrap gap-2 mb-3">
-					{tags.map((tag) => (
-						<Badge
+					{tags.map((tag, tagIndex) => (
+						<ContentTag
 							key={tag}
-							variant="secondary"
-							className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted flex items-center gap-1">
-							{tag}
-							{editable && onRemoveTag && (
-								<button
-									type="button"
-									onClick={() => onRemoveTag(tag)}
-									className="ml-1 hover:bg-destructive/20 rounded-full p-0.5 transition-colors">
-									<X className="w-3 h-3" />
-								</button>
-							)}
-						</Badge>
+							tag={tag}
+							tagId={editable ? undefined : tagIds?.[tagIndex]}
+							onRemove={editable ? onRemoveTag : undefined}
+							className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+						/>
 					))}
 				</div>
 			)}

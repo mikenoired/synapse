@@ -484,6 +484,7 @@ export function MediaViewerModal({
 										</div>
 										<TagManager
 											tags={activeItem.tags}
+											tagIds={activeItem.tag_ids}
 											onAddTag={handleAddTag}
 											onRemoveTag={handleRemoveTag}
 											inputPlaceholder="Добавить тег..."

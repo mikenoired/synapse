@@ -1,11 +1,12 @@
 import { cn } from "@synapse/ui/cn";
-import { Badge, Button, Input, Modal } from "@synapse/ui/components";
+import { Button, Input, Modal } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import { motion } from "framer-motion";
 import { Calendar, Clock, ListChecks, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 interface TodoViewerModalProps {
 	open: boolean;
@@ -116,13 +117,13 @@ export function TodoViewerModal({
 							</div>
 							{item.tags.length > 0 && (
 								<div className="flex flex-wrap gap-1">
-									{item.tags.map((tag: string) => (
-										<Badge
+									{item.tags.map((tag: string, tagIndex) => (
+										<ContentTag
 											key={tag}
-											variant="secondary"
-											className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted">
-											{tag}
-										</Badge>
+											tag={tag}
+											tagId={item.tag_ids[tagIndex]}
+											className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+										/>
 									))}
 								</div>
 							)}

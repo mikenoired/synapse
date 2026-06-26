@@ -1,7 +1,6 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import { Badge } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import DOMPurify from "dompurify";
 import { AnimatePresence, motion } from "framer-motion";
@@ -39,6 +38,7 @@ import {
 	parseMediaJson,
 } from "@/shared/lib/schemas";
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
+import { ContentTag } from "@/shared/ui/content-tag";
 import { GenerateTagsButton, type SuggestedTag } from "@/shared/ui/generate-tags-button";
 import { CustomVideoPlayer } from "@/widgets/content-viewer/ui/custom-video-player";
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
@@ -908,10 +908,8 @@ export function UnifiedViewerModal({
 							</h1>
 							{currentItem.tags.length > 0 && (
 								<div className="mt-5 flex flex-wrap gap-2">
-									{currentItem.tags.map((tag) => (
-										<Badge key={tag} variant="secondary">
-											{tag}
-										</Badge>
+									{currentItem.tags.map((tag, tagIndex) => (
+										<ContentTag key={tag} tag={tag} tagId={currentItem.tag_ids[tagIndex]} />
 									))}
 								</div>
 							)}
@@ -1077,6 +1075,7 @@ export function UnifiedViewerModal({
 										</div>
 										<TagManager
 											tags={currentItem.tags}
+											tagIds={currentItem.tag_ids}
 											onAddTag={handleAddTag}
 											onRemoveTag={handleRemoveTag}
 											inputPlaceholder="Добавить тег..."

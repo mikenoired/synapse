@@ -1,9 +1,9 @@
 "use client";
 
-import { Badge, Button, Input, Label } from "@synapse/ui/components";
-import { X } from "lucide-react";
+import { Button, Input, Label } from "@synapse/ui/components";
 
 import type { Content } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 import type { SuggestedTag } from "@/shared/ui/generate-tags-button";
 import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
 
@@ -77,16 +77,7 @@ export function TagInput({
 			{tags.length > 0 && (
 				<div className="flex flex-wrap gap-2">
 					{tags.map((tag) => (
-						<Badge key={tag} variant="secondary" className="flex items-center gap-1">
-							{tag}
-							<button
-								type="button"
-								onClick={() => onRemoveTag(tag)}
-								className="ml-1 hover:bg-destructive/20 rounded-full p-0.5"
-								disabled={isLoading}>
-								<X className="w-3 h-3" />
-							</button>
-						</Badge>
+						<ContentTag key={tag} tag={tag} onRemove={onRemoveTag} disabled={isLoading} />
 					))}
 				</div>
 			)}

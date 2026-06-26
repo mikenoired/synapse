@@ -1,11 +1,12 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import { Badge, Button } from "@synapse/ui/components";
+import { Button } from "@synapse/ui/components";
 import type { LucideIcon } from "lucide-react";
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { ContentTag } from "@/shared/ui/content-tag";
 import { modalSpacing, modalTypography } from "@/shared/ui/design-tokens";
 
 interface ModalHeaderProps {
@@ -83,18 +84,22 @@ function ModalHeaderInfo({ createdAt, updatedAt, readingTime, className }: Modal
 
 interface ModalHeaderTagsProps {
 	tags: string[];
+	tagIds?: string[];
 	className?: string;
 }
 
-function ModalHeaderTags({ tags, className }: ModalHeaderTagsProps) {
+function ModalHeaderTags({ tags, tagIds, className }: ModalHeaderTagsProps) {
 	if (tags.length === 0) return null;
 
 	return (
 		<div className={cn("flex flex-wrap gap-1", className)}>
-			{tags.map((tag) => (
-				<Badge key={tag} variant="secondary" className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted">
-					{tag}
-				</Badge>
+			{tags.map((tag, tagIndex) => (
+				<ContentTag
+					key={tag}
+					tag={tag}
+					tagId={tagIds?.[tagIndex]}
+					className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+				/>
 			))}
 		</div>
 	);
