@@ -9,7 +9,7 @@ import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
-import { useModal } from "@/widgets/modals";
+import { useModal } from "@/widgets/modals/context/modal-context";
 
 const ContentFilter = lazy(() =>
 	import("@/features/content-filter/content-filter").then((mod) => ({ default: mod.ContentFilter }))
@@ -62,7 +62,7 @@ export default function DashboardClient({
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		initialData:
 			queryInput.search || queryInput.tagIds ? undefined : { pages: [initial], pageParams: [undefined] },
-		refetchOnMount: true,
+		refetchOnMount: false,
 		retry: false,
 	});
 

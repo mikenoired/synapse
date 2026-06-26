@@ -13,7 +13,8 @@ import { trpc } from "@/shared/api/trpc";
 import { AuthProvider } from "@/shared/lib/auth-context";
 import type { User } from "@/shared/lib/auth-context";
 import { UserPreferencesProvider } from "@/shared/lib/user-preferences-context";
-import { ModalManager, ModalProvider } from "@/widgets/modals";
+import { ModalProvider } from "@/widgets/modals/context/modal-context";
+import { ModalManager } from "@/widgets/modals/context/modal-manager";
 
 function getBaseUrl() {
 	if (typeof window !== "undefined") return "";
@@ -66,7 +67,13 @@ function TRPCProvider({ children }: { children: ReactNode }) {
 	);
 }
 
-export function Providers({ children, initialUser }: { children: ReactNode; initialUser: User | null }) {
+export function Providers({
+	children,
+	initialUser = null,
+}: {
+	children: ReactNode;
+	initialUser?: User | null;
+}) {
 	return (
 		<AuthProvider initialUser={initialUser}>
 			<TRPCProvider>

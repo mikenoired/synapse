@@ -1,5 +1,3 @@
-"use server";
-
 import { Suspense } from "react";
 
 import { ItemSkeleton } from "@/entities/item/ui/skeleton";
@@ -21,14 +19,19 @@ function DashboardContentSkeleton() {
 	);
 }
 
-export default async function DashboardPage() {
+async function DashboardContent() {
 	const caller = await getServerCaller();
 	const initial = await caller.content.getAll({
 		limit: 12,
 	});
+
+	return <DashboardClient initial={initial} />;
+}
+
+export default function DashboardPage() {
 	return (
 		<Suspense fallback={<DashboardContentSkeleton />}>
-			<DashboardClient initial={initial} />
+			<DashboardContent />
 		</Suspense>
 	);
 }

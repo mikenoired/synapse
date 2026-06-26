@@ -4,7 +4,6 @@ import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/app/providers";
-import { createContext } from "@/server/context";
 import { PerformanceMonitor } from "@/shared/lib/performance-monitor";
 import { WebVitals } from "@/shared/lib/webvitals";
 
@@ -37,9 +36,7 @@ export const viewport: Viewport = {
 	],
 };
 
-export default async function RootLayout({ children }: { children: ReactNode }) {
-	const { user } = await createContext({});
-
+export default function RootLayout({ children }: { children: ReactNode }) {
 	return (
 		<html lang="ru" className={`${geist} ${geistMono.variable}`} suppressHydrationWarning>
 			<head>
@@ -50,7 +47,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 			<body className="font-sans">
 				<WebVitals />
 				<PerformanceMonitor />
-				<Providers initialUser={user}>{children}</Providers>
+				<Providers>{children}</Providers>
 			</body>
 		</html>
 	);

@@ -10,6 +10,9 @@ function handler(req: Request) {
 		req,
 		router: appRouter,
 		createContext: () => createContext({ req: req as NextRequest }),
+	}).then((response) => {
+		response.headers.set("Cache-Control", "no-store");
+		return response;
 	});
 }
 

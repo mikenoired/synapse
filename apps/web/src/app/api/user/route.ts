@@ -6,6 +6,11 @@ import { getUserFromTokens } from "@/server/lib/auth-session";
 const ACCESS_TOKEN_COOKIE = "synapse_token";
 const REFRESH_TOKEN_COOKIE = "synapse_refresh_token";
 
+function noStore(response: NextResponse) {
+	response.headers.set("Cache-Control", "no-store");
+	return response;
+}
+
 export async function GET(req: NextRequest) {
 	try {
 		const authHeader = req.headers.get("authorization");
@@ -18,11 +23,11 @@ export async function GET(req: NextRequest) {
 		const user = getUserFromTokens(token, refreshToken);
 
 		if (!user) {
-			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+			return noStore(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
 		}
 
-		return NextResponse.json(user);
+		return noStore(NextResponse.json(user));
 	} catch {
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return noStore(NextResponse.json({ error: "Internal server error" }, { status: 500 }));
 	}
 }

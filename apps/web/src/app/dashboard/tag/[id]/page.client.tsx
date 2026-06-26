@@ -14,7 +14,7 @@ import {
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
-import { useModal } from "@/widgets/modals";
+import { useModal } from "@/widgets/modals/context/modal-context";
 
 interface Props {
 	tagId: string;

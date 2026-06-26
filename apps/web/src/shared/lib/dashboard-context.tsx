@@ -1,11 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
-import { AddContentModal } from "@/widgets/modals";
+
+const AddContentModal = dynamic(() =>
+	import("@/widgets/modals/editor/add-content-modal").then((mod) => ({ default: mod.AddContentModal }))
+);
 
 interface AddDialogOpenOptions {
 	initialTags?: string[];
@@ -149,21 +153,25 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
 		]
 	);
 
+	const shouldRenderAddContentModal = isAddDialogOpen || preloadedFiles.length > 0;
+
 	return (
 		<DashboardContext.Provider value={value}>
 			{children}
-			<AddContentModal
-				open={isAddDialogOpen}
-				onOpenChange={(nextOpen) => {
-					setAddDialogOpen(nextOpen);
-					if (!nextOpen) {
-						setPreloadedFiles([]);
-					}
-				}}
-				initialTags={dialogOptions.initialTags}
-				onContentAdded={dialogOptions.onContentAdded}
-				preloadedFiles={preloadedFiles}
-			/>
+			{shouldRenderAddContentModal && (
+				<AddContentModal
+					open={isAddDialogOpen}
+					onOpenChange={(nextOpen) => {
+						setAddDialogOpen(nextOpen);
+						if (!nextOpen) {
+							setPreloadedFiles([]);
+						}
+					}}
+					initialTags={dialogOptions.initialTags}
+					onContentAdded={dialogOptions.onContentAdded}
+					preloadedFiles={preloadedFiles}
+				/>
+			)}
 		</DashboardContext.Provider>
 	);
 }

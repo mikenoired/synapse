@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export interface User {
 	id: string;
@@ -32,8 +32,40 @@ export function AuthProvider({
 	initialUser?: User | null;
 }) {
 	const [user, setUser] = useState<User | null>(initialUser);
-	const [loading] = useState(false);
+	const [loading, setLoading] = useState(initialUser === null);
 	const router = useRouter();
+
+	useEffect(() => {
+		if (initialUser) return;
+
+		const controller = new AbortController();
+
+		async function loadUser() {
+			try {
+				const response = await fetch("/api/user", {
+					credentials: "include",
+					signal: controller.signal,
+				});
+
+				if (!response.ok) {
+					setUser(null);
+					return;
+				}
+
+				const nextUser = (await response.json()) as User;
+				setUser(nextUser);
+			} catch (error) {
+				if (error instanceof DOMException && error.name === "AbortError") return;
+				setUser(null);
+			} finally {
+				if (!controller.signal.aborted) setLoading(false);
+			}
+		}
+
+		void loadUser();
+
+		return () => controller.abort();
+	}, [initialUser]);
 
 	const signUp = async (email: string, password: string) => {
 		try {
