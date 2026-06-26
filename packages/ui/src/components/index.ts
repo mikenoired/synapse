@@ -2,7 +2,6 @@ export * from "./badge";
 export * from "./button";
 export * from "./checkbox";
 export * from "./context-menu";
-export * from "./custom-scrollbar";
 export * from "./form";
 export * from "./input";
 export * from "./label";

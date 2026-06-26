@@ -191,6 +191,32 @@
 		font-feature-settings: "cv01", "cv02", "cv03", "cv04", "cv11";
 	}
 
+	* {
+		scrollbar-color: color-mix(in oklch, var(--muted-foreground) 55%, transparent) transparent;
+		scrollbar-width: thin;
+	}
+
+	*::-webkit-scrollbar {
+		width: 10px;
+		height: 10px;
+	}
+
+	*::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	*::-webkit-scrollbar-thumb {
+		background: color-mix(in oklch, var(--muted-foreground) 38%, transparent);
+		border: 3px solid transparent;
+		border-radius: 999px;
+		background-clip: content-box;
+	}
+
+	*::-webkit-scrollbar-thumb:hover {
+		background: color-mix(in oklch, var(--muted-foreground) 62%, transparent);
+		background-clip: content-box;
+	}
+
 	h1,
 	h2,
 	h3,
@@ -254,15 +280,6 @@
 		-webkit-box-orient: vertical;
 		-webkit-line-clamp: 3;
 		line-clamp: 3;
-	}
-
-	.scrollbar-hide {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-
-	.scrollbar-hide::-webkit-scrollbar {
-		display: none;
 	}
 }
 
