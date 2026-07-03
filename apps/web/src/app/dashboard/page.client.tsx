@@ -5,6 +5,7 @@ import type { DragEvent } from "react";
 import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import { getQueryTypesForFilter, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
@@ -26,6 +27,7 @@ export default function DashboardClient({
 	const [searchQuery, setSearchQuery] = useState("");
 	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 	const [selectedTags, setSelectedTags] = useState<string[]>([]);
+	const [selectedContentTypes, setSelectedContentTypes] = useState<Content["type"][]>([]);
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const { openModal } = useModal();
 	const router = useRouter();
@@ -33,6 +35,10 @@ export default function DashboardClient({
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
 	const utils = trpc.useUtils();
+	const { data: availableContentTypes = [] } = trpc.content.getAvailableTypes.useQuery(undefined, {
+		staleTime: 30_000,
+		refetchOnWindowFocus: false,
+	});
 
 	useEffect(() => {
 		if (!searchQuery) {
@@ -43,13 +49,25 @@ export default function DashboardClient({
 		return () => window.clearTimeout(timeout);
 	}, [searchQuery]);
 
+	const selectedQueryTypes = useMemo(() => {
+		const types = selectedContentTypes.flatMap(getQueryTypesForFilter);
+		return Array.from(new Set(types));
+	}, [selectedContentTypes]);
+
+	useEffect(() => {
+		setSelectedContentTypes((current) =>
+			current.filter((type) => isContentTypeFilterAvailable(type, availableContentTypes))
+		);
+	}, [availableContentTypes]);
+
 	const queryInput = useMemo<ContentListQueryInput>(
 		() => ({
 			search: debouncedSearchQuery || undefined,
 			tagIds: selectedTags.length > 0 ? selectedTags : undefined,
+			types: selectedQueryTypes.length > 0 ? selectedQueryTypes : undefined,
 			limit: 12,
 		}),
-		[debouncedSearchQuery, selectedTags]
+		[debouncedSearchQuery, selectedTags, selectedQueryTypes]
 	);
 
 	const {
@@ -61,7 +79,9 @@ export default function DashboardClient({
 	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		initialData:
-			queryInput.search || queryInput.tagIds ? undefined : { pages: [initial], pageParams: [undefined] },
+			queryInput.search || queryInput.tagIds || queryInput.types
+				? undefined
+				: { pages: [initial], pageParams: [undefined] },
 		refetchOnMount: false,
 		retry: false,
 	});
@@ -70,6 +90,7 @@ export default function DashboardClient({
 
 	const invalidateRelatedQueries = useCallback(() => {
 		void Promise.all([
+			utils.content.getAvailableTypes.invalidate(),
 			utils.content.getTags.invalidate(),
 			utils.content.getTagsWithContent.invalidate(),
 			utils.graph.getGraph.invalidate(),
@@ -188,7 +209,14 @@ export default function DashboardClient({
 	const clearFilters = () => {
 		setSearchQuery("");
 		setSelectedTags([]);
+		setSelectedContentTypes([]);
 		router.push("/dashboard");
+	};
+
+	const toggleContentType = (type: Content["type"]) => {
+		setSelectedContentTypes((current) =>
+			current.includes(type) ? current.filter((item) => item !== type) : [...current, type]
+		);
 	};
 
 	return (
@@ -222,7 +250,14 @@ export default function DashboardClient({
 				</div>
 			)}
 			<main className="min-w-0 flex-1 overflow-y-auto relative">
-				<ContentFilter searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+				<ContentFilter
+					searchQuery={searchQuery}
+					setSearchQuery={setSearchQuery}
+					availableContentTypes={availableContentTypes}
+					selectedContentTypes={selectedContentTypes}
+					onClearContentTypes={() => setSelectedContentTypes([])}
+					onToggleContentType={toggleContentType}
+				/>
 				<div className="p-4">
 					<ContentGrid
 						items={content}
@@ -232,6 +267,7 @@ export default function DashboardClient({
 						onItemClick={handleItemClick}
 						searchQuery={debouncedSearchQuery}
 						selectedTags={selectedTags}
+						selectedContentTypes={selectedContentTypes}
 						onClearFilters={clearFilters}
 						onAddContent={openAddDialog}
 						fetchNext={fetchNextPage}

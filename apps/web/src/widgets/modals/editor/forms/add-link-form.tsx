@@ -77,6 +77,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 			});
 
 			void Promise.all([
+				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
 				utils.graph.getGraph.invalidate(),

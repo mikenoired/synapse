@@ -35,17 +35,17 @@ function matchesTags(item: Content, tagIds?: string[]): boolean {
 	return tagIds.every((tagId) => item.tag_ids.includes(tagId));
 }
 
-function matchesType(item: Content, type?: Content["type"]): boolean {
-	if (!type) {
+function matchesTypes(item: Content, types?: Content["type"][]): boolean {
+	if (!types?.length) {
 		return true;
 	}
 
-	return item.type === type;
+	return types.includes(item.type);
 }
 
 export function matchesContentListFilters(item: Content, input: ContentListQueryInput): boolean {
 	return (
-		matchesSearch(item, input.search) && matchesTags(item, input.tagIds) && matchesType(item, input.type)
+		matchesSearch(item, input.search) && matchesTags(item, input.tagIds) && matchesTypes(item, input.types)
 	);
 }
 

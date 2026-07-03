@@ -53,6 +53,7 @@ export default function Item({
 	const deleteMutation = trpc.content.delete.useMutation({
 		onSuccess: () => {
 			void Promise.all([
+				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
 				utils.graph.getGraph.invalidate(),

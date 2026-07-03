@@ -27,8 +27,12 @@ import ContentRepository from "../repositories/content.repository";
 type ContentSelect = typeof contentTable.$inferSelect;
 type ContentRow = Omit<ContentSelect, "searchText" | "searchVector"> &
 	Partial<Pick<ContentSelect, "searchText" | "searchVector">>;
+type ContentType = Content["type"];
 
 const TAGS_CACHE_TTL_SECONDS = Math.floor(Number(process.env.TAGS_CACHE_TTL_MS ?? 30000) / 1000);
+const CONTENT_TYPES_CACHE_TTL_SECONDS = Math.floor(
+	Number(process.env.CONTENT_TYPES_CACHE_TTL_MS ?? 30000) / 1000
+);
 const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024;
 const LIST_TEXT_PREVIEW_CHARS = 1_200;
 
@@ -47,31 +51,19 @@ export default class ContentService {
 
 	async getAll(
 		search: string | undefined,
-		type:
-			| "note"
-			| "media"
-			| "link"
-			| "todo"
-			| "audio"
-			| "doc"
-			| "pdf"
-			| "docx"
-			| "epub"
-			| "xlsx"
-			| "csv"
-			| undefined,
+		types: ContentType[] | undefined,
 		tagIds: string[] | undefined,
 		cursor: string | undefined,
 		limit: number,
 		includeTags: boolean
 	) {
 		if (search?.trim()) {
-			return await this.searchContent(search.trim(), type, tagIds, limit, includeTags);
+			return await this.searchContent(search.trim(), types, tagIds, limit, includeTags);
 		}
 		if (tagIds && tagIds.length) {
-			return await this.getContentWithTagFilter(tagIds, limit, search, type, cursor, includeTags);
+			return await this.getContentWithTagFilter(tagIds, limit, search, types, cursor, includeTags);
 		}
-		const data = await this.repo.getAll(search, type, cursor, limit);
+		const data = await this.repo.getAll(search, types, cursor, limit);
 
 		const contentRows = (data || []) as ContentRow[];
 		const last = contentRows[contentRows.length - 1];
@@ -89,12 +81,12 @@ export default class ContentService {
 
 	private async searchContent(
 		search: string,
-		type: Content["type"] | undefined,
+		types: ContentType[] | undefined,
 		tagIds: string[] | undefined,
 		limit: number,
 		includeTags: boolean
 	) {
-		const rows = (await this.repo.searchFtsFiltered(search, type, tagIds, limit)) as ContentRow[];
+		const rows = (await this.repo.searchFtsFiltered(search, types, tagIds, limit)) as ContentRow[];
 		const items = includeTags
 			? await this.attachTagsToContent(rows, { previewContent: true })
 			: rows.map((row) => this.mapContentRow(row, this.ctx.user!.id, { previewContent: true }));
@@ -115,23 +107,11 @@ export default class ContentService {
 		tagIds: string[],
 		limit: number,
 		search: string | undefined,
-		type:
-			| "note"
-			| "media"
-			| "link"
-			| "todo"
-			| "audio"
-			| "doc"
-			| "pdf"
-			| "docx"
-			| "epub"
-			| "xlsx"
-			| "csv"
-			| undefined,
+		types: ContentType[] | undefined,
 		cursor: string | undefined,
 		includeTags: boolean
 	) {
-		const data = await this.repo.getWithTagFilter(tagIds, limit, search, type, cursor);
+		const data = await this.repo.getWithTagFilter(tagIds, limit, search, types, cursor);
 		const contentRows = (data || []) as ContentRow[];
 		const last = contentRows[contentRows.length - 1];
 		const nextCursor = last ? `${last.createdAt}|${last.id}` : undefined;
@@ -438,6 +418,18 @@ export default class ContentService {
 		return await this.repo.getTagById(id);
 	}
 
+	async getAvailableTypes() {
+		const cacheKey = `user:${this.ctx.user!.id}:content_types`;
+		const cached = await this.ctx.cache.getJSON<ContentType[]>(cacheKey);
+		if (cached) return cached;
+
+		const rows = await this.repo.getAvailableTypes();
+		const result = rows.map((row) => contentTypeSchema.parse(row.type));
+		await this.ctx.cache.setJSON(cacheKey, result, CONTENT_TYPES_CACHE_TTL_SECONDS);
+		return result;
+	}
+
+
 	async syncSearchText(content: Content) {
 		await this.repo.updateSearchText(content.id, buildContentSearchText(content));
 	}
@@ -505,6 +497,7 @@ export default class ContentService {
 		await Promise.all([
 			this.ctx.cache.del(`user:${userId}:tags`),
 			this.ctx.cache.del(`user:${userId}:tags_with_content`),
+			this.ctx.cache.del(`user:${userId}:content_types`),
 		]);
 	}
 

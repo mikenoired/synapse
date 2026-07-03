@@ -85,6 +85,7 @@ export default class UploadService {
 		await Promise.all([
 			this.ctx.cache.del(`user:${userId}:tags`),
 			this.ctx.cache.del(`user:${userId}:tags_with_content`),
+			this.ctx.cache.del(`user:${userId}:content_types`),
 		]);
 	}
 

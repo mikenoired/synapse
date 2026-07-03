@@ -83,7 +83,7 @@ describe.serial("content service", () => {
 
 		const service = createService();
 		expect(await service.getById(created.id)).toEqual(created);
-		const result = await service.getAll("integration note", "note", [tag!.id], undefined, 10, true);
+		const result = await service.getAll("integration note", ["note"], [tag!.id], undefined, 10, true);
 		expect(result.items).toEqual([created]);
 
 		const contentNode = await db.query.nodes.findFirst({

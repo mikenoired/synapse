@@ -87,8 +87,9 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	}, [content]);
 
 	const updateContentMutation = trpc.content.update.useMutation({
-		onSuccess: (updatedContent) => {
+			onSuccess: (updatedContent) => {
 			void Promise.all([
+				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
 				utils.graph.getGraph.invalidate(),

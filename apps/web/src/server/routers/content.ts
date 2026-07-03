@@ -12,7 +12,7 @@ export const contentRouter = router({
 			z.object({
 				search: z.string().optional(),
 				tagIds: z.array(z.string()).optional(),
-				type: contentTypeSchema.optional(),
+				types: z.array(contentTypeSchema).optional(),
 				cursor: z.string().optional(), // keyset: `${created_at}|${id}`
 				limit: z.number().min(1).max(50).optional().default(12),
 				includeTags: z.boolean().optional().default(true),
@@ -22,7 +22,7 @@ export const contentRouter = router({
 			const service = new ContentService(ctx);
 			return await service.getAll(
 				input.search,
-				input.type,
+				input.types,
 				input.tagIds,
 				input.cursor,
 				input.limit || 12,
@@ -63,6 +63,11 @@ export const contentRouter = router({
 	getTagsWithContent: protectedProcedure.query(async ({ ctx }) => {
 		const service = new ContentService(ctx);
 		return await service.getTagsWithContent();
+	}),
+
+	getAvailableTypes: protectedProcedure.query(async ({ ctx }) => {
+		const service = new ContentService(ctx);
+		return await service.getAvailableTypes();
 	}),
 
 	importFile: protectedProcedure

@@ -35,6 +35,7 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 	const importFileMutation = trpc.content.importFile.useMutation({
 		onSuccess: () => {
 			void Promise.all([
+				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
 				utils.graph.getGraph.invalidate(),

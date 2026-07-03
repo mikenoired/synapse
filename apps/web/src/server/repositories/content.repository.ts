@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, ilike, inArray, isNull, lt, lte, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, ilike, inArray, isNull, lt, lte, or, type SQL, sql } from "drizzle-orm";
 import type z from "zod";
 
 import type { createContentSchema, updateContentSchema } from "@/shared/lib/schemas";
@@ -11,6 +11,8 @@ import { requireAuth } from "../lib/auth-guard";
 type DatabaseExecutor = Context["db"];
 
 const LIST_CONTENT_PREVIEW_CHARS = 6_000;
+
+type ContentType = z.infer<typeof createContentSchema>["type"];
 
 function normalizeTagTitle(title: string) {
 	return title.trim().toLowerCase();
@@ -43,31 +45,19 @@ export default class ContentRepository {
 
 	private buildContentConditions(
 		search: string | undefined,
-		type:
-			| "note"
-			| "media"
-			| "link"
-			| "todo"
-			| "audio"
-			| "doc"
-			| "pdf"
-			| "docx"
-			| "epub"
-			| "xlsx"
-			| "csv"
-			| undefined,
+		types: ContentType[] | undefined,
 		cursor: string | undefined,
-		extraConditions: Array<ReturnType<typeof eq>> = []
+		extraConditions: SQL[] = []
 	) {
-		const conditions = [eq(content.userId, this.ctx.user!.id), ...extraConditions];
+		const conditions: SQL[] = [eq(content.userId, this.ctx.user!.id), ...extraConditions];
 
 		if (search && search.trim().length > 0) {
 			const term = `%${search.trim()}%`;
 			conditions.push(or(ilike(content.title, term), ilike(content.content, term))!);
 		}
 
-		if (type) {
-			conditions.push(eq(content.type, type));
+		if (types?.length) {
+			conditions.push(inArray(content.type, types));
 		}
 
 		if (cursor) {
@@ -87,25 +77,13 @@ export default class ContentRepository {
 
 	async getAll(
 		search: string | undefined,
-		type:
-			| "note"
-			| "media"
-			| "link"
-			| "todo"
-			| "audio"
-			| "doc"
-			| "pdf"
-			| "docx"
-			| "epub"
-			| "xlsx"
-			| "csv"
-			| undefined,
+		types: ContentType[] | undefined,
 		cursor: string | undefined,
 		limit: number
 	) {
 		requireAuth(this.ctx);
 
-		const conditions = this.buildContentConditions(search, type, cursor);
+		const conditions = this.buildContentConditions(search, types, cursor);
 
 		const data = await this.database
 			.select(contentListColumns)
@@ -119,19 +97,7 @@ export default class ContentRepository {
 
 	async searchFtsFiltered(
 		search: string,
-		type:
-			| "note"
-			| "media"
-			| "link"
-			| "todo"
-			| "audio"
-			| "doc"
-			| "pdf"
-			| "docx"
-			| "epub"
-			| "xlsx"
-			| "csv"
-			| undefined,
+		types: ContentType[] | undefined,
 		tagIds: string[] | undefined,
 		limit: number
 	) {
@@ -145,7 +111,7 @@ export default class ContentRepository {
 		const score = sql<number>`ts_rank_cd(${content.searchVector}, ${searchQuery})`;
 		const conditions = [eq(content.userId, this.ctx.user.id), sql`${content.searchVector} @@ ${searchQuery}`];
 
-		if (type) conditions.push(eq(content.type, type));
+		if (types?.length) conditions.push(inArray(content.type, types));
 		if (tagIds?.length) {
 			const tagList = sql.join(
 				tagIds.map((tagId) => sql`${tagId}`),
@@ -172,24 +138,12 @@ export default class ContentRepository {
 		tagIds: string[],
 		limit: number,
 		search: string | undefined,
-		type:
-			| "note"
-			| "media"
-			| "link"
-			| "todo"
-			| "audio"
-			| "doc"
-			| "pdf"
-			| "docx"
-			| "epub"
-			| "xlsx"
-			| "csv"
-			| undefined,
+		types: ContentType[] | undefined,
 		cursor: string | undefined
 	) {
 		requireAuth(this.ctx);
 
-		const conditions = this.buildContentConditions(search, type, cursor, [
+		const conditions = this.buildContentConditions(search, types, cursor, [
 			inArray(contentTags.tagId, tagIds),
 		]);
 
@@ -236,6 +190,17 @@ export default class ContentRepository {
 			.groupBy(contentTags.contentId);
 
 		return data;
+	}
+
+	async getAvailableTypes() {
+		requireAuth(this.ctx);
+
+		return await this.database
+			.select({ type: content.type })
+			.from(content)
+			.where(eq(content.userId, this.ctx.user.id))
+			.groupBy(content.type)
+			.orderBy(asc(content.type));
 	}
 
 	async getTagsWithContentPreview(limitPerTag: number) {

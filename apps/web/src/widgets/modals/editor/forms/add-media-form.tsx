@@ -28,6 +28,7 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 	const uploadMutation = trpc.upload.formData.useMutation({
 		onSuccess: () => {
 			void Promise.all([
+				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
 				utils.graph.getGraph.invalidate(),

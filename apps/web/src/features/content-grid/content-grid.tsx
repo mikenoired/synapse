@@ -21,6 +21,7 @@ interface ContentGridProps {
 	onItemHover?: () => void;
 	searchQuery?: string;
 	selectedTags?: string[];
+	selectedContentTypes?: Content["type"][];
 	onClearFilters?: () => void;
 	onAddContent?: () => void;
 	excludedTag?: string;
@@ -48,15 +49,18 @@ export const ContentGrid = memo(
 		onItemHover,
 		searchQuery,
 		selectedTags,
+		selectedContentTypes,
 		onClearFilters,
 		onAddContent,
 		excludedTag,
 	}: ContentGridProps) => {
 		const hasContent = items.length > 0;
+		const hasSelectedTags = Boolean(selectedTags?.length);
+		const hasSelectedContentTypes = Boolean(selectedContentTypes?.length);
 		const showEmptyState =
-			!isLoading && !hasContent && !searchQuery && (!selectedTags || selectedTags.length === 0);
+			!isLoading && !hasContent && !searchQuery && !hasSelectedTags && !hasSelectedContentTypes;
 		const showNotFoundState =
-			!isLoading && !hasContent && (searchQuery || (selectedTags && selectedTags.length > 0));
+			!isLoading && !hasContent && (searchQuery || hasSelectedTags || hasSelectedContentTypes);
 
 		const sentinelRef = useRef<HTMLDivElement | null>(null);
 
