@@ -46,19 +46,19 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 	const getDocumentTypeName = (type: string) => {
 		switch (type) {
 			case "pdf":
-				return "PDF Document";
+				return "PDF-документ";
 			case "docx":
-				return "Word Document";
+				return "Документ Word";
 			case "epub":
-				return "EPUB Book";
+				return "Книга EPUB";
 			case "xlsx":
 			case "xls":
-				return "Excel Spreadsheet";
+				return "Таблица Excel";
 			case "csv":
-				return "CSV File";
+				return "CSV-файл";
 			case "doc":
 			default:
-				return "Document";
+				return "Документ";
 		}
 	};
 
@@ -87,7 +87,7 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 					<div className="h-32 w-full overflow-hidden">
 						<img
 							src={ensureDataUri(item.thumbnail_base64)}
-							alt="Document thumbnail"
+							alt="Миниатюра документа"
 							className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
 						/>
 					</div>
@@ -98,7 +98,7 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 						<div className="text-2xl flex-shrink-0 mt-0.5">{getDocumentIcon(item.type)}</div>
 						<div className="flex-1 min-w-0">
 							<h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm leading-tight line-clamp-2">
-								{item.title || "Untitled Document"}
+								{item.title || "Документ без названия"}
 							</h3>
 							<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
 								{getDocumentTypeName(item.type)}

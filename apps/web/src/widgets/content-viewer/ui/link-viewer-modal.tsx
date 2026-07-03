@@ -252,14 +252,14 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 									</div>
 									<Button size="sm" variant="outline" onClick={handleOpenLink} className="flex-shrink-0">
 										<ExternalLink className="w-3 h-3 mr-1" />
-										Open
+										Открыть
 									</Button>
 								</div>
 							)}
 
 							<div className="space-y-2">
 								<h1 className="text-2xl md:text-3xl font-bold leading-tight text-foreground">
-									{linkContent?.title || item.title || "No title"}
+									{linkContent?.title || item.title || "Без названия"}
 								</h1>
 								{/* {linkContent?.description && (
                   <p className="text-muted-foreground leading-relaxed">
@@ -272,7 +272,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 								<div className="flex items-center gap-1">
 									<Calendar className="w-3 h-3" />
 									<span>
-										{new Date(item.created_at).toLocaleDateString("en-US", {
+										{new Date(item.created_at).toLocaleDateString("ru-RU", {
 											year: "numeric",
 											month: "short",
 											day: "numeric",
@@ -283,8 +283,8 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 									<div className="flex items-center gap-1">
 										<FileText className="w-3 h-3" />
 										<span>
-											Uploaded:
-											{new Date(linkContent.metadata.publishedTime).toLocaleDateString("en-US", {
+											Опубликовано:{" "}
+											{new Date(linkContent.metadata.publishedTime).toLocaleDateString("ru-RU", {
 												year: "numeric",
 												month: "short",
 												day: "numeric",
@@ -367,7 +367,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 											<div className="p-2 bg-primary/10 rounded-lg">
 												<ExternalLink className="w-5 h-5 text-primary" />
 											</div>
-											<div className="text-sm text-muted-foreground">External link</div>
+											<div className="text-sm text-muted-foreground">Внешняя ссылка</div>
 										</div>
 
 										<div className="space-y-3">
@@ -377,13 +377,13 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 
 											<Button onClick={handleOpenLink} className="w-full" size="lg">
 												<ExternalLink className="w-4 h-4 mr-2" />
-												Open link
+												Открыть ссылку
 											</Button>
 										</div>
 									</div>
 
 									<div className="text-xs text-muted-foreground">
-										Link was saved in old format. Edit for another parse.
+										Ссылка сохранена в старом формате. Отредактируйте ее, чтобы разобрать заново.
 									</div>
 								</div>
 							</div>
@@ -398,7 +398,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 								className="flex gap-2 justify-center p-4">
 								<Button size="sm" variant="outline" onClick={handleEdit} className="text-xs hover:bg-muted">
 									<Pencil className="w-3 h-3 mr-1" />
-									Edit
+									Редактировать
 								</Button>
 								<Button
 									size="sm"
@@ -406,7 +406,7 @@ export function LinkViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 									onClick={handleDelete}
 									className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10">
 									<Trash2 className="w-3 h-3 mr-1" />
-									Delete
+									Удалить
 								</Button>
 							</motion.div>
 						</div>

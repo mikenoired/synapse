@@ -23,7 +23,7 @@ export async function parsePDF(buffer: Buffer, options: ParserOptions = {}): Pro
 			content += pageText + "\n\n";
 		}
 
-		const title = extractTitleFromContent(content) || "PDF Document";
+		const title = extractTitleFromContent(content) || "PDF-документ";
 
 		return {
 			type: "pdf",

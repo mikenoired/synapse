@@ -95,7 +95,7 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 								<div className="flex items-center gap-1">
 									<Calendar className="size-3" />
 									<span className="text-sm leading-none">
-										{new Date(item.created_at).toLocaleDateString("en-US", {
+										{new Date(item.created_at).toLocaleDateString("ru-RU", {
 											year: "numeric",
 											month: "short",
 											day: "numeric",
@@ -108,8 +108,8 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 									<div className="flex items-center gap-1">
 										<Clock className="size-3" />
 										<span>
-											Updated:
-											{new Date(item.updated_at).toLocaleDateString("en-US", {
+											Обновлено:{" "}
+											{new Date(item.updated_at).toLocaleDateString("ru-RU", {
 												month: "short",
 												day: "numeric",
 												hour: "2-digit",
@@ -139,7 +139,7 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 								className="flex gap-2 pt-2">
 								<Button size="sm" variant="outline" onClick={handleEdit} className="text-xs">
 									<Pencil className="w-3 h-3 mr-1" />
-									Edit
+									Редактировать
 								</Button>
 								<Button
 									size="sm"
@@ -147,7 +147,7 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 									onClick={handleDelete}
 									className="text-xs text-destructive hover:text-destructive">
 									<Trash2 className="w-3 h-3 mr-1" />
-									Delete
+									Удалить
 								</Button>
 							</motion.div>
 						</div>

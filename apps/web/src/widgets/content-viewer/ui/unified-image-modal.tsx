@@ -190,7 +190,7 @@ export function UnifiedMediaModal({
 
 	const handleDelete = () => {
 		// eslint-disable-next-line no-alert
-		if (confirm("Delete this content?")) {
+		if (confirm("Удалить этот элемент?")) {
 			deleteContentMutation.mutate({ id: item.id });
 		}
 	};
@@ -243,11 +243,11 @@ export function UnifiedMediaModal({
 							{isMultiple && (
 								<>
 									<span>
-										{currentIndex + 1} of {imageUrls.length}
+										{currentIndex + 1} из {imageUrls.length}
 									</span>
 									<div className="flex items-center gap-1">
 										<Layers className="w-3 h-3" />
-										<span>Group</span>
+										<span>Группа</span>
 									</div>
 								</>
 							)}
@@ -260,7 +260,7 @@ export function UnifiedMediaModal({
 							size="sm"
 							onClick={() => setShowTags(!showTags)}
 							className="text-white hover:bg-white/20"
-							title="Tags">
+							title="Теги">
 							<Tag className="w-4 h-4" />
 						</Button>
 						{onEdit && (
@@ -269,7 +269,7 @@ export function UnifiedMediaModal({
 								size="sm"
 								onClick={handleEdit}
 								className="text-white hover:bg-white/20"
-								title="Edit">
+								title="Редактировать">
 								<Edit2 className="w-4 h-4" />
 							</Button>
 						)}
@@ -279,7 +279,7 @@ export function UnifiedMediaModal({
 								size="sm"
 								onClick={handleDelete}
 								className="text-white hover:bg-white/20"
-								title="Delete">
+								title="Удалить">
 								<Trash2 className="w-4 h-4" />
 							</Button>
 						)}
@@ -302,7 +302,7 @@ export function UnifiedMediaModal({
 					)}>
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
-							<h3 className="font-medium">Tags</h3>
+							<h3 className="font-medium">Теги</h3>
 							<Button
 								variant="ghost"
 								size="sm"
@@ -327,7 +327,7 @@ export function UnifiedMediaModal({
 
 						<div className="flex flex-col sm:flex-row gap-2">
 							<Input
-								placeholder="Add tag..."
+								placeholder="Добавить тег..."
 								value={newTag}
 								onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTag(e.target.value)}
 								onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -350,7 +350,7 @@ export function UnifiedMediaModal({
 
 						{isMultiple && (
 							<div className="pt-2 border-t border-white/20">
-								<p className="text-xs text-white/70">Tags apply to all images in the group</p>
+								<p className="text-xs text-white/70">Теги применяются ко всем изображениям в группе</p>
 							</div>
 						)}
 					</div>
@@ -393,7 +393,7 @@ export function UnifiedMediaModal({
 								opacity: { duration: 0.2, ease: "linear" },
 							}}
 							src={mediaSrc || undefined}
-							alt={`${item.title || "Image"} ${currentIndex + 1}`}
+							alt={`${item.title || "Изображение"} ${currentIndex + 1}`}
 							className="absolute inset-0 w-full h-full object-contain pointer-events-none"
 							draggable={false}
 							onTouchStart={handleTouchStart}

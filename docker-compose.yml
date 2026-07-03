@@ -25,10 +25,26 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
-    command: redis-server --appendonly yes
+    command: >
+      sh -c 'if [ -n "$$REDIS_PASSWORD" ]; then
+        redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD";
+      else
+        redis-server --appendonly yes;
+      fi'
+    healthcheck:
+      test:
+        [
+          CMD-SHELL,
+          'if [ -n "$$REDIS_PASSWORD" ]; then redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG; else redis-cli ping | grep PONG; fi',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
       - redis-network
   postgres:
@@ -47,7 +63,7 @@ services:
       - synapse-network
       - postgres-network
     healthcheck:
-      test: [CMD-SHELL, pg_isready -U postgres]
+      test: [CMD-SHELL, 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
       interval: 10s
       timeout: 5s
       retries: 5

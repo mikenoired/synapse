@@ -74,16 +74,13 @@ export function LinkPreview({
 								)}
 								<div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
 									{parsedLinkData.metadata.siteName && <span>{parsedLinkData.metadata.siteName}</span>}
-									{parsedLinkData.metadata.author && (
+									{parsedLinkData.metadata.author && <span>• Автор: {parsedLinkData.metadata.author}</span>}
+									{parsedLinkData.metadata.publishedTime && (
 										<span>
-											• by
-											{parsedLinkData.metadata.author}
+											•{new Date(parsedLinkData.metadata.publishedTime).toLocaleDateString("ru-RU")}
 										</span>
 									)}
-									{parsedLinkData.metadata.publishedTime && (
-										<span>•{new Date(parsedLinkData.metadata.publishedTime).toLocaleDateString()}</span>
-									)}
-									<span>•{parsedLinkData.metadata.contentBlocks} blocks</span>
+									<span>• Блоков: {parsedLinkData.metadata.contentBlocks}</span>
 								</div>
 							</div>
 							<Button

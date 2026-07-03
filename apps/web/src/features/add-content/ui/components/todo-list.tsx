@@ -36,7 +36,7 @@ export function TodoList({
 		<div className="flex flex-col gap-4">
 			<div className="flex gap-2">
 				<Input
-					placeholder="Add item..."
+					placeholder="Добавить пункт..."
 					value={todoInput}
 					onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTodoInput(e.target.value)}
 					onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -47,11 +47,11 @@ export function TodoList({
 				/>
 				<Button type="button" onClick={handleAddTodo} disabled={!todoInput.trim() || isLoading} size="sm">
 					<Plus className="w-4 h-4 mr-1" />
-					Add
+					Добавить
 				</Button>
 			</div>
 			<div className="flex flex-col gap-2">
-				{items.length === 0 && <div className="text-muted-foreground text-sm">There's no items</div>}
+				{items.length === 0 && <div className="text-muted-foreground text-sm">Пунктов пока нет</div>}
 				{items.map((item, idx) => (
 					<div key={idx} className="flex items-center gap-2 group">
 						<Input

@@ -4,6 +4,7 @@ import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 
 import { Providers } from "@/app/providers";
+import { NextDevtoolsLocalizer } from "@/shared/lib/next-devtools-localizer";
 import { PerformanceMonitor } from "@/shared/lib/performance-monitor";
 import { WebVitals } from "@/shared/lib/webvitals";
 
@@ -14,7 +15,10 @@ const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 });
 
-const geist = Geist();
+const geist = Geist({
+	subsets: ["latin"],
+	variable: "--font-geist",
+});
 
 export const metadata: Metadata = {
 	title: "Synapse — личный архив",
@@ -38,7 +42,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
 	return (
-		<html lang="ru" className={`${geist} ${geistMono.variable}`} suppressHydrationWarning>
+		<html lang="ru" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
 			<head>
 				<link rel="preconnect" href="http://localhost:9000" />
 				<link rel="dns-prefetch" href="http://localhost:9000" />
@@ -47,6 +51,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 			<body className="font-sans">
 				<WebVitals />
 				<PerformanceMonitor />
+				<NextDevtoolsLocalizer />
 				<Providers>{children}</Providers>
 			</body>
 		</html>

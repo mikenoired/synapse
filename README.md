@@ -22,9 +22,10 @@ brew install ffmpeg
 
 ```bash
 cp apps/web/.env.example apps/web/.env.local
+cp apps/web/.env.example .env
 ```
 
-Заполните обязательные секреты в `apps/web/.env.local`:
+Заполните обязательные секреты в `apps/web/.env.local` и продублируйте инфраструктурные значения в root `.env`, который читает Docker Compose:
 
 ```env
 JWT_SECRET=<случайная строка>
@@ -45,19 +46,19 @@ docker compose ps
 ### 4. Создайте таблицы
 
 ```bash
-bun --filter @synapse/web db:push
-bun --filter @synapse/web db:install-tag-merge
-bun --filter @synapse/web search:backfill
+bun --env-file=.env --filter @synapse/web db:push
+bun --env-file=.env --filter @synapse/web db:install-tag-merge
+bun --env-file=.env --filter @synapse/web search:backfill
 ```
 
 ### 5. Создайте bucket в MinIO
 
-Откройте [http://localhost:9001](http://localhost:9001), войдите с логином и паролем `minioadmin`, затем создайте bucket `synapse`.
+Приложение создаст bucket `synapse` при первой загрузке файла. Для ручной проверки можно открыть [http://localhost:9001](http://localhost:9001) и войти с логином/паролем из `.env`.
 
 ### 6. Запустите приложение
 
 ```bash
-bun --filter @synapse/web dev
+bun --env-file=.env --filter @synapse/web dev
 ```
 
 Приложение будет доступно на [http://localhost:3000](http://localhost:3000).

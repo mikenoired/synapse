@@ -7,7 +7,7 @@ export async function parseXLSX(buffer: Buffer, _options: ParserOptions = {}): P
 		const workbook = XLSX.read(buffer, { type: "buffer" });
 
 		let content = "";
-		let title = workbook.Props?.Title || "XLSX Document";
+		let title = workbook.Props?.Title || "Таблица XLSX";
 
 		for (const sheetName of workbook.SheetNames) {
 			const worksheet = workbook.Sheets[sheetName];

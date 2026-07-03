@@ -23,14 +23,14 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 
 	const createContentMutation = trpc.content.create.useMutation({
 		onSuccess: (content) => {
-			toast.success("Saved");
+			toast.success("Сохранено");
 			utils.content.getTags.invalidate();
 			utils.content.getTagsWithContent.invalidate();
 			onSuccess();
 			onContentAdded?.(content);
 		},
 		onError: (error) => {
-			toast.error(`Error creating content: ${error.message}`);
+			toast.error(`Ошибка создания элемента: ${error.message}`);
 		},
 	});
 
@@ -104,7 +104,7 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 			try {
 				if ((type === "media" || type === "audio") && selectedFiles && selectedFiles.length > 0) {
 					const uploadedFiles = await uploadMultipleFiles(selectedFiles, title, tags);
-					toast.success("Saved");
+					toast.success("Сохранено");
 					onSuccess();
 					onContentAdded?.(uploadedFiles.flatMap((file) => (file.content ? [file.content] : [])));
 					return true;

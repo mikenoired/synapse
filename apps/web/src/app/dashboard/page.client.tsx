@@ -213,9 +213,9 @@ export default function DashboardClient({
 							/>
 						</svg>
 						<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0 text-center">
-							Drop files to add content
+							Перетащите файлы, чтобы добавить контент
 							<div className="text-base font-normal mt-2 text-muted-foreground">
-								Images, video, audio and documents supported
+								Поддерживаются изображения, видео, аудио и документы
 							</div>
 						</div>
 					</div>

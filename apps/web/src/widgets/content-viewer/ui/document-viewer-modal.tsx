@@ -55,18 +55,18 @@ export function DocumentViewerModal({
 	const getDocumentTypeName = (type: string) => {
 		switch (type) {
 			case "pdf":
-				return "PDF Document";
+				return "PDF-документ";
 			case "docx":
-				return "Word Document";
+				return "Документ Word";
 			case "epub":
-				return "EPUB Book";
+				return "Книга EPUB";
 			case "xlsx":
 			case "xls":
-				return "Excel Spreadsheet";
+				return "Таблица Excel";
 			case "csv":
-				return "CSV File";
+				return "CSV-файл";
 			default:
-				return "Document";
+				return "Документ";
 		}
 	};
 
@@ -125,7 +125,7 @@ export function DocumentViewerModal({
 						<div className="text-3xl">{getDocumentIcon(item.type)}</div>
 						<div>
 							<h1 className="text-xl font-semibold text-foreground truncate max-w-md">
-								{item.title || "Untitled Document"}
+								{item.title || "Документ без названия"}
 							</h1>
 							<p className="text-sm text-muted-foreground">{getDocumentTypeName(item.type)}</p>
 						</div>
@@ -135,7 +135,7 @@ export function DocumentViewerModal({
 						{onEdit && (
 							<Button variant="outline" size="sm" onClick={handleEdit} className="h-8 px-3">
 								<Edit2 className="w-4 h-4 mr-2" />
-								Edit
+								Редактировать
 							</Button>
 						)}
 
@@ -147,7 +147,7 @@ export function DocumentViewerModal({
 								disabled={isDeleting}
 								className="h-8 px-3 text-destructive hover:text-destructive-foreground hover:bg-destructive">
 								<Trash2 className="w-4 h-4 mr-2" />
-								{isDeleting ? "Deleting..." : "Delete"}
+								{isDeleting ? "Удаление..." : "Удалить"}
 							</Button>
 						)}
 
@@ -166,7 +166,7 @@ export function DocumentViewerModal({
 								<div className="flex items-center space-x-6 text-sm text-muted-foreground">
 									<div className="flex items-center space-x-2">
 										<Calendar className="w-4 h-4" />
-										<span>Created {formatDate(item.created_at)}</span>
+										<span>Создано {formatDate(item.created_at)}</span>
 									</div>
 									<div className="flex items-center space-x-2">
 										<Clock className="w-4 h-4" />
@@ -196,7 +196,7 @@ export function DocumentViewerModal({
 									<div className="mb-6">
 										<img
 											src={ensureDataUri(item.thumbnail_base64)}
-											alt="Document thumbnail"
+											alt="Миниатюра документа"
 											className="w-full max-w-md mx-auto rounded-lg shadow-md"
 										/>
 									</div>

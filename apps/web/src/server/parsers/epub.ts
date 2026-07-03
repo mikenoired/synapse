@@ -8,7 +8,7 @@ export async function parseEPUB(buffer: Buffer, options: ParserOptions = {}): Pr
 		await epub.parse();
 
 		let content = "";
-		let title = epub.metadata?.title || "EPUB Document";
+		let title = epub.metadata?.title || "Книга EPUB";
 
 		const chapters = epub.flow || [];
 		for (const chapter of chapters) {

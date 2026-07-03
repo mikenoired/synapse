@@ -58,7 +58,7 @@ export default function Item({
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);
-			toast.success("Element was deleted");
+			toast.success("Элемент удален");
 			onContentDeleted?.(item.id);
 		},
 	});
@@ -87,9 +87,9 @@ export default function Item({
 					</div>
 				</ContextMenuTrigger>
 				<ContextMenuContent>
-					<ContextMenuItem onClick={() => onItemClick?.(item)}>Open</ContextMenuItem>
-					<ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
-					<ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+					<ContextMenuItem onClick={() => onItemClick?.(item)}>Открыть</ContextMenuItem>
+					<ContextMenuItem onClick={handleEdit}>Редактировать</ContextMenuItem>
+					<ContextMenuItem onClick={handleDelete}>Удалить</ContextMenuItem>
 				</ContextMenuContent>
 			</ContextMenu>
 			{editOpen && item.type === "note" && (
@@ -120,7 +120,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 			<div className="flex flex-col gap-2">
 				<div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
 					<ListChecks className="w-4 h-4" />
-					{done} /{todos.length} done
+					{done} /{todos.length} выполнено
 				</div>
 				{todos.slice(0, 3).map((todo, idx) => (
 					<div key={idx} className="flex items-center gap-2">
@@ -180,7 +180,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 		return (
 			<div className="space-y-3">
 				<h3 className="font-semibold text-base leading-tight line-clamp-2">
-					{linkContent.title || item.title || "No title"}
+					{linkContent.title || item.title || "Без названия"}
 				</h3>
 
 				{previewText && (

@@ -88,10 +88,10 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 				const files = await context.uploadFiles(context.selectedFiles, title, context.tags);
 				createdContent = files.flatMap((file) => (file.content ? [file.content] : []));
 				if (files && files.length > 0) {
-					toast.success("Media files saved");
+					toast.success("Медиафайлы сохранены");
 					success = true;
 				} else {
-					toast.error("Media files failed to load");
+					toast.error("Не удалось загрузить медиафайлы");
 					success = false;
 				}
 			} else if (type === "audio" && context.selectedFiles.length > 0) {
@@ -99,10 +99,10 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 				const files = await context.uploadFiles(context.selectedFiles, title, context.tags, { makeTrack });
 				createdContent = files.flatMap((file) => (file.content ? [file.content] : []));
 				if (files && files.length > 0) {
-					toast.success("Audio saved");
+					toast.success("Аудио сохранено");
 					success = true;
 				} else {
-					toast.error("Audio file isn't loaded");
+					toast.error("Аудиофайл не загружен");
 					success = false;
 				}
 			} else {
@@ -149,20 +149,20 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 	const getSubmitButtonText = () => {
 		if (uploading) {
 			if (type === "doc") {
-				return `Importing ${documentUpload.selectedFiles.length} document...`;
+				return `Импорт документов: ${documentUpload.selectedFiles.length}...`;
 			} else if (type === "media") {
-				return `Loading ${context.selectedFiles.length} file...`;
+				return `Загрузка файлов: ${context.selectedFiles.length}...`;
 			} else if (type === "audio") {
-				return `Loading ${context.selectedFiles.length} file...`;
+				return `Загрузка файлов: ${context.selectedFiles.length}...`;
 			}
 		}
 		if (documentUpload.isLoading) {
-			return `Importing ${documentUpload.selectedFiles.length} document...`;
+			return `Импорт документов: ${documentUpload.selectedFiles.length}...`;
 		}
 		if (context.isSubmitting) {
-			return "Saving...";
+			return "Сохранение...";
 		}
-		return "Save";
+		return "Сохранить";
 	};
 
 	const isSubmitDisabled = () => {
@@ -239,10 +239,10 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 								style={{ overflow: "hidden" }}
 								className="flex-1 p-6 space-y-4 overflow-y-auto">
 								<div className="space-y-2">
-									<Label htmlFor="title">Title (optional)</Label>
+									<Label htmlFor="title">Заголовок (необязательно)</Label>
 									<Input
 										id="title"
-										placeholder="Enter title..."
+										placeholder="Введите заголовок..."
 										value={title}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => context.updateTitle(e.target.value)}
 										disabled={isLoading}
@@ -250,7 +250,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 								</div>
 
 								<div className="space-y-2">
-									<Label htmlFor="content">Documents</Label>
+									<Label htmlFor="content">Документы</Label>
 									<DocumentDropZone
 										dragActive={documentUpload.dragActive}
 										isLoading={documentUpload.isLoading}
@@ -283,10 +283,10 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 								style={{ overflow: "hidden" }}
 								className="flex-1 p-6 space-y-4 overflow-y-auto">
 								<div className="space-y-2">
-									<Label htmlFor="title">Title (optional)</Label>
+									<Label htmlFor="title">Заголовок (необязательно)</Label>
 									<Input
 										id="title"
-										placeholder="Enter title..."
+										placeholder="Введите заголовок..."
 										value={title}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => context.updateTitle(e.target.value)}
 										disabled={isLoading}
@@ -298,8 +298,8 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 										{type === "link"
 											? "URL"
 											: type === "audio"
-												? "Audio"
-												: "Media (image, videos, or documents)"}
+												? "Аудио"
+												: "Медиа (изображения, видео или документы)"}
 									</Label>
 									<AnimatePresence mode="wait" initial={false}>
 										{type === "link" ? (
@@ -331,7 +331,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 												className="space-y-4">
 												{/* Document Drop Zone */}
 												<div>
-													<h3 className="text-sm font-medium text-foreground mb-2">Documents</h3>
+													<h3 className="text-sm font-medium text-foreground mb-2">Документы</h3>
 													<DocumentDropZone
 														dragActive={documentUpload.dragActive}
 														isLoading={documentUpload.isLoading}
@@ -345,7 +345,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 
 												{/* Media Drop Zone */}
 												<div>
-													<h3 className="text-sm font-medium text-foreground mb-2">Images & Videos</h3>
+													<h3 className="text-sm font-medium text-foreground mb-2">Изображения и видео</h3>
 													<MediaDropZone
 														dragActive={context.dragActive}
 														isLoading={isLoading}
@@ -394,7 +394,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 										style={{ overflow: "hidden" }}>
 										{type === "audio" && (
 											<>
-												<Label htmlFor="makeTrack">Save as track</Label>
+												<Label htmlFor="makeTrack">Сохранить как трек</Label>
 												<div className="flex items-center gap-2">
 													<input
 														id="makeTrack"
@@ -404,7 +404,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 														onChange={(e) => setMakeTrack(e.target.checked)}
 													/>
 													<span className="text-sm text-muted-foreground">
-														Use extended player if file contains metadata
+														Использовать расширенный плеер, если в файле есть метаданные
 													</span>
 												</div>
 											</>
@@ -441,7 +441,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 								variant="outline"
 								onClick={() => onOpenChange(false)}
 								disabled={isLoading}>
-								Discard
+								Отменить
 							</Button>
 							<Button type="submit" disabled={isSubmitDisabled()}>
 								{getSubmitButtonText()}

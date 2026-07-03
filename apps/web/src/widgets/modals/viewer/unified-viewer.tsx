@@ -857,8 +857,8 @@ export function UnifiedViewerModal({
 									{audioState.isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
 								</button>
 							</div>
-							<div className="flex items-center gap-3">
-								<div className="w-11 text-right text-xs tabular-nums text-white/60">
+							<div className="flex items-center gap-2 sm:gap-3">
+								<div className="w-11 shrink-0 text-right text-xs tabular-nums text-white/60">
 									{formatDuration(audioState.currentTime)}
 								</div>
 								<input
@@ -891,9 +891,9 @@ export function UnifiedViewerModal({
 											seeking: false,
 										}));
 									}}
-									className="flex-1 cursor-pointer"
+									className="min-w-0 flex-1 cursor-pointer accent-primary"
 								/>
-								<div className="w-11 text-xs tabular-nums text-white/60">
+								<div className="w-11 shrink-0 text-xs tabular-nums text-white/60">
 									{formatDuration(audioState.duration)}
 								</div>
 							</div>
@@ -917,7 +917,7 @@ export function UnifiedViewerModal({
 									onChange={(e) =>
 										setAudioState((current) => ({ ...current, volume: Number(e.target.value) }))
 									}
-									className="w-32 cursor-pointer"
+									className="w-28 max-w-[40vw] shrink-0 cursor-pointer accent-primary"
 								/>
 							</div>
 						</div>

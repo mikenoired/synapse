@@ -93,6 +93,7 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 						tabIndex={-1}
 						role="dialog"
 						aria-modal="true"
+						aria-labelledby="settings-modal-title"
 						initial={{ filter: "blur(12px)", opacity: 0, scale: 0.98, y: 18 }}
 						animate={{ filter: "blur(0px)", opacity: 1, scale: 1, y: 0 }}
 						exit={{ filter: "blur(10px)", opacity: 0, scale: 0.985, y: 12 }}
@@ -103,10 +104,18 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 							href={closeHref}
 							scroll={false}
 							className="absolute right-3 top-3 z-20 flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
-							aria-label="Close settings">
+							aria-label="Закрыть настройки">
 							<X className="size-4.5" />
 						</Link>
 						<div className="flex flex-col p-3 pt-12 md:border-r md:border-border md:p-3 md:pt-3">
+							<div className="mb-3 px-2">
+								<h1 id="settings-modal-title" className="text-lg font-semibold text-foreground">
+									Настройки
+								</h1>
+								<p className="mt-1 text-sm text-muted-foreground">
+									Параметры аккаунта, хранилища и воспроизведения.
+								</p>
+							</div>
 							<SettingsModalNav activeTab={activeTab} pathname={pathname} search={searchParams.toString()} />
 						</div>
 						<div className="min-h-0 overflow-hidden">

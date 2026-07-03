@@ -94,12 +94,12 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);
-			toast.success("Saved");
+			toast.success("Сохранено");
 			onOpenChange(false);
 			onContentUpdated?.(updatedContent);
 		},
 		onError: (error) => {
-			toast.error(`Update error: ${error.message}`);
+			toast.error(`Ошибка обновления: ${error.message}`);
 		},
 	});
 
@@ -117,7 +117,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				});
 				setHasUnsaved(false);
 			} catch (error) {
-				toast.error(`Update error: ${error instanceof Error ? error.message : "Unknown error"}`);
+				toast.error(`Ошибка обновления: ${error instanceof Error ? error.message : "неизвестная ошибка"}`);
 			}
 			return;
 		}
@@ -132,7 +132,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				tags,
 			});
 		} catch (error) {
-			toast.error(`Update error: ${error instanceof Error ? error.message : "Unknown error"}`);
+			toast.error(`Ошибка обновления: ${error instanceof Error ? error.message : "неизвестная ошибка"}`);
 		}
 	};
 
@@ -182,7 +182,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				<div className="max-w-[700px] mx-auto w-full">
 					<Input
 						id="title"
-						placeholder="Title (optional)..."
+						placeholder="Заголовок (необязательно)..."
 						value={title}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
 						disabled={updateContentMutation.isPending}
@@ -194,7 +194,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 							onTagsChange={setTags}
 							disabled={updateContentMutation.isPending}
 							inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
-							placeholder="+ Add tag"
+							placeholder="+ Добавить тег"
 							aiGenerate={{
 								mode: "existing",
 								contentId: content.id,
@@ -208,7 +208,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				<div className="max-w-[700px] mx-auto w-full flex flex-col gap-4">
 					<div className="flex gap-2">
 						<Input
-							placeholder="Add item..."
+							placeholder="Добавить пункт..."
 							value={todoInput}
 							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTodoInput(e.target.value)}
 							onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -223,11 +223,11 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 							disabled={!todoInput.trim() || updateContentMutation.isPending}
 							size="sm">
 							<Plus className="w-4 h-4 mr-1" />
-							Add
+							Добавить
 						</Button>
 					</div>
 					<div className="flex flex-col gap-2">
-						{todoItems.length === 0 && <div className="text-muted-foreground text-sm">There's no items</div>}
+						{todoItems.length === 0 && <div className="text-muted-foreground text-sm">Пунктов пока нет</div>}
 						{todoItems.map((item, idx) => (
 							<div key={idx} className="flex items-center gap-2 group">
 								<Input
@@ -269,7 +269,9 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}>
 				<div className="p-4 border-b flex flex-row items-center justify-between">
-					<div className="text-lg font-semibold">{content.type === "todo" ? "Edit list" : "Edit note"}</div>
+					<div className="text-lg font-semibold">
+						{content.type === "todo" ? "Редактировать список" : "Редактировать заметку"}
+					</div>
 					<div className="flex items-center gap-2">
 						<Button variant="ghost" size="sm" onClick={() => setIsFullScreen(!isFullScreen)}>
 							{isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
@@ -300,7 +302,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 											onTagsChange={setTags}
 											disabled={updateContentMutation.isPending}
 											inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
-											placeholder="+ Add tag"
+											placeholder="+ Добавить тег"
 											aiGenerate={{
 												mode: "existing",
 												contentId: content.id,
@@ -328,7 +330,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 								variant="outline"
 								onClick={handleClose}
 								disabled={updateContentMutation.isPending}>
-								Cancel
+								Отмена
 							</Button>
 							<Button
 								type="submit"
@@ -338,7 +340,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 										? todoItems.length === 0 || todoItems.some((item) => !item.text.trim())
 										: !editorData || !editorData.content || editorData.content.length === 0)
 								}>
-								{updateContentMutation.isPending ? "Saving..." : "Save"}
+								{updateContentMutation.isPending ? "Сохранение..." : "Сохранить"}
 							</Button>
 						</div>
 					</div>
@@ -347,15 +349,15 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 			{showUnsavedModal && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
 					<div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-sm">
-						<div className="mb-4 text-lg font-semibold">Unsaved changes</div>
+						<div className="mb-4 text-lg font-semibold">Несохраненные изменения</div>
 						<div className="mb-6 text-sm text-muted-foreground">
-							You have unsaved changes. Save or discard changes?
+							У вас есть несохраненные изменения. Сохранить или отменить их?
 						</div>
 						<div className="flex justify-end gap-2">
 							<Button variant="outline" onClick={handleDiscard}>
-								Discard
+								Отменить
 							</Button>
-							<Button onClick={handleSave}>Save</Button>
+							<Button onClick={handleSave}>Сохранить</Button>
 						</div>
 					</div>
 				</div>

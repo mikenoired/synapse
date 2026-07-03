@@ -8,7 +8,7 @@ export async function parseDOCX(buffer: Buffer, options: ParserOptions = {}): Pr
 		const htmlResult = await mammoth.convertToHtml({ buffer });
 
 		const content = htmlResult.value || "";
-		const title = extractTitleFromHTML(content) || "DOCX Document";
+		const title = extractTitleFromHTML(content) || "Документ DOCX";
 
 		// Обрабатываем изображения
 		const images = await processDocumentImages(htmlResult.messages, options);

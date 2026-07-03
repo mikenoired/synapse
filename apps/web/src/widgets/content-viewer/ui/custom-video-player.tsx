@@ -209,7 +209,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 					<button
 						onClick={togglePlay}
 						className="text-white bg-black/40 rounded p-1 hover:bg-white/20 transition"
-						aria-label={isPlaying ? "Pause" : "Play"}>
+						aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>
 						{isPlaying ? (
 							<svg width="24" height="24" fill="none" viewBox="0 0 24 24">
 								<rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor" />

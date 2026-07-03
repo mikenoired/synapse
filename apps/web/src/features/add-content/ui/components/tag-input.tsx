@@ -43,12 +43,12 @@ export function TagInput({
 
 	return (
 		<div className="space-y-3">
-			<Label htmlFor="tags">Tags</Label>
+			<Label htmlFor="tags">Теги</Label>
 			<div className="flex gap-2">
 				<Input
 					id="tags"
 					list="tag-input-suggestions"
-					placeholder="Add tag..."
+					placeholder="Добавить тег..."
 					value={currentTag}
 					onChange={(e: React.ChangeEvent<HTMLInputElement>) => onCurrentTagChange(e.target.value)}
 					onKeyDown={onKeyDown}
@@ -61,7 +61,7 @@ export function TagInput({
 					))}
 				</datalist>
 				<Button type="button" onClick={onAddTag} disabled={!currentTag.trim() || isLoading} size="sm">
-					Add
+					Добавить
 				</Button>
 				{aiGenerate && onAiTags && (
 					<GenerateTagsButton

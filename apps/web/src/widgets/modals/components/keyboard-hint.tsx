@@ -53,7 +53,7 @@ export const modalKeyboardHints = {
 		{ keys: ["ESC"], label: "Закрыть" },
 	],
 	audio: [
-		{ keys: ["Space"], label: "Play/Pause" },
+		{ keys: ["Space"], label: "Воспроизвести/пауза" },
 		{ keys: ["←"], label: "-5 сек" },
 		{ keys: ["→"], label: "+5 сек" },
 		{ keys: ["ESC"], label: "Закрыть" },

@@ -27,7 +27,6 @@ export function AudioViewerModal({ open: _open, onOpenChange, item }: AudioViewe
 	const [volume, setVolume] = useState(1);
 	const [muted, setMuted] = useState(false);
 	const [coverSrc, setCoverSrc] = useState("");
-	const [isTallLayout, setIsTallLayout] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
 
 	useEffect(() => {
@@ -76,8 +75,6 @@ export function AudioViewerModal({ open: _open, onOpenChange, item }: AudioViewe
 	useEffect(() => {
 		const compute = () => {
 			if (typeof window === "undefined") return;
-			const ratio = window.innerWidth / window.innerHeight;
-			setIsTallLayout(ratio <= 2 / 3);
 			const nav: any = navigator;
 			const ua: string = nav?.userAgent || "";
 			const uaDataMobile: boolean = Boolean(nav?.userAgentData?.mobile);
@@ -169,8 +166,10 @@ export function AudioViewerModal({ open: _open, onOpenChange, item }: AudioViewe
 	const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
 	const InfoBlock = (
-		<div>
-			<div className="text-lg font-semibold">{audioData?.track?.title || item.title || "Audio"}</div>
+		<div className="min-w-0">
+			<div className="break-words text-lg font-semibold">
+				{audioData?.track?.title || item.title || "Аудио"}
+			</div>
 			{(audioData?.track?.artist || audioData?.track?.album) && (
 				<div className="text-sm text-muted-foreground">
 					{[audioData?.track?.artist, audioData?.track?.album].filter(Boolean).join(" • ")}
@@ -181,99 +180,53 @@ export function AudioViewerModal({ open: _open, onOpenChange, item }: AudioViewe
 
 	const Controls = (
 		<div className="w-full">
-			{isTallLayout ? (
-				<div className="flex flex-col gap-3">
-					<div className="flex items-center justify-center">
-						<button
-							type="button"
-							onClick={togglePlay}
-							className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-							{isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
-						</button>
-					</div>
-					<div className="flex items-center gap-3">
-						<div className="text-xs tabular-nums w-12 text-right">{formatTime(currentTime)}</div>
-						<div className="flex-1 flex items-center gap-2">
-							<input
-								type="range"
-								min={0}
-								max={100}
-								value={seeking ? seekValue : progressPercent}
-								onMouseDown={onSeekStart}
-								onTouchStart={onSeekStart}
-								onChange={(e) => onSeekChange(Number(e.target.value))}
-								onMouseUp={onSeekEnd}
-								onTouchEnd={onSeekEnd}
-								className="w-full cursor-pointer"
-							/>
-						</div>
-						<div className="text-xs tabular-nums w-12">{formatTime(duration)}</div>
-					</div>
-					{!isMobile && (
-						<div className="flex items-center gap-3 justify-center">
-							<button
-								type="button"
-								onClick={() => setMuted(!muted)}
-								className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground">
-								{muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-							</button>
-							<input
-								type="range"
-								min={0}
-								max={1}
-								step={0.01}
-								value={muted ? 0 : volume}
-								onChange={(e) => setVolume(Number(e.target.value))}
-								className="w-32 cursor-pointer"
-							/>
-						</div>
-					)}
-				</div>
-			) : (
-				<div className="flex items-center gap-3">
+			<div className="flex flex-col gap-3">
+				<div className="flex items-center justify-center">
 					<button
 						type="button"
 						onClick={togglePlay}
-						className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-						{isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+						aria-label={isPlaying ? "Пауза" : "Воспроизвести"}
+						className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+						{isPlaying ? <Pause className="size-6" /> : <Play className="size-6" />}
 					</button>
-					<div className="text-xs tabular-nums w-12 text-right">{formatTime(currentTime)}</div>
-					<div className="flex-1 flex items-center gap-2">
+				</div>
+				<div className="grid grid-cols-[3rem_minmax(0,1fr)_3rem] items-center gap-2 sm:gap-3">
+					<div className="w-12 shrink-0 text-right text-xs tabular-nums">{formatTime(currentTime)}</div>
+					<input
+						type="range"
+						min={0}
+						max={100}
+						value={seeking ? seekValue : progressPercent}
+						onMouseDown={onSeekStart}
+						onTouchStart={onSeekStart}
+						onChange={(e) => onSeekChange(Number(e.target.value))}
+						onMouseUp={onSeekEnd}
+						onTouchEnd={onSeekEnd}
+						className="min-w-0 w-full cursor-pointer accent-primary"
+					/>
+					<div className="w-12 shrink-0 text-xs tabular-nums">{formatTime(duration)}</div>
+				</div>
+				{!isMobile && (
+					<div className="flex items-center justify-center gap-3">
+						<button
+							type="button"
+							onClick={() => setMuted(!muted)}
+							aria-label={muted || volume === 0 ? "Включить звук" : "Выключить звук"}
+							className="flex size-8 shrink-0 items-center justify-center rounded text-muted-foreground">
+							{muted || volume === 0 ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+						</button>
 						<input
 							type="range"
 							min={0}
-							max={100}
-							value={seeking ? seekValue : progressPercent}
-							onMouseDown={onSeekStart}
-							onTouchStart={onSeekStart}
-							onChange={(e) => onSeekChange(Number(e.target.value))}
-							onMouseUp={onSeekEnd}
-							onTouchEnd={onSeekEnd}
-							className="w-full cursor-pointer"
+							max={1}
+							step={0.01}
+							value={muted ? 0 : volume}
+							onChange={(e) => setVolume(Number(e.target.value))}
+							className="h-2 w-28 max-w-[42vw] shrink-0 cursor-pointer accent-primary"
 						/>
 					</div>
-					<div className="text-xs tabular-nums w-12">{formatTime(duration)}</div>
-					{!isMobile && (
-						<>
-							<button
-								type="button"
-								onClick={() => setMuted(!muted)}
-								className="w-8 h-8 rounded flex items-center justify-center text-muted-foreground">
-								{muted || volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-							</button>
-							<input
-								type="range"
-								min={0}
-								max={1}
-								step={0.01}
-								value={muted ? 0 : volume}
-								onChange={(e) => setVolume(Number(e.target.value))}
-								className="w-24 cursor-pointer"
-							/>
-						</>
-					)}
-				</div>
-			)}
+				)}
+			</div>
 		</div>
 	);
 

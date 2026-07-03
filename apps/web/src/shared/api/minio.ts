@@ -60,6 +60,7 @@ export async function uploadFile(
 		const sanitizedFileName = sanitizeFileName(fileName);
 		const objectName = `${folder}/${userId}/${Date.now()}-${sanitizedFileName}`;
 
+		await ensureBucketExists();
 		await minioClient.putObject(bucketName, objectName, file, file.length, {
 			"Content-Type": contentType,
 			"x-amz-meta-user-id": userId,

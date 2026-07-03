@@ -38,16 +38,16 @@ export function ThemeToggle() {
 								animate={{ opacity: 1, width: "100%" }}
 								exit={{ opacity: 0, width: 0 }}
 								transition={SIDEBAR_ANIMATION}>
-								{theme === "light" ? "Dark theme" : "Light theme"}
+								{theme === "light" ? "Темная тема" : "Светлая тема"}
 							</motion.span>
 						)}
 					</AnimatePresence>
-					<span className="sr-only">Switch theme</span>
+					<span className="sr-only">Переключить тему</span>
 				</Button>
 			</TooltipTrigger>
 			{!isSidebarExpanded && (
 				<TooltipContent side="right" sideOffset={5}>
-					Switch theme
+					Переключить тему
 				</TooltipContent>
 			)}
 		</Tooltip>

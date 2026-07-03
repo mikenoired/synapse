@@ -330,8 +330,8 @@ export function AudioViewerModal({ open, onOpenChange, item, onEdit, onDelete }:
 										</button>
 									</div>
 
-									<div className="flex items-center gap-3">
-										<div className="w-11 text-right text-xs tabular-nums text-white/60">
+									<div className="flex items-center gap-2 sm:gap-3">
+										<div className="w-11 shrink-0 text-right text-xs tabular-nums text-white/60">
 											{formatTime(currentTime)}
 										</div>
 										<input
@@ -344,9 +344,11 @@ export function AudioViewerModal({ open, onOpenChange, item, onEdit, onDelete }:
 											onChange={(e) => setSeekValue(Number(e.target.value))}
 											onMouseUp={handleSeekEnd}
 											onTouchEnd={handleSeekEnd}
-											className="flex-1 cursor-pointer"
+											className="min-w-0 flex-1 cursor-pointer accent-primary"
 										/>
-										<div className="w-11 text-xs tabular-nums text-white/60">{formatTime(duration)}</div>
+										<div className="w-11 shrink-0 text-xs tabular-nums text-white/60">
+											{formatTime(duration)}
+										</div>
 									</div>
 
 									{!isMobile && (
@@ -368,7 +370,7 @@ export function AudioViewerModal({ open, onOpenChange, item, onEdit, onDelete }:
 												step={0.01}
 												value={muted ? 0 : volume}
 												onChange={(e) => setVolume(Number(e.target.value))}
-												className="w-32 cursor-pointer"
+												className="w-28 max-w-[40vw] shrink-0 cursor-pointer accent-primary"
 											/>
 										</div>
 									)}

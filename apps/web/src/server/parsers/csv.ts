@@ -11,7 +11,7 @@ export async function parseCSV(buffer: Buffer, _options: ParserOptions = {}): Pr
 				complete: (results: any) => {
 					try {
 						let content = "";
-						let title = "CSV Document";
+						let title = "CSV-документ";
 
 						if (results.errors.length > 0 && results.data.length === 0) {
 							reject(

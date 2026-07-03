@@ -25,8 +25,8 @@ function AutoplayPreference({
 	onToggle: () => void;
 }) {
 	return (
-		<div className="flex items-start justify-between gap-4 rounded-3xl bg-muted px-5 py-4">
-			<div className="space-y-1.5">
+		<div className="flex flex-col gap-4 rounded-[1.75rem] bg-muted px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+			<div className="min-w-0 space-y-1.5">
 				<div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
 					<PlayCircle className="size-4 text-muted-foreground" />
 					Автовоспроизведение
@@ -41,7 +41,7 @@ function AutoplayPreference({
 				aria-checked={enabled}
 				disabled={disabled}
 				onClick={onToggle}
-				className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition ${enabled ? "bg-foreground" : "bg-background"} ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+				className={`relative inline-flex h-7 w-12 shrink-0 items-center self-start rounded-full transition sm:self-center ${enabled ? "bg-foreground" : "bg-background"} ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
 				<span
 					className={`inline-block size-5 rounded-full bg-background transition-transform ${enabled ? "translate-x-6" : "translate-x-1"} ${enabled ? "bg-background" : "bg-foreground"}`}
 				/>

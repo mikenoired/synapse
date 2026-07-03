@@ -24,7 +24,7 @@ export default function AddNoteView() {
 				<div className="max-w-[700px] mx-auto w-full">
 					<Input
 						id="title"
-						placeholder="Title (optional)..."
+						placeholder="Заголовок (необязательно)..."
 						value={title}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTitle(e.target.value)}
 						disabled={isSubmitting}
@@ -36,7 +36,7 @@ export default function AddNoteView() {
 							onTagsChange={setTags}
 							disabled={isSubmitting}
 							inputClassName="border-none shadow-none focus-visible:ring-0 h-auto flex-1"
-							placeholder="+ Add tag"
+							placeholder="+ Добавить тег"
 							aiGenerate={{
 								mode: "draft",
 								type: "note",
