@@ -8,6 +8,7 @@ import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown } from "@tiptap/markdown";
+import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { JSONContent } from "@tiptap/react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -53,6 +54,35 @@ const EditorShortcuts = Extension.create({
 			"Mod-Shift-7": () => this.editor.commands.toggleOrderedList(),
 			"Mod-Shift-8": () => this.editor.commands.toggleBulletList(),
 		};
+	},
+});
+
+// Запрещает автоматическое создание in-page якорных ссылок (href вида "#foo"),
+// которые браузер раскрывает как example.com/page#foo. Ссылки внутри заметки
+// должны быть только осмысленными внешними адресами.
+const NoInPageAnchorLinks = Extension.create({
+	name: "noInPageAnchorLinks",
+	addProseMirrorPlugins() {
+		return [
+			new Plugin({
+				key: new PluginKey("noInPageAnchorLinks"),
+				appendTransaction: (_transactions, _oldState, newState) => {
+					const linkType = newState.schema.marks.link;
+					if (!linkType) return null;
+					const tr = newState.tr;
+					let modified = false;
+					newState.doc.descendants((node, pos) => {
+						if (!node.isText || !node.marks) return;
+						const href = node.marks.find((mark) => mark.type === linkType)?.attrs?.href;
+						if (typeof href === "string" && href.startsWith("#")) {
+							tr.removeMark(pos, pos + node.nodeSize, linkType);
+							modified = true;
+						}
+					});
+					return modified ? tr.setMeta("addToHistory", false) : null;
+				},
+			}),
+		];
 	},
 });
 
@@ -120,6 +150,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 			}),
 			Markdown,
 			EditorShortcuts,
+			NoInPageAnchorLinks,
 			Placeholder.configure({ placeholder: "Начните с мысли, идеи или наблюдения…" }),
 		],
 		editorProps: {
