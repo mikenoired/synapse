@@ -27,6 +27,7 @@ export const users = pgTable("users", {
 	email: text("email").notNull().unique(),
 	passwordHash: text("password_hash").notNull(),
 	preferences: jsonb("preferences").$type<UserPreferences>().notNull().default(DEFAULT_USER_PREFERENCES),
+	plan: text("plan").notNull().default("starter"),
 	createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 	updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
+import { DEFAULT_PLAN_ID, isPlanId, type PlanId } from "@/shared/config/plans";
 import type { UserPreferencesInput } from "@/shared/lib/user-preferences";
 import { normalizeUserPreferences } from "@/shared/lib/user-preferences";
 
@@ -8,10 +9,18 @@ import type { Context } from "../context";
 import { users } from "../db/schema";
 import { requireAuth } from "../lib/auth-guard";
 
+export interface CurrentUser {
+	id: string;
+	email: string;
+	plan: PlanId;
+	createdAt: Date | null;
+	updatedAt: Date | null;
+}
+
 export default class UserRepository {
 	constructor(private readonly ctx: Context) {}
 
-	async getUser() {
+	async getUser(): Promise<CurrentUser> {
 		requireAuth(this.ctx);
 
 		const user = await this.ctx.db.query.users.findFirst({
@@ -19,6 +28,7 @@ export default class UserRepository {
 			columns: {
 				id: true,
 				email: true,
+				plan: true,
 				createdAt: true,
 				updatedAt: true,
 			},
@@ -31,7 +41,13 @@ export default class UserRepository {
 			});
 		}
 
-		return user;
+		return {
+			id: user.id,
+			email: user.email,
+			plan: isPlanId(user.plan) ? user.plan : DEFAULT_PLAN_ID,
+			createdAt: user.createdAt,
+			updatedAt: user.updatedAt,
+		};
 	}
 
 	async getPreferences() {
