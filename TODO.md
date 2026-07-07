@@ -9,3 +9,4 @@
 - [x] Fix register/login flow
 - [ ] Item slider new content loader
 - [ ] Code preview for note items
+- [x] Descriptions on hover for note editor buttons

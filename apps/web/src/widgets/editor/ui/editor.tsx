@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import { Button } from "@synapse/ui/components";
+import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@synapse/ui/components";
 import { prose } from "@synapse/ui/prose";
 import { Extension, type Editor as TiptapEditor } from "@tiptap/core";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
@@ -102,18 +102,28 @@ interface ToolbarButtonProps {
 }
 
 function ToolbarButton({ active, children, disabled, label, onClick, shortcut }: ToolbarButtonProps) {
-	const title = shortcut ? `${label} (${shortcut})` : label;
 	return (
-		<Button
-			aria-label={title}
-			disabled={disabled}
-			onClick={onClick}
-			size="icon"
-			title={title}
-			type="button"
-			variant={active ? "secondary" : "ghost"}>
-			{children}
-		</Button>
+		<Tooltip>
+			<TooltipTrigger asChild>
+				<Button
+					aria-label={label}
+					disabled={disabled}
+					onClick={onClick}
+					size="icon"
+					type="button"
+					variant={active ? "secondary" : "ghost"}>
+					{children}
+				</Button>
+			</TooltipTrigger>
+			<TooltipContent side="bottom" sideOffset={6}>
+				<span>{label}</span>
+				{shortcut && (
+					<kbd className="rounded bg-background/15 px-1 font-mono ring-1 ring-background/20" data-slot="kbd">
+						{shortcut}
+					</kbd>
+				)}
+			</TooltipContent>
+		</Tooltip>
 	);
 }
 
@@ -226,130 +236,132 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 			/>
 			{editor && !readOnly && (
 				<>
-					<div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-y border-border/70 bg-background/95 py-2 backdrop-blur">
-						<select
-							aria-label="Тип блока"
-							className="h-8 rounded-lg border border-border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-							onChange={(event) => {
-								const level = Number(event.target.value);
-								if (level)
-									editor
-										.chain()
-										.focus()
-										.setHeading({ level: level as 2 | 3 | 4 })
-										.run();
-								else editor.chain().focus().setParagraph().run();
-							}}
-							value={
-								editor.isActive("heading", { level: 2 })
-									? "2"
-									: editor.isActive("heading", { level: 3 })
-										? "3"
-										: editor.isActive("heading", { level: 4 })
-											? "4"
-											: "0"
-							}>
-							<option value="0">Текст</option>
-							<option value="2">Заголовок 2</option>
-							<option value="3">Заголовок 3</option>
-							<option value="4">Заголовок 4</option>
-						</select>
-						<div className="mx-1 h-5 w-px bg-border" />
-						<ToolbarButton
-							active={editor.isActive("bold")}
-							label="Полужирный"
-							onClick={() => void editor.chain().focus().toggleBold().run()}
-							shortcut="⌘/Ctrl+B">
-							<Bold />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("italic")}
-							label="Курсив"
-							onClick={() => void editor.chain().focus().toggleItalic().run()}
-							shortcut="⌘/Ctrl+I">
-							<Italic />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("underline")}
-							label="Подчёркнутый"
-							onClick={() => void editor.chain().focus().toggleUnderline().run()}
-							shortcut="⌘/Ctrl+U">
-							<Underline />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("strike")}
-							label="Зачёркнутый"
-							onClick={() => void editor.chain().focus().toggleStrike().run()}
-							shortcut="⌘/Ctrl+Shift+S">
-							<Strikethrough />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("code")}
-							label="Строчный код"
-							onClick={() => void editor.chain().focus().toggleCode().run()}
-							shortcut="⌘/Ctrl+E">
-							<Code2 />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("link")}
-							label="Ссылка"
-							onClick={() => void editLink(editor)}
-							shortcut="⌘/Ctrl+K">
-							<Link />
-						</ToolbarButton>
-						<div className="mx-1 h-5 w-px bg-border" />
-						<ToolbarButton
-							active={editor.isActive("bulletList")}
-							label="Маркированный список"
-							onClick={() => void editor.chain().focus().toggleBulletList().run()}
-							shortcut="⌘/Ctrl+Shift+8">
-							<List />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("orderedList")}
-							label="Нумерованный список"
-							onClick={() => void editor.chain().focus().toggleOrderedList().run()}
-							shortcut="⌘/Ctrl+Shift+7">
-							<ListOrdered />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("blockquote")}
-							label="Цитата"
-							onClick={() => void editor.chain().focus().toggleBlockquote().run()}
-							shortcut="⌘/Ctrl+Shift+B">
-							<Quote />
-						</ToolbarButton>
-						<ToolbarButton
-							active={editor.isActive("codeBlock")}
-							label="Блок кода"
-							onClick={() => void editor.chain().focus().toggleCodeBlock().run()}
-							shortcut="⌘/Ctrl+Alt+C">
-							<FileCode2 />
-						</ToolbarButton>
-						<ToolbarButton
-							label="Разделитель"
-							onClick={() => void editor.chain().focus().setHorizontalRule().run()}>
-							<Minus />
-						</ToolbarButton>
-						<ToolbarButton label="Изображение" onClick={openImagePicker}>
-							<ImageIcon />
-						</ToolbarButton>
-						<div className="mx-1 h-5 w-px bg-border" />
-						<ToolbarButton
-							disabled={!editor.can().undo()}
-							label="Отменить"
-							onClick={() => void editor.chain().focus().undo().run()}
-							shortcut="⌘/Ctrl+Z">
-							<Undo2 />
-						</ToolbarButton>
-						<ToolbarButton
-							disabled={!editor.can().redo()}
-							label="Повторить"
-							onClick={() => void editor.chain().focus().redo().run()}
-							shortcut="⌘/Ctrl+Shift+Z">
-							<Redo2 />
-						</ToolbarButton>
-					</div>
+					<TooltipProvider delayDuration={400} skipDelayDuration={150}>
+						<div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-y border-border/70 bg-background/95 py-2 backdrop-blur">
+							<select
+								aria-label="Тип блока"
+								className="h-8 rounded-lg border border-border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+								onChange={(event) => {
+									const level = Number(event.target.value);
+									if (level)
+										editor
+											.chain()
+											.focus()
+											.setHeading({ level: level as 2 | 3 | 4 })
+											.run();
+									else editor.chain().focus().setParagraph().run();
+								}}
+								value={
+									editor.isActive("heading", { level: 2 })
+										? "2"
+										: editor.isActive("heading", { level: 3 })
+											? "3"
+											: editor.isActive("heading", { level: 4 })
+												? "4"
+												: "0"
+								}>
+								<option value="0">Текст</option>
+								<option value="2">Заголовок 2</option>
+								<option value="3">Заголовок 3</option>
+								<option value="4">Заголовок 4</option>
+							</select>
+							<div className="mx-1 h-5 w-px bg-border" />
+							<ToolbarButton
+								active={editor.isActive("bold")}
+								label="Полужирный"
+								onClick={() => void editor.chain().focus().toggleBold().run()}
+								shortcut="⌘/Ctrl+B">
+								<Bold />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("italic")}
+								label="Курсив"
+								onClick={() => void editor.chain().focus().toggleItalic().run()}
+								shortcut="⌘/Ctrl+I">
+								<Italic />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("underline")}
+								label="Подчёркнутый"
+								onClick={() => void editor.chain().focus().toggleUnderline().run()}
+								shortcut="⌘/Ctrl+U">
+								<Underline />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("strike")}
+								label="Зачёркнутый"
+								onClick={() => void editor.chain().focus().toggleStrike().run()}
+								shortcut="⌘/Ctrl+Shift+S">
+								<Strikethrough />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("code")}
+								label="Строчный код"
+								onClick={() => void editor.chain().focus().toggleCode().run()}
+								shortcut="⌘/Ctrl+E">
+								<Code2 />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("link")}
+								label="Ссылка"
+								onClick={() => void editLink(editor)}
+								shortcut="⌘/Ctrl+K">
+								<Link />
+							</ToolbarButton>
+							<div className="mx-1 h-5 w-px bg-border" />
+							<ToolbarButton
+								active={editor.isActive("bulletList")}
+								label="Маркированный список"
+								onClick={() => void editor.chain().focus().toggleBulletList().run()}
+								shortcut="⌘/Ctrl+Shift+8">
+								<List />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("orderedList")}
+								label="Нумерованный список"
+								onClick={() => void editor.chain().focus().toggleOrderedList().run()}
+								shortcut="⌘/Ctrl+Shift+7">
+								<ListOrdered />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("blockquote")}
+								label="Цитата"
+								onClick={() => void editor.chain().focus().toggleBlockquote().run()}
+								shortcut="⌘/Ctrl+Shift+B">
+								<Quote />
+							</ToolbarButton>
+							<ToolbarButton
+								active={editor.isActive("codeBlock")}
+								label="Блок кода"
+								onClick={() => void editor.chain().focus().toggleCodeBlock().run()}
+								shortcut="⌘/Ctrl+Alt+C">
+								<FileCode2 />
+							</ToolbarButton>
+							<ToolbarButton
+								label="Разделитель"
+								onClick={() => void editor.chain().focus().setHorizontalRule().run()}>
+								<Minus />
+							</ToolbarButton>
+							<ToolbarButton label="Изображение" onClick={openImagePicker}>
+								<ImageIcon />
+							</ToolbarButton>
+							<div className="mx-1 h-5 w-px bg-border" />
+							<ToolbarButton
+								disabled={!editor.can().undo()}
+								label="Отменить"
+								onClick={() => void editor.chain().focus().undo().run()}
+								shortcut="⌘/Ctrl+Z">
+								<Undo2 />
+							</ToolbarButton>
+							<ToolbarButton
+								disabled={!editor.can().redo()}
+								label="Повторить"
+								onClick={() => void editor.chain().focus().redo().run()}
+								shortcut="⌘/Ctrl+Shift+Z">
+								<Redo2 />
+							</ToolbarButton>
+						</div>
+					</TooltipProvider>
 					<SlashMenu editor={editor} onImage={openImagePicker} />
 				</>
 			)}
