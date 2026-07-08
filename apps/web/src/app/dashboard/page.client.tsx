@@ -8,6 +8,7 @@ import { trpc } from "@/shared/api/trpc";
 import { getQueryTypesForFilter, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
+import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 import { useModal } from "@/widgets/modals/context/modal-context";
@@ -30,6 +31,7 @@ export default function DashboardClient({
 	const [selectedContentTypes, setSelectedContentTypes] = useState<Content["type"][]>([]);
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const { openModal } = useModal();
+	const { t } = useI18n();
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	const [dragActive, setDragActive] = useState(false);
@@ -241,9 +243,9 @@ export default function DashboardClient({
 							/>
 						</svg>
 						<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0 text-center">
-							Drop files to add content
+							{t("dashboard.drop.title")}
 							<div className="text-base font-normal mt-2 text-muted-foreground">
-								Images, video, audio and documents supported
+								{t("dashboard.drop.subtitle")}
 							</div>
 						</div>
 					</div>

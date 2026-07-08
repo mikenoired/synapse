@@ -6,20 +6,29 @@ import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import { useAuth } from "@/shared/lib/auth-context";
+import { useI18n } from "@/shared/lib/i18n";
 
-function formatRegistrationDate(date?: string | Date | null) {
-	if (!date) return "Дата недоступна";
+function formatRegistrationDate(
+	date: string | Date | null | undefined,
+	locale: string,
+	template: (date: string) => string,
+	noDateLabel: string
+) {
+	if (!date) return noDateLabel;
 
-	return `С нами с ${new Intl.DateTimeFormat("ru-RU", {
+	const formattedDate = new Intl.DateTimeFormat(locale, {
 		day: "numeric",
 		month: "long",
 		year: "numeric",
-	}).format(new Date(date))}`;
+	}).format(new Date(date));
+
+	return template(formattedDate);
 }
 
 export default function GeneralTab() {
 	const { data: user, isLoading } = trpc.user.getUser.useQuery();
 	const { signOut } = useAuth();
+	const { locale, t } = useI18n();
 	const [isSigningOut, setIsSigningOut] = useState(false);
 
 	const handleSignOut = async () => {
@@ -52,14 +61,21 @@ export default function GeneralTab() {
 
 				<div className="inline-flex items-center gap-2 rounded-full bg-muted px-3.5 py-2 text-sm text-foreground">
 					<CalendarDays className="size-4 text-muted-foreground" />
-					<span>{formatRegistrationDate(user?.createdAt)}</span>
+					<span>
+						{formatRegistrationDate(
+							user?.createdAt,
+							locale,
+							(date) => t("createdWithUs", { date }),
+							t("noDate")
+						)}
+					</span>
 				</div>
 			</div>
 
 			<div className="flex items-center justify-between gap-4 rounded-3xl bg-muted px-5 py-4">
 				<div>
-					<h2 className="text-sm font-medium">Текущая сессия</h2>
-					<p className="mt-1 text-sm text-muted-foreground">Завершить работу на этом устройстве.</p>
+					<h2 className="text-sm font-medium">{t("session.title")}</h2>
+					<p className="mt-1 text-sm text-muted-foreground">{t("session.description")}</p>
 				</div>
 				<Button
 					variant="destructive"
@@ -67,7 +83,7 @@ export default function GeneralTab() {
 					disabled={isSigningOut}
 					onClick={handleSignOut}>
 					<LogOut className="size-4" />
-					{isSigningOut ? "Выходим…" : "Выйти"}
+					{isSigningOut ? t("session.signingOut") : t("session.signOut")}
 				</Button>
 			</div>
 		</div>

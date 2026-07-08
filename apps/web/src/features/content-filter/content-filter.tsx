@@ -6,6 +6,7 @@ import { type ChangeEvent, type FocusEvent, useEffect, useRef, useState } from "
 
 import { contentTypeOptions, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";
 import { useDashboard } from "@/shared/lib/dashboard-context";
+import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 
 interface ContentFilterProps {
@@ -28,6 +29,7 @@ export function ContentFilter({
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const { setTriggerSearchFocus } = useDashboard();
+	const { t } = useI18n();
 	const hasActiveTypeFilters = selectedContentTypes.length > 0;
 	const availableOptions = contentTypeOptions.filter((option) =>
 		isContentTypeFilterAvailable(option.key, availableContentTypes)
@@ -55,8 +57,8 @@ export function ContentFilter({
 					ref={searchInputRef}
 					id="search"
 					type="text"
-					placeholder="Поиск по названию и содержимому"
-					aria-label="Поиск по материалам"
+					placeholder={t("search.placeholder")}
+					aria-label={t("search.aria")}
 					value={searchQuery}
 					autoFocus
 					onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
@@ -65,7 +67,7 @@ export function ContentFilter({
 				<button
 					type="button"
 					aria-expanded={filtersOpen}
-					aria-label={hasActiveTypeFilters ? "Фильтрация по типам включена" : "Показать фильтры по типам"}
+					aria-label={hasActiveTypeFilters ? t("filter.types.active") : t("filter.types.show")}
 					className={cn(
 						"absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
 						hasActiveTypeFilters
@@ -90,7 +92,7 @@ export function ContentFilter({
 				)}>
 				<div className="overflow-hidden">
 					<div className="flex items-center gap-2 overflow-x-auto px-4 pb-2">
-						{availableOptions.map(({ key, icon: Icon, label }) => {
+						{availableOptions.map(({ key, icon: Icon, label, labelKey }) => {
 							const selected = selectedContentTypes.includes(key);
 
 							return (
@@ -106,7 +108,7 @@ export function ContentFilter({
 											: "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:bg-muted hover:text-foreground"
 									)}>
 									<Icon className="size-4" />
-									<span>{label}</span>
+									<span>{t(labelKey) || label}</span>
 								</button>
 							);
 						})}
@@ -117,7 +119,7 @@ export function ContentFilter({
 								onClick={onClearContentTypes}
 								className="flex h-9 shrink-0 animate-in items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 text-sm font-medium text-destructive fade-in-0 slide-in-from-left-2 duration-200 hover:bg-destructive/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
 								<X className="size-4" />
-								<span>Сбросить типы</span>
+								<span>{t("clearFilters")}</span>
 							</button>
 						)}
 					</div>

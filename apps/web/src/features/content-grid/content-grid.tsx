@@ -5,6 +5,7 @@ import { FileText, Search } from "lucide-react";
 import { lazy, memo, useEffect, useRef } from "react";
 import Masonry from "react-masonry-css";
 
+import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 
 const Item = lazy(() => import("@/entities/item/ui/item"));
@@ -63,6 +64,7 @@ export const ContentGrid = memo(
 			!isLoading && !hasContent && (searchQuery || hasSelectedTags || hasSelectedContentTypes);
 
 		const sentinelRef = useRef<HTMLDivElement | null>(null);
+		const { t } = useI18n();
 
 		useEffect(() => {
 			if (!fetchNext || !hasNext) return;
@@ -106,9 +108,9 @@ export const ContentGrid = memo(
 					<div className="w-full max-w-md p-8 space-y-4">
 						<FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
 						<div>
-							<h3 className="text-xl font-semibold mb-2">Здесь пока пусто</h3>
-							<p className="text-muted-foreground mb-6">Добавьте первую заметку, документ или медиафайл.</p>
-							{onAddContent && <Button onClick={onAddContent}>Добавить материал</Button>}
+							<h3 className="text-xl font-semibold mb-2">{t("empty.title")}</h3>
+							<p className="text-muted-foreground mb-6">{t("empty.description")}</p>
+							{onAddContent && <Button onClick={onAddContent}>{t("addContent")}</Button>}
 						</div>
 					</div>
 				</div>
@@ -120,11 +122,11 @@ export const ContentGrid = memo(
 				<div className="text-center py-12">
 					<div className="text-muted-foreground">
 						<Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-						<p className="text-lg mb-2">Ничего не найдено</p>
-						<p className="text-sm">Измените запрос или сбросьте фильтры.</p>
+						<p className="text-lg mb-2">{t("notFound.title")}</p>
+						<p className="text-sm">{t("notFound.description")}</p>
 						{onClearFilters && (
 							<Button variant="outline" onClick={onClearFilters} className="mt-4">
-								Сбросить фильтры
+								{t("clearFilters")}
 							</Button>
 						)}
 					</div>

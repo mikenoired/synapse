@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 
 import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
 import { trpc } from "@/shared/api/trpc";
+import { useI18n } from "@/shared/lib/i18n";
 import type { Content, LinkContent } from "@/shared/lib/schemas";
 import { extractTextFromStructuredContent, parseLinkContent } from "@/shared/lib/schemas";
 import { ContentTag } from "@/shared/ui/content-tag";
@@ -49,17 +50,17 @@ export default function Item({
 }: ItemProps) {
 	const [editOpen, setEditOpen] = useState(false);
 	const utils = trpc.useUtils();
+	const { t } = useI18n();
 
 	const deleteMutation = trpc.content.delete.useMutation({
 		onSuccess: () => {
 			void Promise.all([
-				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);
-			toast.success("Element was deleted");
+			toast.success("Элемент удален");
 			onContentDeleted?.(item.id);
 		},
 	});
@@ -88,9 +89,9 @@ export default function Item({
 					</div>
 				</ContextMenuTrigger>
 				<ContextMenuContent>
-					<ContextMenuItem onClick={() => onItemClick?.(item)}>Open</ContextMenuItem>
-					<ContextMenuItem onClick={handleEdit}>Edit</ContextMenuItem>
-					<ContextMenuItem onClick={handleDelete}>Delete</ContextMenuItem>
+					<ContextMenuItem onClick={() => onItemClick?.(item)}>{t("open")}</ContextMenuItem>
+					<ContextMenuItem onClick={handleEdit}>{t("edit")}</ContextMenuItem>
+					<ContextMenuItem onClick={handleDelete}>{t("delete")}</ContextMenuItem>
 				</ContextMenuContent>
 			</ContextMenu>
 			{editOpen && item.type === "note" && (
@@ -106,6 +107,7 @@ export default function Item({
 }
 
 function ItemContent({ item, index, onItemClick }: ItemProps) {
+	const { t } = useI18n();
 	const notePreview = useMemo(() => {
 		if (item.type !== "note") return item.content;
 		return getNotePreview(item.content);
@@ -121,7 +123,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 			<div className="flex flex-col gap-2">
 				<div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
 					<ListChecks className="w-4 h-4" />
-					{done} /{todos.length} done
+					{done} /{todos.length} {t("done")}
 				</div>
 				{todos.slice(0, 3).map((todo, idx) => (
 					<div key={idx} className="flex items-center gap-2">
@@ -181,7 +183,7 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 		return (
 			<div className="space-y-3">
 				<h3 className="font-semibold text-base leading-tight line-clamp-2">
-					{linkContent.title || item.title || "No title"}
+					{linkContent.title || item.title || t("untitled")}
 				</h3>
 
 				{previewText && (
@@ -244,10 +246,10 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 						<>
 							<div className="mb-4 h-0.5 w-8 rounded-full bg-primary/70" />
 							<h3 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-foreground">
-								{item.title || "Без названия"}
+								{item.title || t("untitled")}
 							</h3>
 							<p className="mt-3 line-clamp-5 whitespace-pre-wrap wrap-break-words text-sm leading-6 text-muted-foreground">
-								{notePreview || "Пустая заметка"}
+								{notePreview || t("emptyNote")}
 							</p>
 							<div className="mt-auto flex flex-wrap gap-1 pt-5">
 								{item.tags.map((tag: string, tagIndex) => (
