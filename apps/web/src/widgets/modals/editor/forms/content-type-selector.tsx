@@ -67,7 +67,7 @@ export function ContentTypePicker({ onSelect, suggestedType }: ContentTypePicker
 							type="button"
 							onClick={() => onSelect(key)}
 							className={cn(
-								"group rounded-2xl border border-border bg-card p-4 text-left transition-colors duration-150 hover:border-foreground/20 hover:bg-accent/40",
+								"group relative rounded-2xl border border-border bg-card p-4 text-left transition-[border-color,background-color,box-shadow,transform] duration-150 ease-out hover:z-10 hover:scale-[1.025] hover:border-foreground/20 hover:bg-accent/40 hover:shadow-sm focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[1.01]",
 								isSuggested && "border-primary/40 bg-primary/5"
 							)}>
 							<div className="flex items-start justify-between gap-3">
