@@ -4,6 +4,7 @@ import { Input } from "@synapse/ui/components";
 import { useId, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 import { ContentTag } from "@/shared/ui/content-tag";
 
@@ -55,10 +56,11 @@ export function TagEditor({
 	disabled = false,
 	aiGenerate,
 	inputClassName,
-	placeholder = "+ Добавить тег",
+	placeholder,
 }: TagEditorProps) {
 	const listId = useId();
 	const [currentTag, setCurrentTag] = useState("");
+	const { t } = useI18n();
 	const { data: tagSuggestions = [] } = trpc.content.getTags.useQuery(undefined, {
 		refetchOnMount: false,
 	});
@@ -99,7 +101,7 @@ export function TagEditor({
 			))}
 			<Input
 				list={listId}
-				placeholder={placeholder}
+				placeholder={placeholder ?? t("addTag")}
 				value={currentTag}
 				onChange={(e) => setCurrentTag(e.target.value)}
 				onKeyDown={(e) => {

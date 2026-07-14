@@ -7,12 +7,18 @@ import { usePathname } from "next/navigation";
 
 import { SIDEBAR_ANIMATION } from "@/shared/config/animations";
 import { useDashboard } from "@/shared/lib/dashboard-context";
+import { useI18n } from "@/shared/lib/i18n";
 
 import type { NavItem } from "./sidebar";
 
 export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
 	const { isSidebarExpanded, toggleSidebar } = useDashboard();
 	const pathname = usePathname();
+	const { t } = useI18n();
+	const sidebarToggleLabel = isSidebarExpanded ? t("position.collapse") : t("position.expand");
+	const sidebarToggleAriaLabel = isSidebarExpanded
+		? t("settings.sidebar.collapse")
+		: t("settings.sidebar.expand");
 
 	return (
 		<TooltipProvider delayDuration={0} disableHoverableContent={isSidebarExpanded}>
@@ -28,6 +34,7 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
 								<TooltipTrigger asChild>
 									<button
 										onClick={toggleSidebar}
+										aria-label={sidebarToggleAriaLabel}
 										className="h-10 w-full justify-start transition-all duration-200 rounded-lg pl-2.5 text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer">
 										<div className="flex items-center h-10 overflow-hidden w-full">
 											<motion.div
@@ -45,17 +52,17 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
 														exit={{ opacity: 0, width: 0 }}
 														transition={SIDEBAR_ANIMATION}
 														className="ml-3 text-sm font-medium whitespace-nowrap overflow-hidden text-left">
-														{isSidebarExpanded ? "Collapse" : "Expand"}
+														{sidebarToggleLabel}
 													</motion.span>
 												)}
 											</AnimatePresence>
 										</div>
-										<span className="sr-only">{isSidebarExpanded ? "Collapse" : "Expand"} sidebar</span>
+										<span className="sr-only">{sidebarToggleAriaLabel}</span>
 									</button>
 								</TooltipTrigger>
 								{!isSidebarExpanded && (
 									<TooltipContent side="right" sideOffset={5}>
-										{isSidebarExpanded ? "Collapse" : "Expand"}
+										{sidebarToggleLabel}
 									</TooltipContent>
 								)}
 							</Tooltip>

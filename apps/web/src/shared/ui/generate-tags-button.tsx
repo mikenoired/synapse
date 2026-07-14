@@ -5,6 +5,7 @@ import { Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
+import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 
 export interface SuggestedTag {
@@ -31,6 +32,7 @@ type GenerateTagsButtonProps = (DraftInput | ExistingInput) & {
 };
 
 export function GenerateTagsButton({ disabled, onResult, className, ...input }: GenerateTagsButtonProps) {
+	const { t } = useI18n();
 	const mutation = trpc.ai.suggestTags.useMutation({
 		onSuccess: (res) => {
 			if (res.success) {
@@ -58,9 +60,9 @@ export function GenerateTagsButton({ disabled, onResult, className, ...input }: 
 			className={className}
 			disabled={disabled || mutation.isPending}
 			onClick={() => mutation.mutate(input)}
-			title="Generate tags with AI">
+			title={t("generateTags")}>
 			<Sparkles className={`size-4 ${mutation.isPending ? "animate-pulse" : ""}`} />
-			{mutation.isPending ? "Generating…" : "AI tags"}
+			{mutation.isPending ? t("generatingTags") : t("generateTags")}
 		</Button>
 	);
 }

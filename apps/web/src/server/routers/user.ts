@@ -18,9 +18,14 @@ export const userRouter = router({
 	}),
 	updatePreferences: protectedProcedure
 		.input(
-			z.object({
-				mediaAutoplayEnabled: z.boolean(),
-			})
+			z
+				.object({
+					interfaceLanguage: z.enum(["ru", "en"]).optional(),
+					mediaAutoplayEnabled: z.boolean().optional(),
+				})
+				.refine((value) => Object.keys(value).length > 0, {
+					message: "At least one preference must be provided",
+				})
 		)
 		.mutation(async ({ input, ctx }) => {
 			const service = new UserService(ctx);

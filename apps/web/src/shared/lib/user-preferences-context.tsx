@@ -7,20 +7,40 @@ import toast from "react-hot-toast";
 import { trpc } from "@/shared/api/trpc";
 import { useAuth } from "@/shared/lib/auth-context";
 
-import { DEFAULT_USER_PREFERENCES } from "./user-preferences";
+import {
+	DEFAULT_USER_PREFERENCES,
+	type InterfaceLanguage,
+	normalizeUserPreferences,
+} from "./user-preferences";
 
 interface UserPreferencesContextValue {
+	interfaceLanguage: InterfaceLanguage;
 	isReady: boolean;
 	mediaAutoplayEnabled: boolean;
+	setInterfaceLanguage: (value: InterfaceLanguage) => void;
 	setMediaAutoplayEnabled: (value: boolean) => void;
 }
 
 const UserPreferencesContext = createContext<UserPreferencesContextValue | undefined>(undefined);
+const languageStorageKey = "synapse-interface-language";
+
+function getStoredInterfaceLanguage() {
+	if (typeof window === "undefined") return DEFAULT_USER_PREFERENCES.interfaceLanguage;
+
+	const storedLanguage = window.localStorage.getItem(languageStorageKey);
+
+	return storedLanguage === "en" || storedLanguage === "ru"
+		? storedLanguage
+		: DEFAULT_USER_PREFERENCES.interfaceLanguage;
+}
 
 export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 	const utils = trpc.useUtils();
 	const { user } = useAuth();
 	const [isReady, setIsReady] = useState(false);
+	const [interfaceLanguage, setInterfaceLanguageState] = useState<InterfaceLanguage>(
+		DEFAULT_USER_PREFERENCES.interfaceLanguage
+	);
 	const [mediaAutoplayEnabled, setMediaAutoplayEnabledState] = useState(
 		DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled
 	);
@@ -36,18 +56,22 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		if (!user) {
+			setInterfaceLanguageState(getStoredInterfaceLanguage());
 			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
 			setIsReady(true);
 			return;
 		}
 
 		if (preferencesQuery.data) {
-			setMediaAutoplayEnabledState(preferencesQuery.data.mediaAutoplayEnabled);
+			const preferences = normalizeUserPreferences(preferencesQuery.data);
+			setInterfaceLanguageState(preferences.interfaceLanguage);
+			setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
 			setIsReady(true);
 			return;
 		}
 
 		if (preferencesQuery.error) {
+			setInterfaceLanguageState(getStoredInterfaceLanguage());
 			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
 			setIsReady(true);
 			return;
@@ -56,44 +80,95 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		setIsReady(false);
 	}, [preferencesQuery.data, preferencesQuery.error, user]);
 
-	const setMediaAutoplayEnabled = useCallback(
-		(value: boolean) => {
-			const previousValue = mediaAutoplayEnabled;
-			setMediaAutoplayEnabledState(value);
+	useEffect(() => {
+		document.documentElement.lang = interfaceLanguage;
+		window.localStorage.setItem(languageStorageKey, interfaceLanguage);
+	}, [interfaceLanguage]);
+
+	const setInterfaceLanguage = useCallback(
+		(value: InterfaceLanguage) => {
+			const previousPreferences = normalizeUserPreferences({ interfaceLanguage, mediaAutoplayEnabled });
+			const nextPreferences = normalizeUserPreferences({ ...previousPreferences, interfaceLanguage: value });
+			setInterfaceLanguageState(nextPreferences.interfaceLanguage);
 
 			if (!user) {
 				return;
 			}
 
-			utils.user.getPreferences.setData(undefined, { mediaAutoplayEnabled: value });
+			utils.user.getPreferences.setData(undefined, nextPreferences);
+
+			updatePreferencesMutation.mutate(
+				{ interfaceLanguage: value },
+				{
+					onError: () => {
+						setInterfaceLanguageState(previousPreferences.interfaceLanguage);
+						utils.user.getPreferences.setData(undefined, previousPreferences);
+						toast.error(
+							previousPreferences.interfaceLanguage === "ru"
+								? "Не удалось сохранить язык интерфейса"
+								: "Failed to save interface language"
+						);
+					},
+					onSuccess: (preferences) => {
+						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
+						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
+						utils.user.getPreferences.setData(undefined, normalizedPreferences);
+					},
+				}
+			);
+		},
+		[interfaceLanguage, mediaAutoplayEnabled, updatePreferencesMutation, user, utils]
+	);
+
+	const setMediaAutoplayEnabled = useCallback(
+		(value: boolean) => {
+			const previousPreferences = normalizeUserPreferences({ interfaceLanguage, mediaAutoplayEnabled });
+			const nextPreferences = normalizeUserPreferences({
+				...previousPreferences,
+				mediaAutoplayEnabled: value,
+			});
+			setMediaAutoplayEnabledState(nextPreferences.mediaAutoplayEnabled);
+
+			if (!user) {
+				return;
+			}
+
+			utils.user.getPreferences.setData(undefined, nextPreferences);
 
 			updatePreferencesMutation.mutate(
 				{ mediaAutoplayEnabled: value },
 				{
 					onError: () => {
-						setMediaAutoplayEnabledState(previousValue);
-						utils.user.getPreferences.setData(undefined, {
-							mediaAutoplayEnabled: previousValue,
-						});
-						toast.error("Не удалось сохранить настройку автоплея");
+						setMediaAutoplayEnabledState(previousPreferences.mediaAutoplayEnabled);
+						utils.user.getPreferences.setData(undefined, previousPreferences);
+						toast.error(
+							interfaceLanguage === "ru"
+								? "Не удалось сохранить настройку автоплея"
+								: "Failed to save autoplay setting"
+						);
 					},
 					onSuccess: (preferences) => {
-						setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
-						utils.user.getPreferences.setData(undefined, preferences);
+						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
+						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
+						utils.user.getPreferences.setData(undefined, normalizedPreferences);
 					},
 				}
 			);
 		},
-		[mediaAutoplayEnabled, updatePreferencesMutation, user, utils]
+		[interfaceLanguage, mediaAutoplayEnabled, updatePreferencesMutation, user, utils]
 	);
 
 	const value = useMemo(
 		() => ({
+			interfaceLanguage,
 			isReady,
 			mediaAutoplayEnabled,
+			setInterfaceLanguage,
 			setMediaAutoplayEnabled,
 		}),
-		[isReady, mediaAutoplayEnabled, setMediaAutoplayEnabled]
+		[interfaceLanguage, isReady, mediaAutoplayEnabled, setInterfaceLanguage, setMediaAutoplayEnabled]
 	);
 
 	return <UserPreferencesContext.Provider value={value}>{children}</UserPreferencesContext.Provider>;

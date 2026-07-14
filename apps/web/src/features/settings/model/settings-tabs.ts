@@ -5,8 +5,8 @@ export const LEGACY_SETTINGS_QUERY_PARAM = "tab";
 export const DEFAULT_SETTINGS_TAB = "general";
 
 export const settingsTabs = [
-	{ key: "general", label: "Основное", icon: Settings2 },
-	{ key: "media", label: "Хранилище", icon: HardDrive },
+	{ key: "general", labelKey: "general", icon: Settings2 },
+	{ key: "media", labelKey: "mediaStorage", icon: HardDrive },
 ] as const;
 
 export type SettingsTabKey = (typeof settingsTabs)[number]["key"];
