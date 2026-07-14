@@ -52,7 +52,7 @@ export function ContentFilter({
 			onMouseLeave={() => setFiltersOpen(false)}
 			onFocus={() => setFiltersOpen(true)}
 			onBlur={handleBlur}>
-			<div className="relative">
+			<div className="relative rounded-lg border border-transparent border-b-border transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--ring)_18%,transparent)]">
 				<input
 					ref={searchInputRef}
 					id="search"
@@ -62,7 +62,7 @@ export function ContentFilter({
 					value={searchQuery}
 					autoFocus
 					onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-					className="w-full border-b bg-background px-4 py-3 pr-16 text-lg outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:text-2xl"
+					className="w-full rounded-[inherit] bg-background px-4 py-3 pr-16 text-lg outline-none placeholder:text-muted-foreground sm:text-2xl"
 				/>
 				<button
 					type="button"
