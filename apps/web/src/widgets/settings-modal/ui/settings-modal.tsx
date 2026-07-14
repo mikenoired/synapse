@@ -114,7 +114,6 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 								<h1 id="settings-modal-title" className="text-lg font-semibold text-foreground">
 									{t("settings.title")}
 								</h1>
-								<p className="mt-1 text-sm text-muted-foreground">{t("settings.description")}</p>
 							</div>
 							<SettingsModalNav activeTab={activeTab} pathname={pathname} search={searchParams.toString()} />
 						</div>

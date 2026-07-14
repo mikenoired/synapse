@@ -8,16 +8,16 @@ import {
 	Music2,
 } from "lucide-react";
 
-import type { TranslationKey } from "@/shared/lib/i18n";
+import type { KeysWithoutParams } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 
 interface ContentTypeOption {
 	description: string;
-	descriptionKey: TranslationKey;
+	descriptionKey: KeysWithoutParams;
 	icon: LucideIcon;
 	key: Content["type"];
 	label: string;
-	labelKey: TranslationKey;
+	labelKey: KeysWithoutParams;
 }
 
 export const contentTypeOptions: ContentTypeOption[] = [
