@@ -1,5 +1,24 @@
 // Z.ai (GLM) provider — OpenAI-compatible Chat Completions.
-import type { LlmCompletionRequest, LlmCompletionResult, LlmProvider, LlmUsage } from "../provider";
+import type {
+	ChatContentPart,
+	LlmCompletionRequest,
+	LlmCompletionResult,
+	LlmProvider,
+	LlmUsage,
+} from "../provider";
+
+// Map provider-agnostic message parts to the OpenAI vision content schema.
+function toApiContent(content: string | ChatContentPart[]) {
+	if (typeof content === "string") return content;
+	return content.map((part) => {
+		if (part.type === "image_url") {
+			const image_url: { url: string; detail?: string } = { url: part.imageUrl.url };
+			if (part.imageUrl.detail) image_url.detail = part.imageUrl.detail;
+			return { type: "image_url", image_url };
+		}
+		return { type: "text", text: part.text };
+	});
+}
 
 interface ZaiConfig {
 	apiKey: string;
@@ -38,7 +57,7 @@ export function createZaiProvider(config: ZaiConfig): LlmProvider {
 				signal: controller.signal,
 				body: JSON.stringify({
 					model: req.model,
-					messages: req.messages,
+					messages: req.messages.map((m) => ({ role: m.role, content: toApiContent(m.content) })),
 					temperature: req.temperature ?? 0.2,
 					...(req.maxTokens ? { max_tokens: req.maxTokens } : {}),
 					...(req.responseJson ? { response_format: { type: "json_object" } } : {}),

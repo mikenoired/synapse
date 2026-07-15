@@ -14,12 +14,17 @@ const aiTagLimiter = new RedisRateLimiter({
 });
 
 const aiSuggestTagsSchema = z.discriminatedUnion("mode", [
-	z.object({
-		mode: z.literal("draft"),
-		type: contentTypeSchema,
-		title: z.string().optional(),
-		content: z.string().min(1),
-	}),
+	z
+		.object({
+			mode: z.literal("draft"),
+			type: contentTypeSchema,
+			title: z.string().optional(),
+			content: z.string().optional(),
+			image: z.string().optional(),
+		})
+		.refine((v) => Boolean(v.image) || (v.content && v.content.length > 0), {
+			message: "Either content or image is required",
+		}),
 	z.object({
 		mode: z.literal("existing"),
 		contentId: z.string().min(1),

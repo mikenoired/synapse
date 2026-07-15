@@ -1113,8 +1113,8 @@ export function UnifiedViewerModal({
 											contentId={currentItem.id}
 											disabled={
 												updateContentMutation.isPending ||
-												currentItem.type === "media" ||
-												currentItem.type === "audio"
+												currentItem.type === "audio" ||
+												(currentItem.type === "media" && mediaData?.type !== "image")
 											}
 											onResult={handleAiTags}
 											className="mt-2"

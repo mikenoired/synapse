@@ -17,7 +17,8 @@ interface DraftInput {
 	mode: "draft";
 	type: Content["type"];
 	title?: string;
-	content: string;
+	content?: string;
+	image?: string;
 }
 
 interface ExistingInput {

@@ -1,0 +1,29 @@
+// Browser-side downscale of a picked image File into a JPEG data URL, so the
+// draft AI-tag request payload stays small. Honors EXIF orientation.
+const MAX_DIMENSION = 1024;
+const JPEG_QUALITY = 0.8;
+
+export async function fileToScaledDataUrl(file: File): Promise<string | null> {
+	if (!file.type.startsWith("image/")) return null;
+
+	try {
+		const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+		const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+		const width = Math.max(1, Math.round(bitmap.width * scale));
+		const height = Math.max(1, Math.round(bitmap.height * scale));
+
+		const canvas = document.createElement("canvas");
+		canvas.width = width;
+		canvas.height = height;
+		const ctx = canvas.getContext("2d");
+		if (!ctx) {
+			bitmap.close();
+			return null;
+		}
+		ctx.drawImage(bitmap, 0, 0, width, height);
+		bitmap.close();
+		return canvas.toDataURL("image/jpeg", JPEG_QUALITY);
+	} catch {
+		return null;
+	}
+}

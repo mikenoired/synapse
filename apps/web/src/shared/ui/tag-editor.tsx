@@ -15,7 +15,8 @@ type AiGenerate =
 			mode: "draft";
 			type: Content["type"];
 			title?: string;
-			content: string;
+			content?: string;
+			image?: string;
 			disabled?: boolean;
 	  }
 	| {
@@ -33,7 +34,9 @@ interface TagEditorProps {
 	placeholder?: string;
 }
 
-const mediaTypes = new Set<Content["type"]>(["media", "audio", "doc", "pdf", "docx", "epub", "xlsx", "csv"]);
+// Draft AI tag generation requires text; media images are handled via the
+// `image` field instead, so "media" is allowed here.
+const mediaTypes = new Set<Content["type"]>(["audio", "doc", "pdf", "docx", "epub", "xlsx", "csv"]);
 
 function normalizeTagTitle(title: string) {
 	return title.trim().toLowerCase();
@@ -125,6 +128,7 @@ export function TagEditor({
 						type={aiGenerate.type}
 						title={aiGenerate.title}
 						content={aiGenerate.content}
+						image={aiGenerate.image}
 						disabled={aiDisabled}
 						onResult={handleAiTags}
 					/>

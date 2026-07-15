@@ -4,9 +4,13 @@
 // 3. add a case in createLlmProvider() below
 export type ChatRole = "system" | "user" | "assistant";
 
+export type ChatContentPart =
+	| { type: "text"; text: string }
+	| { type: "image_url"; imageUrl: { url: string; detail?: "auto" | "low" | "high" } };
+
 export interface ChatMessage {
 	role: ChatRole;
-	content: string;
+	content: string | ChatContentPart[];
 }
 
 export interface LlmUsage {

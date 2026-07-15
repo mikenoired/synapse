@@ -43,4 +43,21 @@ SAFETY RULES:
 			"----- CONTENT END -----",
 		].join("\n");
 	},
+
+	// Instruction text for image content. The actual image is attached as a
+	// separate multimodal part by the tagging service, so this omits the text body.
+	buildImageUserMessage({ title, tags }: { title?: string | null; tags: AiTagOption[] }): string {
+		const tagList = tags.length
+			? tags.map((t) => `- ${t.id} | ${t.name}`).join("\n")
+			: "(no existing tags yet)";
+		const titleLine = title?.trim() ? `Title: ${title.trim()}\n\n` : "";
+		return [
+			"Available tags (id | name):",
+			tagList,
+			"",
+			'Return JSON: { "existing_tag_ids": string[], "new_tag_names": string[] }',
+			"",
+			`${titleLine}Suggest tags that describe the attached image.`,
+		].join("\n");
+	},
 };

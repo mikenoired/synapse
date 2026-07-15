@@ -9,6 +9,7 @@ import toast from "react-hot-toast";
 
 import { trpc } from "@/shared/api/trpc";
 import { useDashboard } from "@/shared/lib/dashboard-context";
+import { fileToScaledDataUrl } from "@/shared/lib/downscale-image";
 import type { Content } from "@/shared/lib/schemas";
 
 import { AddContentProvider, useAddContent } from "../model/add-content-context";
@@ -43,6 +44,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 
 	const { type, title, content, isFullScreen } = context.formState;
 	const [makeTrack, setMakeTrack] = useState(false);
+	const [mediaImageDataUrl, setMediaImageDataUrl] = useState<string | null>(null);
 
 	const [startY, setStartY] = useState<number | null>(null);
 
@@ -67,6 +69,24 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 			setPreloadedFiles([]);
 		}
 	}, [preloadedFiles, context.updateType, context.handleFileSelect, setPreloadedFiles]);
+
+	// Prepare a downscaled data URL of the first picked image so AI tags can be
+	// generated during media creation (before the item is uploaded).
+	useEffect(() => {
+		let cancelled = false;
+		const firstImage =
+			type === "media" ? context.selectedFiles.find((f) => f.type.startsWith("image/")) : undefined;
+		if (!firstImage) {
+			setMediaImageDataUrl(null);
+			return;
+		}
+		void fileToScaledDataUrl(firstImage).then((url) => {
+			if (!cancelled) setMediaImageDataUrl(url);
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [type, context.selectedFiles]);
 
 	const handleSubmit = async (e: FormEvent) => {
 		e.preventDefault();
@@ -424,7 +444,9 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 									aiGenerate={
 										type === "link" && context.parsedLinkData
 											? { type: "link", title, content: JSON.stringify(context.parsedLinkData) }
-											: null
+											: type === "media" && mediaImageDataUrl
+												? { type: "media", title, image: mediaImageDataUrl }
+												: null
 									}
 									onAiTags={(existing, newTags) =>
 										context.addTags([...existing.map((t) => t.name), ...newTags])

@@ -10,7 +10,8 @@ import { GenerateTagsButton } from "@/shared/ui/generate-tags-button";
 interface AiGenerateDraft {
 	type: Content["type"];
 	title?: string;
-	content: string;
+	content?: string;
+	image?: string;
 }
 
 interface TagInputProps {
@@ -69,6 +70,7 @@ export function TagInput({
 						type={aiGenerate.type}
 						title={aiGenerate.title}
 						content={aiGenerate.content}
+						image={aiGenerate.image}
 						disabled={isLoading}
 						onResult={(existing, newTags) => onAiTags(existing, newTags)}
 					/>

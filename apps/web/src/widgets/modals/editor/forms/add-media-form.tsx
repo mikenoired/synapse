@@ -5,6 +5,7 @@ import { Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import { fileToScaledDataUrl } from "@/shared/lib/downscale-image";
 import type { Content } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
 
@@ -21,6 +22,7 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 	const [title, setTitle] = useState("");
 	const [tags, setTags] = useState<string[]>(initialTags);
 	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+	const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 	const [dragActive, setDragActive] = useState(false);
 
 	const utils = trpc.useUtils();
@@ -42,6 +44,22 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 			setSelectedFiles(preloadedFiles);
 		}
 	}, [preloadedFiles]);
+
+	// Downscale the first picked image so AI tags can be suggested before upload.
+	useEffect(() => {
+		let cancelled = false;
+		const firstImage = selectedFiles.find((f) => f.type.startsWith("image/"));
+		if (!firstImage) {
+			setImageDataUrl(null);
+			return;
+		}
+		void fileToScaledDataUrl(firstImage).then((url) => {
+			if (!cancelled) setImageDataUrl(url);
+		});
+		return () => {
+			cancelled = true;
+		};
+	}, [selectedFiles]);
 
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.files) {
@@ -201,7 +219,22 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 					{/* Tags */}
 					<div className="space-y-2">
 						<label className="text-sm font-medium">Теги</label>
-						<TagEditor tags={tags} onTagsChange={setTags} disabled={uploadMutation.isPending} />
+						<TagEditor
+							tags={tags}
+							onTagsChange={setTags}
+							disabled={uploadMutation.isPending}
+							aiGenerate={
+								imageDataUrl
+									? {
+											mode: "draft",
+											type: "media",
+											title: title || undefined,
+											image: imageDataUrl,
+											disabled: uploadMutation.isPending,
+										}
+									: null
+							}
+						/>
 					</div>
 				</div>
 			</ModalBody>
