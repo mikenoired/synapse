@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { DragEvent } from "react";
 import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
-import { getQueryTypesForFilter, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";
+import { contentTypeOptions, getQueryTypesForFilter, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import { useI18n } from "@/shared/lib/i18n";
@@ -20,20 +20,40 @@ const ContentGrid = lazy(() =>
 	import("@/features/content-grid/content-grid").then((mod) => ({ default: mod.ContentGrid }))
 );
 
+const FILTER_TYPE_KEYS = contentTypeOptions.map((option) => option.key);
+
+function parseTypesParam(value: string | null): Content["type"][] {
+	if (!value) return [];
+	return value.split(",").filter((type): type is Content["type"] =>
+		(FILTER_TYPE_KEYS as string[]).includes(type)
+	);
+}
+
+function sameStringSet(left: string[], right: string[]): boolean {
+	if (left.length !== right.length) return false;
+	return left.every((value) => right.includes(value));
+}
+
 export default function DashboardClient({
 	initial,
 }: {
 	initial: { items: Content[]; nextCursor: string | undefined };
 }) {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
-	const [selectedTags, setSelectedTags] = useState<string[]>([]);
-	const [selectedContentTypes, setSelectedContentTypes] = useState<Content["type"][]>([]);
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const { openModal } = useModal();
 	const { t } = useI18n();
 	const router = useRouter();
+	const pathname = usePathname();
 	const searchParams = useSearchParams();
+	const [searchQuery, setSearchQuery] = useState(() => searchParams?.get("search") ?? "");
+	const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(() => searchParams?.get("search") ?? "");
+	const [selectedTags, setSelectedTags] = useState<string[]>(() => {
+		const tags = searchParams?.get("tags");
+		return tags ? tags.split(",") : [];
+	});
+	const [selectedContentTypes, setSelectedContentTypes] = useState<Content["type"][]>(() =>
+		parseTypesParam(searchParams?.get("types") ?? null)
+	);
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
 	const utils = trpc.useUtils();
@@ -57,6 +77,7 @@ export default function DashboardClient({
 	}, [selectedContentTypes]);
 
 	useEffect(() => {
+		if (availableContentTypes.length === 0) return;
 		setSelectedContentTypes((current) =>
 			current.filter((type) => isContentTypeFilterAvailable(type, availableContentTypes))
 		);
@@ -132,11 +153,37 @@ export default function DashboardClient({
 		[invalidateRelatedQueries, utils]
 	);
 
+	// URL → state: применяем фильтры из адресной строки (перезагрузка, шаринг, назад/вперёд).
 	useEffect(() => {
 		if (!searchParams) return;
+
+		const searchFromUrl = searchParams.get("search") ?? "";
+		setSearchQuery((current) => (current === searchFromUrl ? current : searchFromUrl));
+		setDebouncedSearchQuery((current) => (current === searchFromUrl ? current : searchFromUrl));
+
+		const typesFromUrl = parseTypesParam(searchParams.get("types"));
+		setSelectedContentTypes((current) => (sameStringSet(current, typesFromUrl) ? current : typesFromUrl));
+
 		const tagsFromUrl = searchParams.get("tags");
-		setSelectedTags(tagsFromUrl ? tagsFromUrl.split(",") : []);
+		const nextTags = tagsFromUrl ? tagsFromUrl.split(",") : [];
+		setSelectedTags((current) => (sameStringSet(current, nextTags) ? current : nextTags));
 	}, [searchParams]);
+
+	// state → URL: обновляем адресную строку через нативный History API, чтобы
+	// НЕ триггерить ре-рендер серверного page.tsx и лишний серверный content.getAll.
+	useEffect(() => {
+		const params = new URLSearchParams(window.location.search);
+		if (searchQuery) params.set("search", searchQuery);
+		else params.delete("search");
+		if (selectedContentTypes.length > 0) params.set("types", selectedContentTypes.join(","));
+		else params.delete("types");
+		if (selectedTags.length > 0) params.set("tags", selectedTags.join(","));
+		else params.delete("tags");
+
+		const queryString = params.toString();
+		const url = queryString ? `${pathname}?${queryString}` : pathname;
+		window.history.replaceState(window.history.state, "", url);
+	}, [searchQuery, selectedContentTypes, selectedTags, pathname]);
 
 	useEffect(() => {
 		setAddDialogDefaults({ initialTags: [], onContentAdded: handleContentAdded });
