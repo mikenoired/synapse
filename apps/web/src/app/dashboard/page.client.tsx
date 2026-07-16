@@ -171,6 +171,10 @@ export default function DashboardClient({
 
 	// state → URL: обновляем адресную строку через нативный History API, чтобы
 	// НЕ триггерить ре-рендер серверного page.tsx и лишний серверный content.getAll.
+	// Важно: первым аргументом передаём null. Next патчит window.history.replaceState
+	// и при data без __NA/_N диспатчит ACTION_RESTORE — тогда useSearchParams тоже
+	// обновляется (иначе модалки/сайдбар, строящие URL через useSearchParams, теряли
+	// текущие фильтры). ACTION_RESTORE переиспользует кеш (HistoryTraversal), без RSC-fetch.
 	useEffect(() => {
 		const params = new URLSearchParams(window.location.search);
 		if (searchQuery) params.set("search", searchQuery);
@@ -182,7 +186,7 @@ export default function DashboardClient({
 
 		const queryString = params.toString();
 		const url = queryString ? `${pathname}?${queryString}` : pathname;
-		window.history.replaceState(window.history.state, "", url);
+		window.history.replaceState(null, "", url);
 	}, [searchQuery, selectedContentTypes, selectedTags, pathname]);
 
 	useEffect(() => {
