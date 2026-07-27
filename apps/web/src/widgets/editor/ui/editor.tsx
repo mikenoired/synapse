@@ -6,11 +6,12 @@ import { prose } from "@synapse/ui/prose";
 import { Extension, type Editor as TiptapEditor } from "@tiptap/core";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Image from "@tiptap/extension-image";
+import { TaskItem, TaskList } from "@tiptap/extension-list";
 import Placeholder from "@tiptap/extension-placeholder";
 import { Markdown } from "@tiptap/markdown";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
 import type { JSONContent } from "@tiptap/react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import { EditorContent, ReactNodeViewRenderer, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { common, createLowlight } from "lowlight";
 import {
@@ -25,6 +26,7 @@ import {
 	Minus,
 	Quote,
 	Redo2,
+	SquareCheckBig,
 	Strikethrough,
 	Underline,
 	Undo2,
@@ -33,7 +35,10 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 
+import { useI18n } from "@/shared/lib/i18n";
+
 import { imageFilesToDataUrls, looksLikeMarkdown } from "../lib/editor-input";
+import { EditableTaskItemView, ReadonlyTaskItemView, TaskListView } from "./readonly-task-item";
 import { SlashMenu } from "./slash-menu";
 
 const lowlight = createLowlight(common);
@@ -57,9 +62,6 @@ const EditorShortcuts = Extension.create({
 	},
 });
 
-// Запрещает автоматическое создание in-page якорных ссылок (href вида "#foo"),
-// которые браузер раскрывает как example.com/page#foo. Ссылки внутри заметки
-// должны быть только осмысленными внешними адресами.
 const NoInPageAnchorLinks = Extension.create({
 	name: "noInPageAnchorLinks",
 	addProseMirrorPlugins() {
@@ -130,6 +132,7 @@ function ToolbarButton({ active, children, disabled, label, onClick, shortcut }:
 export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 	const editorRef = useRef<TiptapEditor | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
+	const { t } = useI18n();
 
 	const insertImageFiles = useCallback(async (files: File[], position?: number) => {
 		const editor = editorRef.current;
@@ -144,7 +147,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 			if (position !== undefined) chain.setTextSelection(position);
 			chain.insertContent(content).run();
 		} catch (error) {
-			toast.error(error instanceof Error ? error.message : "Не удалось добавить изображение");
+			toast.error(error instanceof Error ? error.message : t("editor.imageLoadError"));
 		}
 	}, []);
 
@@ -162,12 +165,28 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 			EditorShortcuts,
 			NoInPageAnchorLinks,
 			Placeholder.configure({ placeholder: "Начните с мысли, идеи или наблюдения…" }),
+			TaskList.extend({
+				addNodeView() {
+					return ReactNodeViewRenderer(TaskListView);
+				},
+			}),
+			readOnly
+				? TaskItem.extend({
+						addNodeView() {
+							return ReactNodeViewRenderer(ReadonlyTaskItemView);
+						},
+					}).configure({ nested: false })
+				: TaskItem.extend({
+						addNodeView() {
+							return ReactNodeViewRenderer(EditableTaskItemView);
+						},
+					}).configure({ nested: false }),
 		],
 		editorProps: {
 			attributes: {
-				"aria-label": "Содержимое заметки",
+				"aria-label": t("editor.noteContent"),
 				"class":
-					"min-h-[420px] px-1 py-5 text-base leading-7 outline-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-muted-foreground/60 [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
+					"synapse-editor-content min-h-[420px] px-1 py-5 text-base leading-7 outline-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-muted-foreground/60 [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
 				"role": "textbox",
 			},
 			handleDrop(view, event, moved) {
@@ -239,7 +258,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 					<TooltipProvider delayDuration={400} skipDelayDuration={150}>
 						<div className="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-y border-border/70 bg-background/95 py-2 backdrop-blur">
 							<select
-								aria-label="Тип блока"
+								aria-label={t("editor.blockType")}
 								className="h-8 rounded-lg border border-border bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
 								onChange={(event) => {
 									const level = Number(event.target.value);
@@ -268,42 +287,42 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 							<div className="mx-1 h-5 w-px bg-border" />
 							<ToolbarButton
 								active={editor.isActive("bold")}
-								label="Полужирный"
+								label={t("editor.bold")}
 								onClick={() => void editor.chain().focus().toggleBold().run()}
 								shortcut="⌘/Ctrl+B">
 								<Bold />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("italic")}
-								label="Курсив"
+								label={t("editor.italic")}
 								onClick={() => void editor.chain().focus().toggleItalic().run()}
 								shortcut="⌘/Ctrl+I">
 								<Italic />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("underline")}
-								label="Подчёркнутый"
+								label={t("editor.underline")}
 								onClick={() => void editor.chain().focus().toggleUnderline().run()}
 								shortcut="⌘/Ctrl+U">
 								<Underline />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("strike")}
-								label="Зачёркнутый"
+								label={t("editor.strike")}
 								onClick={() => void editor.chain().focus().toggleStrike().run()}
 								shortcut="⌘/Ctrl+Shift+S">
 								<Strikethrough />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("code")}
-								label="Строчный код"
+								label={t("editor.code")}
 								onClick={() => void editor.chain().focus().toggleCode().run()}
 								shortcut="⌘/Ctrl+E">
 								<Code2 />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("link")}
-								label="Ссылка"
+								label={t("editor.link")}
 								onClick={() => void editLink(editor)}
 								shortcut="⌘/Ctrl+K">
 								<Link />
@@ -311,51 +330,58 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 							<div className="mx-1 h-5 w-px bg-border" />
 							<ToolbarButton
 								active={editor.isActive("bulletList")}
-								label="Маркированный список"
+								label={t("editor.bulletList")}
 								onClick={() => void editor.chain().focus().toggleBulletList().run()}
 								shortcut="⌘/Ctrl+Shift+8">
 								<List />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("orderedList")}
-								label="Нумерованный список"
+								label={t("editor.orderedList")}
 								onClick={() => void editor.chain().focus().toggleOrderedList().run()}
 								shortcut="⌘/Ctrl+Shift+7">
 								<ListOrdered />
 							</ToolbarButton>
 							<ToolbarButton
+								active={editor.isActive("taskList")}
+								label={t("editor.taskList")}
+								onClick={() => void editor.chain().focus().toggleTaskList().run()}
+								shortcut="⌘/Ctrl+Shift+9">
+								<SquareCheckBig />
+							</ToolbarButton>
+							<ToolbarButton
 								active={editor.isActive("blockquote")}
-								label="Цитата"
+								label={t("editor.blockquote")}
 								onClick={() => void editor.chain().focus().toggleBlockquote().run()}
 								shortcut="⌘/Ctrl+Shift+B">
 								<Quote />
 							</ToolbarButton>
 							<ToolbarButton
 								active={editor.isActive("codeBlock")}
-								label="Блок кода"
+								label={t("editor.codeBlock")}
 								onClick={() => void editor.chain().focus().toggleCodeBlock().run()}
 								shortcut="⌘/Ctrl+Alt+C">
 								<FileCode2 />
 							</ToolbarButton>
 							<ToolbarButton
-								label="Разделитель"
+								label={t("editor.separator")}
 								onClick={() => void editor.chain().focus().setHorizontalRule().run()}>
 								<Minus />
 							</ToolbarButton>
-							<ToolbarButton label="Изображение" onClick={openImagePicker}>
+							<ToolbarButton label={t("editor.image")} onClick={openImagePicker}>
 								<ImageIcon />
 							</ToolbarButton>
 							<div className="mx-1 h-5 w-px bg-border" />
 							<ToolbarButton
 								disabled={!editor.can().undo()}
-								label="Отменить"
+								label={t("undo")}
 								onClick={() => void editor.chain().focus().undo().run()}
 								shortcut="⌘/Ctrl+Z">
 								<Undo2 />
 							</ToolbarButton>
 							<ToolbarButton
 								disabled={!editor.can().redo()}
-								label="Повторить"
+								label={t("repeat")}
 								onClick={() => void editor.chain().focus().redo().run()}
 								shortcut="⌘/Ctrl+Shift+Z">
 								<Redo2 />

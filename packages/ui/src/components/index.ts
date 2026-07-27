@@ -1,6 +1,7 @@
 export * from "./badge";
 export * from "./button";
 export * from "./checkbox";
+export * from "./checkbox-group";
 export * from "./context-menu";
 export * from "./dropdown";
 export * from "./form";

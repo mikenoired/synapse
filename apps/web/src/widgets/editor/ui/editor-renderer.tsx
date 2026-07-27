@@ -3,14 +3,8 @@
 import { cn } from "@synapse/ui/cn";
 import { prose } from "@synapse/ui/prose";
 import type { JSONContent } from "@tiptap/core";
-import { generateHTML } from "@tiptap/core";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import Image from "@tiptap/extension-image";
-import StarterKit from "@tiptap/starter-kit";
-import DOMPurify from "dompurify";
-import { common, createLowlight } from "lowlight";
 
-const lowlight = createLowlight(common);
+import { Editor } from "./editor";
 
 interface EditorRendererProps {
 	data: JSONContent | null;
@@ -19,15 +13,9 @@ interface EditorRendererProps {
 export function EditorRenderer({ data }: EditorRendererProps) {
 	if (!data || !data.content) return null;
 
-	const html = generateHTML(data, [
-		StarterKit.configure({ codeBlock: false }),
-		CodeBlockLowlight.configure({ lowlight }),
-		Image.configure({
-			HTMLAttributes: { class: "h-auto max-w-full rounded-lg", loading: "lazy" },
-		}),
-	]);
-
 	return (
-		<div className={cn("max-w-none", prose)} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }} />
+		<div className={cn("synapse-editor-content max-w-none", prose)}>
+			<Editor data={data} readOnly />
+		</div>
 	);
 }

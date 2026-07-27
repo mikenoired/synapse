@@ -1,4 +1,11 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from "@synapse/ui/components";
+import {
+	CheckboxGroup,
+	ContextMenu,
+	ContextMenuContent,
+	ContextMenuItem,
+	ContextMenuTrigger,
+	ReadonlyCheckboxItem,
+} from "@synapse/ui/components";
 import { motion } from "framer-motion";
 import { ListChecks } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -128,12 +135,11 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 					<ListChecks className="w-4 h-4" />
 					{done} /{todos.length} {t("done")}
 				</div>
-				{todos.slice(0, 3).map((todo, idx) => (
-					<div key={idx} className="flex items-center gap-2">
-						<input type="checkbox" checked={todo.marked} readOnly disabled className="w-4 h-4" />
-						<span className={todo.marked ? "line-through opacity-60" : ""}>{todo.text}</span>
-					</div>
-				))}
+				<CheckboxGroup className="gap-1">
+					{todos.slice(0, 3).map((todo, idx) => (
+						<ReadonlyCheckboxItem key={idx} checked={todo.marked} label={todo.text} className="px-0" />
+					))}
+				</CheckboxGroup>
 				{todos.length > 3 && (
 					<div className="text-xs text-muted-foreground">
 						+{todos.length - 3}
