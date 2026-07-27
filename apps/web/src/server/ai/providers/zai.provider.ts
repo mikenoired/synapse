@@ -1,4 +1,3 @@
-// Z.ai (GLM) provider — OpenAI-compatible Chat Completions.
 import type {
 	ChatContentPart,
 	LlmCompletionRequest,
@@ -7,7 +6,6 @@ import type {
 	LlmUsage,
 } from "../provider";
 
-// Map provider-agnostic message parts to the OpenAI vision content schema.
 function toApiContent(content: string | ChatContentPart[]) {
 	if (typeof content === "string") return content;
 	return content.map((part) => {
@@ -94,12 +92,10 @@ export function createZaiProvider(config: ZaiConfig): LlmProvider {
 			req: LlmCompletionRequest,
 			parse: (raw: string) => T
 		): Promise<LlmCompletionResult<T>> {
-			// Network/auth/timeout errors throw immediately (service records the error).
 			const first = await callOnce(req);
 			try {
 				return { data: parse(first.content), usage: first.usage, model: first.model };
 			} catch {
-				// Parse failed (model returned non-JSON) — one retry with a strict-JSON nudge.
 				const retried = await callOnce({
 					...req,
 					messages: [

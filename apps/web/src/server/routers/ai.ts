@@ -4,6 +4,7 @@ import { z } from "zod";
 import { contentTypeSchema } from "@/shared/lib/schemas";
 
 import { RedisRateLimiter } from "../lib/redis-rate-limiter";
+import AiUsageRepository from "../repositories/ai-usage.repository";
 import AiTaggingService from "../services/ai-tagging.service";
 import { protectedProcedure, router } from "../trpc";
 
@@ -41,6 +42,10 @@ const aiTagLimiterMiddleware = protectedProcedure.use(async ({ ctx, next }) => {
 });
 
 export const aiRouter = router({
+	getUsageOverview: protectedProcedure.query(async ({ ctx }) => {
+		const repository = new AiUsageRepository(ctx);
+		return repository.getOverview();
+	}),
 	suggestTags: aiTagLimiterMiddleware.input(aiSuggestTagsSchema).mutation(async ({ input, ctx }) => {
 		const service = new AiTaggingService(ctx);
 		return service.suggestTags(input);

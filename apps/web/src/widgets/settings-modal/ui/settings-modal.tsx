@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
+import AiTab from "@/features/settings-ai/ui/ai-tab";
 import GeneralTab from "@/features/settings-general/ui/general-tab";
 import MediaTab from "@/features/settings-media/ui/media-tab";
 import type { SettingsTabKey } from "@/features/settings/model/settings-tabs";
@@ -23,6 +24,7 @@ interface SettingsModalProps {
 const tabComponentMap = {
 	general: GeneralTab,
 	media: MediaTab,
+	ai: AiTab,
 };
 
 const settingsModalBackdropColor = "rgba(32, 29, 26, 0.26)";
