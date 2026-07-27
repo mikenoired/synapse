@@ -24,8 +24,6 @@ import { shape } from "../../lib/shape";
 import { spring } from "../../lib/springs";
 import { useProximityHover } from "../../lib/use-proximity-hover";
 
-/* ─────────────────────── Contexts ─────────────────────── */
-
 interface TabsValueOrderContextValue {
 	valueOrder: string[];
 	setValueOrder: (order: string[]) => void;
@@ -38,7 +36,6 @@ interface TabsListContextValue {
 	registerTab: (index: number, value: string, el: HTMLElement | null) => void;
 	hoveredIndex: number | null;
 	selectedValue: string | undefined;
-	/** Оптимистично ставит selectedIdx, чтобы индикатор прыгал сразу по клику. */
 	setOptimisticIdx: (index: number) => void;
 }
 
@@ -49,8 +46,6 @@ function useTabsList() {
 	if (!ctx) throw new Error("TabItem must be used within a TabsList");
 	return ctx;
 }
-
-/* ─────────────────────── Tabs (Root) ─────────────────────── */
 
 interface TabsProps extends Omit<
 	ComponentPropsWithoutRef<typeof TabsPrimitive.Root>,
@@ -115,8 +110,6 @@ const Tabs = forwardRef<HTMLDivElement, TabsProps>(
 );
 
 Tabs.displayName = "Tabs";
-
-/* ─────────────────────── TabsList ─────────────────────── */
 
 interface TabsListProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.List> {
 	orientation?: "horizontal" | "vertical";
@@ -191,7 +184,6 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 		const isHoveringSelected = hoveredIndex === activeSelectedIdx;
 		const isHovering = hoveredIndex !== null && !isHoveringSelected;
 
-		// Авто-индекс детям. Пропускаем plain DOM-элементы (React warn на unknown-prop).
 		const indexedChildren = Children.map(children, (child, i) => {
 			if (isValidElement(child) && typeof child.type !== "string") {
 				return cloneElement(child, { _index: i } as Record<string, unknown>);
@@ -209,9 +201,9 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 				}}>
 				<TabsPrimitive.List
 					ref={(node) => {
-						(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+						(containerRef as React.RefObject<HTMLDivElement | null>).current = node;
 						if (typeof ref === "function") ref(node);
-						else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+						else if (ref) (ref as React.RefObject<HTMLDivElement | null>).current = node;
 					}}
 					onMouseMove={handleMouseMove}
 					onMouseLeave={handleMouseLeave}
@@ -240,7 +232,6 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 						className
 					)}
 					{...props}>
-					{/* Активный сегмент-индикатор */}
 					{selectedRect && (
 						<motion.div
 							className={cn("absolute pointer-events-none bg-background shadow-sm", shape.bg)}
@@ -259,7 +250,6 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 						/>
 					)}
 
-					{/* Hover-индикатор */}
 					<AnimatePresence>
 						{hoverRect && !isHoveringSelected && selectedRect && (
 							<motion.div
@@ -301,7 +291,6 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 						)}
 					</AnimatePresence>
 
-					{/* Focus-ring */}
 					<AnimatePresence>
 						{focusRect && (
 							<motion.div
@@ -331,8 +320,6 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 
 TabsList.displayName = "TabsList";
 
-/* ─────────────────────── TabItem ─────────────────────── */
-
 interface TabItemProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
 	value: string;
 	icon?: LucideIcon;
@@ -360,14 +347,13 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 					onClick?.(e);
 				}}
 				ref={(node) => {
-					(internalRef as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+					(internalRef as React.RefObject<HTMLButtonElement | null>).current = node;
 					if (typeof ref === "function") ref(node);
-					else if (ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+					else if (ref) (ref as React.RefObject<HTMLButtonElement | null>).current = node;
 				}}
 				value={value}
 				data-proximity-index={_index}
 				className={cn(
-					// Фикс. высота (не py), чтобы text-box trim не сжимал таб.
 					"relative z-10 flex h-8 items-center gap-2 px-3 cursor-pointer bg-transparent border-none outline-none",
 					className
 				)}
@@ -406,8 +392,6 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 );
 
 TabItem.displayName = "TabItem";
-
-/* ─────────────────────── TabPanel ─────────────────────── */
 
 interface TabPanelProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Content> {
 	value: string;

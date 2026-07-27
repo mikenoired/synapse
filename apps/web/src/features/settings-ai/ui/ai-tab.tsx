@@ -88,7 +88,7 @@ export default function AiTab() {
 	return (
 		<div className="space-y-4 py-1">
 			<section className="relative overflow-hidden rounded-[1.75rem] bg-foreground p-5 text-background">
-				<PixelSparkles className="opacity-90" pixelSize={5} speed={0.4} fireSpeed={0.8} density={1.1} />
+				<PixelSparkles className="opacity-90" pixelSize={5} speed={0.4} fireSpeed={1.8} density={1.1} />
 				<div className="relative z-10 flex items-start justify-between gap-4">
 					<div>
 						<h2 className="text-2xl font-semibold tracking-tight">{data.planLabel}</h2>

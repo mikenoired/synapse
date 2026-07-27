@@ -195,6 +195,17 @@
 		font-feature-settings: "cv01", "cv02", "cv03", "cv04", "cv11";
 	}
 
+	html,
+	body,
+	html *,
+	html *::before,
+	html *::after {
+		transition-property:
+			color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, box-shadow;
+		transition-duration: 220ms;
+		transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
 	* {
 		scrollbar-color: color-mix(in oklch, var(--muted-foreground) 55%, transparent) transparent;
 		scrollbar-width: thin;

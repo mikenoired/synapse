@@ -10,6 +10,13 @@ export const ru: TranslationMap = {
 	"addContent.description":
 		"Сначала выбираем тип содержимого, затем показываем только нужные поля и действия.",
 	"audio": "Аудио",
+	"appearance": "Оформление",
+	"appearance.title": "Оформление",
+	"appearance.description": "Выберите, как Synapse будет выглядеть на этом устройстве.",
+	"appearance.theme.title": "Тема",
+	"appearance.theme.system": "Системная",
+	"appearance.theme.light": "Светлая",
+	"appearance.theme.dark": "Тёмная",
 	"autoplay.description": "Автоматически запускает аудио и видео сразу после открытия в просмотрщике.",
 	"autoplay.title": "Автовоспроизведение",
 	"aiUsage": "ИИ и использование",
