@@ -59,6 +59,10 @@
 	--button-primary-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1);
 	--button-secondary-border: rgb(0 0 0 / 0.08);
 	--button-secondary-shadow: 0 7px 3px rgb(0 0 0 / 0.03), inset 0 1px 0 0 rgb(255 255 255 / 0.35);
+	--fw-normal: "wght" 400, "opsz" 14;
+	--fw-medium: "wght" 450, "opsz" 15;
+	--fw-semibold: "wght" 550, "opsz" 20;
+	--fw-bold: "wght" 700, "opsz" 25;
 	--tracking-normal: 0em;
 	--spacing: 0.25rem;
 }
@@ -96,7 +100,7 @@
 	--sidebar-accent-foreground: oklch(0.9674 0.0013 286.3752);
 	--sidebar-border: oklch(0.2739 0.0055 286.0326);
 	--sidebar-ring: oklch(0.8711 0.0055 286.286);
-	--app-font-sans: var(--font-non-bureau), ui-sans-serif, system-ui, sans-serif;
+	--app-font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
 	--font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 	--font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
 	--radius: 0.5rem;
@@ -255,9 +259,61 @@
 			background-position: 200% 0;
 		}
 	}
+
+	@keyframes spinner-move {
+		to {
+			stroke-dashoffset: -100;
+		}
+	}
+
+	@keyframes spinner-dash {
+		0%,
+		100% {
+			stroke-dasharray: 15 85;
+		}
+
+		50% {
+			stroke-dasharray: 40 60;
+		}
+	}
+
+	@keyframes text-shimmer {
+		0% {
+			background-position: 0% 0;
+		}
+
+		100% {
+			background-position: 100% 0;
+		}
+	}
+
+	.shimmer-text {
+		color: transparent;
+		background: linear-gradient(
+			90deg,
+			var(--muted-foreground) 0%,
+			var(--muted-foreground) 35%,
+			var(--foreground) 50%,
+			var(--muted-foreground) 65%,
+			var(--muted-foreground) 100%
+		);
+		background-size: 300% 100%;
+		background-clip: text;
+		-webkit-background-clip: text;
+		animation: text-shimmer 1.5s ease-in-out infinite;
+	}
 }
 
 @layer utilities {
+	.scrollbar-hide {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+
 	.line-clamp-1 {
 		overflow: hidden;
 		display: -webkit-box;

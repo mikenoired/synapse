@@ -14,7 +14,11 @@ const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 });
 
-const geist = Geist();
+const geist = Geist({
+	subsets: ["latin"],
+	variable: "--font-geist",
+	display: "swap",
+});
 
 export const metadata: Metadata = {
 	title: "Synapse — личный архив",
@@ -38,7 +42,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
 	return (
-		<html lang="ru" className={`${geist} ${geistMono.variable}`} suppressHydrationWarning>
+		<html lang="ru" className={`${geist.variable} ${geistMono.variable}`} suppressHydrationWarning>
 			<head>
 				<link rel="preconnect" href="http://localhost:9000" />
 				<link rel="dns-prefetch" href="http://localhost:9000" />

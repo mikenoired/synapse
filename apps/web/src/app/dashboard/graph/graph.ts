@@ -47,8 +47,14 @@ type GraphColors = {
 	text: number;
 };
 
-export function createGraph(container: HTMLElement, data: GraphInput) {
-	return new GraphRenderer(container, data);
+export type GraphCallbacks = {
+	onNodeClick?: (nodeId: string, nodeType: string) => void;
+	onNodeHover?: (nodeId: string, x: number, y: number) => void;
+	onNodeLeave?: () => void;
+};
+
+export function createGraph(container: HTMLElement, data: GraphInput, callbacks?: GraphCallbacks) {
+	return new GraphRenderer(container, data, callbacks);
 }
 
 class GraphRenderer {
@@ -69,11 +75,16 @@ class GraphRenderer {
 	private resizeObserver: ResizeObserver;
 	private themeObserver: MutationObserver;
 	private colors: GraphColors;
+	private callbacks?: GraphCallbacks;
+	private hoverTimer: NodeJS.Timeout | null = null;
+	private hoveredNode: NodeState | null = null;
 
 	constructor(
 		private readonly container: HTMLElement,
-		data: GraphInput
+		data: GraphInput,
+		callbacks?: GraphCallbacks
 	) {
+		this.callbacks = callbacks;
 		this.colors = readGraphColors(container);
 		this.app = new Application<HTMLCanvasElement>({
 			antialias: true,
@@ -174,6 +185,7 @@ class GraphRenderer {
 		view.addEventListener("pointermove", this.onPointerMove);
 		view.addEventListener("pointerup", this.onPointerUp);
 		view.addEventListener("pointercancel", this.onPointerUp);
+		view.addEventListener("pointerleave", this.onPointerLeave);
 		view.addEventListener("wheel", this.onWheel, { passive: false });
 	}
 
@@ -183,6 +195,7 @@ class GraphRenderer {
 		view.removeEventListener("pointermove", this.onPointerMove);
 		view.removeEventListener("pointerup", this.onPointerUp);
 		view.removeEventListener("pointercancel", this.onPointerUp);
+		view.removeEventListener("pointerleave", this.onPointerLeave);
 		view.removeEventListener("wheel", this.onWheel);
 	}
 
@@ -190,6 +203,10 @@ class GraphRenderer {
 		const point = this.pointerPoint(event);
 		const world = this.toWorld(point.x, point.y);
 		const node = this.findNode(world.x, world.y);
+		if (this.hoveredNode) {
+			this.hoveredNode = null;
+			this.callbacks?.onNodeLeave?.();
+		}
 
 		this.app.view.setPointerCapture(event.pointerId);
 		if (node) {
@@ -223,6 +240,18 @@ class GraphRenderer {
 			const world = this.toWorld(point.x, point.y);
 			const node = this.findNode(world.x, world.y);
 			this.app.view.style.cursor = node ? "grab" : "default";
+
+			// Handle hover — pass pointer position (not node position)
+			if (node && this.callbacks?.onNodeHover) {
+				const rect = this.app.view.getBoundingClientRect();
+				this.callbacks.onNodeHover(node.id, rect.left + point.x, rect.top + point.y);
+				if (this.hoveredNode !== node) {
+					this.hoveredNode = node;
+				}
+			} else if (!node && this.hoveredNode && this.callbacks?.onNodeLeave) {
+				this.hoveredNode = null;
+				this.callbacks.onNodeLeave();
+			}
 			return;
 		}
 
@@ -247,8 +276,12 @@ class GraphRenderer {
 	private onPointerUp = (event: PointerEvent) => {
 		if (this.pointer?.id !== event.pointerId) return;
 
-		if (this.pointer.kind === "node" && !this.pointer.moved && this.pointer.node.href) {
-			window.location.assign(this.pointer.node.href);
+		if (this.pointer.kind === "node" && !this.pointer.moved) {
+			if (this.callbacks?.onNodeClick) {
+				this.callbacks.onNodeClick(this.pointer.node.id, this.pointer.node.type);
+			} else if (this.pointer.node.href) {
+				window.location.assign(this.pointer.node.href);
+			}
 		}
 
 		this.pointer = null;
@@ -258,6 +291,13 @@ class GraphRenderer {
 		} catch {
 			return;
 		}
+	};
+
+	private onPointerLeave = () => {
+		if (this.pointer || !this.hoveredNode) return;
+		this.hoveredNode = null;
+		this.callbacks?.onNodeLeave?.();
+		this.app.view.style.cursor = "default";
 	};
 
 	private onWheel = (event: WheelEvent) => {
@@ -400,6 +440,13 @@ class GraphRenderer {
 		return {
 			x: (x - this.panX) / this.scale,
 			y: (y - this.panY) / this.scale,
+		};
+	}
+
+	private toScreen(x: number, y: number) {
+		return {
+			x: x * this.scale + this.panX,
+			y: y * this.scale + this.panY,
 		};
 	}
 

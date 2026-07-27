@@ -38,6 +38,7 @@ interface ItemProps {
 	onContentDeleted?: (contentId: string) => void;
 	onItemClick?: (content: Content) => void;
 	excludedTag?: string;
+	disableAnimation?: boolean;
 }
 
 export default function Item({
@@ -47,6 +48,7 @@ export default function Item({
 	onContentDeleted,
 	onItemClick,
 	excludedTag,
+	disableAnimation,
 }: ItemProps) {
 	const [editOpen, setEditOpen] = useState(false);
 	const utils = trpc.useUtils();
@@ -85,6 +87,7 @@ export default function Item({
 								tag_ids: displayTagIds,
 							}}
 							index={index}
+							disableAnimation={disableAnimation}
 						/>
 					</div>
 				</ContextMenuTrigger>
@@ -106,7 +109,7 @@ export default function Item({
 	);
 }
 
-function ItemContent({ item, index, onItemClick }: ItemProps) {
+function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) {
 	const { t } = useI18n();
 	const notePreview = useMemo(() => {
 		if (item.type !== "note") return item.content;
@@ -197,9 +200,9 @@ function ItemContent({ item, index, onItemClick }: ItemProps) {
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 20 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.2 }}
+			initial={disableAnimation ? false : { opacity: 0, y: 20 }}
+			animate={disableAnimation ? undefined : { opacity: 1, y: 0 }}
+			transition={disableAnimation ? undefined : { duration: 0.2 }}
 			className="group">
 			<div
 				className={`cursor-pointer overflow-hidden relative transition-all ${
