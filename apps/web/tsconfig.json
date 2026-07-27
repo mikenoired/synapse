@@ -2,11 +2,7 @@
 	"extends": "@synapse/tsconfig/nextjs.json",
 	"compilerOptions": {
 		"experimentalDecorators": true,
-		"ignoreDeprecations": "6.0",
-		"baseUrl": ".",
-		"paths": {
-			"@/*": ["src/*"]
-		},
+		"paths": { "@/*": ["./src/*"] },
 		"strictNullChecks": true,
 		"types": ["bun"]
 	},

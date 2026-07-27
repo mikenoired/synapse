@@ -27,19 +27,19 @@ export const DEFAULT_PLAN_ID: PlanId = "starter";
 const GiB = 1024 ** 3;
 
 const LIMITS = {
-	starter: {
+	"starter": {
 		aiTokensPerMonth: 50_000,
 		aiRequestsPerMonth: 100,
 		contentItemsLimit: 500,
 		storageBytesLimit: 1 * GiB,
 	},
-	plus: {
+	"plus": {
 		aiTokensPerMonth: 250_000,
 		aiRequestsPerMonth: 1_000,
 		contentItemsLimit: 5_000,
 		storageBytesLimit: 10 * GiB,
 	},
-	pro: {
+	"pro": {
 		aiTokensPerMonth: 1_500_000,
 		aiRequestsPerMonth: 5_000,
 		contentItemsLimit: 50_000,
@@ -56,9 +56,9 @@ const LIMITS = {
 export const PLAN_LIMITS: Record<PlanId, PlanLimits> = LIMITS;
 
 const META: Record<PlanId, { label: string; tagline: string }> = {
-	starter: { label: "Starter", tagline: "Для знакомства с сервисом" },
-	plus: { label: "Plus", tagline: "Для личного архива" },
-	pro: { label: "Pro", tagline: "Для активной работы с контентом" },
+	"starter": { label: "Starter", tagline: "Для знакомства с сервисом" },
+	"plus": { label: "Plus", tagline: "Для личного архива" },
+	"pro": { label: "Pro", tagline: "Для активной работы с контентом" },
 	"god-mode": { label: "God Mode", tagline: "Без ограничений" },
 };
 

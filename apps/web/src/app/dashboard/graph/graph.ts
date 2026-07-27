@@ -476,7 +476,10 @@ function readGraphColors(element: HTMLElement): GraphColors {
 			style.getPropertyValue(dark ? "--muted-foreground" : "--border"),
 			dark ? 0xc4c4c4 : 0xe0e0e0
 		),
-		text: cssColorToHex(style.getPropertyValue(dark ? "--muted-foreground" : "--muted"), dark ? 0xff0000 : 0x222222),
+		text: cssColorToHex(
+			style.getPropertyValue(dark ? "--muted-foreground" : "--muted"),
+			dark ? 0xff0000 : 0x222222
+		),
 	};
 }
 
@@ -568,26 +571,13 @@ function cssColorToHex(value: string, fallback: number): number {
 		const lmsM = m_ ** 3;
 		const lmsS = s_ ** 3;
 
-		const linearR =
-			4.0767416621 * lmsL -
-			3.3077115913 * lmsM +
-			0.2309699292 * lmsS;
+		const linearR = 4.0767416621 * lmsL - 3.3077115913 * lmsM + 0.2309699292 * lmsS;
 
-		const linearG =
-			-1.2684380046 * lmsL +
-			2.6097574011 * lmsM -
-			0.3413193965 * lmsS;
+		const linearG = -1.2684380046 * lmsL + 2.6097574011 * lmsM - 0.3413193965 * lmsS;
 
-		const linearB =
-			-0.0041960863 * lmsL -
-			0.7034186147 * lmsM +
-			1.707614701 * lmsS;
+		const linearB = -0.0041960863 * lmsL - 0.7034186147 * lmsM + 1.707614701 * lmsS;
 
-		return packRgb(
-			toSrgb(linearR) * 255,
-			toSrgb(linearG) * 255,
-			toSrgb(linearB) * 255
-		);
+		return packRgb(toSrgb(linearR) * 255, toSrgb(linearG) * 255, toSrgb(linearB) * 255);
 	}
 
 	return fallback;
@@ -603,42 +593,20 @@ function labToHex(l: number, a: number, b: number): number {
 	const zD50 = labPivotInverse(fz) * 0.82521;
 
 	// Bradford adaptation: D50 → D65.
-	const xD65 =
-		0.9555766 * xD50 -
-		0.0230393 * yD50 +
-		0.0631636 * zD50;
+	const xD65 = 0.9555766 * xD50 - 0.0230393 * yD50 + 0.0631636 * zD50;
 
-	const yD65 =
-		-0.0282895 * xD50 +
-		1.0099416 * yD50 +
-		0.0210077 * zD50;
+	const yD65 = -0.0282895 * xD50 + 1.0099416 * yD50 + 0.0210077 * zD50;
 
-	const zD65 =
-		0.0122982 * xD50 -
-		0.020483 * yD50 +
-		1.3299098 * zD50;
+	const zD65 = 0.0122982 * xD50 - 0.020483 * yD50 + 1.3299098 * zD50;
 
 	// XYZ D65 → linear sRGB.
-	const linearR =
-		3.2406 * xD65 -
-		1.5372 * yD65 -
-		0.4986 * zD65;
+	const linearR = 3.2406 * xD65 - 1.5372 * yD65 - 0.4986 * zD65;
 
-	const linearG =
-		-0.9689 * xD65 +
-		1.8758 * yD65 +
-		0.0415 * zD65;
+	const linearG = -0.9689 * xD65 + 1.8758 * yD65 + 0.0415 * zD65;
 
-	const linearB =
-		0.0557 * xD65 -
-		0.204 * yD65 +
-		1.057 * zD65;
+	const linearB = 0.0557 * xD65 - 0.204 * yD65 + 1.057 * zD65;
 
-	return packRgb(
-		toSrgb(linearR) * 255,
-		toSrgb(linearG) * 255,
-		toSrgb(linearB) * 255
-	);
+	return packRgb(toSrgb(linearR) * 255, toSrgb(linearG) * 255, toSrgb(linearB) * 255);
 }
 
 function labPivotInverse(value: number): number {

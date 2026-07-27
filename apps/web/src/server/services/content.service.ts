@@ -429,7 +429,6 @@ export default class ContentService {
 		return result;
 	}
 
-
 	async syncSearchText(content: Content) {
 		await this.repo.updateSearchText(content.id, buildContentSearchText(content));
 	}

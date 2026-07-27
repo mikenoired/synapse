@@ -5,8 +5,12 @@ import type { DragEvent } from "react";
 import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
-import { contentTypeOptions, getQueryTypesForFilter, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
+import {
+	contentTypeOptions,
+	getQueryTypesForFilter,
+	isContentTypeFilterAvailable,
+} from "@/shared/lib/content-type-options";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
@@ -24,9 +28,9 @@ const FILTER_TYPE_KEYS = contentTypeOptions.map((option) => option.key);
 
 function parseTypesParam(value: string | null): Content["type"][] {
 	if (!value) return [];
-	return value.split(",").filter((type): type is Content["type"] =>
-		(FILTER_TYPE_KEYS as string[]).includes(type)
-	);
+	return value
+		.split(",")
+		.filter((type): type is Content["type"] => (FILTER_TYPE_KEYS as string[]).includes(type));
 }
 
 function sameStringSet(left: string[], right: string[]): boolean {

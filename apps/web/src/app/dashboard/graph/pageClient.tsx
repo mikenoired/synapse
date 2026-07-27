@@ -197,7 +197,7 @@ function getContentId(node: Node) {
 		if (typeof contentId === "string") return contentId;
 	}
 
-		return node.id;
+	return node.id;
 }
 
 function calculatePreviewPosition(cursorX: number, cursorY: number, size: { width: number; height: number }) {

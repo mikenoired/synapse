@@ -76,7 +76,6 @@ export const config = {
 	matcher: [
 		"/",
 		"/dashboard/:path*",
-		"/item/:path*",
 		"/api/trpc/:path*",
 		"/api/user",
 		"/api/files/:path*",

@@ -49,9 +49,7 @@ export function ContentTypePicker({ onSelect, suggestedType }: ContentTypePicker
 							</div>
 							<div className="mt-4 space-y-1">
 								<h3 className="text-base font-medium text-foreground">{t(labelKey) || label}</h3>
-								<p className="text-sm leading-6 text-muted-foreground">
-									{t(descriptionKey) || description}
-								</p>
+								<p className="text-sm leading-6 text-muted-foreground">{t(descriptionKey) || description}</p>
 							</div>
 						</button>
 					);
@@ -104,9 +102,7 @@ export function ContentTypeHeader({
 					onClick={onToggleFullScreen}
 					className="h-9 gap-2 px-3 text-muted-foreground">
 					{isFullScreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
-					<span className="hidden sm:inline">
-						{isFullScreen ? t("view.windowed") : t("view.fullscreen")}
-					</span>
+					<span className="hidden sm:inline">{isFullScreen ? t("view.windowed") : t("view.fullscreen")}</span>
 				</Button>
 			)}
 		</div>
