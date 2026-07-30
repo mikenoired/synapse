@@ -117,7 +117,7 @@ const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
 						ref={(node: HTMLDivElement | null) => {
 							containerRef.current = node;
 							if (typeof ref === "function") ref(node);
-							else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+							else if (ref) (ref as React.RefObject<HTMLDivElement | null>).current = node;
 						}}
 						onMouseMove={handleMouseMove}
 						onMouseLeave={handleMouseLeave}
@@ -278,7 +278,7 @@ const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
 				ref={(node: HTMLButtonElement | null) => {
 					internalRef.current = node;
 					if (typeof ref === "function") ref(node);
-					else if (ref) (ref as React.MutableRefObject<HTMLButtonElement | null>).current = node;
+					else if (ref) (ref as React.RefObject<HTMLButtonElement | null>).current = node;
 				}}
 				value={String(index)}
 				data-proximity-index={index}
