@@ -6,11 +6,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentGrid } from "@/features/content-grid/content-grid";
 import { trpc } from "@/shared/api/trpc";
-import {
-	removeContentFromList,
-	type ContentListQueryInput,
-	upsertContentInList,
-} from "@/shared/lib/content-query-sync";
+import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
@@ -38,17 +34,27 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 	);
 	const deleteContentMutation = trpc.content.delete.useMutation();
 
-	const { data: queryData, isLoading: contentLoading } = trpc.content.getAll.useQuery(queryInput, {
+	const {
+		data: queryData,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading: contentLoading,
+	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
+		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		retry: false,
-		initialData: initial,
+		initialData: { pages: [initial], pageParams: [undefined] },
+		refetchOnMount: false,
 	});
 
-	const content: Content[] = queryData?.items ?? [];
+	const content: Content[] = queryData?.pages.flatMap((page) => page.items) ?? [];
 
 	const invalidateRelatedQueries = useCallback(() => {
 		void Promise.all([
 			utils.content.getTags.invalidate(),
 			utils.content.getTagsWithContent.invalidate(),
+			utils.content.getTagsWithContentPage.invalidate(),
+			utils.content.getSuggestions.invalidate(),
 			utils.graph.getGraph.invalidate(),
 			utils.user.getStorageUsage.invalidate(),
 		]);
@@ -65,12 +71,10 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 			}
 
 			for (const content of contentList) {
-				utils.content.getAll.setData(queryInput, (current) =>
-					upsertContentInList(current, content, queryInput)
-				);
 				utils.content.getById.setData({ id: content.id }, content);
 			}
 
+			void utils.content.getAll.invalidate(queryInput);
 			invalidateRelatedQueries();
 		},
 		[invalidateRelatedQueries, queryInput, utils]
@@ -78,10 +82,8 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 
 	const handleContentUpdated = useCallback(
 		(nextContent: Content) => {
-			utils.content.getAll.setData(queryInput, (current) =>
-				upsertContentInList(current, nextContent, queryInput)
-			);
 			utils.content.getById.setData({ id: nextContent.id }, nextContent);
+			void utils.content.getAll.invalidate(queryInput);
 			invalidateRelatedQueries();
 		},
 		[invalidateRelatedQueries, queryInput, utils]
@@ -89,7 +91,7 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 
 	const handleContentDeleted = useCallback(
 		(contentId: string) => {
-			utils.content.getAll.setData(queryInput, (current) => removeContentFromList(current, contentId));
+			void utils.content.getAll.invalidate(queryInput);
 			void utils.content.getById.invalidate({ id: contentId });
 			invalidateRelatedQueries();
 		},
@@ -176,6 +178,9 @@ export default function TagClient({ tagId, tagTitle, initial }: Props) {
 					onContentDeleted={handleContentDeleted}
 					onItemClick={handleItemClick}
 					excludedTag={tagTitle}
+					fetchNext={fetchNextPage}
+					hasNext={hasNextPage}
+					isFetchingNext={isFetchingNextPage}
 				/>
 			</main>
 		</div>

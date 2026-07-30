@@ -35,6 +35,19 @@ export const contentRouter = router({
 		return await service.getById(input.id);
 	}),
 
+	getSuggestions: protectedProcedure
+		.input(
+			z.object({
+				contentId: z.string(),
+				cursor: z.string().optional(),
+				limit: z.number().min(1).max(30).default(12),
+			})
+		)
+		.query(async ({ input, ctx }) => {
+			const service = new ContentService(ctx);
+			return await service.getSuggestions(input.contentId, input.cursor, input.limit);
+		}),
+
 	create: protectedProcedure.input(createContentSchema).mutation(async ({ input, ctx }) => {
 		const service = new ContentService(ctx);
 		return await service.create(input);
@@ -64,6 +77,18 @@ export const contentRouter = router({
 		const service = new ContentService(ctx);
 		return await service.getTagsWithContent();
 	}),
+
+	getTagsWithContentPage: protectedProcedure
+		.input(
+			z.object({
+				cursor: z.string().optional(),
+				limit: z.number().min(1).max(50).default(24),
+			})
+		)
+		.query(async ({ input, ctx }) => {
+			const service = new ContentService(ctx);
+			return await service.getTagsWithContentPage(input.cursor, input.limit);
+		}),
 
 	getAvailableTypes: protectedProcedure.query(async ({ ctx }) => {
 		const service = new ContentService(ctx);

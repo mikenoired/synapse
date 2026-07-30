@@ -26,6 +26,8 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 			toast.success("Saved");
 			utils.content.getTags.invalidate();
 			utils.content.getTagsWithContent.invalidate();
+			utils.content.getTagsWithContentPage.invalidate();
+			utils.content.getSuggestions.invalidate();
 			onSuccess();
 			onContentAdded?.(content);
 		},
@@ -38,6 +40,8 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 		onSuccess: () => {
 			utils.content.getTags.invalidate();
 			utils.content.getTagsWithContent.invalidate();
+			utils.content.getTagsWithContentPage.invalidate();
+			utils.content.getSuggestions.invalidate();
 		},
 	});
 

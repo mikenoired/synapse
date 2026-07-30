@@ -173,6 +173,73 @@ describe.serial("content service", () => {
 		expect(await db.select().from(contentTags).where(eq(contentTags.contentId, created.id))).toHaveLength(1);
 	});
 
+	test("paginates suggestions from rare tags first without duplicates", async () => {
+		const [rareTag, commonTag] = await db
+			.insert(tags)
+			.values([
+				{ title: "rare", userId },
+				{ title: "common", userId },
+			])
+			.returning();
+		const service = createService();
+		const source = await service.create({
+			type: "note",
+			media_type: "image",
+			title: "Source",
+			content: "source",
+			tag_ids: [rareTag!.id, commonTag!.id],
+		});
+		const rareOnly = await service.create({
+			type: "note",
+			media_type: "image",
+			title: "Rare only",
+			content: "rare",
+			tag_ids: [rareTag!.id],
+		});
+		const shared = await service.create({
+			type: "note",
+			media_type: "image",
+			title: "Shared",
+			content: "shared",
+			tag_ids: [rareTag!.id, commonTag!.id],
+		});
+		const commonOnly = await service.create({
+			type: "note",
+			media_type: "image",
+			title: "Common only",
+			content: "common",
+			tag_ids: [commonTag!.id],
+		});
+		const commonExtra = await service.create({
+			type: "note",
+			media_type: "image",
+			title: "Common extra",
+			content: "common extra",
+			tag_ids: [commonTag!.id],
+		});
+
+		const pages = [];
+		let cursor: string | undefined;
+		do {
+			const page = await service.getSuggestions(source.id, cursor, 1);
+			pages.push(page);
+			cursor = page.nextCursor;
+		} while (cursor);
+
+		const groups = pages.flatMap((page) => page.groups);
+		const suggestedIds = groups.flatMap((group) => group.items.map((item) => item.id));
+
+		expect(groups.map((group) => group.tag.id)).toEqual([
+			rareTag!.id,
+			rareTag!.id,
+			commonTag!.id,
+			commonTag!.id,
+		]);
+		expect(new Set(suggestedIds)).toEqual(new Set([rareOnly.id, shared.id, commonOnly.id, commonExtra.id]));
+		expect(suggestedIds).not.toContain(source.id);
+		expect(new Set(suggestedIds).size).toBe(suggestedIds.length);
+	});
+
 	test("rejects relations to another user's tag without leaving partial content", async () => {
 		const [foreignUser] = await db
 			.insert(users)

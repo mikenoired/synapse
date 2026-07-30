@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { TagStack } from "@/entities/item/ui/tag-stack";
 import { trpc } from "@/shared/api/trpc";
+import { useInfiniteScroll } from "@/shared/hooks/use-infinite-scroll";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
@@ -14,30 +15,49 @@ import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 export default function TagsClient({
 	initial,
 }: {
-	initial: { id: string; title: string; items: Content[] }[];
+	initial: {
+		items: { id: string; title: string; items: Content[] }[];
+		nextCursor: string | undefined;
+	};
 }) {
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
 	const utils = trpc.useUtils();
 
-	const { data: tagsWithContentData, isLoading: tagsLoading } = trpc.content.getTagsWithContent.useQuery(
-		undefined,
+	const {
+		data: tagsWithContentData,
+		fetchNextPage,
+		hasNextPage,
+		isFetchingNextPage,
+		isLoading: tagsLoading,
+	} = trpc.content.getTagsWithContentPage.useInfiniteQuery(
+		{ limit: 24 },
 		{
-			initialData: initial,
+			getNextPageParam: (lastPage) => lastPage.nextCursor,
+			initialData: { pages: [initial], pageParams: [undefined] },
 			refetchOnMount: false,
 		}
 	);
 
-	const isLoading = tagsLoading && !tagsWithContentData?.length;
+	const tagsWithContent = tagsWithContentData?.pages.flatMap((page) => page.items) ?? [];
+	const isLoading = tagsLoading && tagsWithContent.length === 0;
 
-	const tagsWithContent = tagsWithContentData ?? [];
+	const loadNextPage = useCallback(() => {
+		if (!hasNextPage || isFetchingNextPage) return;
+		void fetchNextPage();
+	}, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+	const sentinelRef = useInfiniteScroll({
+		enabled: Boolean(hasNextPage && !isFetchingNextPage),
+		onLoadMore: loadNextPage,
+	});
 
 	const handleContentAdded = useCallback(
 		(_content?: Content | Content[]) => {
 			void Promise.all([
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
+				utils.content.getTagsWithContentPage.invalidate(),
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);
@@ -97,7 +117,7 @@ export default function TagsClient({
 		);
 	}
 
-	if (!tagsWithContentData || !tagsWithContentData.length) {
+	if (tagsWithContent.length === 0) {
 		return (
 			<div
 				className="p-6 text-center h-full"
@@ -143,6 +163,11 @@ export default function TagsClient({
 					</Link>
 				))}
 			</div>
+			{hasNextPage && (
+				<div ref={sentinelRef} aria-hidden className="flex h-20 items-center justify-center">
+					{isFetchingNextPage && <span className="text-xs text-muted-foreground">Загружаем теги…</span>}
+				</div>
+			)}
 		</div>
 	);
 }

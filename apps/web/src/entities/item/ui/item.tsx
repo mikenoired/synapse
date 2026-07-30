@@ -66,6 +66,8 @@ export default function Item({
 			void Promise.all([
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
+				utils.content.getTagsWithContentPage.invalidate(),
+				utils.content.getSuggestions.invalidate(),
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);

@@ -1,14 +1,14 @@
 "use client";
 
-import { Button, Skeleton } from "@synapse/ui/components";
+import { Button } from "@synapse/ui/components";
 import { FileText, Search } from "lucide-react";
-import { lazy, memo, useEffect, useRef } from "react";
-import Masonry from "react-masonry-css";
+import { memo } from "react";
 
+import { useInfiniteScroll } from "@/shared/hooks/use-infinite-scroll";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 
-const Item = lazy(() => import("@/entities/item/ui/item"));
+import { ContentMasonry } from "./content-masonry";
 
 interface ContentGridProps {
 	items: Content[];
@@ -28,22 +28,13 @@ interface ContentGridProps {
 	excludedTag?: string;
 }
 
-const breakpointColumnsObj = {
-	default: 4,
-	2560: 5,
-	1920: 4,
-	1280: 3,
-	1024: 2,
-	768: 2,
-	640: 1,
-};
-
 export const ContentGrid = memo(
 	({
 		items,
 		isLoading,
 		fetchNext,
 		hasNext,
+		isFetchingNext,
 		onContentUpdated,
 		onContentDeleted,
 		onItemClick,
@@ -63,43 +54,14 @@ export const ContentGrid = memo(
 		const showNotFoundState =
 			!isLoading && !hasContent && (searchQuery || hasSelectedTags || hasSelectedContentTypes);
 
-		const sentinelRef = useRef<HTMLDivElement | null>(null);
+		const sentinelRef = useInfiniteScroll({
+			enabled: Boolean(hasNext && !isFetchingNext),
+			onLoadMore: fetchNext,
+		});
 		const { t } = useI18n();
 
-		useEffect(() => {
-			if (!fetchNext || !hasNext) return;
-			const observer = new IntersectionObserver(
-				(entries) => {
-					const first = entries[0];
-					if (first.isIntersecting) {
-						fetchNext();
-					}
-				},
-				{
-					rootMargin: "100px",
-					threshold: 0.1,
-				}
-			);
-			const current = sentinelRef.current;
-			if (current) observer.observe(current);
-			return () => {
-				if (current) observer.unobserve(current);
-			};
-		}, [fetchNext, hasNext]);
-
 		if (isLoading) {
-			return (
-				<Masonry
-					breakpointCols={breakpointColumnsObj}
-					className="masonry-grid"
-					columnClassName="masonry-grid_column">
-					{Array.from({ length: 4 }).map((_, i) => (
-						<div className="mb-4 bg-transparent" key={i}>
-							<Skeleton className="h-40 w-full rounded-lg" />
-						</div>
-					))}
-				</Masonry>
-			);
+			return <ContentMasonry items={[]} isLoading />;
 		}
 
 		if (showEmptyState) {
@@ -135,27 +97,17 @@ export const ContentGrid = memo(
 		}
 
 		return (
-			<Masonry
-				breakpointCols={breakpointColumnsObj}
-				className="masonry-grid"
-				columnClassName="masonry-grid_column">
-				{items.map((item, index) => (
-					<div
-						key={item.id}
-						className={`animate-in fade-in-0 duration-300 ${item.type === "note" ? "rounded-xl" : "rounded-sm shadow-sm"}`}
-						onMouseEnter={onItemHover}>
-						<Item
-							item={item}
-							index={index}
-							onContentUpdated={onContentUpdated}
-							onContentDeleted={onContentDeleted}
-							onItemClick={onItemClick}
-							excludedTag={excludedTag}
-						/>
-					</div>
-				))}
-				{hasNext && <div ref={sentinelRef} className="h-10 w-full"></div>}
-			</Masonry>
+			<>
+				<ContentMasonry
+					items={items}
+					onContentUpdated={onContentUpdated}
+					onContentDeleted={onContentDeleted}
+					onItemClick={onItemClick}
+					onItemHover={onItemHover}
+					excludedTag={excludedTag}
+				/>
+				{hasNext && <div ref={sentinelRef} aria-hidden className="h-px w-full" />}
+			</>
 		);
 	}
 );

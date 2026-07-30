@@ -92,6 +92,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 				utils.content.getAvailableTypes.invalidate(),
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
+				utils.content.getTagsWithContentPage.invalidate(),
+				utils.content.getSuggestions.invalidate(),
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);

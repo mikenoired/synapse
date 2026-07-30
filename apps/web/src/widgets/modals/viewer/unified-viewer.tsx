@@ -25,6 +25,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { ContentSuggestions } from "@/features/content-suggestions/content-suggestions";
 import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
 import { trpc } from "@/shared/api/trpc";
 import useMouseActivity from "@/shared/hooks/use-mouse-activity";
@@ -378,6 +379,7 @@ export function UnifiedViewerModal({
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 	const [editOpen, setEditOpen] = useState(false);
 	const [updatedItems, setUpdatedItems] = useState<Record<string, Content>>({});
+	const [discoveredItems, setDiscoveredItems] = useState<Content[]>([]);
 	const [isDownloading, setIsDownloading] = useState(false);
 	const [sparklesStartedFor, setSparklesStartedFor] = useState<string | null>(null);
 	const [sideWidths, setSideWidths] = useState({ left: 0, right: 0 });
@@ -395,10 +397,12 @@ export function UnifiedViewerModal({
 	const { bind, isHovered } = useMouseActivity(1800);
 	const { isReady: preferencesReady, mediaAutoplayEnabled, noteSparklesEnabled } = useUserPreferences();
 
-	const normalizedItems = useMemo(() => {
-		const source = items.length > 0 ? items : [item];
-		return source.filter(Boolean);
+	const baseItems = useMemo(() => {
+		return (items.length > 0 ? items : [item]).filter(Boolean);
 	}, [item, items]);
+	const normalizedItems = useMemo(() => {
+		return Array.from(new Map([...baseItems, ...discoveredItems].map((entry) => [entry.id, entry])).values());
+	}, [baseItems, discoveredItems]);
 
 	const currentBaseItem = normalizedItems[currentIndex] ?? item;
 	const currentDetailQuery = trpc.content.getById.useQuery(
@@ -463,6 +467,7 @@ export function UnifiedViewerModal({
 
 	useEffect(() => {
 		setUpdatedItems({});
+		setDiscoveredItems([]);
 	}, [item.id]);
 
 	useEffect(() => {
@@ -508,11 +513,11 @@ export function UnifiedViewerModal({
 			return;
 		}
 
-		const nextIndex = normalizedItems.findIndex((entry) => entry.id === item.id);
+		const nextIndex = baseItems.findIndex((entry) => entry.id === item.id);
 		setCurrentIndex(nextIndex >= 0 ? nextIndex : 0);
 		setDirection(0);
 		setShowDetails(false);
-	}, [item.id, normalizedItems, open]);
+	}, [baseItems, item.id, open]);
 
 	useEffect(() => {
 		if (currentItem.type !== "audio" || !audioRef.current) {
@@ -605,6 +610,8 @@ export function UnifiedViewerModal({
 			void Promise.all([
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
+				utils.content.getTagsWithContentPage.invalidate(),
+				utils.content.getSuggestions.invalidate(),
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);
@@ -617,6 +624,8 @@ export function UnifiedViewerModal({
 			void Promise.all([
 				utils.content.getTags.invalidate(),
 				utils.content.getTagsWithContent.invalidate(),
+				utils.content.getTagsWithContentPage.invalidate(),
+				utils.content.getSuggestions.invalidate(),
 				utils.graph.getGraph.invalidate(),
 				utils.user.getStorageUsage.invalidate(),
 			]);
@@ -640,6 +649,19 @@ export function UnifiedViewerModal({
 
 	const goToPrevious = () => {
 		goToIndex(currentIndex - 1);
+	};
+
+	const openSuggestedItem = (suggestedItem: Content) => {
+		const existingIndex = normalizedItems.findIndex((entry) => entry.id === suggestedItem.id);
+		if (existingIndex >= 0) {
+			goToIndex(existingIndex);
+			return;
+		}
+
+		setDiscoveredItems((current) => [...current, suggestedItem]);
+		setDirection(1);
+		setCurrentIndex(normalizedItems.length);
+		setShowDetails(false);
 	};
 
 	useModalKeyboard({
@@ -976,7 +998,7 @@ export function UnifiedViewerModal({
 
 		if (currentItem.type === "note") {
 			return (
-				<div className="relative z-10 h-full w-full overflow-y-auto text-foreground">
+				<div className="relative z-10 min-h-full w-full text-foreground">
 					<article
 						ref={setNoteArticle}
 						className="relative z-10 mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
@@ -1069,11 +1091,7 @@ export function UnifiedViewerModal({
 						</div>
 					)}
 
-					<div
-						className={cn(
-							"relative z-10 h-full w-full overflow-hidden",
-							currentItem.type !== "note" && "px-6 py-10"
-						)}>
+					<div className="relative z-10 h-full w-full overflow-hidden">
 						<div className="relative h-full w-full overflow-hidden">
 							<AnimatePresence initial={false} mode="sync" custom={direction}>
 								<motion.div
@@ -1085,7 +1103,7 @@ export function UnifiedViewerModal({
 									exit="exit"
 									transition={viewerSlideTransition}
 									{...gestures}
-									className="absolute inset-0 flex items-center justify-center">
+									className="absolute inset-0 overflow-y-auto overscroll-y-contain">
 									{showNoteSparkles && (
 										<motion.div
 											aria-hidden="true"
@@ -1113,7 +1131,26 @@ export function UnifiedViewerModal({
 											</div>
 										</motion.div>
 									)}
-									{renderContent()}
+									<div
+										className={cn(
+											"flex min-h-[100svh] w-full items-center justify-center",
+											currentItem.type !== "note" && "px-4 py-10 sm:px-6"
+										)}>
+										{renderContent()}
+									</div>
+									<ContentSuggestions
+										item={currentItem}
+										onItemClick={openSuggestedItem}
+										onContentUpdated={(updatedContent) => {
+											setUpdatedItems((current) => ({
+												...current,
+												[updatedContent.id]: updatedContent,
+											}));
+											onContentUpdated?.(updatedContent);
+										}}
+										onContentDeleted={onDelete}
+										dark={currentItem.type !== "note"}
+									/>
 								</motion.div>
 							</AnimatePresence>
 						</div>

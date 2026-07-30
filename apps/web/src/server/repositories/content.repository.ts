@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, desc, eq, ilike, inArray, isNull, lt, lte, or, type SQL, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, isNull, lt, lte, ne, or, type SQL, sql } from "drizzle-orm";
 import type z from "zod";
 
 import type { createContentSchema, updateContentSchema } from "@/shared/lib/schemas";
@@ -93,6 +93,78 @@ export default class ContentRepository {
 			.limit(limit);
 
 		return data;
+	}
+
+	async getSuggestionTagPriorities(tagIds: string[]) {
+		requireAuth(this.ctx);
+		if (tagIds.length === 0) return [];
+
+		return await this.database
+			.select({
+				id: tags.id,
+				title: tags.title,
+				itemCount: sql<number>`count(${contentTags.contentId})::int`,
+			})
+			.from(tags)
+			.innerJoin(contentTags, and(eq(contentTags.tagId, tags.id), eq(contentTags.userId, this.ctx.user.id)))
+			.innerJoin(content, and(eq(content.id, contentTags.contentId), eq(content.userId, this.ctx.user.id)))
+			.where(and(inArray(tags.id, tagIds), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!))
+			.groupBy(tags.id, tags.title)
+			.orderBy(asc(sql`count(${contentTags.contentId})`), asc(tags.title), asc(tags.id));
+	}
+
+	async getSuggestionsForTag(
+		tagId: string,
+		higherPriorityTagIds: string[],
+		excludedContentId: string,
+		cursor: string | undefined,
+		limit: number
+	) {
+		requireAuth(this.ctx);
+
+		const conditions: SQL[] = [
+			eq(content.userId, this.ctx.user.id),
+			eq(contentTags.userId, this.ctx.user.id),
+			eq(contentTags.tagId, tagId),
+			ne(content.id, excludedContentId),
+		];
+
+		if (higherPriorityTagIds.length > 0) {
+			const tagList = sql.join(
+				higherPriorityTagIds.map((higherPriorityTagId) => sql`${higherPriorityTagId}`),
+				sql`, `
+			);
+			conditions.push(sql`not exists (
+				select 1
+				from ${contentTags} higher_priority_tags
+				where higher_priority_tags.content_id = ${content.id}
+					and higher_priority_tags.user_id = ${this.ctx.user.id}
+					and higher_priority_tags.tag_id in (${tagList})
+			)`);
+		}
+
+		if (cursor) {
+			const [timestamp, id] = cursor.split("|");
+			if (timestamp && id) {
+				const cursorDate = new Date(timestamp);
+				if (!Number.isNaN(cursorDate.getTime())) {
+					conditions.push(
+						or(
+							lt(content.createdAt, cursorDate),
+							and(eq(content.createdAt, cursorDate), lt(content.id, id))!
+						)!
+					);
+				}
+			}
+		}
+
+		return await this.database
+			.select(contentListColumns)
+			.from(content)
+			.innerJoin(contentTags, eq(content.id, contentTags.contentId))
+			.where(and(...conditions))
+			.orderBy(desc(content.createdAt), desc(content.id))
+			.limit(limit);
 	}
 
 	async searchFtsFiltered(
@@ -203,7 +275,33 @@ export default class ContentRepository {
 			.orderBy(asc(content.type));
 	}
 
-	async getTagsWithContentPreview(limitPerTag: number) {
+	async getContentTagPage(limit: number, cursor?: { title: string; id: string }) {
+		requireAuth(this.ctx);
+
+		const conditions: SQL[] = [
+			eq(contentTags.userId, this.ctx.user.id),
+			or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!,
+		];
+		if (cursor) {
+			conditions.push(
+				or(gt(tags.title, cursor.title), and(eq(tags.title, cursor.title), gt(tags.id, cursor.id))!)!
+			);
+		}
+
+		return await this.database
+			.select({
+				id: tags.id,
+				title: tags.title,
+			})
+			.from(tags)
+			.innerJoin(contentTags, eq(contentTags.tagId, tags.id))
+			.where(and(...conditions))
+			.groupBy(tags.id, tags.title)
+			.orderBy(asc(tags.title), asc(tags.id))
+			.limit(limit);
+	}
+
+	async getTagsWithContentPreview(limitPerTag: number, tagIds?: string[]) {
 		requireAuth(this.ctx);
 
 		const rankedContent = this.database
@@ -217,7 +315,13 @@ export default class ContentRepository {
 			})
 			.from(contentTags)
 			.innerJoin(content, eq(content.id, contentTags.contentId))
-			.where(and(eq(contentTags.userId, this.ctx.user.id), eq(content.userId, this.ctx.user.id)))
+			.where(
+				and(
+					eq(contentTags.userId, this.ctx.user.id),
+					eq(content.userId, this.ctx.user.id),
+					tagIds?.length ? inArray(contentTags.tagId, tagIds) : undefined
+				)
+			)
 			.as("ranked_content");
 
 		const data = await this.database

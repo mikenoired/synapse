@@ -103,6 +103,78 @@ export default class ContentService {
 		return contentDetailSchema.parse(withTags);
 	}
 
+	async getSuggestions(contentId: string, cursor: string | undefined, limit: number) {
+		const source = await this.getById(contentId);
+		if (source.tag_ids.length === 0) {
+			return { groups: [], nextCursor: undefined };
+		}
+
+		const priorities = await this.repo.getSuggestionTagPriorities(source.tag_ids);
+		if (priorities.length === 0) {
+			return { groups: [], nextCursor: undefined };
+		}
+
+		const [rawTagIndex, cursorTimestamp, cursorId] = cursor?.split("|") ?? [];
+		let tagIndex = Math.max(0, Number.parseInt(rawTagIndex || "0", 10) || 0);
+		let itemCursor = cursorTimestamp && cursorId ? `${cursorTimestamp}|${cursorId}` : undefined;
+		const matches: Array<{
+			row: ContentRow;
+			tag: { id: string; title: string; itemCount: number };
+		}> = [];
+		let nextCursor: string | undefined;
+
+		while (matches.length < limit && tagIndex < priorities.length) {
+			const priority = priorities[tagIndex]!;
+			const remaining = limit - matches.length;
+			const rows = (await this.repo.getSuggestionsForTag(
+				priority.id,
+				priorities.slice(0, tagIndex).map((tag) => tag.id),
+				contentId,
+				itemCursor,
+				remaining + 1
+			)) as ContentRow[];
+			const pageRows = rows.slice(0, remaining);
+
+			matches.push(
+				...pageRows.map((row) => ({
+					row,
+					tag: priority,
+				}))
+			);
+
+			if (rows.length > remaining) {
+				const last = pageRows[pageRows.length - 1]!;
+				nextCursor = `${tagIndex}|${(last.createdAt ?? new Date(0)).toISOString()}|${last.id}`;
+				break;
+			}
+
+			tagIndex++;
+			itemCursor = undefined;
+			if (matches.length === limit && tagIndex < priorities.length) {
+				nextCursor = `${tagIndex}`;
+			}
+		}
+
+		const contentItems = await this.attachTagsToContent(
+			matches.map((match) => match.row),
+			{ previewContent: true }
+		);
+		const groups = new Map<
+			string,
+			{ tag: { id: string; title: string; itemCount: number }; items: Content[] }
+		>();
+
+		for (const [index, match] of matches.entries()) {
+			const item = contentItems[index];
+			if (!item) continue;
+			const group = groups.get(match.tag.id) ?? { tag: match.tag, items: [] };
+			group.items.push(contentListItemSchema.parse(item));
+			groups.set(match.tag.id, group);
+		}
+
+		return { groups: Array.from(groups.values()), nextCursor };
+	}
+
 	private async getContentWithTagFilter(
 		tagIds: string[],
 		limit: number,
@@ -464,6 +536,42 @@ export default class ContentService {
 		const result = Array.from(tagsMap.values());
 		await this.ctx.cache.setJSON(cacheKey, result, TAGS_CACHE_TTL_SECONDS);
 		return result;
+	}
+
+	async getTagsWithContentPage(cursor: string | undefined, limit: number) {
+		const [encodedTitle, cursorId] = cursor?.split("|") ?? [];
+		const cursorValue =
+			encodedTitle && cursorId ? { title: decodeURIComponent(encodedTitle), id: cursorId } : undefined;
+		const tagRows = await this.repo.getContentTagPage(limit + 1, cursorValue);
+		const pageTags = tagRows.slice(0, limit);
+		if (pageTags.length === 0) return { items: [], nextCursor: undefined };
+
+		const previewRows = await this.repo.getTagsWithContentPreview(
+			3,
+			pageTags.map((tag) => tag.id)
+		);
+		const uniqueRows = Array.from(new Map(previewRows.map((row) => [row.id, row as ContentRow])).values());
+		const contentItems = await this.attachTagsToContent(uniqueRows, { previewContent: true });
+		const itemById = new Map(contentItems.map((item) => [item.id, item]));
+		const previewByTag = new Map<string, Content[]>();
+
+		for (const row of previewRows) {
+			const item = itemById.get(row.id);
+			if (!item) continue;
+			const items = previewByTag.get(row.tagId) ?? [];
+			if (items.length < 3) items.push(item);
+			previewByTag.set(row.tagId, items);
+		}
+
+		const last = pageTags[pageTags.length - 1];
+		return {
+			items: pageTags.map((tag) => ({
+				id: tag.id,
+				title: tag.title,
+				items: previewByTag.get(tag.id) ?? [],
+			})),
+			nextCursor: tagRows.length > limit && last ? `${encodeURIComponent(last.title)}|${last.id}` : undefined,
+		};
 	}
 
 	private extractObjectNameFromApiUrl(url?: string | null): string | null {
