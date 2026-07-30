@@ -8,6 +8,7 @@
 - [ ] Onboarding flow
 - [x] Fix register/login flow
 - [ ] Item slider new content loader
+- [ ] Viewer URL state and browser history restoration (opened item, dashboard context, and suggestion navigation)
 - [ ] Code preview for note items
 - [x] Descriptions on hover for note editor buttons
 - [x] Drop in-page anchor link auto-creation in note editor
