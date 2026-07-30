@@ -14,6 +14,9 @@ export const en = {
 	"appearance.theme.system": "System",
 	"appearance.theme.light": "Light",
 	"appearance.theme.dark": "Dark",
+	"appearance.noteSparkles.title": "Note ambience",
+	"appearance.noteSparkles.description":
+		"Shows a subtle pixel glow beside a note after it has been open for a while.",
 	"autoplay.description": "Automatically starts audio and video when opened in the viewer.",
 	"autoplay.title": "Autoplay",
 	"aiUsage": "AI usage",

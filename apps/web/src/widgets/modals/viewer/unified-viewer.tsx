@@ -40,6 +40,7 @@ import {
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
 import { ContentTag } from "@/shared/ui/content-tag";
 import { GenerateTagsButton, type SuggestedTag } from "@/shared/ui/generate-tags-button";
+import { PixelSparkles } from "@/shared/ui/pixel-sparkles";
 import { CustomVideoPlayer } from "@/widgets/content-viewer/ui/custom-video-player";
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
 
@@ -378,6 +379,9 @@ export function UnifiedViewerModal({
 	const [editOpen, setEditOpen] = useState(false);
 	const [updatedItems, setUpdatedItems] = useState<Record<string, Content>>({});
 	const [isDownloading, setIsDownloading] = useState(false);
+	const [sparklesStartedFor, setSparklesStartedFor] = useState<string | null>(null);
+	const [sideWidths, setSideWidths] = useState({ left: 0, right: 0 });
+	const [noteArticle, setNoteArticle] = useState<HTMLElement | null>(null);
 	const [audioState, setAudioState] = useState({
 		currentTime: 0,
 		duration: 0,
@@ -389,7 +393,7 @@ export function UnifiedViewerModal({
 	});
 	const audioRef = useRef<HTMLAudioElement | null>(null);
 	const { bind, isHovered } = useMouseActivity(1800);
-	const { isReady: preferencesReady, mediaAutoplayEnabled } = useUserPreferences();
+	const { isReady: preferencesReady, mediaAutoplayEnabled, noteSparklesEnabled } = useUserPreferences();
 
 	const normalizedItems = useMemo(() => {
 		const source = items.length > 0 ? items : [item];
@@ -406,6 +410,7 @@ export function UnifiedViewerModal({
 		}
 	);
 	const currentItem = updatedItems[currentBaseItem.id] ?? currentDetailQuery.data ?? currentBaseItem;
+	const activeNoteId = currentItem.type === "note" ? currentItem.id : null;
 	const linkContent = useMemo(
 		() => (currentItem.type === "link" ? parseLinkContent(currentItem.content) : null),
 		[currentItem.content, currentItem.type]
@@ -459,6 +464,42 @@ export function UnifiedViewerModal({
 	useEffect(() => {
 		setUpdatedItems({});
 	}, [item.id]);
+
+	useEffect(() => {
+		setSparklesStartedFor(null);
+
+		if (!open || !activeNoteId) return;
+
+		const timeout = window.setTimeout(() => setSparklesStartedFor(activeNoteId), 10_000);
+		return () => window.clearTimeout(timeout);
+	}, [activeNoteId, open]);
+
+	useEffect(() => {
+		if (!open || !activeNoteId || !noteArticle) {
+			setSideWidths({ left: 0, right: 0 });
+			return;
+		}
+
+		const updateSideWidths = () => {
+			const bounds = noteArticle.getBoundingClientRect();
+			if (window.innerWidth <= bounds.width) {
+				setSideWidths({ left: 0, right: 0 });
+				return;
+			}
+
+			setSideWidths({ left: Math.max(0, bounds.left), right: Math.max(0, window.innerWidth - bounds.right) });
+		};
+
+		const observer = new ResizeObserver(updateSideWidths);
+		observer.observe(noteArticle);
+		window.addEventListener("resize", updateSideWidths);
+		updateSideWidths();
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener("resize", updateSideWidths);
+		};
+	}, [activeNoteId, noteArticle, open]);
 
 	useEffect(() => {
 		if (!open) {
@@ -784,6 +825,13 @@ export function UnifiedViewerModal({
 		showDetails,
 	]);
 
+	const showNoteSparkles =
+		preferencesReady &&
+		noteSparklesEnabled &&
+		sparklesStartedFor === activeNoteId &&
+		sideWidths.left > 0 &&
+		sideWidths.right > 0;
+
 	const renderContent = () => {
 		if (currentItem.type === "media") {
 			if (mediaData?.type === "video") {
@@ -928,8 +976,10 @@ export function UnifiedViewerModal({
 
 		if (currentItem.type === "note") {
 			return (
-				<div className="h-full w-full overflow-y-auto bg-background text-foreground">
-					<article className="mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
+				<div className="relative z-10 h-full w-full overflow-y-auto text-foreground">
+					<article
+						ref={setNoteArticle}
+						className="relative z-10 mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
 						<header className="mb-8 border-b border-border pb-7">
 							<h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
 								{currentItem.title || "Без названия"}
@@ -1036,6 +1086,33 @@ export function UnifiedViewerModal({
 									transition={viewerSlideTransition}
 									{...gestures}
 									className="absolute inset-0 flex items-center justify-center">
+									{showNoteSparkles && (
+										<motion.div
+											aria-hidden="true"
+											className="pointer-events-none fixed inset-0 z-0 overflow-hidden text-muted-foreground opacity-70"
+											initial={{ opacity: 0 }}
+											animate={{ opacity: 0.7 }}
+											transition={{ duration: 5, ease: "easeOut" }}>
+											<div
+												className="absolute inset-y-0 left-0"
+												style={{
+													width: sideWidths.left,
+													maskImage: "linear-gradient(to right, black 0%, black 58%, transparent 100%)",
+													WebkitMaskImage: "linear-gradient(to right, black 0%, black 58%, transparent 100%)",
+												}}>
+												<PixelSparkles pixelSize={5} speed={0.38} fireSpeed={0.35} density={0.26} />
+											</div>
+											<div
+												className="absolute inset-y-0 right-0"
+												style={{
+													width: sideWidths.right,
+													maskImage: "linear-gradient(to left, black 0%, black 58%, transparent 100%)",
+													WebkitMaskImage: "linear-gradient(to left, black 0%, black 58%, transparent 100%)",
+												}}>
+												<PixelSparkles pixelSize={5} speed={0.38} fireSpeed={0.35} density={0.26} />
+											</div>
+										</motion.div>
+									)}
 									{renderContent()}
 								</motion.div>
 							</AnimatePresence>

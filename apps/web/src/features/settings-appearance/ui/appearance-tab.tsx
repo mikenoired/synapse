@@ -1,12 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Monitor, Moon, Sun } from "lucide-react";
+import { Monitor, Moon, Sparkles, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { SIDEBAR_ANIMATION } from "@/shared/config/animations";
 import { useI18n } from "@/shared/lib/i18n";
+import { useUserPreferences } from "@/shared/lib/user-preferences-context";
 
 const themeOptions = [
 	{
@@ -29,6 +30,7 @@ const themeOptions = [
 export default function AppearanceTab() {
 	const { theme, setTheme } = useTheme();
 	const { t } = useI18n();
+	const { isReady, noteSparklesEnabled, setNoteSparklesEnabled } = useUserPreferences();
 	const [mounted, setMounted] = useState(false);
 
 	useEffect(() => setMounted(true), []);
@@ -75,6 +77,29 @@ export default function AppearanceTab() {
 					})}
 				</div>
 			</fieldset>
+
+			<div className="flex flex-col gap-4 rounded-[1.75rem] bg-muted px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+				<div className="min-w-0 space-y-1.5">
+					<div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+						<Sparkles className="size-4 text-muted-foreground" />
+						{t("appearance.noteSparkles.title")}
+					</div>
+					<p className="max-w-md text-sm leading-6 text-muted-foreground">
+						{t("appearance.noteSparkles.description")}
+					</p>
+				</div>
+				<button
+					type="button"
+					role="switch"
+					aria-checked={noteSparklesEnabled}
+					disabled={!isReady}
+					onClick={() => setNoteSparklesEnabled(!noteSparklesEnabled)}
+					className={`relative inline-flex h-7 w-12 shrink-0 items-center self-start rounded-full transition sm:self-center ${noteSparklesEnabled ? "bg-foreground" : "bg-background"} ${!isReady ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
+					<span
+						className={`inline-block size-5 rounded-full transition-transform ${noteSparklesEnabled ? "translate-x-6 bg-background" : "translate-x-1 bg-foreground"}`}
+					/>
+				</button>
+			</div>
 		</div>
 	);
 }

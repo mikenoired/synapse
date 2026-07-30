@@ -3,6 +3,7 @@ export type InterfaceLanguage = "ru" | "en";
 export interface UserPreferences {
 	interfaceLanguage: InterfaceLanguage;
 	mediaAutoplayEnabled: boolean;
+	noteSparklesEnabled: boolean;
 }
 
 export type UserPreferencesInput = Partial<UserPreferences>;
@@ -10,6 +11,7 @@ export type UserPreferencesInput = Partial<UserPreferences>;
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
 	interfaceLanguage: "ru",
 	mediaAutoplayEnabled: true,
+	noteSparklesEnabled: true,
 };
 
 export function normalizeUserPreferences(preferences?: UserPreferencesInput | null): UserPreferences {

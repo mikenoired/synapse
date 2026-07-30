@@ -2,11 +2,14 @@
 
 import { cn } from "@synapse/ui/cn";
 import { prose } from "@synapse/ui/prose";
+import { motion } from "framer-motion";
 import { Edit2, FileText, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
+import { useUserPreferences } from "@/shared/lib/user-preferences-context";
+import { PixelSparkles } from "@/shared/ui/pixel-sparkles";
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
 
 import { BaseModal } from "../base";
@@ -27,6 +30,55 @@ interface NoteViewerModalProps {
 export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: NoteViewerModalProps) {
 	const router = useRouter();
 	const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+	const [sparklesStartedFor, setSparklesStartedFor] = useState<string | null>(null);
+	const [sideWidths, setSideWidths] = useState({ left: 0, right: 0 });
+	const [noteContent, setNoteContent] = useState<HTMLDivElement | null>(null);
+	const { isReady: preferencesReady, noteSparklesEnabled } = useUserPreferences();
+
+	useEffect(() => {
+		setSparklesStartedFor(null);
+
+		if (!open) {
+			return;
+		}
+
+		const timeout = window.setTimeout(() => setSparklesStartedFor(item.id), 10_000);
+		return () => window.clearTimeout(timeout);
+	}, [open, item.id]);
+
+	useEffect(() => {
+		if (!open) {
+			setSideWidths({ left: 0, right: 0 });
+			return;
+		}
+
+		const updateSideWidths = () => {
+			if (!noteContent) {
+				setSideWidths({ left: 0, right: 0 });
+				return;
+			}
+
+			const bounds = noteContent.getBoundingClientRect();
+			if (window.innerWidth <= bounds.width) {
+				setSideWidths({ left: 0, right: 0 });
+				return;
+			}
+
+			setSideWidths({ left: Math.max(0, bounds.left), right: Math.max(0, window.innerWidth - bounds.right) });
+		};
+
+		if (!noteContent) return;
+
+		const observer = new ResizeObserver(updateSideWidths);
+		observer.observe(noteContent);
+		window.addEventListener("resize", updateSideWidths);
+		updateSideWidths();
+
+		return () => {
+			observer.disconnect();
+			window.removeEventListener("resize", updateSideWidths);
+		};
+	}, [noteContent, open]);
 
 	useModalKeyboard({
 		enabled: open,
@@ -99,10 +151,48 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 				]
 			: []),
 	];
+	const showSparkles =
+		preferencesReady &&
+		noteSparklesEnabled &&
+		sparklesStartedFor === item.id &&
+		sideWidths.left > 0 &&
+		sideWidths.right > 0;
 
 	return (
 		<>
-			<BaseModal open={open} onOpenChange={onOpenChange} size="lg">
+			<BaseModal
+				open={open}
+				onOpenChange={onOpenChange}
+				size="lg"
+				overlayDecoration={
+					showSparkles ? (
+						<motion.div
+							aria-hidden="true"
+							className="pointer-events-none absolute inset-0 z-0 overflow-hidden text-muted-foreground opacity-70"
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 0.7 }}
+							transition={{ duration: 5, ease: "easeOut" }}>
+							<div
+								className="absolute inset-y-0 left-0"
+								style={{
+									width: sideWidths.left,
+									maskImage: "linear-gradient(to right, black 0%, black 58%, transparent 100%)",
+									WebkitMaskImage: "linear-gradient(to right, black 0%, black 58%, transparent 100%)",
+								}}>
+								<PixelSparkles pixelSize={5} speed={0.38} fireSpeed={0.35} density={0.26} />
+							</div>
+							<div
+								className="absolute inset-y-0 right-0"
+								style={{
+									width: sideWidths.right,
+									maskImage: "linear-gradient(to left, black 0%, black 58%, transparent 100%)",
+									WebkitMaskImage: "linear-gradient(to left, black 0%, black 58%, transparent 100%)",
+								}}>
+								<PixelSparkles pixelSize={5} speed={0.38} fireSpeed={0.35} density={0.26} />
+							</div>
+						</motion.div>
+					) : undefined
+				}>
 				<div className="mx-auto flex h-full w-full max-w-4xl flex-col">
 					<ModalHeader>
 						<div className="space-y-4">
@@ -119,7 +209,7 @@ export function NoteViewerModal({ open, onOpenChange, item, onEdit, onDelete }: 
 					</ModalHeader>
 
 					<ModalBody>
-						<div className="rounded-2xl border border-border bg-card p-5 sm:p-6">
+						<div ref={setNoteContent} className="rounded-2xl border border-border bg-card p-5 sm:p-6">
 							<div className={cn("max-w-none", prose)}>{renderContent()}</div>
 						</div>
 					</ModalBody>

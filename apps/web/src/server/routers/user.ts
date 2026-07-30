@@ -22,6 +22,7 @@ export const userRouter = router({
 				.object({
 					interfaceLanguage: z.enum(["ru", "en"]).optional(),
 					mediaAutoplayEnabled: z.boolean().optional(),
+					noteSparklesEnabled: z.boolean().optional(),
 				})
 				.refine((value) => Object.keys(value).length > 0, {
 					message: "At least one preference must be provided",

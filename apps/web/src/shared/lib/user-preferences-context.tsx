@@ -17,8 +17,10 @@ interface UserPreferencesContextValue {
 	interfaceLanguage: InterfaceLanguage;
 	isReady: boolean;
 	mediaAutoplayEnabled: boolean;
+	noteSparklesEnabled: boolean;
 	setInterfaceLanguage: (value: InterfaceLanguage) => void;
 	setMediaAutoplayEnabled: (value: boolean) => void;
+	setNoteSparklesEnabled: (value: boolean) => void;
 }
 
 const UserPreferencesContext = createContext<UserPreferencesContextValue | undefined>(undefined);
@@ -44,6 +46,9 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 	const [mediaAutoplayEnabled, setMediaAutoplayEnabledState] = useState(
 		DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled
 	);
+	const [noteSparklesEnabled, setNoteSparklesEnabledState] = useState(
+		DEFAULT_USER_PREFERENCES.noteSparklesEnabled
+	);
 
 	const preferencesQuery = trpc.user.getPreferences.useQuery(undefined, {
 		enabled: Boolean(user),
@@ -58,6 +63,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		if (!user) {
 			setInterfaceLanguageState(getStoredInterfaceLanguage());
 			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
+			setNoteSparklesEnabledState(DEFAULT_USER_PREFERENCES.noteSparklesEnabled);
 			setIsReady(true);
 			return;
 		}
@@ -66,6 +72,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 			const preferences = normalizeUserPreferences(preferencesQuery.data);
 			setInterfaceLanguageState(preferences.interfaceLanguage);
 			setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
+			setNoteSparklesEnabledState(preferences.noteSparklesEnabled);
 			setIsReady(true);
 			return;
 		}
@@ -73,6 +80,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		if (preferencesQuery.error) {
 			setInterfaceLanguageState(getStoredInterfaceLanguage());
 			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
+			setNoteSparklesEnabledState(DEFAULT_USER_PREFERENCES.noteSparklesEnabled);
 			setIsReady(true);
 			return;
 		}
@@ -87,7 +95,11 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 
 	const setInterfaceLanguage = useCallback(
 		(value: InterfaceLanguage) => {
-			const previousPreferences = normalizeUserPreferences({ interfaceLanguage, mediaAutoplayEnabled });
+			const previousPreferences = normalizeUserPreferences({
+				interfaceLanguage,
+				mediaAutoplayEnabled,
+				noteSparklesEnabled,
+			});
 			const nextPreferences = normalizeUserPreferences({ ...previousPreferences, interfaceLanguage: value });
 			setInterfaceLanguageState(nextPreferences.interfaceLanguage);
 
@@ -113,17 +125,22 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 						const normalizedPreferences = normalizeUserPreferences(preferences);
 						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
 						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
+						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
 						utils.user.getPreferences.setData(undefined, normalizedPreferences);
 					},
 				}
 			);
 		},
-		[interfaceLanguage, mediaAutoplayEnabled, updatePreferencesMutation, user, utils]
+		[interfaceLanguage, mediaAutoplayEnabled, noteSparklesEnabled, updatePreferencesMutation, user, utils]
 	);
 
 	const setMediaAutoplayEnabled = useCallback(
 		(value: boolean) => {
-			const previousPreferences = normalizeUserPreferences({ interfaceLanguage, mediaAutoplayEnabled });
+			const previousPreferences = normalizeUserPreferences({
+				interfaceLanguage,
+				mediaAutoplayEnabled,
+				noteSparklesEnabled,
+			});
 			const nextPreferences = normalizeUserPreferences({
 				...previousPreferences,
 				mediaAutoplayEnabled: value,
@@ -152,12 +169,55 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 						const normalizedPreferences = normalizeUserPreferences(preferences);
 						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
 						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
+						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
 						utils.user.getPreferences.setData(undefined, normalizedPreferences);
 					},
 				}
 			);
 		},
-		[interfaceLanguage, mediaAutoplayEnabled, updatePreferencesMutation, user, utils]
+		[interfaceLanguage, mediaAutoplayEnabled, noteSparklesEnabled, updatePreferencesMutation, user, utils]
+	);
+
+	const setNoteSparklesEnabled = useCallback(
+		(value: boolean) => {
+			const previousPreferences = normalizeUserPreferences({
+				interfaceLanguage,
+				mediaAutoplayEnabled,
+				noteSparklesEnabled,
+			});
+			const nextPreferences = normalizeUserPreferences({
+				...previousPreferences,
+				noteSparklesEnabled: value,
+			});
+			setNoteSparklesEnabledState(nextPreferences.noteSparklesEnabled);
+
+			if (!user) return;
+
+			utils.user.getPreferences.setData(undefined, nextPreferences);
+
+			updatePreferencesMutation.mutate(
+				{ noteSparklesEnabled: value },
+				{
+					onError: () => {
+						setNoteSparklesEnabledState(previousPreferences.noteSparklesEnabled);
+						utils.user.getPreferences.setData(undefined, previousPreferences);
+						toast.error(
+							interfaceLanguage === "ru"
+								? "Не удалось сохранить настройку эффекта заметок"
+								: "Failed to save note effect setting"
+						);
+					},
+					onSuccess: (preferences) => {
+						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
+						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
+						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
+						utils.user.getPreferences.setData(undefined, normalizedPreferences);
+					},
+				}
+			);
+		},
+		[interfaceLanguage, mediaAutoplayEnabled, noteSparklesEnabled, updatePreferencesMutation, user, utils]
 	);
 
 	const value = useMemo(
@@ -165,10 +225,20 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 			interfaceLanguage,
 			isReady,
 			mediaAutoplayEnabled,
+			noteSparklesEnabled,
 			setInterfaceLanguage,
 			setMediaAutoplayEnabled,
+			setNoteSparklesEnabled,
 		}),
-		[interfaceLanguage, isReady, mediaAutoplayEnabled, setInterfaceLanguage, setMediaAutoplayEnabled]
+		[
+			interfaceLanguage,
+			isReady,
+			mediaAutoplayEnabled,
+			noteSparklesEnabled,
+			setInterfaceLanguage,
+			setMediaAutoplayEnabled,
+			setNoteSparklesEnabled,
+		]
 	);
 
 	return <UserPreferencesContext.Provider value={value}>{children}</UserPreferencesContext.Provider>;

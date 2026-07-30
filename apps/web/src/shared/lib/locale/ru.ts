@@ -17,6 +17,9 @@ export const ru: TranslationMap = {
 	"appearance.theme.system": "Системная",
 	"appearance.theme.light": "Светлая",
 	"appearance.theme.dark": "Тёмная",
+	"appearance.noteSparkles.title": "Атмосфера заметок",
+	"appearance.noteSparkles.description":
+		"Показывает мягкое пиксельное свечение по бокам заметки через некоторое время просмотра.",
 	"autoplay.description": "Автоматически запускает аудио и видео сразу после открытия в просмотрщике.",
 	"autoplay.title": "Автовоспроизведение",
 	"aiUsage": "ИИ и использование",

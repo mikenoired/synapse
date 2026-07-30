@@ -13,6 +13,7 @@ interface BaseModalProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	children: ReactNode;
+	overlayDecoration?: ReactNode;
 	className?: string;
 	size?: "sm" | "md" | "lg" | "xl" | "full";
 	variant?: "default" | "fullscreen" | "drawer";
@@ -33,6 +34,7 @@ export function BaseModal({
 	open,
 	onOpenChange,
 	children,
+	overlayDecoration,
 	className,
 	size = "lg",
 	variant = "default",
@@ -97,6 +99,7 @@ export function BaseModal({
 					exit={modalAnimations.overlay.exit}
 					transition={modalAnimations.overlay.transition}
 					onClick={closeOnOverlayClick ? () => onOpenChange(false) : undefined}>
+					{overlayDecoration}
 					<motion.div
 						key="modal-content"
 						ref={modalRef}
