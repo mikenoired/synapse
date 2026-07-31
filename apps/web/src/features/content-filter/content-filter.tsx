@@ -29,7 +29,7 @@ export function ContentFilter({
 	const searchInputRef = useRef<HTMLInputElement>(null);
 	const [filtersOpen, setFiltersOpen] = useState(false);
 	const { setTriggerSearchFocus } = useDashboard();
-	const { t } = useI18n();
+	const { searchPlaceholder, t } = useI18n();
 	const hasActiveTypeFilters = selectedContentTypes.length > 0;
 	const availableOptions = contentTypeOptions.filter((option) =>
 		isContentTypeFilterAvailable(option.key, availableContentTypes)
@@ -52,12 +52,12 @@ export function ContentFilter({
 			onMouseLeave={() => setFiltersOpen(false)}
 			onFocus={() => setFiltersOpen(true)}
 			onBlur={handleBlur}>
-			<div className="relative rounded-lg border border-transparent border-b-border transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--ring)_18%,transparent)]">
+			<div className="relative border border-transparent border-b-border transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--ring)_18%,transparent)] mb-0">
 				<input
 					ref={searchInputRef}
 					id="search"
 					type="text"
-					placeholder={t("search.placeholder")}
+					placeholder={searchPlaceholder}
 					aria-label={t("search.aria")}
 					value={searchQuery}
 					autoFocus

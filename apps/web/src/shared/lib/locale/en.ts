@@ -122,5 +122,28 @@ export const en = {
 	"view.windowed": "Collapse",
 } as const;
 
+export const searchPlaceholders = [
+	"Search your notes, links, and ideas",
+	"What are we looking for today?",
+	"Find that thought hiding somewhere",
+	"Search the whole Synapse",
+	"Where did I put that brilliant idea?",
+	"Look for a note, link, or tiny revelation",
+	"Try a title, tag, or phrase",
+	"Search like you mean it",
+	"Hunt down a half-remembered thought",
+	"Find the thread worth pulling",
+	"What should we bring back to the surface?",
+	"Search your second brain",
+	"Type a clue. We’ll do the digging.",
+	"Find something you saved for later",
+	"Browse your memory palace",
+	"Looking for a spark?",
+	"Search by title, tag, or content",
+	"Let’s find that little gem",
+	"Which idea is calling?",
+	"Start with a word or two",
+] as const;
+
 export type TranslationKey = keyof typeof en;
 export type TranslationMap = Record<TranslationKey, string>;
