@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import type { Context } from "../context";
-import { edges, nodes } from "../db/schema";
+import { edges, nodes, tags } from "../db/schema";
 import { requireAuth } from "../lib/auth-guard";
 
 export default class GraphRepository {
@@ -20,7 +20,23 @@ export default class GraphRepository {
 			},
 		});
 
-		return data;
+		const tagIds = data.flatMap((node) => {
+			if (node.type !== "tag" || !node.metadata || typeof node.metadata !== "object") return [];
+			if (!("tag_id" in node.metadata) || typeof node.metadata.tag_id !== "string") return [];
+			return [node.metadata.tag_id];
+		});
+		const tagRows = tagIds.length
+			? await this.ctx.db.query.tags.findMany({
+					columns: { color: true, id: true },
+					where: inArray(tags.id, tagIds),
+				})
+			: [];
+		const colorByTagId = new Map(tagRows.map((tag) => [tag.id, tag.color]));
+
+		return data.map((node) => {
+			const metadata = node.metadata as { tag_id?: string } | null;
+			return { ...node, color: metadata?.tag_id ? (colorByTagId.get(metadata.tag_id) ?? 0) : 0 };
+		});
 	}
 
 	async getEdges() {

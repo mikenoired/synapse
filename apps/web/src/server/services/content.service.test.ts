@@ -2,9 +2,12 @@ import { afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:te
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 
+import { DEFAULT_USER_PREFERENCES } from "@/shared/lib/user-preferences";
+
 import type { Context } from "../context";
 import { db } from "../db";
 import { content, contentTags, edges, nodes, tags, users } from "../db/schema";
+import { AVAILABLE_TAG_COLOR_COUNT } from "../lib/tag-colors";
 import type ContentServiceType from "./content.service";
 
 const testEmail = "bun-content-test@synapse.local";
@@ -171,6 +174,40 @@ describe.serial("content service", () => {
 		expect(created.tags).toEqual(["Work"]);
 		expect(await db.select().from(tags).where(eq(tags.userId, userId))).toHaveLength(1);
 		expect(await db.select().from(contentTags).where(eq(contentTags.contentId, created.id))).toHaveLength(1);
+	});
+
+	test("assigns tag colors, updates them, and respects the automatic color preference", async () => {
+		const service = createService();
+		await service.create({
+			content: "Colored body",
+			media_type: "image",
+			tags: ["colored"],
+			type: "note",
+		});
+
+		const coloredTag = await db.query.tags.findFirst({
+			where: and(eq(tags.userId, userId), eq(tags.title, "colored")),
+		});
+		expect(coloredTag?.color).toBeGreaterThanOrEqual(1);
+		expect(coloredTag?.color).toBeLessThanOrEqual(AVAILABLE_TAG_COLOR_COUNT);
+
+		expect(await service.updateTagColor(coloredTag!.id, 0)).toMatchObject({ color: 0 });
+
+		await db
+			.update(users)
+			.set({ preferences: { ...DEFAULT_USER_PREFERENCES, autoTagColorEnabled: false } })
+			.where(eq(users.id, userId));
+		await service.create({
+			content: "Plain body",
+			media_type: "image",
+			tags: ["plain"],
+			type: "note",
+		});
+
+		const plainTag = await db.query.tags.findFirst({
+			where: and(eq(tags.userId, userId), eq(tags.title, "plain")),
+		});
+		expect(plainTag?.color).toBe(0);
 	});
 
 	test("paginates suggestions from rare tags first without duplicates", async () => {

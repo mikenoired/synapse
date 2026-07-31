@@ -11,6 +11,7 @@ import { useMemo, useState } from "react";
 import useMouseActivity from "@/shared/hooks/use-mouse-activity";
 import type { Content } from "@/shared/lib/schemas";
 import { calculateReadingTime } from "@/shared/lib/schemas";
+import { ContentTag } from "@/shared/ui/content-tag";
 
 import { BaseModal } from "../base";
 import { ConfirmDialog } from "../dialogs";
@@ -207,10 +208,13 @@ export function DocumentViewerModal({
 
 									{item.tags.length > 0 && (
 										<div className="flex flex-wrap gap-2">
-											{item.tags.map((tag) => (
-												<span key={tag} className="rounded-full bg-white/8 px-3 py-1 text-xs text-white/80">
-													{tag}
-												</span>
+											{item.tags.map((tag, tagIndex) => (
+												<ContentTag
+													key={tag}
+													tag={tag}
+													tagId={item.tag_ids[tagIndex]}
+													className="px-3 py-1 text-xs text-white/80"
+												/>
 											))}
 										</div>
 									)}

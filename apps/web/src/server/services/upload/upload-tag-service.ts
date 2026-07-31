@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, or, sql } from "drizzle-orm";
 
 import type { Context } from "../../context";
 import { contentTags, edges, nodes, tags } from "../../db/schema";
+import { isAutomaticTagColorEnabled, randomTagColor } from "../../lib/tag-colors";
 import type { UploadContentType } from "./upload-types";
 
 type DatabaseExecutor = Context["db"];
@@ -49,9 +50,16 @@ export class UploadTagService {
 		const missingTitles = uniqueTitles.filter((title) => !tagIdByTitle.has(normalizeTagTitle(title)));
 
 		if (missingTitles.length) {
+			const automaticColorEnabled = await isAutomaticTagColorEnabled(this.database, this.requireUserId());
 			await this.database
 				.insert(tags)
-				.values(missingTitles.map((title) => ({ title, userId: this.requireUserId() })))
+				.values(
+					missingTitles.map((title) => ({
+						color: randomTagColor(automaticColorEnabled),
+						title,
+						userId: this.requireUserId(),
+					}))
+				)
 				.onConflictDoNothing();
 
 			const insertedTags = await this.database.query.tags.findMany({

@@ -10,6 +10,7 @@ import { useModal } from "@/widgets/modals/context/modal-context";
 import { createGraph, type GraphInput } from "./graph";
 
 interface Node {
+	color: number;
 	id: string;
 	content: string | null;
 	type: string;
@@ -30,7 +31,10 @@ interface HoverState {
 export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) {
 	const graphRef = useRef<HTMLDivElement>(null);
 	const previewRef = useRef<HTMLDivElement>(null);
-	const graphData = useGraphData(nodes, edges);
+	const { data: currentTags = [] } = trpc.content.getTags.useQuery(undefined, {
+		refetchOnMount: true,
+	});
+	const graphData = useGraphData(nodes, edges, currentTags);
 	const { openModal } = useModal();
 	const utils = trpc.useUtils();
 	const deleteMutation = trpc.content.delete.useMutation();
@@ -249,19 +253,24 @@ function getTypeLabel(type: string) {
 	return typeMap[type] || type;
 }
 
-function useGraphData(nodes: Node[], edges: Edge[]) {
+function useGraphData(nodes: Node[], edges: Edge[], tags: Array<{ color: number; id: string }>) {
 	return useMemo<GraphInput>(() => {
+		const colorByTagId = new Map(tags.map((tag) => [tag.id, tag.color]));
 		const byId = new Map(
-			nodes.map((node) => [
-				node.id,
-				{
-					id: node.id,
-					label: node.content || "Без названия",
-					links: [] as string[],
-					type: node.type,
-					href: getTagHref(node),
-				},
-			])
+			nodes.map((node) => {
+				const tagId = getTagId(node);
+				return [
+					node.id,
+					{
+						color: tagId ? (colorByTagId.get(tagId) ?? node.color) : node.color,
+						id: node.id,
+						label: node.content || "Без названия",
+						links: [] as string[],
+						type: node.type,
+						href: getTagHref(node),
+					},
+				] as const;
+			})
 		);
 
 		for (const edge of edges) {
@@ -271,12 +280,16 @@ function useGraphData(nodes: Node[], edges: Edge[]) {
 		}
 
 		return { nodes: [...byId.values()] };
-	}, [nodes, edges]);
+	}, [nodes, edges, tags]);
+}
+
+function getTagId(node: Node) {
+	if (node.type !== "tag") return undefined;
+	if (!node.metadata || typeof node.metadata !== "object" || !("tag_id" in node.metadata)) return undefined;
+	return typeof node.metadata.tag_id === "string" ? node.metadata.tag_id : undefined;
 }
 
 function getTagHref(node: Node) {
-	if (node.type !== "tag") return undefined;
-	if (!node.metadata || typeof node.metadata !== "object" || !("tag_id" in node.metadata)) return undefined;
-	const tagId = node.metadata.tag_id;
-	return typeof tagId === "string" ? `/dashboard/tag/${tagId}` : undefined;
+	const tagId = getTagId(node);
+	return tagId ? `/dashboard/tag/${tagId}` : undefined;
 }

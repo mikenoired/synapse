@@ -62,11 +62,13 @@ export const content = pgTable(
 export const tags = pgTable(
 	"tags",
 	{
+		color: integer("color").notNull().default(0),
 		id: uuid("id").primaryKey().defaultRandom(),
 		title: text("title").notNull(),
 		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	},
 	(table) => ({
+		colorRangeChk: check("tags_color_range_chk", sql`${table.color} between 0 and 255`),
 		userIdIdx: index("tags_user_id_idx").on(table.userId),
 		titleIdx: index("tags_title_idx").on(table.title),
 		userIdTitleIdx: index("tags_user_id_title_idx").on(table.userId, table.title),

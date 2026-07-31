@@ -17,6 +17,8 @@ export const en = {
 	"appearance.noteSparkles.title": "Note ambience",
 	"appearance.noteSparkles.description":
 		"Shows a subtle pixel glow beside a note after it has been open for a while.",
+	"appearance.tagColors.title": "Automatic tag colors",
+	"appearance.tagColors.description": "Assign a palette color whenever a new tag is created.",
 	"autoplay.description": "Automatically starts audio and video when opened in the viewer.",
 	"autoplay.title": "Autoplay",
 	"aiUsage": "AI usage",
@@ -111,6 +113,9 @@ export const en = {
 	"storage.used": "Used",
 	"suitable": "Suggested",
 	"tags": "Tags",
+	"tagColor.none": "No color",
+	"tagColor.option": "Color {number}",
+	"tagColor.picker": "Tag color",
 	"todo": "Tasks",
 	"untitled": "Untitled",
 	"view.fullscreen": "Full screen",

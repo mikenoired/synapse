@@ -119,7 +119,7 @@ export default class ContentService {
 		let itemCursor = cursorTimestamp && cursorId ? `${cursorTimestamp}|${cursorId}` : undefined;
 		const matches: Array<{
 			row: ContentRow;
-			tag: { id: string; title: string; itemCount: number };
+			tag: { color: number; id: string; title: string; itemCount: number };
 		}> = [];
 		let nextCursor: string | undefined;
 
@@ -161,7 +161,7 @@ export default class ContentService {
 		);
 		const groups = new Map<
 			string,
-			{ tag: { id: string; title: string; itemCount: number }; items: Content[] }
+			{ tag: { color: number; id: string; title: string; itemCount: number }; items: Content[] }
 		>();
 
 		for (const [index, match] of matches.entries()) {
@@ -473,7 +473,8 @@ export default class ContentService {
 
 	async getTags() {
 		const cacheKey = `user:${this.ctx.user!.id}:tags`;
-		const cached = await this.ctx.cache.getJSON<Array<{ id: string; title: string }>>(cacheKey);
+		const cached =
+			await this.ctx.cache.getJSON<Array<{ color: number; id: string; title: string }>>(cacheKey);
 		if (cached) return cached;
 
 		const contentTags = await this.repo.getContentTags();
@@ -481,13 +482,19 @@ export default class ContentService {
 		if (!tagIds.length) return [];
 
 		const tags = await this.repo.getTags(tagIds);
-		const result = (tags || []).map((t) => ({ id: t.id, title: t.title }));
+		const result = (tags || []).map((t) => ({ color: t.color, id: t.id, title: t.title }));
 		await this.ctx.cache.setJSON(cacheKey, result, TAGS_CACHE_TTL_SECONDS);
 		return result;
 	}
 
 	async getTagById(id: string) {
 		return await this.repo.getTagById(id);
+	}
+
+	async updateTagColor(id: string, color: number) {
+		const tag = await this.repo.updateTagColor(id, color);
+		await this.invalidateUserTags();
+		return tag;
 	}
 
 	async getAvailableTypes() {
@@ -517,14 +524,19 @@ export default class ContentService {
 		const uniqueRows = Array.from(new Map(previewRows.map((row) => [row.id, row as ContentRow])).values());
 		const items = await this.attachTagsToContent(uniqueRows, { previewContent: true });
 		const itemById = new Map(items.map((item) => [item.id, item]));
-		const tagsMap = new Map<string, { id: string; title: string; items: Content[] }>();
+		const tagsMap = new Map<string, { color: number; id: string; title: string; items: Content[] }>();
 
 		for (const row of previewRows) {
 			const item = itemById.get(row.id);
 			if (!item) continue;
 
 			if (!tagsMap.has(row.tagId)) {
-				tagsMap.set(row.tagId, { id: row.tagId, title: row.tagTitle, items: [] });
+				tagsMap.set(row.tagId, {
+					color: row.tagColor,
+					id: row.tagId,
+					items: [],
+					title: row.tagTitle,
+				});
 			}
 
 			const bucket = tagsMap.get(row.tagId)!;
@@ -566,6 +578,7 @@ export default class ContentService {
 		const last = pageTags[pageTags.length - 1];
 		return {
 			items: pageTags.map((tag) => ({
+				color: tag.color,
 				id: tag.id,
 				title: tag.title,
 				items: previewByTag.get(tag.id) ?? [],

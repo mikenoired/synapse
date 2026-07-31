@@ -1,0 +1,8 @@
+ALTER TABLE tags
+	ADD COLUMN IF NOT EXISTS color integer NOT NULL DEFAULT 0;
+
+ALTER TABLE tags
+	DROP CONSTRAINT IF EXISTS tags_color_range_chk;
+
+ALTER TABLE tags
+	ADD CONSTRAINT tags_color_range_chk CHECK (color BETWEEN 0 AND 255);

@@ -20,6 +20,7 @@ export const userRouter = router({
 		.input(
 			z
 				.object({
+					autoTagColorEnabled: z.boolean().optional(),
 					interfaceLanguage: z.enum(["ru", "en"]).optional(),
 					mediaAutoplayEnabled: z.boolean().optional(),
 					noteSparklesEnabled: z.boolean().optional(),

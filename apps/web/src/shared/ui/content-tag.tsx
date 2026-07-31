@@ -4,7 +4,10 @@ import { cn } from "@synapse/ui/cn";
 import { Badge } from "@synapse/ui/components";
 import { X } from "lucide-react";
 import Link from "next/link";
-import type { MouseEvent, ReactNode } from "react";
+import type { CSSProperties, MouseEvent, ReactNode } from "react";
+
+import { trpc } from "@/shared/api/trpc";
+import { getTagColorStyle } from "@/shared/lib/tag-colors";
 
 type BadgeProps = React.ComponentProps<typeof Badge>;
 
@@ -16,6 +19,8 @@ interface ContentTagProps {
 	onRemove?: (tag: string) => void;
 	disabled?: boolean;
 	children?: ReactNode;
+	color?: number;
+	style?: CSSProperties;
 }
 
 export function ContentTag({
@@ -26,12 +31,30 @@ export function ContentTag({
 	onRemove,
 	disabled = false,
 	children,
+	color,
+	style,
 }: ContentTagProps) {
 	const stop = (event: MouseEvent) => event.stopPropagation();
+	const { data: knownTags = [] } = trpc.content.getTags.useQuery(undefined, {
+		enabled: color === undefined,
+		refetchOnMount: true,
+		staleTime: 30_000,
+	});
+	const normalizedTitle = tag.trim().toLowerCase();
+	const knownTag = knownTags.find(
+		(candidate) => candidate.id === tagId || candidate.title.trim().toLowerCase() === normalizedTitle
+	);
+	const resolvedColor = color ?? knownTag?.color ?? 0;
+	const colorStyle = getTagColorStyle(resolvedColor);
+	const badgeStyle = { ...colorStyle, ...style };
+	const colorDot = resolvedColor > 0 && (
+		<span className="size-1.5 shrink-0 rounded-full bg-[var(--tag-color)]" aria-hidden="true" />
+	);
 
 	if (onRemove) {
 		return (
-			<Badge variant={variant} className={cn("flex items-center gap-1", className)}>
+			<Badge variant={variant} className={cn("flex items-center gap-1", className)} style={badgeStyle}>
+				{colorDot}
 				{children ?? tag}
 				<button
 					type="button"
@@ -50,8 +73,9 @@ export function ContentTag({
 
 	if (tagId) {
 		return (
-			<Badge asChild variant={variant} className={cn("cursor-pointer", className)}>
+			<Badge asChild variant={variant} className={cn("cursor-pointer", className)} style={badgeStyle}>
 				<Link href={`/dashboard/tag/${tagId}`} onClick={stop}>
+					{colorDot}
 					{children ?? tag}
 				</Link>
 			</Badge>
@@ -59,7 +83,8 @@ export function ContentTag({
 	}
 
 	return (
-		<Badge variant={variant} className={className}>
+		<Badge variant={variant} className={className} style={badgeStyle}>
+			{colorDot}
 			{children ?? tag}
 		</Badge>
 	);

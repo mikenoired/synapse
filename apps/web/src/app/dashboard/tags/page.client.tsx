@@ -3,20 +3,21 @@
 import { Skeleton } from "@synapse/ui/components";
 import Link from "next/link";
 import type { DragEvent } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { TagStack } from "@/entities/item/ui/tag-stack";
 import { trpc } from "@/shared/api/trpc";
 import { useInfiniteScroll } from "@/shared/hooks/use-infinite-scroll";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
+import { getTagColor, getTagColorStyle } from "@/shared/lib/tag-colors";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 
 export default function TagsClient({
 	initial,
 }: {
 	initial: {
-		items: { id: string; title: string; items: Content[] }[];
+		items: { color: number; id: string; title: string; items: Content[] }[];
 		nextCursor: string | undefined;
 	};
 }) {
@@ -24,6 +25,13 @@ export default function TagsClient({
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
 	const utils = trpc.useUtils();
+	const { data: currentTags = [] } = trpc.content.getTags.useQuery(undefined, {
+		refetchOnMount: true,
+	});
+	const currentColorByTagId = useMemo(
+		() => new Map(currentTags.map((tag) => [tag.id, tag.color])),
+		[currentTags]
+	);
 
 	const {
 		data: tagsWithContentData,
@@ -154,14 +162,24 @@ export default function TagsClient({
 			)}
 			<h1 className="text-2xl font-semibold mb-8">Tags</h1>
 			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-12 pb-6">
-				{tagsWithContent.map(({ id, title, items }) => (
-					<Link key={id} href={`/dashboard/tag/${id}`} className="group">
-						<h2 className="text-lg font-medium mb-3 capitalize group-hover:text-primary transition-colors">
-							{title}
-						</h2>
-						<TagStack items={items} />
-					</Link>
-				))}
+				{tagsWithContent.map(({ color, id, title, items }) => {
+					const currentColor = currentColorByTagId.get(id) ?? color;
+					return (
+						<Link key={id} href={`/dashboard/tag/${id}`} className="group">
+							<h2 className="mb-3 flex items-center text-lg font-medium capitalize">
+								<span
+									className="inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-transform group-hover:translate-x-0.5"
+									style={getTagColorStyle(currentColor)}>
+									{getTagColor(currentColor) && (
+										<span className="size-2 rounded-full bg-[var(--tag-color)]" aria-hidden="true" />
+									)}
+									{title}
+								</span>
+							</h2>
+							<TagStack items={items} />
+						</Link>
+					);
+				})}
 			</div>
 			{hasNextPage && (
 				<div ref={sentinelRef} aria-hidden className="flex h-20 items-center justify-center">

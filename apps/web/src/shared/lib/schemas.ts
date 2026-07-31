@@ -122,9 +122,9 @@ export const contentListItemSchema = contentSchema.pick({
 export const contentDetailSchema = contentSchema;
 
 export const tagSchema = z.object({
+	color: z.number().int().min(0).max(255).default(0),
 	id: z.string(),
 	name: z.string(),
-	color: z.string().optional(),
 	user_id: z.string(),
 });
 

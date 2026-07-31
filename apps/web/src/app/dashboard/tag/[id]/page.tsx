@@ -11,5 +11,12 @@ export default async function TagPage({ params }: { params: Promise<{ id: string
 		caller.content.getAll({ tagIds: [id], limit: 20 }),
 	]);
 
-	return <TagClient tagId={id} tagTitle={tagData?.title || ""} initial={initial} />;
+	return (
+		<TagClient
+			tagId={id}
+			tagTitle={tagData?.title || ""}
+			initialColor={tagData?.color ?? 0}
+			initial={initial}
+		/>
+	);
 }

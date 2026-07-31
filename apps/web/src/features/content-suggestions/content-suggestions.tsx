@@ -11,6 +11,7 @@ import { ContentMasonry } from "@/features/content-grid/content-masonry";
 import { trpc } from "@/shared/api/trpc";
 import { useInfiniteScroll } from "@/shared/hooks/use-infinite-scroll";
 import type { Content } from "@/shared/lib/schemas";
+import { getTagColorStyle } from "@/shared/lib/tag-colors";
 
 interface ContentSuggestionsProps {
 	item: Content;
@@ -28,6 +29,13 @@ export function ContentSuggestions({
 	dark = false,
 }: ContentSuggestionsProps) {
 	const [enabled, setEnabled] = useState(false);
+	const { data: currentTags = [] } = trpc.content.getTags.useQuery(undefined, {
+		refetchOnMount: true,
+	});
+	const currentColorByTagId = useMemo(
+		() => new Map(currentTags.map((tag) => [tag.id, tag.color])),
+		[currentTags]
+	);
 	const enable = useCallback(() => setEnabled(true), []);
 	const activationRef = useInfiniteScroll({
 		enabled: !enabled && item.tag_ids.length > 0,
@@ -47,12 +55,15 @@ export function ContentSuggestions({
 	const groups = useMemo(() => {
 		const ordered = new Map<
 			string,
-			{ tag: { id: string; title: string; itemCount: number }; items: Content[] }
+			{ tag: { color: number; id: string; title: string; itemCount: number }; items: Content[] }
 		>();
 
 		for (const page of query.data?.pages ?? []) {
 			for (const group of page.groups) {
-				const current = ordered.get(group.tag.id) ?? { tag: group.tag, items: [] };
+				const current = ordered.get(group.tag.id) ?? {
+					tag: { ...group.tag, color: currentColorByTagId.get(group.tag.id) ?? group.tag.color },
+					items: [],
+				};
 				const seen = new Set(current.items.map((entry) => entry.id));
 				current.items.push(...group.items.filter((entry) => !seen.has(entry.id)));
 				ordered.set(group.tag.id, current);
@@ -60,7 +71,7 @@ export function ContentSuggestions({
 		}
 
 		return Array.from(ordered.values());
-	}, [query.data?.pages]);
+	}, [currentColorByTagId, query.data?.pages]);
 
 	const loadMore = useCallback(() => {
 		if (!query.hasNextPage || query.isFetchingNextPage) return;
@@ -122,7 +133,8 @@ export function ContentSuggestions({
 											className="text-sm font-medium capitalize tracking-wide">
 											<Link
 												href={`/dashboard/tag/${group.tag.id}`}
-												className="group/tag inline-flex items-center gap-1 rounded-md opacity-70 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/40">
+												className="group/tag inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/40"
+												style={getTagColorStyle(group.tag.color)}>
 												<Hash className="size-4 opacity-55 transition-transform group-hover/tag:-rotate-6" />
 												{group.tag.title}
 											</Link>

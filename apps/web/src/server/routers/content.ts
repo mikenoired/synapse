@@ -73,6 +73,13 @@ export const contentRouter = router({
 		return await service.getTagById(input.id);
 	}),
 
+	updateTagColor: protectedProcedure
+		.input(z.object({ id: z.string(), color: z.number().int().min(0).max(255) }))
+		.mutation(async ({ input, ctx }) => {
+			const service = new ContentService(ctx);
+			return await service.updateTagColor(input.id, input.color);
+		}),
+
 	getTagsWithContent: protectedProcedure.query(async ({ ctx }) => {
 		const service = new ContentService(ctx);
 		return await service.getTagsWithContent();

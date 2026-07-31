@@ -1,11 +1,14 @@
 import { Application, Container, Graphics, Text, TextStyle } from "pixi.js";
 
+import { tagColorToPixi } from "@/shared/lib/tag-colors";
+
 export type GraphNodeInput = {
 	id: string;
 	label: string;
 	links: string[];
 	type: string;
 	href?: string;
+	color?: number;
 };
 
 export type GraphInput = {
@@ -379,8 +382,9 @@ class GraphRenderer {
 
 		this.nodes.clear();
 		for (const node of this.nodeById.values()) {
+			const tagColor = tagColorToPixi(node.color);
 			this.nodes.beginFill(
-				node.type === "tag" ? this.colors.tagNode : this.colors.contentNode,
+				node.type === "tag" ? (tagColor ?? this.colors.tagNode) : this.colors.contentNode,
 				node.type === "tag" ? 0.95 : 0.82
 			);
 			this.nodes.drawCircle(node.x, node.y, nodeRadius(node));

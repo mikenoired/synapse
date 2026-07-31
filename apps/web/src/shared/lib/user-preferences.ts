@@ -1,6 +1,7 @@
 export type InterfaceLanguage = "ru" | "en";
 
 export interface UserPreferences {
+	autoTagColorEnabled: boolean;
 	interfaceLanguage: InterfaceLanguage;
 	mediaAutoplayEnabled: boolean;
 	noteSparklesEnabled: boolean;
@@ -9,6 +10,7 @@ export interface UserPreferences {
 export type UserPreferencesInput = Partial<UserPreferences>;
 
 export const DEFAULT_USER_PREFERENCES: UserPreferences = {
+	autoTagColorEnabled: true,
 	interfaceLanguage: "ru",
 	mediaAutoplayEnabled: true,
 	noteSparklesEnabled: true,

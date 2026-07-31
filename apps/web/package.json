@@ -8,6 +8,7 @@
 		"db:push": "drizzle-kit push",
 		"db:install-tag-merge": "bun src/server/scripts/apply-tag-merge-db.ts",
 		"db:set-god-mode": "bun src/server/scripts/apply-god-mode-existing.ts",
+		"db:backfill-tag-colors": "bun src/server/scripts/backfill-tag-colors.ts",
 		"db:studio": "drizzle-kit studio",
 		"search:backfill": "bun src/server/scripts/backfill-search-text.ts",
 		"format": "bun x oxfmt --config ../../.oxfmtrc.json --write .",

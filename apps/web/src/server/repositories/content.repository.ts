@@ -7,6 +7,7 @@ import type { createContentSchema, updateContentSchema } from "@/shared/lib/sche
 import type { Context } from "../context";
 import { content, contentTags, edges, nodes, tags } from "../db/schema";
 import { requireAuth } from "../lib/auth-guard";
+import { isAutomaticTagColorEnabled, randomTagColor } from "../lib/tag-colors";
 
 type DatabaseExecutor = Context["db"];
 
@@ -101,6 +102,7 @@ export default class ContentRepository {
 
 		return await this.database
 			.select({
+				color: tags.color,
 				id: tags.id,
 				title: tags.title,
 				itemCount: sql<number>`count(${contentTags.contentId})::int`,
@@ -109,7 +111,7 @@ export default class ContentRepository {
 			.innerJoin(contentTags, and(eq(contentTags.tagId, tags.id), eq(contentTags.userId, this.ctx.user.id)))
 			.innerJoin(content, and(eq(content.id, contentTags.contentId), eq(content.userId, this.ctx.user.id)))
 			.where(and(inArray(tags.id, tagIds), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!))
-			.groupBy(tags.id, tags.title)
+			.groupBy(tags.id, tags.color, tags.title)
 			.orderBy(asc(sql`count(${contentTags.contentId})`), asc(tags.title), asc(tags.id));
 	}
 
@@ -290,13 +292,14 @@ export default class ContentRepository {
 
 		return await this.database
 			.select({
+				color: tags.color,
 				id: tags.id,
 				title: tags.title,
 			})
 			.from(tags)
 			.innerJoin(contentTags, eq(contentTags.tagId, tags.id))
 			.where(and(...conditions))
-			.groupBy(tags.id, tags.title)
+			.groupBy(tags.id, tags.color, tags.title)
 			.orderBy(asc(tags.title), asc(tags.id))
 			.limit(limit);
 	}
@@ -327,6 +330,7 @@ export default class ContentRepository {
 		const data = await this.database
 			.select({
 				...contentListColumns,
+				tagColor: tags.color,
 				tagId: rankedContent.tagId,
 				tagTitle: tags.title,
 			})
@@ -548,6 +552,7 @@ export default class ContentRepository {
 				or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!
 			),
 			columns: {
+				color: true,
 				id: true,
 				title: true,
 			},
@@ -562,6 +567,7 @@ export default class ContentRepository {
 		const data = await this.database.query.tags.findFirst({
 			where: and(eq(tags.id, id), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 			columns: {
+				color: true,
 				id: true,
 				title: true,
 			},
@@ -578,6 +584,7 @@ export default class ContentRepository {
 		const data = await this.database.query.tags.findMany({
 			where: and(inArray(tags.id, ids), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 			columns: {
+				color: true,
 				id: true,
 				title: true,
 			},
@@ -591,13 +598,14 @@ export default class ContentRepository {
 
 		const rows = await this.database
 			.select({
+				color: tags.color,
 				id: tags.id,
 				title: tags.title,
 			})
 			.from(tags)
 			.leftJoin(contentTags, and(eq(contentTags.tagId, tags.id), eq(contentTags.userId, this.ctx.user.id)))
 			.where(or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!)
-			.groupBy(tags.id, tags.title)
+			.groupBy(tags.id, tags.color, tags.title)
 			.orderBy(desc(sql`count(*)`), asc(tags.title))
 			.limit(limit);
 
@@ -611,11 +619,13 @@ export default class ContentRepository {
 			new Map(titles.map((tag) => [normalizeTagTitle(tag.title), tag.title.trim()])).values()
 		).filter(Boolean);
 		if (!cleanTitles.length) return [];
+		const automaticColorEnabled = await isAutomaticTagColorEnabled(this.database, this.ctx.user.id);
 
 		await this.database
 			.insert(tags)
 			.values(
 				cleanTitles.map((title) => ({
+					color: randomTagColor(automaticColorEnabled),
 					title,
 					userId: this.ctx.user!.id,
 				}))
@@ -623,6 +633,19 @@ export default class ContentRepository {
 			.onConflictDoNothing();
 
 		return await this.getTagsByTitle(cleanTitles);
+	}
+
+	async updateTagColor(id: string, color: number) {
+		requireAuth(this.ctx);
+
+		const [updated] = await this.database
+			.update(tags)
+			.set({ color })
+			.where(and(eq(tags.id, id), eq(tags.userId, this.ctx.user.id)))
+			.returning({ color: tags.color, id: tags.id, title: tags.title });
+
+		if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Tag not found" });
+		return updated;
 	}
 
 	async updateContent(updData: z.infer<typeof updateContentSchema>) {

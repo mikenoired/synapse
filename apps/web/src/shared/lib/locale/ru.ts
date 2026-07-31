@@ -20,6 +20,8 @@ export const ru: TranslationMap = {
 	"appearance.noteSparkles.title": "Атмосфера заметок",
 	"appearance.noteSparkles.description":
 		"Показывает мягкое пиксельное свечение по бокам заметки через некоторое время просмотра.",
+	"appearance.tagColors.title": "Автоматические цвета тегов",
+	"appearance.tagColors.description": "Назначать цвет из палитры каждому новому тегу.",
 	"autoplay.description": "Автоматически запускает аудио и видео сразу после открытия в просмотрщике.",
 	"autoplay.title": "Автовоспроизведение",
 	"aiUsage": "ИИ и использование",
@@ -114,6 +116,9 @@ export const ru: TranslationMap = {
 	"storage.used": "Использовано",
 	"suitable": "Подходит",
 	"tags": "Теги",
+	"tagColor.none": "Без цвета",
+	"tagColor.option": "Цвет {number}",
+	"tagColor.picker": "Цвет тега",
 	"todo": "Задачи",
 	"untitled": "Без названия",
 	"view.fullscreen": "На весь экран",

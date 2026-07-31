@@ -14,10 +14,12 @@ import {
 } from "./user-preferences";
 
 interface UserPreferencesContextValue {
+	autoTagColorEnabled: boolean;
 	interfaceLanguage: InterfaceLanguage;
 	isReady: boolean;
 	mediaAutoplayEnabled: boolean;
 	noteSparklesEnabled: boolean;
+	setAutoTagColorEnabled: (value: boolean) => void;
 	setInterfaceLanguage: (value: InterfaceLanguage) => void;
 	setMediaAutoplayEnabled: (value: boolean) => void;
 	setNoteSparklesEnabled: (value: boolean) => void;
@@ -40,6 +42,9 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 	const utils = trpc.useUtils();
 	const { user } = useAuth();
 	const [isReady, setIsReady] = useState(false);
+	const [autoTagColorEnabled, setAutoTagColorEnabledState] = useState(
+		DEFAULT_USER_PREFERENCES.autoTagColorEnabled
+	);
 	const [interfaceLanguage, setInterfaceLanguageState] = useState<InterfaceLanguage>(
 		DEFAULT_USER_PREFERENCES.interfaceLanguage
 	);
@@ -61,6 +66,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		if (!user) {
+			setAutoTagColorEnabledState(DEFAULT_USER_PREFERENCES.autoTagColorEnabled);
 			setInterfaceLanguageState(getStoredInterfaceLanguage());
 			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
 			setNoteSparklesEnabledState(DEFAULT_USER_PREFERENCES.noteSparklesEnabled);
@@ -70,6 +76,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 
 		if (preferencesQuery.data) {
 			const preferences = normalizeUserPreferences(preferencesQuery.data);
+			setAutoTagColorEnabledState(preferences.autoTagColorEnabled);
 			setInterfaceLanguageState(preferences.interfaceLanguage);
 			setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
 			setNoteSparklesEnabledState(preferences.noteSparklesEnabled);
@@ -78,6 +85,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		}
 
 		if (preferencesQuery.error) {
+			setAutoTagColorEnabledState(DEFAULT_USER_PREFERENCES.autoTagColorEnabled);
 			setInterfaceLanguageState(getStoredInterfaceLanguage());
 			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
 			setNoteSparklesEnabledState(DEFAULT_USER_PREFERENCES.noteSparklesEnabled);
@@ -96,6 +104,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 	const setInterfaceLanguage = useCallback(
 		(value: InterfaceLanguage) => {
 			const previousPreferences = normalizeUserPreferences({
+				autoTagColorEnabled,
 				interfaceLanguage,
 				mediaAutoplayEnabled,
 				noteSparklesEnabled,
@@ -123,6 +132,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 					},
 					onSuccess: (preferences) => {
 						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
 						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
 						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
 						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
@@ -131,12 +141,21 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 				}
 			);
 		},
-		[interfaceLanguage, mediaAutoplayEnabled, noteSparklesEnabled, updatePreferencesMutation, user, utils]
+		[
+			autoTagColorEnabled,
+			interfaceLanguage,
+			mediaAutoplayEnabled,
+			noteSparklesEnabled,
+			updatePreferencesMutation,
+			user,
+			utils,
+		]
 	);
 
 	const setMediaAutoplayEnabled = useCallback(
 		(value: boolean) => {
 			const previousPreferences = normalizeUserPreferences({
+				autoTagColorEnabled,
 				interfaceLanguage,
 				mediaAutoplayEnabled,
 				noteSparklesEnabled,
@@ -167,6 +186,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 					},
 					onSuccess: (preferences) => {
 						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
 						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
 						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
 						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
@@ -175,12 +195,21 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 				}
 			);
 		},
-		[interfaceLanguage, mediaAutoplayEnabled, noteSparklesEnabled, updatePreferencesMutation, user, utils]
+		[
+			autoTagColorEnabled,
+			interfaceLanguage,
+			mediaAutoplayEnabled,
+			noteSparklesEnabled,
+			updatePreferencesMutation,
+			user,
+			utils,
+		]
 	);
 
 	const setNoteSparklesEnabled = useCallback(
 		(value: boolean) => {
 			const previousPreferences = normalizeUserPreferences({
+				autoTagColorEnabled,
 				interfaceLanguage,
 				mediaAutoplayEnabled,
 				noteSparklesEnabled,
@@ -209,6 +238,7 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 					},
 					onSuccess: (preferences) => {
 						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
 						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
 						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
 						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
@@ -217,24 +247,87 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 				}
 			);
 		},
-		[interfaceLanguage, mediaAutoplayEnabled, noteSparklesEnabled, updatePreferencesMutation, user, utils]
+		[
+			autoTagColorEnabled,
+			interfaceLanguage,
+			mediaAutoplayEnabled,
+			noteSparklesEnabled,
+			updatePreferencesMutation,
+			user,
+			utils,
+		]
+	);
+
+	const setAutoTagColorEnabled = useCallback(
+		(value: boolean) => {
+			const previousPreferences = normalizeUserPreferences({
+				autoTagColorEnabled,
+				interfaceLanguage,
+				mediaAutoplayEnabled,
+				noteSparklesEnabled,
+			});
+			const nextPreferences = normalizeUserPreferences({
+				...previousPreferences,
+				autoTagColorEnabled: value,
+			});
+			setAutoTagColorEnabledState(value);
+
+			if (!user) return;
+
+			utils.user.getPreferences.setData(undefined, nextPreferences);
+			updatePreferencesMutation.mutate(
+				{ autoTagColorEnabled: value },
+				{
+					onError: () => {
+						setAutoTagColorEnabledState(previousPreferences.autoTagColorEnabled);
+						utils.user.getPreferences.setData(undefined, previousPreferences);
+						toast.error(
+							interfaceLanguage === "ru"
+								? "Не удалось сохранить настройку цветов тегов"
+								: "Failed to save tag color setting"
+						);
+					},
+					onSuccess: (preferences) => {
+						const normalizedPreferences = normalizeUserPreferences(preferences);
+						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
+						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
+						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
+						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
+						utils.user.getPreferences.setData(undefined, normalizedPreferences);
+					},
+				}
+			);
+		},
+		[
+			autoTagColorEnabled,
+			interfaceLanguage,
+			mediaAutoplayEnabled,
+			noteSparklesEnabled,
+			updatePreferencesMutation,
+			user,
+			utils,
+		]
 	);
 
 	const value = useMemo(
 		() => ({
+			autoTagColorEnabled,
 			interfaceLanguage,
 			isReady,
 			mediaAutoplayEnabled,
 			noteSparklesEnabled,
+			setAutoTagColorEnabled,
 			setInterfaceLanguage,
 			setMediaAutoplayEnabled,
 			setNoteSparklesEnabled,
 		}),
 		[
+			autoTagColorEnabled,
 			interfaceLanguage,
 			isReady,
 			mediaAutoplayEnabled,
 			noteSparklesEnabled,
+			setAutoTagColorEnabled,
 			setInterfaceLanguage,
 			setMediaAutoplayEnabled,
 			setNoteSparklesEnabled,
