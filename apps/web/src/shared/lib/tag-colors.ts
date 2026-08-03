@@ -15,7 +15,6 @@ export const TAG_COLOR_PALETTE = [
 	"#d15e70",
 ] as const;
 
-
 export function getTagColor(color?: number | null) {
 	if (!color || color < 1) return undefined;
 	return TAG_COLOR_PALETTE[color - 1];
