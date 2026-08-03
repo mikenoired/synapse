@@ -77,6 +77,15 @@
 				font: inherit;
 				font-size: 12px;
 			}
+			input[type="date"] {
+				border: 1px solid var(--line);
+				border-radius: 3px;
+				background: var(--panel);
+				color: var(--ink);
+				padding: 9px 10px;
+				font: inherit;
+				font-size: 12px;
+			}
 			.panel {
 				border: 1px solid var(--line);
 				background: linear-gradient(145deg, #1a201c, #151816);
@@ -131,6 +140,11 @@
 			}
 			.point:hover {
 				fill: var(--acid);
+				r: 6;
+			}
+			.point.selected {
+				fill: var(--coral);
+				stroke: var(--coral);
 				r: 6;
 			}
 			.cards {
@@ -245,6 +259,22 @@
 						<option value="medianReqPerSec">Медиана, req/sec</option>
 					</select>
 				</div>
+				<div class="field">
+					<span>Период</span>
+					<select id="period">
+						<option value="day">День</option>
+						<option value="week">Неделя</option>
+						<option value="month">Месяц</option>
+						<option value="custom">Выбрать период</option>
+					</select>
+				</div>
+				<div class="field" id="custom-range" hidden>
+					<span>От — до</span>
+					<div>
+						<input id="from" type="date" />
+						<input id="to" type="date" />
+					</div>
+				</div>
 			</div>
 
 			<section class="panel">
@@ -259,7 +289,7 @@
 			<div class="cards" id="cards"></div>
 			<div class="detail">
 				<section class="panel">
-					<h2>Последний запуск</h2>
+					<h2>Выбранная точка</h2>
 					<table id="details"></table>
 				</section>
 				<section class="panel">
@@ -270,7 +300,16 @@
 			<p class="status" id="status">Загрузка истории…</p>
 		</main>
 		<script>
-			const state = { history: {}, dates: [], step: "", metric: "medianMs" };
+			const state = {
+				history: {},
+				dates: [],
+				step: "",
+				metric: "medianMs",
+				period: "day",
+				from: "",
+				to: "",
+				selectedEntry: null,
+			};
 			const metricLabels = {
 				medianMs: ["Медиана", "ms"],
 				avgMs: ["Среднее", "ms"],
@@ -284,13 +323,69 @@
 			};
 			const $ = (id) => document.getElementById(id);
 			const format = (value) => (typeof value === "number" ? value.toFixed(2) : "—");
+			const escapeHtml = (value) =>
+				String(value ?? "")
+					.replaceAll("&", "&amp;")
+					.replaceAll("<", "&lt;")
+					.replaceAll(">", "&gt;")
+					.replaceAll('"', "&quot;");
 			const runsForDate = (date) =>
 				(Array.isArray(state.history[date]) ? state.history[date] : [state.history[date]]).filter(Boolean);
 			const latestRun = (date) => runsForDate(date).at(-1) || {};
+			const dateValue = (date) => new Date(`${date}T00:00:00Z`).getTime();
+			const visibleDates = () => {
+				if (!state.dates.length) return [];
+				if (state.period === "custom") {
+					return state.dates.filter(
+						(date) => (!state.from || date >= state.from) && (!state.to || date <= state.to)
+					);
+				}
+				const latest = dateValue(state.dates.at(-1));
+				const days = state.period === "month" ? 30 : state.period === "week" ? 7 : 1;
+				const first = latest - (days - 1) * 24 * 60 * 60 * 1000;
+				return state.dates.filter((date) => dateValue(date) >= first && dateValue(date) <= latest);
+			};
+			const entriesForDates = (dates) =>
+				dates.flatMap((date) => runsForDate(date).map((run) => ({ date, run })));
+
+			function renderDetails(entry) {
+				const run = entry?.run || {};
+				const step = run.steps?.[state.step] || {};
+				$("details").innerHTML = [
+					["runAt", "Время запуска", run.runAt],
+					["commit", "Коммит", run.commit?.message || run.commit?.sha],
+					["avgMs", "Среднее, ms", format(step.avgMs)],
+					["medianMs", "Медиана, ms", format(step.medianMs)],
+					["p95Ms", "P95, ms", format(step.p95Ms)],
+					["p99Ms", "P99, ms", format(step.p99Ms)],
+					["minMs", "Минимум, ms", format(step.minMs)],
+					["maxMs", "Максимум, ms", format(step.maxMs)],
+					["stdDevMs", "StdDev, ms", format(step.stdDevMs)],
+					["avgReqPerSec", "Среднее, req/sec", format(step.avgReqPerSec)],
+					["medianReqPerSec", "Медиана, req/sec", format(step.medianReqPerSec)],
+					["successCount", "Успешно", format(step.successCount)],
+					["errorCount", "Ошибки", format(step.errorCount)],
+				]
+					.map(([key, label, value]) => `<tr><th>${label}</th><td>${escapeHtml(value)}</td></tr>`)
+					.join("");
+				const system = run.system || {};
+				$("system").innerHTML = [
+					["cpuPercent", "CPU процесса, %"],
+					["rssMb", "RSS, MB"],
+					["heapUsedMb", "Heap, MB"],
+					["warmupRuns", "Разминка", run.warmupRuns ?? 0],
+					["runs", "Измерительных сценариев", run.runs],
+				]
+					.map(
+						([key, label, fallback]) =>
+							`<tr><th>${label}</th><td>${format(system[key] ?? fallback)}</td></tr>`
+					)
+					.join("");
+			}
 
 			function draw() {
 				const metric = metricLabels[state.metric];
-				const chartEntries = state.dates.flatMap((date) => runsForDate(date).map((run) => ({ date, run })));
+				const chartEntries = entriesForDates(visibleDates());
 				const values = chartEntries
 					.map((entry) => entry.run?.steps?.[state.step]?.[state.metric])
 					.filter((value) => typeof value === "number");
@@ -325,18 +420,28 @@
 				]);
 				if (points.length > 1)
 					markup += `<polyline class="trace" points="${points.map(([px, py]) => `${px},${py}`).join(" ")}"/>`;
-				for (const [px, py, entry] of points) {
+				for (const [index, [px, py, entry]] of points.entries()) {
 					const label = entry.run.runAt ? entry.run.runAt.replace("T", " ").slice(5, 16) : entry.date;
-					markup += `<circle class="point" cx="${px}" cy="${py}" r="4"><title>${label}: ${format(entry.run?.steps?.[state.step]?.[state.metric])} ${metric[1]}</title></circle>`;
+					const selected = state.selectedEntry?.run === entry.run ? " selected" : "";
+					markup += `<circle class="point${selected}" data-point="${index}" cx="${px}" cy="${py}" r="4"><title>${label}: ${format(entry.run?.steps?.[state.step]?.[state.metric])} ${metric[1]}</title></circle>`;
 				}
 				for (const [index, entry] of chartEntries.entries()) {
 					const label = entry.run.runAt ? entry.run.runAt.slice(11, 16) : entry.date.slice(5);
 					markup += `<text class="axis" x="${x(index)}" y="${height - 12}" text-anchor="middle">${label}</text>`;
 				}
 				svg.innerHTML = markup;
+				for (const point of svg.querySelectorAll("[data-point]")) {
+					point.addEventListener("click", () => {
+						state.selectedEntry = chartEntries[Number(point.getAttribute("data-point"))] || null;
+						draw();
+					});
+				}
 
-				const latestEntry = latestRun(state.dates[state.dates.length - 1]);
-				const latest = latestEntry.steps?.[state.step] || {};
+				const latestEntry = chartEntries.at(-1) || {
+					date: state.dates.at(-1),
+					run: latestRun(state.dates.at(-1)),
+				};
+				const latest = latestEntry.run?.steps?.[state.step] || {};
 				$("cards").innerHTML = [
 					["avgMs", "Среднее"],
 					["medianMs", "Медиана"],
@@ -348,30 +453,11 @@
 							`<div class="card"><div class="card-label">${label}</div><div class="card-value">${format(latest[key])} <small>ms</small></div></div>`
 					)
 					.join("");
-				$("details").innerHTML = [
-					["p99Ms", "P99, ms"],
-					["minMs", "Минимум, ms"],
-					["maxMs", "Максимум, ms"],
-					["avgReqPerSec", "Среднее, req/sec"],
-					["medianReqPerSec", "Медиана, req/sec"],
-					["successCount", "Успешно"],
-					["errorCount", "Ошибки"],
-				]
-					.map(([key, label]) => `<tr><th>${label}</th><td>${format(latest[key])}</td></tr>`)
-					.join("");
-				const system = latestEntry.system || {};
-				$("system").innerHTML = [
-					["cpuPercent", "CPU процесса, %"],
-					["rssMb", "RSS, MB"],
-					["heapUsedMb", "Heap, MB"],
-					["runs", "Сценариев"],
-				]
-					.map(
-						([key, label]) => `<tr><th>${label}</th><td>${format(system[key] ?? latestEntry.runs)}</td></tr>`
-					)
-					.join("");
+				if (!state.selectedEntry || !chartEntries.some((entry) => entry.run === state.selectedEntry.run))
+					state.selectedEntry = latestEntry;
+				renderDetails(state.selectedEntry);
 				$("status").innerHTML =
-					`Последний запуск: <strong>${latestEntry.runAt || state.dates[state.dates.length - 1]}</strong> · запусков за дату: <strong>${runsForDate(state.dates[state.dates.length - 1]).length}</strong> · commit <strong>${latestEntry.commit?.message || "—"}</strong>`;
+					`Период: <strong>${visibleDates()[0] || "—"} — ${visibleDates().at(-1) || "—"}</strong> · точек: <strong>${chartEntries.length}</strong> · выбран: <strong>${state.selectedEntry?.run?.runAt || "—"}</strong>`;
 			}
 
 			async function loadHistory() {
@@ -392,7 +478,7 @@
 			async function init() {
 				state.history = await loadHistory();
 				state.dates = Object.keys(state.history).sort();
-				const steps = Object.keys(latestRun(state.dates[state.dates.length - 1]).steps || {});
+				const steps = Object.keys(latestRun(state.dates.at(-1)).steps || {});
 				state.step = steps[0] || "—";
 				$("step").innerHTML = steps.map((step) => `<option value="${step}">${step}</option>`).join("");
 				$("step").onchange = (event) => {
@@ -403,6 +489,20 @@
 					state.metric = event.target.value;
 					draw();
 				};
+				$("period").onchange = (event) => {
+					state.period = event.target.value;
+					$("custom-range").hidden = state.period !== "custom";
+					draw();
+				};
+				for (const id of ["from", "to"]) {
+					$(id).onchange = (event) => {
+						state[id] = event.target.value;
+						state.period = "custom";
+						$("period").value = "custom";
+						$("custom-range").hidden = false;
+						draw();
+					};
+				}
 				draw();
 			}
 			init().catch((error) => {

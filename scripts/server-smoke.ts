@@ -17,7 +17,12 @@ const { users } = await import("../apps/web/src/server/db/schema");
 const { deleteUserFiles } = await import("../apps/web/src/shared/api/minio");
 
 const statisticsPath = join(import.meta.dir, "..", "docs", "performance", "server-smoke.json");
-const runs = 5;
+const parseCount = (value: string | undefined, fallback: number) => {
+	const parsed = Number(value);
+	return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+};
+const warmupRuns = parseCount(process.env.SMOKE_WARMUP_RUNS, 10);
+const runs = parseCount(process.env.SMOKE_RUNS, 30);
 const imagePaths = [
 	join(import.meta.dir, "..", "test", "assets", "test-image.jpeg"),
 	join(import.meta.dir, "..", "test", "assets", "test-image.png"),
@@ -193,6 +198,10 @@ async function runScenario(run: number, samples: StepSamples) {
 const cpuStart = process.cpuUsage();
 const wallStart = performance.now();
 const samples: StepSamples = {};
+for (let run = 0; run < warmupRuns; run += 1) {
+	await runScenario(run, {});
+	console.log(`warmup ${run + 1}/${warmupRuns} complete`);
+}
 for (let run = 0; run < runs; run += 1) {
 	await runScenario(run, samples);
 	console.log(`scenario ${run + 1}/${runs} complete`);
@@ -230,7 +239,14 @@ try {
 }
 
 const date = new Date().toISOString().slice(0, 10);
-const run = { runAt: new Date().toISOString(), commit: await gitInfo(), runs, steps, system };
+const run = {
+	runAt: new Date().toISOString(),
+	commit: await gitInfo(),
+	warmupRuns,
+	runs,
+	steps,
+	system,
+};
 history[date] = [...(history[date] ?? []), run];
 await mkdir(dirname(statisticsPath), { recursive: true });
 await Bun.write(statisticsPath, `${JSON.stringify(history)}\n`);
