@@ -87,7 +87,7 @@ export const ContentGrid = memo(
 						<p className="text-lg mb-2">{t("notFound.title")}</p>
 						<p className="text-sm">{t("notFound.description")}</p>
 						{onClearFilters && (
-							<Button variant="outline" onClick={onClearFilters} className="mt-4">
+							<Button variant="tertiary" onClick={onClearFilters} className="mt-4">
 								{t("clearFilters")}
 							</Button>
 						)}

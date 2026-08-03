@@ -154,19 +154,17 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 		<form onSubmit={handleSubmit} className="flex flex-col h-full">
 			<ModalBody scrollable>
 				<div className="space-y-4">
-					{/* Info */}
 					<div className="bg-muted/50 border border-border rounded-lg p-4">
 						<h3 className="text-sm font-medium mb-2">Поддерживаемые форматы</h3>
 						<div className="flex flex-wrap gap-2">
 							{Object.values(SUPPORTED_FORMATS).map((format, idx) => (
-								<Badge key={idx} variant="secondary" className="text-xs">
+								<Badge key={idx} variant="solid" className="text-xs">
 									{format.icon} {format.ext}
 								</Badge>
 							))}
 						</div>
 					</div>
 
-					{/* File Upload */}
 					<div className="space-y-2">
 						<label className="text-sm font-medium">Документы</label>
 						<div
@@ -195,7 +193,6 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 							</label>
 						</div>
 
-						{/* Selected Files */}
 						{selectedFiles.length > 0 && (
 							<div className="space-y-2 mt-4">
 								{selectedFiles.map((file, index) => {
@@ -229,9 +226,9 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 				</div>
 			</ModalBody>
 
-			<div className="p-6 pt-4 border-t bg-background flex-shrink-0">
+			<div className="p-6 pt-4 border-t bg-background shrink-0">
 				<ModalActions position="right">
-					<Button type="button" variant="outline" onClick={() => onSuccess()} disabled={isLoading}>
+					<Button type="button" variant="tertiary" onClick={() => onSuccess()} disabled={isLoading}>
 						Отмена
 					</Button>
 					<Button type="submit" disabled={isLoading || selectedFiles.length === 0} loading={isLoading}>

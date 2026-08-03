@@ -155,7 +155,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 								key={tag}
 								tag={tag}
 								tagId={item.tag_ids[tagIndex]}
-								variant="outline"
+								variant="solid"
 								className="text-xs"
 							/>
 						))}
@@ -242,7 +242,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 											key={tag}
 											tag={tag}
 											tagId={item.tag_ids[tagIndex]}
-											variant="outline"
+											variant="solid"
 											className="text-xs"
 										/>
 									))}

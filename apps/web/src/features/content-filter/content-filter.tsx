@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@synapse/ui/cn";
-import { Funnel, X } from "lucide-react";
+import { X } from "lucide-react";
 import { type ChangeEvent, type FocusEvent, useEffect, useRef, useState } from "react";
 
 import { contentTypeOptions, isContentTypeFilterAvailable } from "@/shared/lib/content-type-options";

@@ -65,7 +65,7 @@ export function MediaDropZone({
 					/>
 					<Button
 						type="button"
-						variant="outline"
+						variant="tertiary"
 						size="sm"
 						disabled={isLoading}
 						onClick={() => document.getElementById("file-upload")?.click()}

@@ -97,7 +97,7 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 				<ModalActions position="right">
 					<Button
 						type="button"
-						variant="outline"
+						variant="tertiary"
 						onClick={() => onSuccess()}
 						disabled={createMutation.isPending}>
 						Отмена

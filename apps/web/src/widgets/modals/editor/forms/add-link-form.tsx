@@ -110,7 +110,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 							/>
 							<Button
 								type="button"
-								variant="outline"
+								variant="tertiary"
 								onClick={handleParseLink}
 								disabled={!url.trim() || parsing || createMutation.isPending}>
 								{parsing ? "Обработка..." : "Распознать"}
@@ -151,11 +151,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 
 			<div className="p-6 pt-4 border-t bg-background flex-shrink-0">
 				<ModalActions position="right">
-					<Button
-						type="button"
-						variant="outline"
-						onClick={() => onSuccess()}
-						disabled={createMutation.isPending}>
+					<Button variant="tertiary" onClick={() => onSuccess()} disabled={createMutation.isPending}>
 						Отмена
 					</Button>
 					<Button

@@ -124,7 +124,7 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 								type="button"
 								onClick={handleAddTodo}
 								disabled={!currentTodo.trim() || createMutation.isPending}
-								variant="outline">
+								variant="tertiary">
 								<Plus className="w-4 h-4" />
 							</Button>
 						</div>
@@ -152,7 +152,7 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 				<ModalActions position="right">
 					<Button
 						type="button"
-						variant="outline"
+						variant="tertiary"
 						onClick={() => onSuccess()}
 						disabled={createMutation.isPending}>
 						Отмена

@@ -328,7 +328,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 						<div className="flex justify-end gap-3">
 							<Button
 								type="button"
-								variant="outline"
+								variant="tertiary"
 								onClick={handleClose}
 								disabled={updateContentMutation.isPending}>
 								Cancel
@@ -355,7 +355,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 							You have unsaved changes. Save or discard changes?
 						</div>
 						<div className="flex justify-end gap-2">
-							<Button variant="outline" onClick={handleDiscard}>
+							<Button variant="tertiary" onClick={handleDiscard}>
 								Discard
 							</Button>
 							<Button onClick={handleSave}>Save</Button>

@@ -147,7 +147,7 @@ export default function HomePage() {
 							Войти
 						</Button>
 						<Button
-							variant="outline"
+							variant="tertiary"
 							size="lg"
 							onClick={() => handleAuthClick("register")}
 							className="min-w-40 h-12 text-lg font-medium border-2 transition-all duration-300">

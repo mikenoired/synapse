@@ -186,14 +186,14 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 				/>
 			) : null}
 			{item.tags.length > 0 && (
-				<div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+				<div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
 					<div className="flex flex-wrap gap-1">
 						{item.tags.map((tag: string, tagIndex) => (
 							<ContentTag
 								key={tag}
 								tag={tag}
 								tagId={item.tag_ids[tagIndex]}
-								variant="outline"
+								variant="solid"
 								className="text-xs bg-white/20 border-white/30 text-white"
 							/>
 						))}

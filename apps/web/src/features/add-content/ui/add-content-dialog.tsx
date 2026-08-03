@@ -460,7 +460,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 						<div className="flex justify-end gap-3">
 							<Button
 								type="button"
-								variant="outline"
+								variant="tertiary"
 								onClick={() => onOpenChange(false)}
 								disabled={isLoading}>
 								Discard

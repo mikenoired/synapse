@@ -80,7 +80,7 @@ export function TagManager({
 						onClick={handleAddTag}
 						disabled={!newTag.trim() || isAdding}
 						size="sm"
-						variant="outline">
+						variant="tertiary">
 						<Plus className="w-4 h-4" />
 					</Button>
 				</div>

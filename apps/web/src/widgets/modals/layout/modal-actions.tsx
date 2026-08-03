@@ -38,7 +38,7 @@ interface ActionButtonProps {
 function ActionButton({
 	children,
 	onClick,
-	variant = "default",
+	variant = "primary",
 	disabled = false,
 	loading = false,
 	type = "button",

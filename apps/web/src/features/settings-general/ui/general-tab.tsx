@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Skeleton } from "@synapse/ui/components";
-import { CalendarDays, LogOut, LogOutIcon, Mail } from "lucide-react";
+import { CalendarDays, LogOutIcon, Mail } from "lucide-react";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";

@@ -1291,7 +1291,7 @@ export function UnifiedViewerModal({
 				description={t("viewer.deleteDescription")}
 				confirmText={t("delete")}
 				cancelText={t("cancel")}
-				variant="destructive"
+				variant="primary"
 				onConfirm={confirmDelete}
 			/>
 		</>

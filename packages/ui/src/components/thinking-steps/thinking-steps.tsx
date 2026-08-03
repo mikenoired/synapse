@@ -272,12 +272,12 @@ function ThinkingStep({
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.24, delay, ease: "easeOut" }}>
 				<div className={cn("flex gap-2.5 px-2 py-1.5", shape.item)}>
-					<div className="flex flex-col items-center shrink-0 w-[14px]">
+					<div className="flex flex-col items-center shrink-0 w-3.5">
 						<div className="pt-0.5">
 							{showIcon ? (
 								<Icon size={14} strokeWidth={1.5} className="text-muted-foreground" />
 							) : (
-								<div className="w-[14px] h-[14px] flex items-center justify-center">
+								<div className="w-3.5 h-3.5 flex items-center justify-center">
 									<div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60" />
 								</div>
 							)}
@@ -376,7 +376,7 @@ function ThinkingStepSource({ delay = 0, children, className }: ThinkingStepSour
 				delay,
 				filter: { duration: 0.12, delay },
 			}}>
-			<Badge variant="secondary" className={className}>
+			<Badge variant="solid" className={className}>
 				{children}
 			</Badge>
 		</motion.span>
@@ -404,8 +404,7 @@ function ThinkingStepImage({ src, alt = "", caption, delay = 0, className }: Thi
 				opacity: { duration: 0.2, delay, ease: "easeOut" },
 				filter: { duration: 0.15, delay },
 			}}>
-			{/* eslint-disable-next-line @next/next/no-img-element */}
-			<img src={src} alt={alt} className={cn("w-full max-w-[200px] object-cover", shape.container)} />
+			<img src={src} alt={alt} className={cn("w-full max-w-50 object-cover", shape.container)} />
 			{caption && <span className="text-[11px] text-muted-foreground mt-1 block">{caption}</span>}
 		</motion.div>
 	);

@@ -106,12 +106,10 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 						</div>
 					</div>
 
-					{/* Превью контента */}
 					<div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
 						{textPreview}
 					</div>
 
-					{/* Метаданные */}
 					<div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
 						<div className="flex items-center gap-3">
 							<div className="flex items-center gap-1">
@@ -125,7 +123,6 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 						</div>
 					</div>
 
-					{/* Теги */}
 					{item.tags.length > 0 && (
 						<div className="flex flex-wrap gap-1 pt-2 border-t border-slate-200 dark:border-slate-700">
 							{item.tags.slice(0, 3).map((tag: string, tagIndex) => (
@@ -137,7 +134,7 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 								/>
 							))}
 							{item.tags.length > 3 && (
-								<Badge variant="secondary" className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60">
+								<Badge variant="solid" className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60">
 									+{item.tags.length - 3}
 								</Badge>
 							)}

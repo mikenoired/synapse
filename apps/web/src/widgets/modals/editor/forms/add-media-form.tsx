@@ -243,7 +243,7 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 				<ModalActions position="right">
 					<Button
 						type="button"
-						variant="outline"
+						variant="tertiary"
 						onClick={() => onSuccess()}
 						disabled={uploadMutation.isPending}>
 						Отмена

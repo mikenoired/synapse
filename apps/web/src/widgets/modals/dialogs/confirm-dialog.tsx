@@ -1,7 +1,7 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { AlertTriangle, Info, X } from "lucide-react";
+import { Info, X } from "lucide-react";
 
 import { BaseModal } from "../base";
 import { ModalActions, ModalBody, ModalHeader } from "../layout";
@@ -13,7 +13,7 @@ interface ConfirmDialogProps {
 	description?: string;
 	confirmText?: string;
 	cancelText?: string;
-	variant?: "default" | "destructive" | "warning";
+	variant?: "tertiary" | "primary" | "secondary" | "ghost";
 	icon?: LucideIcon;
 	onConfirm: () => void | Promise<void>;
 	onCancel?: () => void;
@@ -27,7 +27,6 @@ export function ConfirmDialog({
 	description,
 	confirmText = "Подтвердить",
 	cancelText = "Отмена",
-	variant = "default",
 	icon,
 	onConfirm,
 	onCancel,
@@ -45,15 +44,12 @@ export function ConfirmDialog({
 
 	const getIcon = () => {
 		if (icon) return icon;
-		if (variant === "destructive" || variant === "warning") return AlertTriangle;
 		return Info;
 	};
 
 	const Icon = getIcon();
 
 	const getIconColor = () => {
-		if (variant === "destructive") return "text-destructive";
-		if (variant === "warning") return "text-yellow-500";
 		return "text-primary";
 	};
 
@@ -84,11 +80,11 @@ export function ConfirmDialog({
 			<ModalBody noPadding>
 				<div className="px-6 pb-6">
 					<ModalActions position="right">
-						<ModalActions.Button variant="outline" onClick={handleCancel} disabled={loading}>
+						<ModalActions.Button variant="tertiary" onClick={handleCancel} disabled={loading}>
 							{cancelText}
 						</ModalActions.Button>
 						<ModalActions.Button
-							variant={variant === "destructive" ? "destructive" : "default"}
+							variant="primary"
 							onClick={handleConfirm}
 							disabled={loading}
 							loading={loading}>

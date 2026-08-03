@@ -109,7 +109,7 @@ export function DocumentDropZone({
 					/>
 					<Button
 						type="button"
-						variant="outline"
+						variant="tertiary"
 						size="sm"
 						disabled={isLoading}
 						onClick={() => document.getElementById("document-upload")?.click()}

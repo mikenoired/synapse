@@ -8,7 +8,7 @@ export interface ActionBarItem {
 	icon: LucideIcon;
 	label: string;
 	onClick: () => void;
-	variant?: "default" | "destructive" | "ghost" | "outline";
+	variant?: "primary" | "secondary" | "tertiary" | "ghost";
 	disabled?: boolean;
 	loading?: boolean;
 }
@@ -30,7 +30,7 @@ export function ActionBar({ actions, className, orientation = "horizontal" }: Ac
 			{actions.map((action, index) => (
 				<Button
 					key={index}
-					variant={action.variant || "outline"}
+					variant={action.variant || "tertiary"}
 					size="sm"
 					onClick={action.onClick}
 					disabled={action.disabled || action.loading}
