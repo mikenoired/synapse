@@ -15,10 +15,6 @@ export function getSecureImageUrl(objectName: string, token?: string): string {
 	return url;
 }
 
-export function isImageContent(content: string): boolean {
-	return content.includes("/images/") || content.startsWith("images/");
-}
-
 export function getPresignedMediaUrl(apiPath: string): string {
 	if (!apiPath || apiPath.startsWith("data:") || /^https?:\/\//.test(apiPath)) return apiPath;
 	return getSecureImageUrl(apiPath);

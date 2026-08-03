@@ -44,27 +44,3 @@ export function useModalKeyboard({ enabled = true, onEscape, shortcuts = [] }: U
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, [enabled, onEscape, shortcuts]);
 }
-
-export type KeyboardShortcutHint = {
-	keys: string[];
-	label: string;
-	action: string;
-};
-
-export function useModalKeyboardHints(shortcuts: KeyboardShortcut[]): KeyboardShortcutHint[] {
-	return shortcuts.map((shortcut) => {
-		const keys: string[] = [];
-
-		if (shortcut.meta || shortcut.ctrl) keys.push("⌘");
-
-		if (shortcut.shift) keys.push("⇧");
-
-		keys.push(shortcut.key.toUpperCase());
-
-		return {
-			keys,
-			label: shortcut.key,
-			action: "action",
-		};
-	});
-}

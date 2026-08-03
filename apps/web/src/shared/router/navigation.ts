@@ -20,7 +20,3 @@ export function useSearchParams() {
 	const search = useRouterState({ select: (state) => state.location.searchStr });
 	return new URLSearchParams(search);
 }
-
-export function redirect(to: string): never {
-	throw new Error(`redirect(${to}) is only valid in a route loader`);
-}

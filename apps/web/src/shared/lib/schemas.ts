@@ -191,10 +191,6 @@ export function parseLinkContent(content: string): LinkContent | null {
 	}
 }
 
-export function stringifyLinkContent(linkContent: LinkContent): string {
-	return JSON.stringify(linkContent);
-}
-
 export interface MediaJson {
 	media: {
 		object?: string;

@@ -1,14 +1,3 @@
-import { ApiError } from "@/server/lib/api-error";
-
-export function numWord(value: number, words: string[]) {
-	value = Math.abs(value) % 100;
-	const num = value % 10;
-	if (value > 10 && value < 20) return words[2];
-	if (num > 1 && num < 5) return words[1];
-	if (num === 1) return words[0];
-	return words[2];
-}
-
 /**
  * Format size from bytes to human-readable format
  * @param bytes Size in bytes
@@ -48,71 +37,4 @@ export function formatSize(
 	});
 
 	return `${formattedSize} ${units[clampedIndex]}`;
-}
-
-/**
- * Parse a human-readable size string back to bytes
- * @param sizeString Size string like "1.5 GB" or "512 MB"
- * @returns Size in bytes or null if invalid
- */
-export function parseSize(sizeString: string): number | null {
-	const match = sizeString.trim().match(/^(\d+(?:\.\d+)?)\s*([a-z]+)$/i);
-	if (!match) return null;
-
-	const [, numberStr, unit] = match;
-	const number = Number.parseFloat(numberStr);
-
-	if (Number.isNaN(number)) return null;
-
-	const unitLower = unit.toLowerCase();
-	const binaryUnits = {
-		b: 1,
-		kib: 1024,
-		mib: 1024 ** 2,
-		gib: 1024 ** 3,
-		tib: 1024 ** 4,
-		pib: 1024 ** 5,
-	};
-
-	const decimalUnits = {
-		b: 1,
-		kb: 1000,
-		mb: 1000 ** 2,
-		gb: 1000 ** 3,
-		tb: 1000 ** 4,
-		pb: 1000 ** 5,
-	};
-
-	const multiplier =
-		binaryUnits[unitLower as keyof typeof binaryUnits] ||
-		decimalUnits[unitLower as keyof typeof decimalUnits];
-
-	return multiplier ? Math.round(number * multiplier) : null;
-}
-
-/**
- * Convert bytes to specific unit
- * @param bytes Size in bytes
- * @param targetUnit Target unit (e.g., 'MB', 'GiB')
- * @returns Size in target unit
- */
-export function convertSize(bytes: number, targetUnit: string): number {
-	const parsed = parseSize(`1 ${targetUnit}`);
-	return parsed ? bytes / parsed : 0;
-}
-
-export function handleAuthError(error: unknown, code: "BAD_REQUEST" | "UNAUTHORIZED" = "BAD_REQUEST"): never {
-	const message = error instanceof Error && error.message ? error.message : "Authentication required";
-
-	throw new ApiError({
-		code,
-		message,
-	});
-}
-
-export function handleConflictError(message: string): never {
-	throw new ApiError({
-		code: "CONFLICT",
-		message,
-	});
 }

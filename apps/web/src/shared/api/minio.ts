@@ -1,5 +1,4 @@
 import { Buffer } from "node:buffer";
-import type Stream from "node:stream";
 
 import * as Minio from "minio";
 
@@ -29,15 +28,6 @@ const minioClient = new Minio.Client({
 });
 
 const bucketName = MINIO_BUCKET_NAME;
-
-export async function ensureBucketExists() {
-	try {
-		const exists = await minioClient.bucketExists(bucketName);
-		if (!exists) {
-			await minioClient.makeBucket(bucketName, "us-east-1");
-		}
-	} catch {}
-}
 
 export async function uploadFile(
 	file: Buffer,
@@ -90,19 +80,6 @@ export function getPublicUrl(objectName: string): string {
 	// например, генерация presigned URL или использование CDN.
 	// Сейчас мы просто формируем прямой URL к нашему локальному API-роуту.
 	return `/api/files/${objectName}`;
-}
-
-export async function getFile(
-	objectName: string
-): Promise<{ stream: Stream.Readable; contentType?: string }> {
-	const stream = await minioClient.getObject(bucketName, objectName);
-
-	const stat = await minioClient.statObject(bucketName, objectName);
-
-	return {
-		stream,
-		contentType: stat.metaData?.["content-type"],
-	};
 }
 
 export async function getFileBuffer(objectName: string) {

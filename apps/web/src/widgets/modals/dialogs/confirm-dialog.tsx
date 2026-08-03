@@ -96,19 +96,3 @@ export function ConfirmDialog({
 		</BaseModal>
 	);
 }
-
-// Hook для удобного использования
-export function useConfirm() {
-	return {
-		confirm: (options: Omit<ConfirmDialogProps, "open" | "onOpenChange">) => {
-			return new Promise<boolean>((resolve) => {
-				// TODO: Интеграция с глобальным state для показа диалога
-				// Пока возвращаем стандартный confirm
-				const result = window.confirm(
-					options.title + (options.description ? `\n${options.description}` : "")
-				);
-				resolve(result);
-			});
-		},
-	};
-}

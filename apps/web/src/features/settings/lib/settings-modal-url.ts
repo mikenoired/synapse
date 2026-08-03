@@ -35,11 +35,3 @@ export function getSettingsCloseHref(pathname: string, searchParams: SearchParam
 	nextSearchParams.delete(LEGACY_SETTINGS_QUERY_PARAM);
 	return formatHref(pathname, nextSearchParams);
 }
-
-export function getSidebarRouteHref(pathname: string, targetPath: string, searchParams: SearchParamsInput) {
-	if (pathname !== targetPath) {
-		return targetPath;
-	}
-
-	return getSettingsCloseHref(pathname, searchParams);
-}
