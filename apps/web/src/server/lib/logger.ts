@@ -34,6 +34,28 @@ function formatValue(value: unknown) {
 	return String(value);
 }
 
+function statusText(status: number) {
+	const labels: Record<number, string> = {
+		200: "OK",
+		201: "Created",
+		204: "No Content",
+		301: "Moved Permanently",
+		302: "Found",
+		304: "Not Modified",
+		400: "Bad Request",
+		401: "Unauthorized",
+		403: "Forbidden",
+		404: "Not Found",
+		409: "Conflict",
+		422: "Unprocessable Entity",
+		429: "Too Many Requests",
+		500: "Internal Server Error",
+		502: "Bad Gateway",
+		503: "Service Unavailable",
+	};
+	return labels[status] ?? (status >= 500 ? "Server Error" : status >= 400 ? "Client Error" : "Response");
+}
+
 function prettyMessage(level: LogLevel, event: string, fields: Record<string, unknown>, timestamp: string) {
 	const method = typeof fields.method === "string" ? fields.method : undefined;
 	const path = typeof fields.path === "string" ? fields.path : undefined;
@@ -43,7 +65,7 @@ function prettyMessage(level: LogLevel, event: string, fields: Record<string, un
 
 	let message = event.replaceAll(".", " ");
 	if (event === "http.request" && method && path && status !== undefined) {
-		message = `${method} ${path} ${status}${durationMs === undefined ? "" : ` ${durationMs}ms`}`;
+		message = `${method} ${path}`;
 	}
 
 	const levelTone =
@@ -61,7 +83,7 @@ function prettyMessage(level: LogLevel, event: string, fields: Record<string, un
 	return [
 		color(formatTime(timestamp), "muted"),
 		color(level.toUpperCase().padEnd(5), levelTone),
-		status === undefined ? undefined : color(String(status), statusTone),
+		status === undefined ? undefined : color(`${status} ${statusText(status)}`, statusTone),
 		color(message, level === "error" ? "red" : "white"),
 		durationMs === undefined || event === "http.request" ? undefined : color(`${durationMs}ms`, "muted"),
 		requestId ? color(`rid=${requestId.slice(0, 8)}`, "muted") : undefined,
