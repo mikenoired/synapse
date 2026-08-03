@@ -1,11 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
+import dynamic from "@/shared/router/dynamic";
 
 const AddContentModal = dynamic(() =>
 	import("@/widgets/modals/editor/add-content-modal").then((mod) => ({ default: mod.AddContentModal }))

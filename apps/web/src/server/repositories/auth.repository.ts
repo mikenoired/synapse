@@ -4,7 +4,7 @@ import { DEFAULT_PLAN_ID } from "@/shared/config/plans";
 
 import type { Context } from "../context";
 import { users } from "../db/schema";
-import { ApiError as TRPCError } from "../lib/api-error";
+import { ApiError } from "../lib/api-error";
 import { signRefreshToken, signToken } from "../lib/jwt";
 
 export default class AuthRepository {
@@ -24,7 +24,7 @@ export default class AuthRepository {
 				.returning();
 
 			if (!user) {
-				throw new TRPCError({
+				throw new ApiError({
 					code: "INTERNAL_SERVER_ERROR",
 					message: "Create user error",
 				});
@@ -52,16 +52,16 @@ export default class AuthRepository {
 				error: null,
 			};
 		} catch (error) {
-			if (error instanceof TRPCError) throw error;
+			if (error instanceof ApiError) throw error;
 			const databaseError = error as { code?: string; cause?: { code?: string } };
 			if (databaseError.code === "23505" || databaseError.cause?.code === "23505") {
-				throw new TRPCError({
+				throw new ApiError({
 					code: "BAD_REQUEST",
 					message: "User with current E-Mail already exist",
 				});
 			}
 
-			throw new TRPCError({
+			throw new ApiError({
 				code: "INTERNAL_SERVER_ERROR",
 				message: "User register error",
 			});
@@ -75,7 +75,7 @@ export default class AuthRepository {
 			});
 
 			if (!user) {
-				throw new TRPCError({
+				throw new ApiError({
 					code: "UNAUTHORIZED",
 					message: "Incorrect E-Mail or password",
 				});
@@ -84,7 +84,7 @@ export default class AuthRepository {
 			const isPasswordValid = await Bun.password.verify(password, user.passwordHash);
 
 			if (!isPasswordValid) {
-				throw new TRPCError({
+				throw new ApiError({
 					code: "UNAUTHORIZED",
 					message: "Incorrect E-Mail or password",
 				});
@@ -112,9 +112,9 @@ export default class AuthRepository {
 				error: null,
 			};
 		} catch (error) {
-			if (error instanceof TRPCError) throw error;
+			if (error instanceof ApiError) throw error;
 
-			throw new TRPCError({
+			throw new ApiError({
 				code: "INTERNAL_SERVER_ERROR",
 				message: "Login error",
 			});

@@ -3,7 +3,7 @@
 import { Switch } from "@synapse/ui/components";
 import { HardDrive, PlayCircle } from "lucide-react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useI18n } from "@/shared/lib/i18n";
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
 import { formatSize } from "@/shared/lib/utils";
@@ -49,7 +49,7 @@ function AutoplayPreference({
 }
 
 export default function MediaTab() {
-	const { data: storageUsage } = trpc.user.getStorageUsage.useQuery();
+	const { data: storageUsage } = api.user.getStorageUsage.useQuery();
 	const { isReady, mediaAutoplayEnabled, setMediaAutoplayEnabled } = useUserPreferences();
 	const { locale, t } = useI18n();
 	const { fileSize, files } = storageUsage || { fileSize: 0, files: 0 };

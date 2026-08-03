@@ -160,8 +160,8 @@ export const api = new Hono()
 			method: c.req.method,
 			path: new URL(c.req.url).pathname,
 		});
-		const trpcLike = error as { code?: string; message?: string };
-		const code = trpcLike.code as ApiError["code"] | undefined;
+		const apiError = error as { code?: string; message?: string };
+		const code = apiError.code as ApiError["code"] | undefined;
 		const status =
 			code === "UNAUTHORIZED"
 				? 401
@@ -178,7 +178,7 @@ export const api = new Hono()
 									: 500;
 		return c.json(
 			{
-				error: trpcLike.message || "Internal server error",
+				error: apiError.message || "Internal server error",
 				code: code || "INTERNAL_SERVER_ERROR",
 				fieldErrors: null,
 			},

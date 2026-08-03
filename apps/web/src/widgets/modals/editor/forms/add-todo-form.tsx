@@ -4,7 +4,7 @@ import { Button, Input } from "@synapse/ui/components";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
 
@@ -21,9 +21,9 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 	const [tags, setTags] = useState<string[]>(initialTags);
 	const [todos, setTodos] = useState<{ text: string; marked: boolean }[]>([{ text: "", marked: false }]);
 	const [currentTodo, setCurrentTodo] = useState("");
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const createMutation = trpc.content.create.useMutation();
+	const createMutation = api.content.create.useMutation();
 
 	const handleAddTodo = () => {
 		if (currentTodo.trim()) {

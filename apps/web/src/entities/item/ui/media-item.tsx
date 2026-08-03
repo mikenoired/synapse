@@ -1,10 +1,10 @@
 import { Music2 } from "lucide-react";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content } from "@/shared/lib/schemas";
 import { parseAudioJson, parseMediaJson } from "@/shared/lib/schemas";
+import Image from "@/shared/router/image";
 import { ContentTag } from "@/shared/ui/content-tag";
 
 function ensureDataUri(base64: string): string {

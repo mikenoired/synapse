@@ -1,13 +1,13 @@
 "use client";
 
 import { Button } from "@synapse/ui/components";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
 import { AuthDialog } from "@/features/auth-dialog/ui/auth-dialog";
 import { useAuth } from "@/shared/lib/auth-context";
+import Image from "@/shared/router/image";
+import { useRouter } from "@/shared/router/navigation";
 
 interface FeatureHighlightProps {
 	title: string;

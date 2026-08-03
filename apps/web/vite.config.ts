@@ -8,11 +8,6 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": source,
-			"next/navigation": `${source}shared/router/next-navigation.ts`,
-			"next/link": `${source}shared/router/next-link.tsx`,
-			"next/image": `${source}shared/router/next-image.tsx`,
-			"next/dynamic": `${source}shared/router/next-dynamic.tsx`,
-			"next/web-vitals": `${source}shared/router/next-web-vitals.ts`,
 		},
 	},
 	build: {

@@ -4,7 +4,7 @@ import { Button, Skeleton } from "@synapse/ui/components";
 import { CalendarDays, LogOutIcon, Mail } from "lucide-react";
 import { useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useAuth } from "@/shared/lib/auth-context";
 import { useI18n } from "@/shared/lib/i18n";
 
@@ -26,7 +26,7 @@ function formatRegistrationDate(
 }
 
 export default function GeneralTab() {
-	const { data: user, isLoading } = trpc.user.getUser.useQuery();
+	const { data: user, isLoading } = api.user.getUser.useQuery();
 	const { signOut } = useAuth();
 	const { locale, t } = useI18n();
 	const [isSigningOut, setIsSigningOut] = useState(false);

@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useAuth } from "@/shared/lib/auth-context";
 
 import {
@@ -39,7 +39,7 @@ function getStoredInterfaceLanguage() {
 }
 
 export function UserPreferencesProvider({ children }: { children: ReactNode }) {
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 	const { user } = useAuth();
 	const [isReady, setIsReady] = useState(false);
 	const [autoTagColorEnabled, setAutoTagColorEnabledState] = useState(
@@ -55,14 +55,14 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		DEFAULT_USER_PREFERENCES.noteSparklesEnabled
 	);
 
-	const preferencesQuery = trpc.user.getPreferences.useQuery(undefined, {
+	const preferencesQuery = api.user.getPreferences.useQuery(undefined, {
 		enabled: Boolean(user),
 		retry: false,
 		staleTime: Number.POSITIVE_INFINITY,
 		refetchOnWindowFocus: false,
 	});
 
-	const updatePreferencesMutation = trpc.user.updatePreferences.useMutation();
+	const updatePreferencesMutation = api.user.updatePreferences.useMutation();
 
 	useEffect(() => {
 		if (!user) {

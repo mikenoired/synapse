@@ -1,4 +1,4 @@
-import type { ReadonlyURLSearchParams } from "next/navigation";
+import type { ReadonlyURLSearchParams } from "@/shared/router/navigation";
 
 import {
 	DEFAULT_SETTINGS_TAB,

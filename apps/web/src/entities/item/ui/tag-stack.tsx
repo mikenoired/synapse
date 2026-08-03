@@ -2,12 +2,12 @@
 
 import { cn } from "@synapse/ui/cn";
 import { FileText, LinkIcon } from "lucide-react";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content } from "@/shared/lib/schemas";
 import { parseMediaJson } from "@/shared/lib/schemas";
+import Image from "@/shared/router/image";
 
 function ensureDataUri(base64: string): string {
 	if (!base64) return "";

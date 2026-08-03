@@ -21,13 +21,11 @@ import {
 	Volume2,
 	VolumeX,
 } from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentSuggestions } from "@/features/content-suggestions/content-suggestions";
 import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import useMouseActivity from "@/shared/hooks/use-mouse-activity";
 import { useI18n } from "@/shared/lib/i18n";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
@@ -40,6 +38,8 @@ import {
 	parseMediaJson,
 } from "@/shared/lib/schemas";
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
+import Image from "@/shared/router/image";
+import { useRouter } from "@/shared/router/navigation";
 import { ContentTag } from "@/shared/ui/content-tag";
 import { GenerateTagsButton, type SuggestedTag } from "@/shared/ui/generate-tags-button";
 import { PixelSparkles } from "@/shared/ui/pixel-sparkles";
@@ -384,7 +384,7 @@ export function UnifiedViewerModal({
 }: UnifiedViewerModalProps) {
 	const { locale, t } = useI18n();
 	const router = useRouter();
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 	const [currentIndex, setCurrentIndex] = useState(0);
 	const [direction, setDirection] = useState(0);
 	const [showDetails, setShowDetails] = useState(false);
@@ -417,7 +417,7 @@ export function UnifiedViewerModal({
 	}, [baseItems, discoveredItems]);
 
 	const currentBaseItem = normalizedItems[currentIndex] ?? item;
-	const currentDetailQuery = trpc.content.getById.useQuery(
+	const currentDetailQuery = api.content.getById.useQuery(
 		{ id: currentBaseItem.id },
 		{
 			enabled: open,
@@ -630,7 +630,7 @@ export function UnifiedViewerModal({
 		};
 	}, [audioUrl, currentItem.type, mediaAutoplayEnabled, preferencesReady]);
 
-	const updateContentMutation = trpc.content.update.useMutation({
+	const updateContentMutation = api.content.update.useMutation({
 		onSuccess: (updatedContent) => {
 			setUpdatedItems((current) => ({ ...current, [updatedContent.id]: updatedContent }));
 			void Promise.all([
@@ -645,7 +645,7 @@ export function UnifiedViewerModal({
 		},
 	});
 
-	const deleteContentMutation = trpc.content.delete.useMutation({
+	const deleteContentMutation = api.content.delete.useMutation({
 		onSuccess: () => {
 			void Promise.all([
 				utils.content.getTags.invalidate(),

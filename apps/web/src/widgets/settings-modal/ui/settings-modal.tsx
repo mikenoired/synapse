@@ -2,8 +2,6 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useRef } from "react";
 
 import AiTab from "@/features/settings-ai/ui/ai-tab";
@@ -12,6 +10,8 @@ import GeneralTab from "@/features/settings-general/ui/general-tab";
 import MediaTab from "@/features/settings-media/ui/media-tab";
 import type { SettingsTabKey } from "@/features/settings/model/settings-tabs";
 import { useI18n } from "@/shared/lib/i18n";
+import Link from "@/shared/router/link";
+import { usePathname, useSearchParams } from "@/shared/router/navigation";
 
 import { SettingsModalNav } from "./settings-modal-nav";
 

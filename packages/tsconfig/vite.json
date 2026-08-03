@@ -1,6 +1,6 @@
 {
 	"$schema": "https://json.schemastore.org/tsconfig",
-	"display": "Next.js",
+	"display": "Vite React application",
 	"extends": "./base.json",
 	"compilerOptions": {
 		"declaration": false,
@@ -20,12 +20,8 @@
 		"jsx": "preserve",
 		"strictNullChecks": true,
 		"useUnknownInCatchVariables": true,
-		"plugins": [
-			{
-				"name": "next"
-			}
-		]
+		"plugins": []
 	},
-	"include": ["src", "next-env.d.ts", "../types/next-auth.d.ts", "../types/*.d.ts"],
+	"include": ["src", "../types/*.d.ts"],
 	"exclude": ["node_modules"]
 }

@@ -3,7 +3,7 @@
 import { Skeleton } from "@synapse/ui/components";
 import { Activity, Bot, CircleDollarSign, Gauge, Timer } from "lucide-react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { isUnlimited } from "@/shared/config/plans";
 import { useI18n } from "@/shared/lib/i18n";
 import { PixelSparkles } from "@/shared/ui/pixel-sparkles";
@@ -61,7 +61,7 @@ function Metric({ icon: Icon, label, value }: { icon: typeof Activity; label: st
 }
 
 export default function AiTab() {
-	const { data, isLoading, isError } = trpc.ai.getUsageOverview.useQuery();
+	const { data, isLoading, isError } = api.ai.getUsageOverview.useQuery();
 	const { locale, t } = useI18n();
 
 	if (isLoading) {

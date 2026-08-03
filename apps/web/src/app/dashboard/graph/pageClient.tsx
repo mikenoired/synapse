@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Item from "@/entities/item/ui/item";
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 import { useModal } from "@/widgets/modals/context/modal-context";
 
@@ -31,13 +31,13 @@ interface HoverState {
 export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Edge[] }) {
 	const graphRef = useRef<HTMLDivElement>(null);
 	const previewRef = useRef<HTMLDivElement>(null);
-	const { data: currentTags = [] } = trpc.content.getTags.useQuery(undefined, {
+	const { data: currentTags = [] } = api.content.getTags.useQuery(undefined, {
 		refetchOnMount: true,
 	});
 	const graphData = useGraphData(nodes, edges, currentTags);
 	const { openModal } = useModal();
-	const utils = trpc.useUtils();
-	const deleteMutation = trpc.content.delete.useMutation();
+	const utils = api.useUtils();
+	const deleteMutation = api.content.delete.useMutation();
 	const [hoverState, setHoverState] = useState<HoverState | null>(null);
 	const [hoveredItem, setHoveredItem] = useState<Content | null>(null);
 	const [previewSize, setPreviewSize] = useState({ width: 320, height: 120 });

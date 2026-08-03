@@ -2,8 +2,9 @@
 
 import { Button, Input } from "@synapse/ui/components";
 import { Plus, Upload, X } from "lucide-react";
-import Image from "next/image";
 import type { DragEvent } from "react";
+
+import Image from "@/shared/router/image";
 
 interface MediaDropZoneProps {
 	dragActive: boolean;

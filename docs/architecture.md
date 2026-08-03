@@ -68,4 +68,4 @@ packages/ui            Framework-agnostic shared component library
 - The application is a Vite-built React SPA. TanStack Router owns `/`, `/dashboard`, `/dashboard/tags`, `/dashboard/tag/:id`, and `/dashboard/graph`.
 - TanStack Query owns asynchronous server state; it talks to the Hono API at `/api` with cookie credentials.
 - Bun starts the single production server. It mounts Hono first, then serves `apps/web/dist` and falls back to `index.html` for client routes.
-- Hono `Api` is the type authority for HTTP RPC. Zod validates inputs at the boundary; client code derives its contracts without tRPC.
+- Hono `Api` is the type authority for HTTP RPC. Zod validates inputs at the boundary; client code derives its contracts through the Hono client and query hooks.

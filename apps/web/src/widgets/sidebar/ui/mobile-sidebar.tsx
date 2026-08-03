@@ -1,6 +1,7 @@
 import { cn } from "@synapse/ui/cn";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+
+import Link from "@/shared/router/link";
+import { usePathname } from "@/shared/router/navigation";
 
 import type { NavItem } from "./sidebar";
 

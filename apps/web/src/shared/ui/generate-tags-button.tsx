@@ -4,7 +4,7 @@ import { Button } from "@synapse/ui/components";
 import { Sparkles } from "lucide-react";
 import toast from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 
@@ -34,7 +34,7 @@ type GenerateTagsButtonProps = (DraftInput | ExistingInput) & {
 
 export function GenerateTagsButton({ disabled, onResult, className, ...input }: GenerateTagsButtonProps) {
 	const { t } = useI18n();
-	const mutation = trpc.ai.suggestTags.useMutation({
+	const mutation = api.ai.suggestTags.useMutation({
 		onSuccess: (res) => {
 			if (res.success) {
 				const total = res.existing.length + res.newTags.length;

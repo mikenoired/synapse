@@ -14,7 +14,6 @@
 	"bracketSameLine": true,
 	"bracketSpacing": true,
 	"ignorePatterns": [
-		"**/.next/**",
 		"**/src/routeTree.gen.ts",
 		"**/src/styles.css",
 		"docs/performance/server-smoke.json",

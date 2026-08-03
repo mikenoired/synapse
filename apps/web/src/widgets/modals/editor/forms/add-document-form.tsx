@@ -5,7 +5,7 @@ import { Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 
 import { ModalActions, ModalBody } from "../../layout";
@@ -30,9 +30,9 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 	const [dragActive, setDragActive] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const importFileMutation = trpc.content.importFile.useMutation({
+	const importFileMutation = api.content.importFile.useMutation({
 		onSuccess: () => {
 			void Promise.all([
 				utils.content.getAvailableTypes.invalidate(),

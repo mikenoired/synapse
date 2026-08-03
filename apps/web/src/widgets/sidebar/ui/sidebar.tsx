@@ -2,7 +2,6 @@
 
 import type { LucideProps } from "lucide-react";
 import { Home, Network, Plus, Settings, Tag } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";
 import { useCallback } from "react";
 
@@ -10,6 +9,7 @@ import { getSettingsHref } from "@/features/settings/lib/settings-modal-url";
 import { DEFAULT_SETTINGS_TAB, SETTINGS_QUERY_PARAM } from "@/features/settings/model/settings-tabs";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import { useI18n } from "@/shared/lib/i18n";
+import { usePathname, useSearchParams } from "@/shared/router/navigation";
 
 import DesktopSidebar from "./desktop-sidebar";
 import MobileSidebar from "./mobile-sidebar";

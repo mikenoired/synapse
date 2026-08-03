@@ -3,11 +3,11 @@
 import { cn } from "@synapse/ui/cn";
 import { Badge } from "@synapse/ui/components";
 import { X } from "lucide-react";
-import Link from "next/link";
 import type { CSSProperties, MouseEvent, ReactNode } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { getTagColorStyle } from "@/shared/lib/tag-colors";
+import Link from "@/shared/router/link";
 
 type BadgeProps = React.ComponentProps<typeof Badge>;
 
@@ -35,7 +35,7 @@ export function ContentTag({
 	style,
 }: ContentTagProps) {
 	const stop = (event: MouseEvent) => event.stopPropagation();
-	const { data: knownTags = [] } = trpc.content.getTags.useQuery(undefined, {
+	const { data: knownTags = [] } = api.content.getTags.useQuery(undefined, {
 		enabled: color === undefined,
 		refetchOnMount: true,
 		staleTime: 30_000,

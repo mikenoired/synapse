@@ -13,7 +13,7 @@ import {
 
 import type { Context } from "../context";
 import type { content as contentTable } from "../db/schema";
-import { ApiError as TRPCError } from "../lib/api-error";
+import { ApiError } from "../lib/api-error";
 import { buildContentSearchText } from "../lib/content-search";
 import {
 	deleteStoredNoteImages,
@@ -268,10 +268,10 @@ export default class ContentService {
 		const { file, tags, title } = input;
 
 		if (!isSupportedFileType(file.name, file.type)) {
-			throw new TRPCError({ code: "BAD_REQUEST", message: `Неподдерживаемый тип файла: ${file.name}` });
+			throw new ApiError({ code: "BAD_REQUEST", message: `Неподдерживаемый тип файла: ${file.name}` });
 		}
 		if (file.size > MAX_IMPORT_FILE_SIZE) {
-			throw new TRPCError({
+			throw new ApiError({
 				code: "BAD_REQUEST",
 				message: "Файл слишком большой. Максимальный размер: 50MB",
 			});

@@ -1,11 +1,11 @@
 "use client";
 
 import { TabItem, Tabs, TabsList } from "@synapse/ui/components";
-import { useRouter } from "next/navigation";
 
 import { getSettingsHref } from "@/features/settings/lib/settings-modal-url";
 import { isSettingsTab, settingsTabs, type SettingsTabKey } from "@/features/settings/model/settings-tabs";
 import { useI18n } from "@/shared/lib/i18n";
+import { useRouter } from "@/shared/router/navigation";
 
 interface SettingsModalNavProps {
 	activeTab: SettingsTabKey;

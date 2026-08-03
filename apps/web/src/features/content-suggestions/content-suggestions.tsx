@@ -4,14 +4,14 @@ import { cn } from "@synapse/ui/cn";
 import { Skeleton } from "@synapse/ui/components";
 import { motion } from "framer-motion";
 import { Hash } from "lucide-react";
-import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
 import { ContentMasonry } from "@/features/content-grid/content-masonry";
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useInfiniteScroll } from "@/shared/hooks/use-infinite-scroll";
 import type { Content } from "@/shared/lib/schemas";
 import { getTagColorStyle } from "@/shared/lib/tag-colors";
+import Link from "@/shared/router/link";
 
 interface ContentSuggestionsProps {
 	item: Content;
@@ -29,7 +29,7 @@ export function ContentSuggestions({
 	dark = false,
 }: ContentSuggestionsProps) {
 	const [enabled, setEnabled] = useState(false);
-	const { data: currentTags = [] } = trpc.content.getTags.useQuery(undefined, {
+	const { data: currentTags = [] } = api.content.getTags.useQuery(undefined, {
 		refetchOnMount: true,
 	});
 	const currentColorByTagId = useMemo(
@@ -43,7 +43,7 @@ export function ContentSuggestions({
 		rootMargin: "320px 0px",
 	});
 
-	const query = trpc.content.getSuggestions.useInfiniteQuery(
+	const query = api.content.getSuggestions.useInfiniteQuery(
 		{ contentId: item.id, limit: 12 },
 		{
 			enabled,

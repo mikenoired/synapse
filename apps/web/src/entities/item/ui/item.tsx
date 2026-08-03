@@ -12,7 +12,7 @@ import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
 import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content, LinkContent } from "@/shared/lib/schemas";
 import { extractTextFromStructuredContent, parseLinkContent } from "@/shared/lib/schemas";
@@ -58,10 +58,10 @@ export default function Item({
 	disableAnimation,
 }: ItemProps) {
 	const [editOpen, setEditOpen] = useState(false);
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 	const { t } = useI18n();
 
-	const deleteMutation = trpc.content.delete.useMutation({
+	const deleteMutation = api.content.delete.useMutation({
 		onSuccess: () => {
 			void Promise.all([
 				utils.content.getTags.invalidate(),

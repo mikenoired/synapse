@@ -136,10 +136,10 @@ function json(body: unknown): RequestInit {
 	return { method: "POST", body: JSON.stringify(body) };
 }
 
-// Compatibility facade: keeps feature components small while every request now goes to Hono.
-// It deliberately contains no tRPC client/runtime dependency and can be removed as features
+// Query-hook facade: keeps feature components small while every request goes to Hono.
+// It deliberately contains no generated client/runtime dependency and can be removed as features
 // are converted to explicit queryOptions factories.
-const runtimeTrpc = {
+const runtimeApi = {
 	content: {
 		getAll: {
 			useInfiniteQuery: (input: Input, options: any = {}) =>
@@ -354,4 +354,4 @@ interface Client {
 	useUtils: () => ClientUtils;
 }
 
-export const trpc = runtimeTrpc as unknown as Client;
+export const api = runtimeApi as unknown as Client;

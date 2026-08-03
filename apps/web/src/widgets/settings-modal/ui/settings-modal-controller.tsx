@@ -1,13 +1,12 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-
 import { getSettingsCloseHref } from "@/features/settings/lib/settings-modal-url";
 import {
 	LEGACY_SETTINGS_QUERY_PARAM,
 	getSettingsTab,
 	SETTINGS_QUERY_PARAM,
 } from "@/features/settings/model/settings-tabs";
+import { usePathname, useRouter, useSearchParams } from "@/shared/router/navigation";
 
 import { SettingsModal } from "./settings-modal";
 

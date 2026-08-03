@@ -3,7 +3,7 @@
 import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { apiUrl } from "@/shared/config/api";
 import type { Content } from "@/shared/lib/schemas";
 import type { LinkContent } from "@/shared/lib/schemas";
@@ -23,9 +23,9 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 	const [tags, setTags] = useState<string[]>(initialTags);
 	const [parsing, setParsing] = useState(false);
 	const [parsedLink, setParsedLink] = useState<LinkContent | null>(null);
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const createMutation = trpc.content.create.useMutation();
+	const createMutation = api.content.create.useMutation();
 	const parseLink = async (targetUrl: string): Promise<LinkContent> => {
 		const response = await fetch(apiUrl("/parse-link"), {
 			method: "POST",

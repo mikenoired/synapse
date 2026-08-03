@@ -1,17 +1,17 @@
 "use client";
 
 import { Skeleton } from "@synapse/ui/components";
-import Link from "next/link";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { TagStack } from "@/entities/item/ui/tag-stack";
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useInfiniteScroll } from "@/shared/hooks/use-infinite-scroll";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import type { Content } from "@/shared/lib/schemas";
 import { getTagColor, getTagColorStyle } from "@/shared/lib/tag-colors";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
+import Link from "@/shared/router/link";
 
 export default function TagsClient({
 	initial,
@@ -24,8 +24,8 @@ export default function TagsClient({
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
-	const utils = trpc.useUtils();
-	const { data: currentTags = [] } = trpc.content.getTags.useQuery(undefined, {
+	const utils = api.useUtils();
+	const { data: currentTags = [] } = api.content.getTags.useQuery(undefined, {
 		refetchOnMount: true,
 	});
 	const currentColorByTagId = useMemo(
@@ -39,7 +39,7 @@ export default function TagsClient({
 		hasNextPage,
 		isFetchingNextPage,
 		isLoading: tagsLoading,
-	} = trpc.content.getTagsWithContentPage.useInfiniteQuery(
+	} = api.content.getTagsWithContentPage.useInfiniteQuery(
 		{ limit: 24 },
 		{
 			getNextPageParam: (lastPage) => lastPage.nextCursor,

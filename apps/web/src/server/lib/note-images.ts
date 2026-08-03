@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import { imageUploadMaxFileSizeBytes } from "@/server/services/upload/upload-media";
 import { deleteFile, getFileMetadata, getPublicUrl, uploadFile } from "@/shared/api/minio";
 
-import { ApiError as TRPCError } from "./api-error";
+import { ApiError } from "./api-error";
 
 const imageDataUrlPattern = /^data:(image\/(?:jpeg|png|gif|webp));base64,([a-zA-Z0-9+/=\s]+)$/;
 const imageExtensions: Record<string, string> = {
@@ -43,22 +43,22 @@ function parseDocument(content: string): unknown | null {
 function parseImageDataUrl(src: string): { buffer: Buffer; extension: string; mimeType: string } {
 	const match = imageDataUrlPattern.exec(src);
 	if (!match) {
-		throw new TRPCError({ code: "BAD_REQUEST", message: "Unsupported inline image" });
+		throw new ApiError({ code: "BAD_REQUEST", message: "Unsupported inline image" });
 	}
 
 	const [, mimeType, encoded] = match;
 	if (!mimeType || !encoded) {
-		throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid inline image" });
+		throw new ApiError({ code: "BAD_REQUEST", message: "Invalid inline image" });
 	}
 
 	const compact = encoded.replace(/\s/g, "");
 	if (compact.length > Math.ceil((imageUploadMaxFileSizeBytes * 4) / 3) + 4) {
-		throw new TRPCError({ code: "BAD_REQUEST", message: "Inline image is too large (max 10MB)" });
+		throw new ApiError({ code: "BAD_REQUEST", message: "Inline image is too large (max 10MB)" });
 	}
 
 	const buffer = Buffer.from(compact, "base64");
 	if (!buffer.length || buffer.length > imageUploadMaxFileSizeBytes) {
-		throw new TRPCError({ code: "BAD_REQUEST", message: "Inline image is too large (max 10MB)" });
+		throw new ApiError({ code: "BAD_REQUEST", message: "Inline image is too large (max 10MB)" });
 	}
 
 	return { buffer, extension: imageExtensions[mimeType]!, mimeType };
@@ -107,7 +107,7 @@ export async function prepareNoteImages(
 				);
 
 				if (!result.success || !result.objectName) {
-					throw new TRPCError({
+					throw new ApiError({
 						code: "BAD_REQUEST",
 						message: result.validation.errors[0] || "Inline image upload failed",
 					});

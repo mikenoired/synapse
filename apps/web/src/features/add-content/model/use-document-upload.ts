@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 
 export function useDocumentUpload() {
@@ -9,9 +9,9 @@ export function useDocumentUpload() {
 	const [dragActive, setDragActive] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const importFileMutation = trpc.content.importFile.useMutation({
+	const importFileMutation = api.content.importFile.useMutation({
 		onSuccess: () => {
 			toast.success("Документ успешно импортирован!");
 			utils.content.getAll.invalidate();

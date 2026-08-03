@@ -4,7 +4,7 @@ import { Maximize, Minimize, Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
 import { Editor } from "@/widgets/editor/ui/editor";
@@ -45,7 +45,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	const [todoInput, setTodoInput] = useState("");
 	const [showUnsavedModal, setShowUnsavedModal] = useState(false);
 	const [hasUnsaved, setHasUnsaved] = useState(false);
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 	const handleTouchStart = (e: React.TouchEvent) => {
 		setStartY(e.touches[0].clientY);
 	};
@@ -86,7 +86,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 		}
 	}, [content]);
 
-	const updateContentMutation = trpc.content.update.useMutation({
+	const updateContentMutation = api.content.update.useMutation({
 		onSuccess: (updatedContent) => {
 			void Promise.all([
 				utils.content.getAvailableTypes.invalidate(),

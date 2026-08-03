@@ -8,12 +8,7 @@
 		"noEmit": true,
 		"experimentalDecorators": true,
 		"paths": {
-			"@/*": ["./src/*"],
-			"next/navigation": ["./src/shared/router/next-navigation.ts"],
-			"next/link": ["./src/shared/router/next-link.tsx"],
-			"next/image": ["./src/shared/router/next-image.tsx"],
-			"next/dynamic": ["./src/shared/router/next-dynamic.tsx"],
-			"next/web-vitals": ["./src/shared/router/next-web-vitals.ts"]
+			"@/*": ["./src/*"]
 		},
 		"strictNullChecks": true,
 		"types": ["bun"]

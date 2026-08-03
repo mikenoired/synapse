@@ -3,7 +3,7 @@
 import { Input } from "@synapse/ui/components";
 import { useId, useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 import { ContentTag } from "@/shared/ui/content-tag";
@@ -64,7 +64,7 @@ export function TagEditor({
 	const listId = useId();
 	const [currentTag, setCurrentTag] = useState("");
 	const { t } = useI18n();
-	const { data: tagSuggestions = [] } = trpc.content.getTags.useQuery(undefined, {
+	const { data: tagSuggestions = [] } = api.content.getTags.useQuery(undefined, {
 		refetchOnMount: false,
 	});
 

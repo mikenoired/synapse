@@ -1,6 +1,6 @@
 "use client";
 
-import { useReportWebVitals } from "next/web-vitals";
+import { useReportWebVitals } from "@/shared/router/web-vitals";
 
 function sendToAnalytics(_metric: unknown) {}
 

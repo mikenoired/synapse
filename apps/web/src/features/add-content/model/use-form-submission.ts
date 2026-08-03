@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import toast from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 
 interface UploadedFileInfo {
@@ -19,9 +19,9 @@ interface UseFormSubmissionProps {
 }
 
 export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissionProps) {
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const createContentMutation = trpc.content.create.useMutation({
+	const createContentMutation = api.content.create.useMutation({
 		onSuccess: (content) => {
 			toast.success("Saved");
 			utils.content.getTags.invalidate();
@@ -36,7 +36,7 @@ export function useFormSubmission({ onSuccess, onContentAdded }: UseFormSubmissi
 		},
 	});
 
-	const uploadMutation = trpc.upload.formData.useMutation({
+	const uploadMutation = api.upload.formData.useMutation({
 		onSuccess: () => {
 			utils.content.getTags.invalidate();
 			utils.content.getTagsWithContent.invalidate();

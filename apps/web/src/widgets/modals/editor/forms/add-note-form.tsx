@@ -3,7 +3,7 @@
 import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
 import { Editor } from "@/widgets/editor/ui/editor";
@@ -21,9 +21,9 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 	const [title, setTitle] = useState("");
 	const [editorData, setEditorData] = useState<any>(null);
 	const [tags, setTags] = useState<string[]>(initialTags);
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const createMutation = trpc.content.create.useMutation();
+	const createMutation = api.content.create.useMutation();
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

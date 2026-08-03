@@ -4,7 +4,7 @@ import { Button, Checkbox, Input, Label } from "@synapse/ui/components";
 import { Music, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
 
@@ -24,9 +24,9 @@ export function AddAudioForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 	const [dragActive, setDragActive] = useState(false);
 	const [makeTrack, setMakeTrack] = useState(false);
 
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const uploadMutation = trpc.upload.formData.useMutation({
+	const uploadMutation = api.upload.formData.useMutation({
 		onSuccess: () => {
 			void Promise.all([
 				utils.content.getAvailableTypes.invalidate(),

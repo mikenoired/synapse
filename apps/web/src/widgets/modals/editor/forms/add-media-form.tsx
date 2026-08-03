@@ -4,7 +4,7 @@ import { Button, Input } from "@synapse/ui/components";
 import { Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { fileToScaledDataUrl } from "@/shared/lib/downscale-image";
 import type { Content } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
@@ -25,9 +25,9 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 	const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
 	const [dragActive, setDragActive] = useState(false);
 
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 
-	const uploadMutation = trpc.upload.formData.useMutation({
+	const uploadMutation = api.upload.formData.useMutation({
 		onSuccess: () => {
 			void Promise.all([
 				utils.content.getAvailableTypes.invalidate(),
@@ -104,7 +104,7 @@ export function AddMediaForm({ initialTags = [], onSuccess, preloadedFiles = [] 
 		}
 
 		try {
-			// Конвертируем файлы в правильный формат для TRPC
+			// Конвертируем файлы в правильный формат для api
 			const filesPayload = await Promise.all(
 				selectedFiles.map(async (file) => ({
 					name: file.name,

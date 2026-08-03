@@ -1,10 +1,9 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { DragEvent } from "react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import {
 	contentTypeOptions,
@@ -15,6 +14,7 @@ import { useDashboard } from "@/shared/lib/dashboard-context";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
+import { usePathname, useRouter, useSearchParams } from "@/shared/router/navigation";
 import { useModal } from "@/widgets/modals/context/modal-context";
 
 const ContentFilter = lazy(() =>
@@ -60,8 +60,8 @@ export default function DashboardClient({
 	);
 	const [dragActive, setDragActive] = useState(false);
 	const dragCounter = useRef(0);
-	const utils = trpc.useUtils();
-	const { data: availableContentTypes = [] } = trpc.content.getAvailableTypes.useQuery(undefined, {
+	const utils = api.useUtils();
+	const { data: availableContentTypes = [] } = api.content.getAvailableTypes.useQuery(undefined, {
 		staleTime: 30_000,
 		refetchOnWindowFocus: false,
 	});
@@ -103,7 +103,7 @@ export default function DashboardClient({
 		hasNextPage,
 		isFetchingNextPage,
 		isLoading: contentLoading,
-	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
+	} = api.content.getAll.useInfiniteQuery(queryInput, {
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		initialData:
 			initial && !(queryInput.search || queryInput.tagIds || queryInput.types)
@@ -244,7 +244,7 @@ export default function DashboardClient({
 		};
 	}, [openAddDialog, setPreloadedFiles]);
 
-	const deleteContentMutation = trpc.content.delete.useMutation();
+	const deleteContentMutation = api.content.delete.useMutation();
 
 	const handleItemClick = (item: Content) => {
 		openModal({

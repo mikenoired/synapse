@@ -1,18 +1,18 @@
 "use client";
 
 import { Check, Palette, Slash } from "lucide-react";
-import { useRouter } from "next/navigation";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentGrid } from "@/features/content-grid/content-grid";
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content } from "@/shared/lib/schemas";
 import { getTagColor, getTagColorStyle, TAG_COLOR_PALETTE } from "@/shared/lib/tag-colors";
 import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
+import { useRouter } from "@/shared/router/navigation";
 import { useModal } from "@/widgets/modals/context/modal-context";
 
 interface Props {
@@ -32,7 +32,7 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 	const [paletteOpen, setPaletteOpen] = useState(false);
 	const dragCounter = useRef(0);
 	const router = useRouter();
-	const utils = trpc.useUtils();
+	const utils = api.useUtils();
 	const updateCachedTagColor = useCallback(
 		(color: number) => {
 			utils.content.getTagById.setData({ id: tagId }, (tag) =>
@@ -54,8 +54,8 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 		}),
 		[tagId]
 	);
-	const deleteContentMutation = trpc.content.delete.useMutation();
-	const updateTagColorMutation = trpc.content.updateTagColor.useMutation({
+	const deleteContentMutation = api.content.delete.useMutation();
+	const updateTagColorMutation = api.content.updateTagColor.useMutation({
 		onError: () => {
 			setTagColor(previousTagColor.current);
 			updateCachedTagColor(previousTagColor.current);
@@ -87,7 +87,7 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 		hasNextPage,
 		isFetchingNextPage,
 		isLoading: contentLoading,
-	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
+	} = api.content.getAll.useInfiniteQuery(queryInput, {
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		retry: false,
 		initialData: initial ? { pages: [initial], pageParams: [undefined] } : undefined,

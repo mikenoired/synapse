@@ -7,7 +7,7 @@ import type { FormEvent, TouchEvent } from "react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-import { trpc } from "@/shared/api/trpc";
+import { api } from "@/shared/api/hooks";
 import { useDashboard } from "@/shared/lib/dashboard-context";
 import { fileToScaledDataUrl } from "@/shared/lib/downscale-image";
 import type { Content } from "@/shared/lib/schemas";
@@ -35,7 +35,7 @@ const baseTransition: Transition = {
 function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddContentDialogProps) {
 	const { preloadedFiles, setPreloadedFiles } = useDashboard();
 	const [uploading, setUploading] = useState(false);
-	const { data: tagSuggestions = [] } = trpc.content.getTags.useQuery(undefined, {
+	const { data: tagSuggestions = [] } = api.content.getTags.useQuery(undefined, {
 		refetchOnMount: false,
 	});
 

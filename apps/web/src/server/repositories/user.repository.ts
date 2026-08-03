@@ -6,7 +6,7 @@ import { normalizeUserPreferences } from "@/shared/lib/user-preferences";
 
 import type { Context } from "../context";
 import { users } from "../db/schema";
-import { ApiError as TRPCError } from "../lib/api-error";
+import { ApiError } from "../lib/api-error";
 import { requireAuth } from "../lib/auth-guard";
 
 export interface CurrentUser {
@@ -35,7 +35,7 @@ export default class UserRepository {
 		});
 
 		if (!user) {
-			throw new TRPCError({
+			throw new ApiError({
 				code: "NOT_FOUND",
 				message: "User not found",
 			});
@@ -61,7 +61,7 @@ export default class UserRepository {
 		});
 
 		if (!user) {
-			throw new TRPCError({
+			throw new ApiError({
 				code: "NOT_FOUND",
 				message: "User not found",
 			});
@@ -91,7 +91,7 @@ export default class UserRepository {
 			});
 
 		if (!updatedUser) {
-			throw new TRPCError({
+			throw new ApiError({
 				code: "NOT_FOUND",
 				message: "User not found",
 			});

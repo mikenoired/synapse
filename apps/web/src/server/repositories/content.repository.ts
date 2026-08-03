@@ -5,7 +5,7 @@ import type { createContentSchema, updateContentSchema } from "@/shared/lib/sche
 
 import type { Context } from "../context";
 import { content, contentTags, edges, nodes, tags } from "../db/schema";
-import { ApiError as TRPCError } from "../lib/api-error";
+import { ApiError } from "../lib/api-error";
 import { requireAuth } from "../lib/auth-guard";
 import { isAutomaticTagColorEnabled, randomTagColor } from "../lib/tag-colors";
 
@@ -355,7 +355,7 @@ export default class ContentRepository {
 			where: and(eq(content.id, id), eq(content.userId, this.ctx.user.id)),
 		});
 
-		if (!data) throw new TRPCError({ code: "NOT_FOUND", message: "Content not found" });
+		if (!data) throw new ApiError({ code: "NOT_FOUND", message: "Content not found" });
 
 		return data;
 	}
@@ -386,7 +386,7 @@ export default class ContentRepository {
 			})
 			.returning();
 
-		if (!data) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Content creation error" });
+		if (!data) throw new ApiError({ code: "INTERNAL_SERVER_ERROR", message: "Content creation error" });
 
 		return data;
 	}
@@ -419,7 +419,7 @@ export default class ContentRepository {
 			where: and(inArray(tags.id, missing), or(eq(tags.userId, this.ctx.user.id), isNull(tags.userId))!),
 		});
 		if (tagsList.length !== missing.length) {
-			throw new TRPCError({ code: "NOT_FOUND", message: "Tag not found" });
+			throw new ApiError({ code: "NOT_FOUND", message: "Tag not found" });
 		}
 
 		const rows = tagsList.map((t) => ({
@@ -467,7 +467,7 @@ export default class ContentRepository {
 			})
 			.returning({ id: nodes.id });
 
-		if (!data) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
+		if (!data) throw new ApiError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
 
 		return data.id;
 	}
@@ -485,7 +485,7 @@ export default class ContentRepository {
 			})
 			.returning({ id: nodes.id });
 
-		if (!data) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
+		if (!data) throw new ApiError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
 
 		return data.id;
 	}
@@ -553,7 +553,7 @@ export default class ContentRepository {
 			})
 			.returning();
 
-		if (!data) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
+		if (!data) throw new ApiError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
 
 		return data;
 	}
@@ -591,7 +591,7 @@ export default class ContentRepository {
 			},
 		});
 
-		if (!data) throw new TRPCError({ code: "NOT_FOUND", message: "Tag not found" });
+		if (!data) throw new ApiError({ code: "NOT_FOUND", message: "Tag not found" });
 
 		return data;
 	}
@@ -662,7 +662,7 @@ export default class ContentRepository {
 			.where(and(eq(tags.id, id), eq(tags.userId, this.ctx.user.id)))
 			.returning({ color: tags.color, id: tags.id, title: tags.title });
 
-		if (!updated) throw new TRPCError({ code: "NOT_FOUND", message: "Tag not found" });
+		if (!updated) throw new ApiError({ code: "NOT_FOUND", message: "Tag not found" });
 		return updated;
 	}
 
@@ -679,7 +679,7 @@ export default class ContentRepository {
 			.where(and(eq(content.id, updData.id), eq(content.userId, this.ctx.user.id)))
 			.returning();
 
-		if (!data) throw new TRPCError({ code: "NOT_FOUND", message: "Content not found" });
+		if (!data) throw new ApiError({ code: "NOT_FOUND", message: "Content not found" });
 
 		return data;
 	}

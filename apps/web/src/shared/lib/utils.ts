@@ -1,4 +1,4 @@
-import { ApiError as TRPCError } from "@/server/lib/api-error";
+import { ApiError } from "@/server/lib/api-error";
 
 export function numWord(value: number, words: string[]) {
 	value = Math.abs(value) % 100;
@@ -104,14 +104,14 @@ export function convertSize(bytes: number, targetUnit: string): number {
 export function handleAuthError(error: unknown, code: "BAD_REQUEST" | "UNAUTHORIZED" = "BAD_REQUEST"): never {
 	const message = error instanceof Error && error.message ? error.message : "Authentication required";
 
-	throw new TRPCError({
+	throw new ApiError({
 		code,
 		message,
 	});
 }
 
 export function handleConflictError(message: string): never {
-	throw new TRPCError({
+	throw new ApiError({
 		code: "CONFLICT",
 		message,
 	});

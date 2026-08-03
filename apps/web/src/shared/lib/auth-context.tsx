@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 import { apiUrl } from "@/shared/config/api";
+import { useRouter } from "@/shared/router/navigation";
 
 export interface User {
 	id: string;
