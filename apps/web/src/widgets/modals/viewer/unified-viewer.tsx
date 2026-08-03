@@ -92,6 +92,10 @@ function isDocumentType(type: Content["type"]) {
 	return ["doc", "pdf", "docx", "epub", "xlsx", "csv"].includes(type);
 }
 
+function isViewportFitType(type: Content["type"]) {
+	return type !== "note" && type !== "todo" && !isDocumentType(type);
+}
+
 function getReadingTime(item: Content, linkContent: LinkContent | null) {
 	if (item.type === "link" && linkContent) {
 		return calculateReadingTimeFromLinkContent(linkContent);
@@ -879,7 +883,7 @@ export function UnifiedViewerModal({
 		if (currentItem.type === "audio") {
 			const progress = audioState.duration > 0 ? (audioState.currentTime / audioState.duration) * 100 : 0;
 			return (
-				<div className="flex w-full max-w-[min(88vw,720px)] flex-col items-center gap-6 rounded-[32px] border border-white/10 bg-[rgba(18,18,18,0.58)] px-5 py-6 sm:px-7 sm:py-8">
+				<div className="flex max-h-full w-full max-w-[min(88vw,720px)] flex-col items-center gap-6 overflow-y-auto rounded-[32px] border border-white/10 bg-[rgba(18,18,18,0.58)] px-5 py-6 sm:px-7 sm:py-8">
 					<audio ref={audioRef} src={audioUrl} className="hidden" />
 					<div className="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-[28px] border border-white/10 bg-white/5 sm:max-w-[360px]">
 						{coverUrl ? (
@@ -1133,8 +1137,10 @@ export function UnifiedViewerModal({
 									)}
 									<div
 										className={cn(
-											"flex min-h-[100svh] w-full items-center justify-center",
-											currentItem.type !== "note" && "px-4 py-10 sm:px-6"
+											"flex w-full items-center justify-center",
+											isViewportFitType(currentItem.type)
+												? "h-[100svh] min-h-[100svh] max-h-[100svh] px-4 py-10 sm:px-6"
+												: "min-h-[100svh]"
 										)}>
 										{renderContent()}
 									</div>

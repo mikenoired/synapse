@@ -91,7 +91,7 @@ export function ContentFilter({
 						: "grid-rows-[0fr] opacity-0"
 				)}>
 				<div className="overflow-hidden">
-					<div className="flex items-center gap-2 overflow-x-auto px-4 pb-2">
+					<div className="flex items-center gap-2 overflow-x-auto px-4 py-2">
 						{availableOptions.map(({ key, icon: Icon, label, labelKey }) => {
 							const selected = selectedContentTypes.includes(key);
 
