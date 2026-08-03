@@ -1,140 +1,241 @@
+"use client";
+
+import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
+import {
+	cloneElement,
+	forwardRef,
+	isValidElement,
+	type ButtonHTMLAttributes,
+	type ReactElement,
+	type ReactNode,
+} from "react";
 
 import { cn } from "../../cn";
-
-const primaryButtonChrome = "[box-shadow:var(--button-primary-shadow)] hover:opacity-60";
-
-const secondaryButtonChrome =
-	"[border-color:var(--button-secondary-border)] [box-shadow:var(--button-secondary-shadow)] hover:opacity-60";
-
-type ButtonProps = React.ComponentProps<"button"> &
-	VariantProps<typeof buttonVariants> & {
-		asChild?: boolean;
-		loading?: boolean;
-	};
+import type { IconComponent } from "../../lib/icon-context";
+import { useShape } from "../../lib/shape";
 
 const buttonVariants = cva(
-	"group/button relative isolate inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg]:transition-[stroke-width] [&_svg]:duration-100 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='stroke-'])]:stroke-[1.5] group-hover/button:[&_svg:not([class*='stroke-'])]:stroke-2",
+	[
+		"group relative isolate inline-flex items-center justify-center outline-none cursor-pointer",
+		"transition-colors duration-80",
+		"disabled:opacity-50 disabled:pointer-events-none",
+		"focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+	],
 	{
 		variants: {
 			variant: {
-				default: cn("bg-primary text-primary-foreground", primaryButtonChrome),
-				outline: cn(
-					"border bg-background aria-expanded:bg-muted aria-expanded:text-foreground dark:bg-input/30",
-					secondaryButtonChrome
-				),
-				secondary: cn(
-					"bg-secondary text-secondary-foreground aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-					secondaryButtonChrome
-				),
-				ghost:
-					"hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
-				destructive:
-					"bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-				link: "text-primary underline-offset-4 hover:underline",
-				fullscreen: "",
+				primary: "text-background",
+				secondary: "text-foreground",
+				tertiary: "text-foreground",
+				ghost: "text-muted-foreground hover:text-foreground",
 			},
 			size: {
-				"default": "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-				"xs": "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-				"sm": "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-				"lg": "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-				"icon": "size-8",
-				"icon-xs":
-					"size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-				"icon-sm": "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-				"icon-lg": "size-9",
+				"sm": "h-7 px-3 text-[12px] gap-1",
+				"md": "h-8 px-4 text-[13px] gap-1.5",
+				"lg": "h-9 px-5 text-[14px] gap-1.5",
+				"icon-sm": "h-8 w-8 p-0 [&_svg]:h-3.5 [&_svg]:w-3.5",
+				"icon": "h-9 w-9 p-0 [&_svg]:h-4 [&_svg]:w-4",
+				"icon-lg": "h-10 w-10 p-0 [&_svg]:h-5 [&_svg]:w-5",
 			},
+			iconLeft: { true: "" },
+			iconRight: { true: "" },
 		},
+		compoundVariants: [
+			{ size: "sm", iconLeft: true, className: "pl-[6px]" },
+			{ size: "md", iconLeft: true, className: "pl-[10px]" },
+			{ size: "lg", iconLeft: true, className: "pl-[14px]" },
+			{ size: "sm", iconRight: true, className: "pr-[6px]" },
+			{ size: "md", iconRight: true, className: "pr-[10px]" },
+			{ size: "lg", iconRight: true, className: "pr-[14px]" },
+		],
 		defaultVariants: {
-			variant: "default",
-			size: "default",
+			variant: "primary",
+			size: "md",
 		},
 	}
 );
 
-const spinnerSizeClass: Record<NonNullable<ButtonProps["size"]>, string> = {
-	"default": "size-4",
-	"xs": "size-3",
-	"sm": "size-3.5",
-	"lg": "size-4",
-	"icon": "size-4",
-	"icon-xs": "size-3",
-	"icon-sm": "size-3.5",
-	"icon-lg": "size-4",
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
+	/** When true, the given single React-element child becomes the rendered element (slot-style). */
+	asChild?: boolean;
+	loading?: boolean;
+	leadingIcon?: IconComponent;
+	trailingIcon?: IconComponent;
+	/** Force the visual pressed/held state. Useful when the button drives an
+	 *  external open piece of UI (a popover, dropdown, etc.) so it reads as
+	 *  engaged while the menu is showing. */
+	active?: boolean;
+}
+
+const bgVariants: Record<string, string> = {
+	primary: "bg-foreground group-hover:bg-foreground/90 group-active:bg-foreground/80",
+	secondary: "bg-accent group-hover:bg-accent/80 group-active:bg-accent",
+	tertiary: "border border-border bg-transparent group-hover:bg-hover group-active:bg-active",
+	ghost: "bg-transparent group-hover:bg-hover group-active:bg-active",
 };
 
-// Fluid-style infinity-loop spinner. Две keyframe-анимации (spinner-move +
-// spinner-dash) в globals.css. currentColor — берёт текстовый цвет кнопки.
-function ButtonSpinner({ className }: { className: string }) {
-	return (
-		<svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
-			<path
-				d="M 12 12 C 14 8.5 19 8.5 19 12 C 19 15.5 14 15.5 12 12 C 10 8.5 5 8.5 5 12 C 5 15.5 10 15.5 12 12 Z"
-				stroke="currentColor"
-				strokeWidth={1.125}
-				strokeLinecap="round"
-				pathLength={100}
-				style={{
-					strokeDasharray: "15 85",
-					animation: "spinner-move 2s linear infinite, spinner-dash 4s ease-in-out infinite",
-				}}
-			/>
-		</svg>
-	);
-}
+const activeBgVariants: Record<string, string> = {
+	primary: "bg-foreground/80",
+	secondary: "bg-accent",
+	tertiary: "border border-border bg-active",
+	ghost: "bg-active",
+};
 
-function Button({
-	className,
-	variant = "default",
-	size = "default",
-	asChild = false,
-	loading = false,
-	disabled = false,
-	children,
-	...props
-}: ButtonProps) {
-	const isDisabled = disabled || loading;
-	const showSpinner = loading && !asChild;
-	if (asChild && React.isValidElement(children)) {
-		return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
-			...props,
-			"data-slot": "button",
-			"data-variant": variant,
-			"data-size": size,
-			"aria-busy": loading || undefined,
-			"aria-disabled": isDisabled || undefined,
-			"className": cn(
-				buttonVariants({ variant, size, className }),
-				(children.props as { className?: string }).className
-			),
-		});
-	}
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+	(
+		{
+			className,
+			variant,
+			size,
+			asChild = false,
+			loading = false,
+			leadingIcon: LeadingIcon,
+			trailingIcon: TrailingIcon,
+			active = false,
+			disabled,
+			children,
+			style,
+			...props
+		},
+		ref
+	) => {
+		// asChild: the user's element becomes the root while the button's internal
+		// structure (bg layer, content wrapper, spinner, icons) survives as its
+		// children — the element's own children become the label. We clone the
+		// element directly instead of routing through ButtonPrimitive's `render`:
+		// Base UI would bolt button semantics (role="button", Space activation)
+		// onto e.g. a link, where plain-link output is wanted.
+		const asChildElement =
+			asChild && isValidElement(children)
+				? (children as ReactElement<{
+						children?: ReactNode;
+						className?: string;
+						style?: React.CSSProperties;
+						ref?: React.Ref<HTMLButtonElement>;
+					}>)
+				: null;
+		const label = asChildElement ? asChildElement.props.children : children;
+		const isIconOnly = size === "icon" || size === "icon-sm" || size === "icon-lg";
+		const iconSize = size === "sm" ? 14 : size === "lg" ? 20 : 16;
+		// Spinner box tracks the button height (sm is h-7, lg/icon are h-9, …) so
+		// the loading glyph stays proportionate across sizes.
+		const spinnerSizeClass =
+			size === "sm"
+				? "h-7 w-7"
+				: size === "lg" || size === "icon"
+					? "h-9 w-9"
+					: size === "icon-lg"
+						? "h-10 w-10"
+						: "h-8 w-8";
+		const shape = useShape();
+		const bgClass = active ? activeBgVariants[variant ?? "primary"] : bgVariants[variant ?? "primary"];
 
-	return (
-		<button
-			data-slot="button"
-			data-variant={variant}
-			data-size={size}
-			aria-busy={loading || undefined}
-			disabled={asChild ? undefined : isDisabled}
-			className={cn(buttonVariants({ variant, size, className }))}
-			{...props}>
-			{showSpinner ? (
+		const internals = (
+			<>
+				<span
+					aria-hidden
+					className={cn(
+						"absolute inset-0 rounded-[inherit] transition-[background-color,transform] duration-80 group-active:scale-[0.98]",
+						bgClass
+					)}
+				/>
 				<span className="relative inline-flex items-center justify-center gap-[inherit]">
-					<span className="flex items-center justify-center gap-[inherit] opacity-0" aria-hidden>
-						{children}
-					</span>
-					<span className="absolute inset-0 flex items-center justify-center">
-						<ButtonSpinner className={spinnerSizeClass[size ?? "default"]} />
-					</span>
+					{loading ? (
+						<>
+							<span className="flex items-center justify-center gap-[inherit] opacity-0">
+								{LeadingIcon && !isIconOnly && <LeadingIcon size={iconSize} strokeWidth={2} />}
+								{label}
+								{TrailingIcon && !isIconOnly && <TrailingIcon size={iconSize} strokeWidth={2} />}
+							</span>
+							<span className="absolute inset-0 flex items-center justify-center">
+								<svg className={spinnerSizeClass} viewBox="0 0 24 24" fill="none">
+									<path
+										d="M 12 12 C 14 8.5 19 8.5 19 12 C 19 15.5 14 15.5 12 12 C 10 8.5 5 8.5 5 12 C 5 15.5 10 15.5 12 12 Z"
+										stroke="currentColor"
+										strokeWidth="1.125"
+										strokeLinecap="round"
+										pathLength="100"
+										style={{
+											strokeDasharray: "15 85",
+											animation: "spinner-move 2s linear infinite, spinner-dash 4s ease-in-out infinite",
+										}}
+									/>
+								</svg>
+							</span>
+						</>
+					) : isIconOnly ? (
+						<span className="[&_svg]:stroke-[1.5] [&_svg]:transition-[stroke-width] [&_svg]:duration-80 group-hover:[&_svg]:stroke-[2]">
+							{label}
+						</span>
+					) : (
+						<>
+							{LeadingIcon && (
+								<LeadingIcon
+									size={iconSize}
+									strokeWidth={1.5}
+									className="transition-[stroke-width] duration-80 group-hover:stroke-[2]"
+								/>
+							)}
+							{/* text-box only applies to block containers, so the trim lives
+                  on the label span (a blockified flex item), not the flex root.
+                  The button's height is fixed (h-*), so this doesn't change
+                  layout — it just centers the cap-to-baseline box optically. */}
+							<span className="[text-box:trim-both_cap_alphabetic]">{label}</span>
+							{TrailingIcon && (
+								<TrailingIcon
+									size={iconSize}
+									strokeWidth={1.5}
+									className="transition-[stroke-width] duration-80 group-hover:stroke-[2]"
+								/>
+							)}
+						</>
+					)}
 				</span>
-			) : (
-				children
-			)}
-		</button>
-	);
-}
+			</>
+		);
+
+		const rootClassName = cn(
+			buttonVariants({
+				variant,
+				size,
+				iconLeft: !isIconOnly && !!LeadingIcon,
+				iconRight: !isIconOnly && !!TrailingIcon,
+			}),
+			shape.button,
+			className
+		);
+
+		if (asChildElement) {
+			const childProps = asChildElement.props;
+			return cloneElement(
+				asChildElement,
+				{
+					...props,
+					ref,
+					className: cn(rootClassName, childProps.className),
+					style: { ...style, ...childProps.style },
+				},
+				internals
+			);
+		}
+
+		return (
+			<ButtonPrimitive
+				// Base UI's `ButtonPrimitive` forwards to an HTMLButtonElement;
+				// keep the public ref type narrow so consumers see the right type.
+				ref={ref as React.Ref<HTMLButtonElement>}
+				className={rootClassName}
+				disabled={disabled || loading}
+				style={style}
+				{...props}>
+				{internals}
+			</ButtonPrimitive>
+		);
+	}
+);
+
+Button.displayName = "Button";
 
 export { Button, buttonVariants };
+export type { ButtonProps };

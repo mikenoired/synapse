@@ -1,18 +1,10 @@
-// Глобальные ограничения подписочных планов. Общий модуль для бэкенда и фронта:
-// бэкенд опирается на них при контроле лимитов, фронтенд — при отображении
-// возможностей и текущего плана. god-mode бесконечен по всем ограничениям.
-
 export const PLAN_IDS = ["starter", "plus", "pro", "god-mode"] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
 export interface PlanLimits {
-	// Месячный бюджет токенов ИИ (input + output).
 	aiTokensPerMonth: number;
-	// Месячное число запросов к ИИ.
 	aiRequestsPerMonth: number;
-	// Максимальное число единиц контента.
 	contentItemsLimit: number;
-	// Максимальный объём хранилища в байтах.
 	storageBytesLimit: number;
 }
 

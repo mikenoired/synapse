@@ -61,9 +61,7 @@ export const ContentMasonry = memo(
 				: items.map((item, index) => (
 						<div
 							key={item.id}
-							className={`animate-in fade-in-0 duration-300 ${
-								item.type === "note" ? "rounded-xl" : "rounded-sm shadow-sm"
-							}`}
+							className={`animate-in fade-in-0 duration-300 rounded-xl shadow`}
 							onMouseEnter={onItemHover}>
 							<Item
 								item={item}

@@ -17,7 +17,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
 
 	return (
 		<DashboardProvider>
-			<div className="h-screen min-h-0 flex w-full bg-muted overflow-hidden">
+			<div className="h-screen min-h-0 flex w-full dark:bg-muted bg-background overflow-hidden">
 				<Sidebar />
 				<DashboardWrapper>{children}</DashboardWrapper>
 				<SettingsModalController />

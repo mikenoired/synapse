@@ -1,12 +1,15 @@
 "use client";
 
+import { cn } from "@synapse/ui/cn";
+import { Switch } from "@synapse/ui/components";
 import { motion } from "framer-motion";
-import { Monitor, Moon, Palette, Sparkles, Sun } from "lucide-react";
+import { Monitor, Moon, Palette, Sparkles, Sun, Languages } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { SIDEBAR_ANIMATION } from "@/shared/config/animations";
 import { useI18n } from "@/shared/lib/i18n";
+import type { InterfaceLanguage } from "@/shared/lib/user-preferences";
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
 
 const themeOptions = [
@@ -26,6 +29,45 @@ const themeOptions = [
 		labelKey: "appearance.theme.dark",
 	},
 ] as const;
+
+function LanguagePreference() {
+	const { interfaceLanguage, isReady, setInterfaceLanguage } = useUserPreferences();
+	const { t } = useI18n();
+	const languageOptions: { label: string; value: InterfaceLanguage }[] = [
+		{ label: t("language.russian"), value: "ru" },
+		{ label: t("language.english"), value: "en" },
+	];
+
+	return (
+		<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+			<div className="min-w-0 space-y-1.5">
+				<div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
+					<Languages className="size-4 text-muted-foreground" />
+					{t("language")}
+				</div>
+				<p className="max-w-md text-sm leading-5 text-muted-foreground">{t("language.description")}</p>
+			</div>
+			<div className="inline-flex shrink-0 self-start rounded-xl bg-background p-1 sm:self-center">
+				{languageOptions.map((option) => (
+					<button
+						key={option.value}
+						type="button"
+						disabled={!isReady}
+						onClick={() => setInterfaceLanguage(option.value)}
+						className={cn(
+							"h-9 rounded-lg px-3 text-sm font-medium transition-colors",
+							interfaceLanguage === option.value
+								? "bg-primary text-primary-foreground shadow-sm"
+								: "text-muted-foreground hover:bg-muted hover:text-foreground",
+							!isReady && "cursor-not-allowed opacity-50"
+						)}>
+						{option.label}
+					</button>
+				))}
+			</div>
+		</div>
+	);
+}
 
 export default function AppearanceTab() {
 	const { theme, setTheme } = useTheme();
@@ -84,50 +126,44 @@ export default function AppearanceTab() {
 				</div>
 			</fieldset>
 
-			<div className="flex flex-col gap-4 rounded-[1.75rem] bg-muted px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+			<LanguagePreference />
+
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div className="min-w-0 space-y-1.5">
 					<div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
 						<Sparkles className="size-4 text-muted-foreground" />
 						{t("appearance.noteSparkles.title")}
 					</div>
-					<p className="max-w-md text-sm leading-6 text-muted-foreground">
+					<p className="max-w-md text-sm leading-5 text-muted-foreground">
 						{t("appearance.noteSparkles.description")}
 					</p>
 				</div>
-				<button
-					type="button"
-					role="switch"
-					aria-checked={noteSparklesEnabled}
+				<Switch
+					checked={noteSparklesEnabled}
+					aria-label={t("appearance.noteSparkles.title")}
 					disabled={!isReady}
-					onClick={() => setNoteSparklesEnabled(!noteSparklesEnabled)}
-					className={`relative inline-flex h-7 w-12 shrink-0 items-center self-start rounded-full transition sm:self-center ${noteSparklesEnabled ? "bg-foreground" : "bg-background"} ${!isReady ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
-					<span
-						className={`inline-block size-5 rounded-full transition-transform ${noteSparklesEnabled ? "translate-x-6 bg-background" : "translate-x-1 bg-foreground"}`}
-					/>
-				</button>
+					className="self-start sm:self-center"
+					onToggle={() => setNoteSparklesEnabled(!noteSparklesEnabled)}
+				/>
 			</div>
 
-			<div className="flex flex-col gap-4 rounded-[1.75rem] bg-muted px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 				<div className="min-w-0 space-y-1.5">
 					<div className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
 						<Palette className="size-4 text-muted-foreground" />
 						{t("appearance.tagColors.title")}
 					</div>
-					<p className="max-w-md text-sm leading-6 text-muted-foreground">
+					<p className="max-w-md text-sm leading-5 text-muted-foreground">
 						{t("appearance.tagColors.description")}
 					</p>
 				</div>
-				<button
-					type="button"
-					role="switch"
-					aria-checked={autoTagColorEnabled}
+				<Switch
+					aria-label={t("appearance.tagColors.title")}
 					disabled={!isReady}
-					onClick={() => setAutoTagColorEnabled(!autoTagColorEnabled)}
-					className={`relative inline-flex h-7 w-12 shrink-0 items-center self-start rounded-full transition sm:self-center ${autoTagColorEnabled ? "bg-foreground" : "bg-background"} ${!isReady ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}>
-					<span
-						className={`inline-block size-5 rounded-full transition-transform ${autoTagColorEnabled ? "translate-x-6 bg-background" : "translate-x-1 bg-foreground"}`}
-					/>
-				</button>
+					checked={autoTagColorEnabled}
+					className="self-start sm:self-center"
+					onToggle={() => setAutoTagColorEnabled(!autoTagColorEnabled)}
+				/>
 			</div>
 		</div>
 	);

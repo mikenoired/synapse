@@ -112,7 +112,6 @@ export default function HomePage() {
 							className="invert dark:invert-0"
 						/>
 					</div>
-					{/* <ThemeToggle /> */}
 				</div>
 			</header>
 

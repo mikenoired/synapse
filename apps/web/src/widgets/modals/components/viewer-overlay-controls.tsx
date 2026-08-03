@@ -28,10 +28,10 @@ interface ViewerOverlayControlsProps {
 
 function getActionClassName(action: ViewerOverlayAction) {
 	if (action.destructive) {
-		return "h-10 rounded-full border border-white/12 bg-red-950 px-4 text-red-500 cursor-pointer";
+		return "h-10 rounded-full px-4 text-red-500 cursor-pointer";
 	}
 
-	return "h-10 rounded-full border border-white/12 bg-black px-4 text-white cursor-pointer";
+	return "h-10 rounded-full px-4 cursor-pointer";
 }
 
 export function ViewerOverlayControls({
@@ -50,31 +50,41 @@ export function ViewerOverlayControls({
 		<>
 			<AnimatePresence initial={false}>
 				{visible && canGoPrevious && onPrevious && (
-					<motion.button
+					<motion.div
 						initial={{ opacity: 0, filter: "blur(10px)", x: -16 }}
 						animate={{ opacity: 1, filter: "blur(0px)", x: 0 }}
 						exit={{ opacity: 0, filter: "blur(0px)", x: -16 }}
 						transition={{ duration: 0.16 }}
-						onClick={onPrevious}
-						aria-label={previousLabel}
-						className="absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70">
-						<ChevronLeft className="size-5" />
-					</motion.button>
+						className="absolute left-5 top-1/2 z-20">
+						<Button
+							onClick={onPrevious}
+							aria-label={previousLabel}
+							variant="secondary"
+							size="icon-lg"
+							className="-translate-y-1/2 rounded-full">
+							<ChevronLeft className="size-5" />
+						</Button>
+					</motion.div>
 				)}
 			</AnimatePresence>
 
 			<AnimatePresence initial={false}>
 				{visible && canGoNext && onNext && (
-					<motion.button
+					<motion.div
 						initial={{ opacity: 0, filter: "blur(10px)", x: 16 }}
 						animate={{ opacity: 1, filter: "blur(0px)", x: 0 }}
 						exit={{ opacity: 0, filter: "blur(0px)", x: 16 }}
 						transition={{ duration: 0.16 }}
-						onClick={onNext}
-						aria-label={nextLabel}
-						className="absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70">
-						<ChevronRight className="size-5" />
-					</motion.button>
+						className="absolute right-5 top-1/2 z-20">
+						<Button
+							onClick={onNext}
+							aria-label={nextLabel}
+							variant="secondary"
+							size="icon-lg"
+							className="-translate-y-1/2 rounded-full">
+							<ChevronRight className="size-5" />
+						</Button>
+					</motion.div>
 				)}
 			</AnimatePresence>
 
@@ -85,16 +95,16 @@ export function ViewerOverlayControls({
 						animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
 						exit={{ opacity: 0, y: 16, filter: "blur(10px)" }}
 						transition={{ duration: 0.18 }}
-						className="absolute bottom-6 left-6 z-20 flex flex-wrap items-center gap-2">
+						className="absolute bottom-6 right-6 z-20 flex flex-wrap items-center gap-2">
 						{actions.map((action) => (
 							<Button
 								key={action.label}
 								variant="secondary"
+								leadingIcon={action.icon}
 								size="sm"
 								onClick={action.onClick}
 								disabled={action.disabled}
 								className={getActionClassName(action)}>
-								<action.icon className="mr-2 size-4" />
 								{action.label}
 							</Button>
 						))}
@@ -115,7 +125,7 @@ export function ViewerOverlayControls({
 							size="icon"
 							onClick={onClose}
 							aria-label={closeLabel}
-							className="h-10 w-10 rounded-full border border-white/12 bg-black/55 text-white hover:bg-black/70">
+							className="rounded-full">
 							<X className="size-4" />
 						</Button>
 					</motion.div>

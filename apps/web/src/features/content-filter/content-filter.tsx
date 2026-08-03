@@ -62,25 +62,8 @@ export function ContentFilter({
 					value={searchQuery}
 					autoFocus
 					onChange={(e: ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-					className="w-full rounded-[inherit] bg-background px-4 py-3 pr-16 text-lg outline-none placeholder:text-muted-foreground sm:text-2xl"
+					className="w-full rounded-[inherit] bg-muted/50 px-4 py-3 pr-16 text-lg outline-none placeholder:text-muted-foreground sm:text-2xl"
 				/>
-				<button
-					type="button"
-					aria-expanded={filtersOpen}
-					aria-label={hasActiveTypeFilters ? t("filter.types.active") : t("filter.types.show")}
-					className={cn(
-						"absolute right-3 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-						hasActiveTypeFilters
-							? "border-primary/40 bg-primary/10 text-primary shadow-sm"
-							: "border-border bg-background text-muted-foreground hover:text-foreground"
-					)}>
-					<Funnel className="size-4" />
-					{hasActiveTypeFilters && (
-						<span className="absolute -right-1 -top-1 flex min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-medium leading-5 text-primary-foreground">
-							{selectedContentTypes.length}
-						</span>
-					)}
-				</button>
 			</div>
 
 			<div
@@ -91,7 +74,7 @@ export function ContentFilter({
 						: "grid-rows-[0fr] opacity-0"
 				)}>
 				<div className="overflow-hidden">
-					<div className="flex items-center gap-2 overflow-x-auto px-4 py-2">
+					<div className="flex items-center gap-2 overflow-x-auto px-4 py-2 bg-muted/50">
 						{availableOptions.map(({ key, icon: Icon, label, labelKey }) => {
 							const selected = selectedContentTypes.includes(key);
 

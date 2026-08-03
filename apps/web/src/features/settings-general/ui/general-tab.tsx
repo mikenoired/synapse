@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Skeleton } from "@synapse/ui/components";
-import { CalendarDays, LogOut, Mail } from "lucide-react";
+import { CalendarDays, LogOut, LogOutIcon, Mail } from "lucide-react";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
@@ -72,17 +72,12 @@ export default function GeneralTab() {
 				</div>
 			</div>
 
-			<div className="flex items-center justify-between gap-4 rounded-3xl bg-muted px-5 py-4">
+			<div className="flex items-center justify-between gap-4">
 				<div>
 					<h2 className="text-sm font-medium">{t("session.title")}</h2>
 					<p className="mt-1 text-sm text-muted-foreground">{t("session.description")}</p>
 				</div>
-				<Button
-					variant="destructive"
-					className="h-11 shrink-0"
-					disabled={isSigningOut}
-					onClick={handleSignOut}>
-					<LogOut className="size-4" />
+				<Button variant="primary" leadingIcon={LogOutIcon} disabled={isSigningOut} onClick={handleSignOut}>
 					{isSigningOut ? t("session.signingOut") : t("session.signOut")}
 				</Button>
 			</div>

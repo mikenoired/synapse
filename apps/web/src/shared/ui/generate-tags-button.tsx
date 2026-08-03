@@ -56,13 +56,13 @@ export function GenerateTagsButton({ disabled, onResult, className, ...input }: 
 	return (
 		<Button
 			type="button"
-			variant="default"
+			variant="primary"
 			size="sm"
+			leadingIcon={Sparkles}
 			className={className}
 			disabled={disabled || mutation.isPending}
 			onClick={() => mutation.mutate(input)}
 			title={t("generateTags")}>
-			<Sparkles className={`size-4 ${mutation.isPending ? "animate-pulse" : ""}`} />
 			{mutation.isPending ? t("generatingTags") : t("generateTags")}
 		</Button>
 	);

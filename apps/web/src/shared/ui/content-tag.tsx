@@ -26,7 +26,7 @@ interface ContentTagProps {
 export function ContentTag({
 	tag,
 	tagId,
-	variant = "secondary",
+	variant = "solid",
 	className,
 	onRemove,
 	disabled = false,
@@ -73,7 +73,7 @@ export function ContentTag({
 
 	if (tagId) {
 		return (
-			<Badge asChild variant={variant} className={cn("cursor-pointer", className)} style={badgeStyle}>
+			<Badge variant={variant} className={cn("cursor-pointer", className)} style={badgeStyle}>
 				<Link href={`/dashboard/tag/${tagId}`} onClick={stop}>
 					{colorDot}
 					{children ?? tag}

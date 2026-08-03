@@ -97,11 +97,11 @@ export function ContentTypeHeader({
 
 			{type === "note" && (
 				<Button
-					variant="ghost"
+					variant="tertiary"
 					size="sm"
 					onClick={onToggleFullScreen}
+					leadingIcon={isFullScreen ? Minimize : Maximize}
 					className="h-9 gap-2 px-3 text-muted-foreground">
-					{isFullScreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
 					<span className="hidden sm:inline">{isFullScreen ? t("view.windowed") : t("view.fullscreen")}</span>
 				</Button>
 			)}

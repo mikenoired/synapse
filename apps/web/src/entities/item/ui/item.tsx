@@ -214,9 +214,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 			className="group">
 			<div
 				className={`cursor-pointer overflow-hidden relative transition-all ${
-					item.type === "note"
-						? "min-h-44 rounded-xl border border-border/70 bg-card text-card-foreground shadow-sm hover:border-foreground/15 hover:shadow-md dark:border-white/10 dark:bg-card/80"
-						: "hover:shadow-lg"
+					item.type === "note" ? "min-h-44 rounded-xl bg-card text-card-foreground" : "hover:shadow-lg"
 				}`}>
 				<div
 					className={
@@ -255,7 +253,6 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 						renderTodoPreview()
 					) : (
 						<>
-							<div className="mb-4 h-0.5 w-8 rounded-full bg-primary/70" />
 							<h3 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-foreground">
 								{item.title || t("untitled")}
 							</h3>

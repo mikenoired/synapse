@@ -18,6 +18,7 @@
 	},
 	"dependencies": {
 		"@base-ui-components/react": "^1.0.0-rc.0",
+		"@base-ui/react": "^1.6.0",
 		"@synapse/tsconfig": "workspace:*",
 		"@synapse/ui": "workspace:*",
 		"class-variance-authority": "^0.7.1",

@@ -1204,7 +1204,7 @@ export function UnifiedViewerModal({
 								animate={{ opacity: 1, y: 0 }}
 								exit={{ opacity: 0, y: 16 }}
 								transition={{ duration: 0.18 }}
-								className="absolute bottom-20 left-6 z-20 w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-3xl border border-white/10 bg-black/78 p-4 text-white">
+								className="absolute bottom-20 right-6 z-20 w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-3xl border border-white/10 bg-black/78 p-4 text-white">
 								<div className="space-y-4">
 									<div className="space-y-2">
 										<div className="flex items-center gap-2 text-sm text-white/70">
