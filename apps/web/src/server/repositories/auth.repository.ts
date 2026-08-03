@@ -1,4 +1,3 @@
-import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
 import { DEFAULT_PLAN_ID } from "@/shared/config/plans";
@@ -24,7 +23,7 @@ export default class AuthRepository {
 				});
 			}
 
-			const passwordHash = await bcrypt.hash(password, 10);
+			const passwordHash = await Bun.password.hash(password, { algorithm: "bcrypt", cost: 10 });
 
 			const [user] = await this.ctx.db
 				.insert(users)
@@ -86,7 +85,7 @@ export default class AuthRepository {
 				});
 			}
 
-			const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+			const isPasswordValid = await Bun.password.verify(password, user.passwordHash);
 
 			if (!isPasswordValid) {
 				throw new TRPCError({
