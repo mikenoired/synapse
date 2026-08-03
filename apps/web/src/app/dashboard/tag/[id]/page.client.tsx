@@ -19,7 +19,7 @@ interface Props {
 	tagId: string;
 	tagTitle: string;
 	initialColor: number;
-	initial: { items: Content[]; nextCursor: string | undefined };
+	initial?: { items: Content[]; nextCursor: string | undefined };
 }
 
 export default function TagClient({ tagId, tagTitle, initialColor, initial }: Props) {
@@ -90,7 +90,7 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		retry: false,
-		initialData: { pages: [initial], pageParams: [undefined] },
+		initialData: initial ? { pages: [initial], pageParams: [undefined] } : undefined,
 		refetchOnMount: false,
 	});
 

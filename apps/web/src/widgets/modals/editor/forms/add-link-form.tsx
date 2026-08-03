@@ -4,6 +4,7 @@ import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
+import { apiUrl } from "@/shared/config/api";
 import type { Content } from "@/shared/lib/schemas";
 import type { LinkContent } from "@/shared/lib/schemas";
 import { TagEditor } from "@/shared/ui/tag-editor";
@@ -26,7 +27,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 
 	const createMutation = trpc.content.create.useMutation();
 	const parseLink = async (targetUrl: string): Promise<LinkContent> => {
-		const response = await fetch("/api/parse-link", {
+		const response = await fetch(apiUrl("/parse-link"), {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",

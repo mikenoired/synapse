@@ -3,7 +3,7 @@
 import { readdir, stat } from "node:fs/promises";
 import { join, relative } from "node:path";
 
-const buildDirectory = join(import.meta.dir, "..", "apps", "web", ".next");
+const buildDirectory = join(import.meta.dir, "..", "apps", "web", "dist");
 
 async function filesIn(directory: string): Promise<string[]> {
 	const entries = await readdir(directory, { withFileTypes: true });
@@ -31,10 +31,10 @@ try {
 				size: (await stat(file)).size,
 			}))
 	);
-	const staticAssets = assets.filter((asset) => asset.file.includes("/.next/static/"));
+	const staticAssets = assets;
 	const total = staticAssets.reduce((sum, asset) => sum + asset.size, 0);
 
-	console.log("\nFinal bundle size (.next/static):");
+	console.log("\nFinal bundle size (dist):");
 	console.log(
 		`  JavaScript: ${formatBytes(staticAssets.filter((asset) => asset.file.endsWith(".js")).reduce((sum, asset) => sum + asset.size, 0))}`
 	);

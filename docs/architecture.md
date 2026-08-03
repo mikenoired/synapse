@@ -12,8 +12,8 @@
 
 ## Technology stack
 
-- TypeScript, Bun 1.3.14+, React 19, Next.js 16 App Router.
-- tRPC 11 with Zod validation and SuperJSON transport serialization.
+- TypeScript, Bun 1.3.14+, React 19, Vite, and TanStack Router.
+- Hono with Zod validation and Hono RPC type contracts.
 - Drizzle ORM over `postgres` for PostgreSQL.
 - TanStack React Query for client server-state; Next Themes and dedicated React contexts for client UI state.
 - Tailwind CSS, Base UI, Framer Motion, Tiptap editor.
@@ -24,28 +24,29 @@
 ## Project layout and dependency flow
 
 ```text
-apps/web/src/app       Next routes, layouts, API route handlers, providers
+apps/web/src/client    TanStack Router entry and route composition
+apps/web/src/app       Reusable page/view components during the SPA transition
 apps/web/src/features  User-facing use cases and feature-local state/UI
 apps/web/src/entities  Reusable domain presentation components
 apps/web/src/widgets   Composite UI blocks (sidebar, dialogs, viewers, editor)
 apps/web/src/shared    Cross-cutting client code, schemas, config, design tokens
-apps/web/src/server    tRPC, services, repositories, DB, integrations, parsers
+apps/web/src/server    Hono API, services, repositories, DB, integrations, parsers
 packages/ui            Framework-agnostic shared component library
 ```
 
 - Client UI depends on `features`, `entities`, `widgets`, `shared`, and `@synapse/ui`.
-- Client-to-server calls use the typed `shared/api/trpc` client.
-- Server flow is **router → service → repository → database/infrastructure**. Routers own transport validation; services own workflows; repositories own persistence and enforce ownership queries.
+- Client-to-server calls use typed Hono contracts and TanStack Query.
+- Server flow is **Hono route → service → repository → database/infrastructure**. Routes own transport validation; services own workflows; repositories own persistence and enforce ownership queries.
 - Shared Zod schemas in `shared/lib/schemas.ts` define the principal client/server content contracts.
 - Do not introduce server imports into client components. Keep infrastructure access inside `src/server` or the explicitly shared MinIO client helpers.
 
 ## Request and rendering lifecycle
 
-1. Next App Router serves the landing page and `/dashboard` route tree. Server and client components are mixed; interactive features/components use client-side React.
-2. Root `Providers` composes auth, tRPC/React Query, user preferences, theme, modal, and toast providers.
-3. Browser tRPC requests batch to `GET`/`POST /api/trpc`; request context resolves the authenticated user from a bearer token, refreshed middleware header, or cookies.
-4. Middleware (`src/proxy.ts`) validates access JWTs, renews them from valid refresh JWTs, and forwards replacement tokens to downstream server code.
-5. tRPC applies CSRF origin checking for production mutations and Redis-backed query/mutation limits. Protected procedures require an authenticated context.
+1. Vite serves the React SPA and TanStack Router renders the landing page and `/dashboard` route tree.
+2. The router root composes auth, React Query, theme, modal, and toast providers.
+3. Browser requests go to Hono under `/api`; request context resolves the authenticated user from bearer tokens or cookies.
+4. Hono applies CSRF origin checking for production mutations and Redis-backed query/mutation limits. Protected routes require an authenticated context.
+5. Bun serves Hono and the Vite output as one process; SPA fallbacks are resolved after API routes.
 6. Services execute domain work, including database transactions where content, tags, and graph records must remain aligned. Repositories scope persisted records by `userId`.
 7. React Query caches results client-side; its default query stale time is one minute.
 
@@ -61,3 +62,10 @@ packages/ui            Framework-agnostic shared component library
 - Content's `content` field is a type-dependent serialized payload; parsers/format-specific helpers interpret it rather than adding per-type database tables.
 - Content-to-tag relationships are mirrored into the graph projection. Preserve both representations together in content-service transactions.
 - Binary file delivery is gated through the application route; do not expose unrestricted MinIO object URLs.
+
+## Frontend and API runtime
+
+- The application is a Vite-built React SPA. TanStack Router owns `/`, `/dashboard`, `/dashboard/tags`, `/dashboard/tag/:id`, and `/dashboard/graph`.
+- TanStack Query owns asynchronous server state; it talks to the Hono API at `/api` with cookie credentials.
+- Bun starts the single production server. It mounts Hono first, then serves `apps/web/dist` and falls back to `index.html` for client routes.
+- Hono `Api` is the type authority for HTTP RPC. Zod validates inputs at the boundary; client code derives its contracts without tRPC.

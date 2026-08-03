@@ -1,28 +1,18 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { createTRPCClient, httpBatchLink } from "@trpc/client";
 import { ThemeProvider } from "next-themes";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Toaster } from "react-hot-toast";
-import superjson from "superjson";
 
-import type { AppRouter } from "@/server/routers/_app";
-import { trpc } from "@/shared/api/trpc";
 import { AuthProvider } from "@/shared/lib/auth-context";
 import type { User } from "@/shared/lib/auth-context";
 import { UserPreferencesProvider } from "@/shared/lib/user-preferences-context";
 import { ModalProvider } from "@/widgets/modals/context/modal-context";
 import { ModalManager } from "@/widgets/modals/context/modal-manager";
 
-function getBaseUrl() {
-	if (typeof window !== "undefined") return "";
-	if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-	return `http://localhost:${process.env.PORT ?? 3000}`;
-}
-
-function TRPCProvider({ children }: { children: ReactNode }) {
+function QueryProvider({ children }: { children: ReactNode }) {
 	const [queryClient] = useState(
 		() =>
 			new QueryClient({
@@ -41,30 +31,7 @@ function TRPCProvider({ children }: { children: ReactNode }) {
 			})
 	);
 
-	const trpcClient = useMemo(
-		() =>
-			createTRPCClient<AppRouter>({
-				links: [
-					httpBatchLink({
-						url: `${getBaseUrl()}/api/trpc`,
-						transformer: superjson,
-						fetch(url, options) {
-							return fetch(url, {
-								...options,
-								credentials: "include",
-							});
-						},
-					}),
-				],
-			}),
-		[]
-	);
-
-	return (
-		<trpc.Provider client={trpcClient} queryClient={queryClient}>
-			<QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-		</trpc.Provider>
-	);
+	return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
 export function Providers({
@@ -76,7 +43,7 @@ export function Providers({
 }) {
 	return (
 		<AuthProvider initialUser={initialUser}>
-			<TRPCProvider>
+			<QueryProvider>
 				<UserPreferencesProvider>
 					<ThemeProvider
 						attribute="class"
@@ -96,7 +63,7 @@ export function Providers({
 						</ModalProvider>
 					</ThemeProvider>
 				</UserPreferencesProvider>
-			</TRPCProvider>
+			</QueryProvider>
 		</AuthProvider>
 	);
 }

@@ -1,9 +1,9 @@
 import { Buffer } from "node:buffer";
 
-import { TRPCError } from "@trpc/server";
-
 import { imageUploadMaxFileSizeBytes } from "@/server/services/upload/upload-media";
 import { deleteFile, getFileMetadata, getPublicUrl, uploadFile } from "@/shared/api/minio";
+
+import { ApiError as TRPCError } from "./api-error";
 
 const imageDataUrlPattern = /^data:(image\/(?:jpeg|png|gif|webp));base64,([a-zA-Z0-9+/=\s]+)$/;
 const imageExtensions: Record<string, string> = {

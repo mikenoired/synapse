@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
 import { DEFAULT_PLAN_ID, isPlanId, type PlanId } from "@/shared/config/plans";
@@ -7,6 +6,7 @@ import { normalizeUserPreferences } from "@/shared/lib/user-preferences";
 
 import type { Context } from "../context";
 import { users } from "../db/schema";
+import { ApiError as TRPCError } from "../lib/api-error";
 import { requireAuth } from "../lib/auth-guard";
 
 export interface CurrentUser {

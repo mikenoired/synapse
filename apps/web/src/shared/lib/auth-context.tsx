@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
+import { apiUrl } from "@/shared/config/api";
+
 export interface User {
 	id: string;
 	email: string;
@@ -42,7 +44,7 @@ export function AuthProvider({
 
 		async function loadUser() {
 			try {
-				const response = await fetch("/api/user", {
+				const response = await fetch(apiUrl("/user"), {
 					credentials: "include",
 					signal: controller.signal,
 				});
@@ -69,34 +71,34 @@ export function AuthProvider({
 
 	const signUp = async (email: string, password: string) => {
 		try {
-			const result = await fetch("/api/trpc/auth.register", {
+			const result = await fetch(apiUrl("/auth/register"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ json: { email, password } }),
+				body: JSON.stringify({ email, password }),
 				credentials: "include",
-			}).then((res) => res.json());
+			}).then(async (res) => ({ ok: res.ok, body: await res.json() }));
 
-			if (result.error) {
-				const error = result.error.json;
+			if (!result.ok) {
+				const error = result.body as { error?: string; fieldErrors?: Record<string, string[] | undefined> };
 				return {
 					error: {
-						message: error?.message || "Register error",
-						fieldErrors: error?.data?.fieldErrors
+						message: error?.error || "Register error",
+						fieldErrors: error?.fieldErrors
 							? {
-									email: error.data.fieldErrors.email?.[0],
-									password: error.data.fieldErrors.password?.[0],
+									email: error.fieldErrors.email?.[0],
+									password: error.fieldErrors.password?.[0],
 								}
 							: undefined,
 					},
 				};
 			}
 
-			const data = result.result?.data?.json || result.result?.data;
+			const data = result.body as { user?: User; token?: string; refreshToken?: string };
 			if (!data?.token || !data?.refreshToken) {
 				return { error: { message: "Can't get tokens" } };
 			}
 
-			const sessionResponse = await fetch("/api/session", {
+			const sessionResponse = await fetch(apiUrl("/session"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -110,7 +112,7 @@ export function AuthProvider({
 				return { error: { message: "Session setting error" } };
 			}
 
-			setUser({ id: data.user.id, email: data.user.email });
+			setUser({ id: data.user!.id, email: data.user!.email });
 			router.push("/dashboard");
 			return { error: null };
 		} catch (error) {
@@ -120,34 +122,34 @@ export function AuthProvider({
 
 	const signIn = async (email: string, password: string) => {
 		try {
-			const result = await fetch("/api/trpc/auth.login", {
+			const result = await fetch(apiUrl("/auth/login"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ json: { email, password } }),
+				body: JSON.stringify({ email, password }),
 				credentials: "include",
-			}).then((res) => res.json());
+			}).then(async (res) => ({ ok: res.ok, body: await res.json() }));
 
-			if (result.error) {
-				const error = result.error.json;
+			if (!result.ok) {
+				const error = result.body as { error?: string; fieldErrors?: Record<string, string[] | undefined> };
 				return {
 					error: {
-						message: error?.message || "Login error",
-						fieldErrors: error?.data?.fieldErrors
+						message: error?.error || "Login error",
+						fieldErrors: error?.fieldErrors
 							? {
-									email: error.data.fieldErrors.email?.[0],
-									password: error.data.fieldErrors.password?.[0],
+									email: error.fieldErrors.email?.[0],
+									password: error.fieldErrors.password?.[0],
 								}
 							: undefined,
 					},
 				};
 			}
 
-			const data = result.result?.data?.json || result.result?.data;
+			const data = result.body as { user?: User; token?: string; refreshToken?: string };
 			if (!data?.token || !data?.refreshToken) {
 				return { error: { message: "Can't get register tokens" } };
 			}
 
-			const sessionResponse = await fetch("/api/session", {
+			const sessionResponse = await fetch(apiUrl("/session"), {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
@@ -161,7 +163,7 @@ export function AuthProvider({
 				return { error: { message: "Session setting error" } };
 			}
 
-			setUser({ id: data.user.id, email: data.user.email });
+			setUser({ id: data.user!.id, email: data.user!.email });
 			router.push("/dashboard");
 			return { error: null };
 		} catch (error) {
@@ -171,7 +173,7 @@ export function AuthProvider({
 
 	const signOut = async () => {
 		try {
-			await fetch("/api/session", {
+			await fetch(apiUrl("/session"), {
 				method: "DELETE",
 				credentials: "include",
 			});

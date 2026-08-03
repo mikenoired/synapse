@@ -1,8 +1,7 @@
-import { TRPCError } from "@trpc/server";
-
 import type { User } from "@/shared/lib/auth-context";
 
 import type { Context } from "../context";
+import { ApiError as TRPCError } from "./api-error";
 
 export type AuthedContext = Context & { user: User };
 

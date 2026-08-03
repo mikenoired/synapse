@@ -1,10 +1,14 @@
+import { apiUrl } from "@/shared/config/api";
+
 export function getSecureImageUrl(objectName: string, token?: string): string {
 	if (!objectName) return "";
 
 	if (objectName.startsWith("http")) return objectName;
 
-	const baseUrl = "/api/files";
-	const url = `${baseUrl}/${objectName}`;
+	const filePath = objectName.startsWith("/api/files/")
+		? objectName.slice("/api".length)
+		: `/files/${objectName.replace(/^\/+/, "")}`;
+	const url = apiUrl(filePath);
 
 	if (token) return `${url}?token=${encodeURIComponent(token)}`;
 
@@ -16,5 +20,6 @@ export function isImageContent(content: string): boolean {
 }
 
 export function getPresignedMediaUrl(apiPath: string): string {
-	return apiPath.startsWith("/api/files/") ? apiPath : `/api/files/${apiPath.replace(/^\/+/, "")}`;
+	if (!apiPath || apiPath.startsWith("data:") || /^https?:\/\//.test(apiPath)) return apiPath;
+	return getSecureImageUrl(apiPath);
 }

@@ -1,11 +1,35 @@
 {
-	"extends": "@synapse/tsconfig/nextjs.json",
+	"extends": "@synapse/tsconfig/base.json",
 	"compilerOptions": {
+		"target": "ES2022",
+		"lib": ["DOM", "DOM.Iterable", "ESNext"],
+		"module": "ESNext",
+		"jsx": "react-jsx",
+		"noEmit": true,
 		"experimentalDecorators": true,
-		"paths": { "@/*": ["./src/*"] },
+		"paths": {
+			"@/*": ["./src/*"],
+			"next/navigation": ["./src/shared/router/next-navigation.ts"],
+			"next/link": ["./src/shared/router/next-link.tsx"],
+			"next/image": ["./src/shared/router/next-image.tsx"],
+			"next/dynamic": ["./src/shared/router/next-dynamic.tsx"],
+			"next/web-vitals": ["./src/shared/router/next-web-vitals.ts"]
+		},
 		"strictNullChecks": true,
 		"types": ["bun"]
 	},
-	"include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+	"include": [
+		"src/vite-env.d.ts",
+		"src/client",
+		"src/entities",
+		"src/features",
+		"src/server",
+		"src/shared",
+		"src/widgets",
+		"src/app/page.tsx",
+		"src/app/dashboard/**/*.client.tsx",
+		"src/app/dashboard/dashboard-content.tsx",
+		"src/app/dashboard/graph/pageClient.tsx"
+	],
 	"exclude": ["node_modules"]
 }

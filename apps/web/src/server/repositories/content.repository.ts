@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import { and, asc, desc, eq, gt, ilike, inArray, isNull, lt, lte, ne, or, type SQL, sql } from "drizzle-orm";
 import type z from "zod";
 
@@ -6,6 +5,7 @@ import type { createContentSchema, updateContentSchema } from "@/shared/lib/sche
 
 import type { Context } from "../context";
 import { content, contentTags, edges, nodes, tags } from "../db/schema";
+import { ApiError as TRPCError } from "../lib/api-error";
 import { requireAuth } from "../lib/auth-guard";
 import { isAutomaticTagColorEnabled, randomTagColor } from "../lib/tag-colors";
 

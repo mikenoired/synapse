@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import type z from "zod";
 
 import { deleteFile, getFileMetadata } from "@/shared/api/minio";
@@ -14,6 +13,7 @@ import {
 
 import type { Context } from "../context";
 import type { content as contentTable } from "../db/schema";
+import { ApiError as TRPCError } from "../lib/api-error";
 import { buildContentSearchText } from "../lib/content-search";
 import {
 	deleteStoredNoteImages,

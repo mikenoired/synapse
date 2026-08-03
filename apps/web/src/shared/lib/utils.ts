@@ -1,4 +1,4 @@
-import { TRPCError } from "@trpc/server";
+import { ApiError as TRPCError } from "@/server/lib/api-error";
 
 export function numWord(value: number, words: string[]) {
 	value = Math.abs(value) % 100;

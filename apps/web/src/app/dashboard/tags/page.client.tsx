@@ -16,7 +16,7 @@ import { normalizeDroppedFiles } from "@/shared/lib/upload-file-kind";
 export default function TagsClient({
 	initial,
 }: {
-	initial: {
+	initial?: {
 		items: { color: number; id: string; title: string; items: Content[] }[];
 		nextCursor: string | undefined;
 	};
@@ -43,7 +43,7 @@ export default function TagsClient({
 		{ limit: 24 },
 		{
 			getNextPageParam: (lastPage) => lastPage.nextCursor,
-			initialData: { pages: [initial], pageParams: [undefined] },
+			initialData: initial ? { pages: [initial], pageParams: [undefined] } : undefined,
 			refetchOnMount: false,
 		}
 	);

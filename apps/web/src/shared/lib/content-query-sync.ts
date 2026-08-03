@@ -1,13 +1,8 @@
-import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
-
-import type { AppRouter } from "@/server/routers/_app";
+import type { ContentList, ContentListInput } from "@/shared/api/contracts";
 import type { Content } from "@/shared/lib/schemas";
 
-type RouterInputs = inferRouterInputs<AppRouter>;
-type RouterOutputs = inferRouterOutputs<AppRouter>;
-
-export type ContentListQueryInput = RouterInputs["content"]["getAll"];
-export type ContentListQueryResult = RouterOutputs["content"]["getAll"];
+export type ContentListQueryInput = ContentListInput;
+export type ContentListQueryResult = ContentList;
 
 function normalizeSearchValue(value?: string): string {
 	return value?.trim().toLowerCase() ?? "";

@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import { eq } from "drizzle-orm";
 
@@ -6,6 +5,7 @@ import { DEFAULT_PLAN_ID } from "@/shared/config/plans";
 
 import type { Context } from "../context";
 import { users } from "../db/schema";
+import { ApiError as TRPCError } from "../lib/api-error";
 import { signRefreshToken, signToken } from "../lib/jwt";
 
 export default class AuthRepository {

@@ -1,6 +1,8 @@
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
+import { apiUrl } from "@/shared/config/api";
+
 import type { LinkState } from "./types";
 
 export function useLinkParser() {
@@ -15,7 +17,7 @@ export function useLinkParser() {
 		try {
 			setState((prev) => ({ ...prev, isLoading: true }));
 
-			const response = await fetch("/api/parse-link", {
+			const response = await fetch(apiUrl("/parse-link"), {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

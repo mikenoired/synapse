@@ -2,7 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { DragEvent } from "react";
-import { lazy, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { trpc } from "@/shared/api/trpc";
 import type { ContentListQueryInput } from "@/shared/lib/content-query-sync";
@@ -41,7 +41,7 @@ function sameStringSet(left: string[], right: string[]): boolean {
 export default function DashboardClient({
 	initial,
 }: {
-	initial: { items: Content[]; nextCursor: string | undefined };
+	initial?: { items: Content[]; nextCursor: string | undefined };
 }) {
 	const { openAddDialog, setAddDialogDefaults, setPreloadedFiles } = useDashboard();
 	const { openModal } = useModal();
@@ -106,9 +106,9 @@ export default function DashboardClient({
 	} = trpc.content.getAll.useInfiniteQuery(queryInput, {
 		getNextPageParam: (lastPage) => lastPage.nextCursor,
 		initialData:
-			queryInput.search || queryInput.tagIds || queryInput.types
-				? undefined
-				: { pages: [initial], pageParams: [undefined] },
+			initial && !(queryInput.search || queryInput.tagIds || queryInput.types)
+				? { pages: [initial], pageParams: [undefined] }
+				: undefined,
 		refetchOnMount: false,
 		retry: false,
 	});
@@ -309,30 +309,34 @@ export default function DashboardClient({
 				</div>
 			)}
 			<main className="min-w-0 flex-1 overflow-y-auto relative">
-				<ContentFilter
-					searchQuery={searchQuery}
-					setSearchQuery={setSearchQuery}
-					availableContentTypes={availableContentTypes}
-					selectedContentTypes={selectedContentTypes}
-					onClearContentTypes={() => setSelectedContentTypes([])}
-					onToggleContentType={toggleContentType}
-				/>
-				<div className="p-4">
-					<ContentGrid
-						items={content}
-						isLoading={contentLoading && content.length === 0}
-						onContentUpdated={handleContentUpdated}
-						onContentDeleted={handleContentDeleted}
-						onItemClick={handleItemClick}
-						searchQuery={debouncedSearchQuery}
-						selectedTags={selectedTags}
+				<Suspense fallback={null}>
+					<ContentFilter
+						searchQuery={searchQuery}
+						setSearchQuery={setSearchQuery}
+						availableContentTypes={availableContentTypes}
 						selectedContentTypes={selectedContentTypes}
-						onClearFilters={clearFilters}
-						onAddContent={openAddDialog}
-						fetchNext={fetchNextPage}
-						hasNext={hasNextPage}
-						isFetchingNext={isFetchingNextPage}
+						onClearContentTypes={() => setSelectedContentTypes([])}
+						onToggleContentType={toggleContentType}
 					/>
+				</Suspense>
+				<div className="p-4">
+					<Suspense fallback={<div className="h-40" aria-busy="true" />}>
+						<ContentGrid
+							items={content}
+							isLoading={contentLoading && content.length === 0}
+							onContentUpdated={handleContentUpdated}
+							onContentDeleted={handleContentDeleted}
+							onItemClick={handleItemClick}
+							searchQuery={debouncedSearchQuery}
+							selectedTags={selectedTags}
+							selectedContentTypes={selectedContentTypes}
+							onClearFilters={clearFilters}
+							onAddContent={openAddDialog}
+							fetchNext={fetchNextPage}
+							hasNext={hasNextPage}
+							isFetchingNext={isFetchingNextPage}
+						/>
+					</Suspense>
 				</div>
 			</main>
 		</div>
