@@ -1,8 +1,8 @@
 "use client";
 
+import { Collapsible } from "@base-ui-components/react/collapsible";
 import { ChevronRight, Dot, type LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Collapsible } from "radix-ui";
 import {
 	useState,
 	useEffect,
@@ -142,7 +142,7 @@ function CollapsePanel({ open, children }: CollapsePanelProps) {
 	}
 
 	return (
-		<Collapsible.Content forceMount asChild hidden={!open && exitComplete}>
+		<Collapsible.Panel keepMounted hidden={!open && exitComplete}>
 			<div>
 				<motion.div
 					className="overflow-hidden"
@@ -157,7 +157,7 @@ function CollapsePanel({ open, children }: CollapsePanelProps) {
 					</div>
 				</motion.div>
 			</div>
-		</Collapsible.Content>
+		</Collapsible.Panel>
 	);
 }
 

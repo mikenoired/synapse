@@ -1,8 +1,8 @@
 "use client";
 
+import { Tabs as TabsPrimitive } from "@base-ui-components/react/tabs";
 import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Tabs as TabsPrimitive } from "radix-ui";
 import {
 	useRef,
 	useState,
@@ -108,11 +108,7 @@ const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
 
 		return (
 			<TabsSubtleContext.Provider value={{ registerTab, hoveredIndex, selectedIndex, idPrefix, activeLabel }}>
-				<TabsPrimitive.Root
-					asChild
-					value={String(selectedIndex)}
-					onValueChange={(value) => onSelect(Number(value))}
-					activationMode="manual">
+				<TabsPrimitive.Root value={String(selectedIndex)} onValueChange={(value) => onSelect(Number(value))}>
 					<TabsPrimitive.List
 						ref={(node: HTMLDivElement | null) => {
 							containerRef.current = node;
@@ -274,7 +270,7 @@ const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
 		);
 
 		return (
-			<TabsPrimitive.Trigger
+			<TabsPrimitive.Tab
 				ref={(node: HTMLButtonElement | null) => {
 					internalRef.current = node;
 					if (typeof ref === "function") ref(node);
@@ -322,7 +318,7 @@ const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
 				) : (
 					labelContent
 				)}
-			</TabsPrimitive.Trigger>
+			</TabsPrimitive.Tab>
 		);
 	}
 );

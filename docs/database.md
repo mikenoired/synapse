@@ -9,15 +9,15 @@
 
 ## Main relational entities
 
-| Entity | Purpose and key relationships |
-| --- | --- |
-| `users` | Identity, password hash, preferences JSON, plan, timestamps. Owns all principal data. Email is unique. |
-| `content` | Unified archive item with type, serialized payload, derived `search_text`/`search_vector`, title, image metadata, timestamps, and `user_id`. |
-| `tags` | User-owned tag label. Many-to-many with content through `content_tags`. |
-| `content_tags` | Content/tag join with an owner field. Unique content/tag pair is installed by SQL migration. |
-| `nodes` | User-owned graph projection node; `metadata` identifies backing content/tag records. |
-| `edges` | Directed, user-owned graph relationship between nodes, with `relation_type`. |
-| `ai_usage` | Per-call AI accounting and diagnostics. `content_id` is intentionally not a foreign key. |
+| Entity         | Purpose and key relationships                                                                                                                |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `users`        | Identity, password hash, preferences JSON, plan, timestamps. Owns all principal data. Email is unique.                                       |
+| `content`      | Unified archive item with type, serialized payload, derived `search_text`/`search_vector`, title, image metadata, timestamps, and `user_id`. |
+| `tags`         | User-owned tag label. Many-to-many with content through `content_tags`.                                                                      |
+| `content_tags` | Content/tag join with an owner field. Unique content/tag pair is installed by SQL migration.                                                 |
+| `nodes`        | User-owned graph projection node; `metadata` identifies backing content/tag records.                                                         |
+| `edges`        | Directed, user-owned graph relationship between nodes, with `relation_type`.                                                                 |
+| `ai_usage`     | Per-call AI accounting and diagnostics. `content_id` is intentionally not a foreign key.                                                     |
 
 ## Indexing and search
 

@@ -8,6 +8,8 @@
 		"apps/*"
 	],
 	"scripts": {
+		"build:check": "bun run check && bun --filter @synapse/web build && bun run bundle:size",
+		"bundle:size": "bun scripts/bundle-size.ts",
 		"check": "bun run lint && bun run format:check && bun run typecheck && bun run test",
 		"format": "bun x oxfmt --config .oxfmtrc.json --write .",
 		"format:check": "bun x oxfmt --config .oxfmtrc.json --check .",

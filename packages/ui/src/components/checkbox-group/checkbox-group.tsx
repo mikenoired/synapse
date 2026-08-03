@@ -1,8 +1,8 @@
 "use client";
 
+import { Checkbox as CheckboxPrimitive } from "@base-ui-components/react/checkbox";
 import { CheckIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { Checkbox as CheckboxPrimitive } from "radix-ui";
 import { useCallback, useLayoutEffect, useRef, useState, type HTMLAttributes, type ReactNode } from "react";
 
 import { cn } from "../../cn";
@@ -250,7 +250,7 @@ function EditableCheckboxItem({
 			<CheckboxPrimitive.Root
 				aria-hidden="true"
 				checked={checked}
-				onCheckedChange={(value) => onToggle(value === true)}
+				onCheckedChange={onToggle}
 				tabIndex={-1}
 				className="relative grid size-[15px] shrink-0 place-items-center rounded-[5px] border-[1.5px] border-border bg-transparent p-0 text-foreground outline-none transition-colors duration-80 data-checked:border-transparent"
 				onClick={(event) => event.stopPropagation()}>

@@ -1,8 +1,8 @@
 "use client";
 
+import { Tabs as TabsPrimitive } from "@base-ui-components/react/tabs";
 import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import { Tabs as TabsPrimitive } from "radix-ui";
 import {
 	useRef,
 	useState,
@@ -100,7 +100,6 @@ const Tabs = forwardRef<HTMLDivElement, TabsProps>(
 					ref={ref}
 					value={resolvedValue ?? ""}
 					onValueChange={handleValueChange}
-					activationMode="automatic"
 					{...props}>
 					{children}
 				</TabsPrimitive.Root>
@@ -320,7 +319,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 
 TabsList.displayName = "TabsList";
 
-interface TabItemProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger> {
+interface TabItemProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Tab> {
 	value: string;
 	icon?: LucideIcon;
 	label: string;
@@ -341,15 +340,16 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 		const isActive = hoveredIndex === _index || isSelected;
 
 		return (
-			<TabsPrimitive.Trigger
+			<TabsPrimitive.Tab
 				onClick={(e) => {
 					setOptimisticIdx(_index);
 					onClick?.(e);
 				}}
 				ref={(node) => {
-					(internalRef as React.RefObject<HTMLButtonElement | null>).current = node;
-					if (typeof ref === "function") ref(node);
-					else if (ref) (ref as React.RefObject<HTMLButtonElement | null>).current = node;
+					const button = node as HTMLButtonElement | null;
+					(internalRef as React.RefObject<HTMLButtonElement | null>).current = button;
+					if (typeof ref === "function") ref(button);
+					else if (ref) (ref as React.RefObject<HTMLButtonElement | null>).current = button;
 				}}
 				value={value}
 				data-proximity-index={_index}
@@ -386,19 +386,19 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 						{label}
 					</span>
 				</span>
-			</TabsPrimitive.Trigger>
+			</TabsPrimitive.Tab>
 		);
 	}
 );
 
 TabItem.displayName = "TabItem";
 
-interface TabPanelProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Content> {
+interface TabPanelProps extends ComponentPropsWithoutRef<typeof TabsPrimitive.Panel> {
 	value: string;
 }
 
 const TabPanel = forwardRef<HTMLDivElement, TabPanelProps>(({ className, ...props }, ref) => {
-	return <TabsPrimitive.Content ref={ref} className={cn("outline-none", className)} {...props} />;
+	return <TabsPrimitive.Panel ref={ref} className={cn("outline-none", className)} {...props} />;
 });
 
 TabPanel.displayName = "TabPanel";

@@ -1,5 +1,4 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { Slot } from "radix-ui";
 import * as React from "react";
 
 import { cn } from "../../cn";
@@ -96,12 +95,25 @@ function Button({
 	children,
 	...props
 }: ButtonProps) {
-	const Comp = asChild ? Slot.Root : "button";
 	const isDisabled = disabled || loading;
 	const showSpinner = loading && !asChild;
+	if (asChild && React.isValidElement(children)) {
+		return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+			...props,
+			"data-slot": "button",
+			"data-variant": variant,
+			"data-size": size,
+			"aria-busy": loading || undefined,
+			"aria-disabled": isDisabled || undefined,
+			"className": cn(
+				buttonVariants({ variant, size, className }),
+				(children.props as { className?: string }).className
+			),
+		});
+	}
 
 	return (
-		<Comp
+		<button
 			data-slot="button"
 			data-variant={variant}
 			data-size={size}
@@ -121,7 +133,7 @@ function Button({
 			) : (
 				children
 			)}
-		</Comp>
+		</button>
 	);
 }
 

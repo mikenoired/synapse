@@ -1,7 +1,5 @@
 "use client";
 
-import type * as LabelPrimitive from "@radix-ui/react-label";
-import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@synapse/ui/cn";
 import * as React from "react";
 import type { ControllerProps, FieldPath, FieldValues } from "react-hook-form";
@@ -70,7 +68,7 @@ function FormItem({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
-function FormLabel({ className, ...props }: React.ComponentProps<typeof LabelPrimitive.Root>) {
+function FormLabel({ className, ...props }: React.ComponentProps<typeof Label>) {
 	const { error, formItemId } = useFormField();
 
 	return (
@@ -84,18 +82,17 @@ function FormLabel({ className, ...props }: React.ComponentProps<typeof LabelPri
 	);
 }
 
-function FormControl({ ...props }: React.ComponentProps<typeof Slot>) {
+function FormControl({ children, ...props }: React.ComponentProps<"span">) {
 	const { error, formItemId, formDescriptionId, formMessageId } = useFormField();
 
-	return (
-		<Slot
-			data-slot="form-control"
-			id={formItemId}
-			aria-describedby={!error ? `${formDescriptionId}` : `${formDescriptionId} ${formMessageId}`}
-			aria-invalid={!!error}
-			{...props}
-		/>
-	);
+	if (!React.isValidElement(children)) throw new Error("FormControl expects a single React element");
+	return React.cloneElement(children as React.ReactElement<Record<string, unknown>>, {
+		...props,
+		"data-slot": "form-control",
+		"id": formItemId,
+		"aria-describedby": !error ? formDescriptionId : `${formDescriptionId} ${formMessageId}`,
+		"aria-invalid": !!error,
+	});
 }
 
 function FormDescription({ className, ...props }: React.ComponentProps<"p">) {

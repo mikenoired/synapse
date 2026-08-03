@@ -16,7 +16,7 @@
 - tRPC 11 with Zod validation and SuperJSON transport serialization.
 - Drizzle ORM over `postgres` for PostgreSQL.
 - TanStack React Query for client server-state; Next Themes and dedicated React contexts for client UI state.
-- Tailwind CSS, Radix UI, Framer Motion, Tiptap editor.
+- Tailwind CSS, Base UI, Framer Motion, Tiptap editor.
 - MinIO/S3-compatible object storage for uploaded binary assets; Sharp and FFmpeg-dependent handlers create media derivatives.
 - Redis provides cache, storage-usage counters, and rate limiting.
 - Optional Z.ai-compatible LLM integration for tag suggestions.

@@ -9,14 +9,14 @@
 
 ## tRPC namespaces
 
-| Namespace | Procedures |
-| --- | --- |
-| `auth` | `register`, `login`, `refresh`, `logout` |
+| Namespace | Procedures                                                                                   |
+| --------- | -------------------------------------------------------------------------------------------- |
+| `auth`    | `register`, `login`, `refresh`, `logout`                                                     |
 | `content` | `getAll`, `getById`, `create`, `update`, `delete`, tag queries, type discovery, `importFile` |
-| `upload` | `formData` (image, video, audio ingest) |
-| `graph` | `getGraph` |
-| `user` | `getUser`, `getStorageUsage`, `getPreferences`, `updatePreferences` |
-| `ai` | `suggestTags`, `getUsageOverview` |
+| `upload`  | `formData` (image, video, audio ingest)                                                      |
+| `graph`   | `getGraph`                                                                                   |
+| `user`    | `getUser`, `getStorageUsage`, `getPreferences`, `updatePreferences`                          |
+| `ai`      | `suggestTags`, `getUsageOverview`                                                            |
 
 ## Authentication and authorization
 

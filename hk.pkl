@@ -1,0 +1,16 @@
+amends "package://github.com/jdx/hk/releases/download/v1.54.0/hk@1.54.0#/Config.pkl"
+
+min_hk_version = "1.54.0"
+fail_fast = false
+
+hooks {
+	["pre-commit"] {
+		fix = false
+		steps {
+			["quality-gate"] {
+				check = "bun run build:check"
+				exclusive = true
+			}
+		}
+	}
+}

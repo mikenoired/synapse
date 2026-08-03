@@ -3,11 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
 	experimental: {
 		optimizePackageImports: [
-			"@radix-ui/react-dialog",
-			"@radix-ui/react-context-menu",
-			"@radix-ui/react-tooltip",
-			"@radix-ui/react-label",
-			"@radix-ui/react-slot",
+			"@base-ui-components/react",
 			"lucide-react",
 			"@tanstack/react-query",
 			"@tiptap/react",
