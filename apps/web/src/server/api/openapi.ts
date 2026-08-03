@@ -69,6 +69,13 @@ export const openApiDocument = {
 				responses: { "200": { description: "Service is healthy", ...json } },
 			},
 		},
+		"/performance": {
+			get: {
+				summary: "Server performance history",
+				tags: ["system"],
+				responses: { "200": { description: "Saved smoke-test history", ...json } },
+			},
+		},
 		"/files/{path}": {
 			get: operation("Files private media", {
 				parameters: [{ name: "path", in: "path", required: true, schema: { type: "string" } }],
@@ -108,7 +115,10 @@ export const openApiDocument = {
 		"/content/{id}/suggestions": { get: operation("Content suggestions", { parameters: idParameter }) },
 		"/content/import": { post: operation("Content import", { body: true, mutation: true }) },
 		"/upload": { post: operation("Upload ingest", { body: true, mutation: true }) },
-		"/user": { get: operation("User profile") },
+		"/user": {
+			get: operation("User profile"),
+			delete: operation("User account delete", { mutation: true }),
+		},
 		"/user/storage": { get: operation("User storage") },
 		"/user/preferences": {
 			get: operation("User preferences"),

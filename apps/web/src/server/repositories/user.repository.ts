@@ -99,4 +99,10 @@ export default class UserRepository {
 
 		return normalizeUserPreferences(updatedUser.preferences);
 	}
+
+	async deleteAccount() {
+		requireAuth(this.ctx);
+		await this.ctx.db.delete(users).where(eq(users.id, this.ctx.user.id));
+		return { success: true };
+	}
 }

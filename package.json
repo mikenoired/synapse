@@ -9,6 +9,7 @@
 	],
 	"scripts": {
 		"build:check": "bun run check && bun --filter @synapse/web build && bun run bundle:size",
+		"build:server:size": "bun build apps/web/src/server/index.ts --outfile apps/web/.server-build/server.js --target bun --minify && bun scripts/bundle-size.ts --server",
 		"bundle:size": "bun scripts/bundle-size.ts",
 		"check": "bun run lint && bun run format:check && bun run typecheck && bun run test",
 		"format": "bun x oxfmt --config .oxfmtrc.json --write .",
@@ -18,6 +19,7 @@
 		"lint:js": "bun x oxlint . --config .oxlintrc.json --deny-warnings",
 		"lint:js:fix": "bun x oxlint . --config .oxlintrc.json --fix",
 		"test": "bun --filter @synapse/web test",
+		"smoke:server": "JWT_SECRET=smoke-test-secret JWT_REFRESH_SECRET=smoke-test-refresh-secret API_RATE_LIMIT_MUTATION=1000 bun scripts/server-smoke.ts",
 		"typecheck": "bun x tsc -p apps/web/tsconfig.json --noEmit && bun x tsc -p packages/ui/tsconfig.json --noEmit"
 	},
 	"devDependencies": {

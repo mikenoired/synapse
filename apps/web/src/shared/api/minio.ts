@@ -140,6 +140,20 @@ export async function deleteFile(objectName: string): Promise<void> {
 	} catch {}
 }
 
+export async function deleteUserFiles(userId: string): Promise<void> {
+	const prefixes = ["images", "audio", "media", "note-images", "documents"];
+	const objectNames: string[] = [];
+
+	for (const prefix of prefixes) {
+		const objects = minioClient.listObjectsV2(bucketName, `${prefix}/${userId}/`, true);
+		for await (const object of objects) {
+			if (object.name) objectNames.push(object.name);
+		}
+	}
+
+	if (objectNames.length > 0) await minioClient.removeObjects(bucketName, objectNames);
+}
+
 export async function getPresignedUrl(objectName: string, expirySeconds: number = 3600): Promise<string> {
 	return await minioClient.presignedGetObject(bucketName, objectName, expirySeconds);
 }

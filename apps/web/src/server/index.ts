@@ -6,6 +6,7 @@ import { log } from "./lib/logger";
 
 const app = new Hono().route("/api", api);
 
+app.get("/performance", serveStatic({ path: "./dist/performance.html" }));
 app.use("/*", serveStatic({ root: "./dist" }));
 app.get("*", serveStatic({ path: "./dist/index.html" }));
 

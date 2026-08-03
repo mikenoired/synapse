@@ -1,10 +1,13 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { Scalar } from "@scalar/hono-api-reference";
 import { Hono } from "hono";
 import { setCookie } from "hono/cookie";
 import { cors } from "hono/cors";
 import { z } from "zod";
 
-import { getPresignedUrl } from "@/shared/api/minio";
+import { deleteUserFiles, getPresignedUrl } from "@/shared/api/minio";
 import {
 	authSchema,
 	contentTypeSchema,
@@ -89,6 +92,20 @@ const corsOrigins = (process.env.CORS_ORIGIN || "http://localhost:5173")
 	.split(",")
 	.map((origin) => origin.trim())
 	.filter(Boolean);
+const performanceStatsPaths = [
+	join(process.cwd(), "docs", "performance", "server-smoke.json"),
+	join(process.cwd(), "..", "docs", "performance", "server-smoke.json"),
+	join(process.cwd(), "..", "..", "docs", "performance", "server-smoke.json"),
+];
+
+async function getPerformanceStats() {
+	for (const path of performanceStatsPaths) {
+		try {
+			return JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
+		} catch {}
+	}
+	return {};
+}
 
 async function body<T extends z.ZodType>(request: Request, schema: T): Promise<z.output<T>> {
 	const result = schema.safeParse(await request.json());
@@ -169,6 +186,7 @@ export const api = new Hono()
 		);
 	})
 	.get("/openapi.json", (c) => c.json(openApiDocument))
+	.get("/performance", async (c) => c.json(await getPerformanceStats()))
 	.get(
 		"/docs",
 		Scalar({
@@ -341,6 +359,11 @@ export const api = new Hono()
 	.get("/user", requireAuth, rateLimit("query"), async (c) =>
 		c.json(await new UserService(c.get("apiContext")).getUser())
 	)
+	.delete("/user", requireAuth, protectMutation, rateLimit("mutation"), async (c) => {
+		const userId = c.get("apiContext").user!.id;
+		await deleteUserFiles(userId);
+		return c.json(await new UserService(c.get("apiContext")).deleteAccount());
+	})
 	.get("/user/storage", requireAuth, rateLimit("query"), async (c) =>
 		c.json(await new UserService(c.get("apiContext")).getStorageUsage())
 	)

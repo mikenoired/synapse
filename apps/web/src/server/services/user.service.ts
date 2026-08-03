@@ -25,4 +25,8 @@ export default class UserService {
 	async updatePreferences(preferences: UserPreferencesInput) {
 		return await this.repo.updatePreferences(preferences);
 	}
+
+	async deleteAccount() {
+		return await this.repo.deleteAccount();
+	}
 }
