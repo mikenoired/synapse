@@ -213,7 +213,7 @@ export default class ContentService {
 				const data = await repo.create(input);
 				const contentId = (data as ContentRow).id;
 
-				const contentNodeId = await repo.getOrCreateContentNode({
+				const contentNodeId = await repo.createContentNode({
 					content_id: contentId,
 					title: contentData.title,
 					type: contentData.type,
@@ -251,7 +251,10 @@ export default class ContentService {
 		}
 
 		await this.trackAddedNoteImages(prepared.uploaded);
-		const [withTags] = await this.attachTagsToContent([result]);
+		const [withTags] =
+			inputTagIds?.length || legacyTagTitles?.length
+				? await this.attachTagsToContent([result])
+				: [this.mapContentRow(result, this.ctx.user!.id)];
 		await this.invalidateUserTags();
 		const content = contentDetailSchema.parse(withTags);
 		return content;

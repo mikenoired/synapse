@@ -472,6 +472,24 @@ export default class ContentRepository {
 		return data.id;
 	}
 
+	async createContentNode(params: { content_id: string; title?: string; type: string }) {
+		requireAuth(this.ctx);
+
+		const [data] = await this.database
+			.insert(nodes)
+			.values({
+				content: params.title ?? "",
+				type: params.type,
+				userId: this.ctx.user.id,
+				metadata: { content_id: params.content_id },
+			})
+			.returning({ id: nodes.id });
+
+		if (!data) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Node creation error" });
+
+		return data.id;
+	}
+
 	async updateContentNode(params: { content_id: string; title?: string; type: string }) {
 		requireAuth(this.ctx);
 
