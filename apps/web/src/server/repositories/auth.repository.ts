@@ -12,7 +12,7 @@ export default class AuthRepository {
 
 	async registerUser(email: string, password: string) {
 		try {
-			const passwordHash = await Bun.password.hash(password, { algorithm: "bcrypt", cost: 10 });
+			const passwordHash = await Bun.password.hash(password);
 
 			const [user] = await this.ctx.db
 				.insert(users)
