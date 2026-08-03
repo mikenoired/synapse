@@ -21,6 +21,9 @@ interface ViewerOverlayControlsProps {
 	onNext?: () => void;
 	onPrevious?: () => void;
 	visible: boolean;
+	closeLabel?: string;
+	nextLabel?: string;
+	previousLabel?: string;
 }
 
 function getActionClassName(action: ViewerOverlayAction) {
@@ -39,6 +42,9 @@ export function ViewerOverlayControls({
 	onNext,
 	onPrevious,
 	visible,
+	closeLabel = "Close viewer",
+	nextLabel = "Next item",
+	previousLabel = "Previous item",
 }: ViewerOverlayControlsProps) {
 	return (
 		<>
@@ -50,6 +56,7 @@ export function ViewerOverlayControls({
 						exit={{ opacity: 0, filter: "blur(0px)", x: -16 }}
 						transition={{ duration: 0.16 }}
 						onClick={onPrevious}
+						aria-label={previousLabel}
 						className="absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70">
 						<ChevronLeft className="size-5" />
 					</motion.button>
@@ -64,6 +71,7 @@ export function ViewerOverlayControls({
 						exit={{ opacity: 0, filter: "blur(0px)", x: 16 }}
 						transition={{ duration: 0.16 }}
 						onClick={onNext}
+						aria-label={nextLabel}
 						className="absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/12 bg-black/55 text-white transition-colors hover:bg-black/70">
 						<ChevronRight className="size-5" />
 					</motion.button>
@@ -106,6 +114,7 @@ export function ViewerOverlayControls({
 							variant="secondary"
 							size="icon"
 							onClick={onClose}
+							aria-label={closeLabel}
 							className="h-10 w-10 rounded-full border border-white/12 bg-black/55 text-white hover:bg-black/70">
 							<X className="size-4" />
 						</Button>

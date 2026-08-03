@@ -29,6 +29,7 @@ import { ContentSuggestions } from "@/features/content-suggestions/content-sugge
 import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
 import { trpc } from "@/shared/api/trpc";
 import useMouseActivity from "@/shared/hooks/use-mouse-activity";
+import { useI18n } from "@/shared/lib/i18n";
 import { getPresignedMediaUrl } from "@/shared/lib/image-utils";
 import type { Content, LinkContent } from "@/shared/lib/schemas";
 import {
@@ -67,8 +68,8 @@ function ensureDataUri(base64: string): string {
 	return `data:image/jpeg;base64,${base64}`;
 }
 
-function formatDate(date: string) {
-	return new Date(date).toLocaleDateString("ru-RU", {
+function formatDate(date: string, locale: string) {
+	return new Date(date).toLocaleDateString(locale, {
 		day: "numeric",
 		month: "long",
 		year: "numeric",
@@ -96,7 +97,7 @@ function isViewportFitType(type: Content["type"]) {
 	return type !== "note" && type !== "todo" && !isDocumentType(type);
 }
 
-function getReadingTime(item: Content, linkContent: LinkContent | null) {
+function getReadingTime(item: Content, linkContent: LinkContent | null, minuteLabel: string) {
 	if (item.type === "link" && linkContent) {
 		return calculateReadingTimeFromLinkContent(linkContent);
 	}
@@ -105,7 +106,7 @@ function getReadingTime(item: Content, linkContent: LinkContent | null) {
 		const audio = parseAudioJson(item.content);
 		const duration = audio?.audio.durationSec;
 		if (!duration) return undefined;
-		return `${Math.max(1, Math.ceil(duration / 60))} мин`;
+		return `${Math.max(1, Math.ceil(duration / 60))} ${minuteLabel}`;
 	}
 
 	if (item.type === "note" || item.type === "todo" || isDocumentType(item.type)) {
@@ -113,6 +114,12 @@ function getReadingTime(item: Content, linkContent: LinkContent | null) {
 	}
 
 	return undefined;
+}
+
+function localizeReadingTime(value: string | undefined, t: ReturnType<typeof useI18n>["t"]) {
+	if (!value) return undefined;
+	if (value === "less than a minute") return t("viewer.lessThanMinute");
+	return value.replace(/ min/g, ` ${t("viewer.minutes")}`).replace(/ h/g, ` ${t("viewer.hours")}`);
 }
 
 function StructuredContentRenderer({ content }: { content: LinkContent["content"] }) {
@@ -220,7 +227,7 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 	);
 }
 
-function TodoRenderer({ content }: { content: string }) {
+function TodoRenderer({ content, emptyLabel }: { content: string; emptyLabel: string }) {
 	const todos = useMemo(() => {
 		try {
 			return JSON.parse(content) as Array<{ marked: boolean; text: string }>;
@@ -230,7 +237,7 @@ function TodoRenderer({ content }: { content: string }) {
 	}, [content]);
 
 	if (todos.length === 0) {
-		return <p className="text-sm text-muted-foreground">Нет задач</p>;
+		return <p className="text-sm text-muted-foreground">{emptyLabel}</p>;
 	}
 
 	return (
@@ -308,7 +315,7 @@ function LinkRenderer({ item, linkContent }: { item: Content; linkContent: LinkC
 	);
 }
 
-function DocumentRenderer({ item }: { item: Content }) {
+function DocumentRenderer({ item, previewAlt }: { item: Content; previewAlt: string }) {
 	const hasHtml = useMemo(() => /<[^>]+>/g.test(item.content), [item.content]);
 	const sanitized = useMemo(() => {
 		if (!hasHtml) return "";
@@ -325,7 +332,7 @@ function DocumentRenderer({ item }: { item: Content }) {
 				<div className="overflow-hidden rounded-2xl border border-border bg-muted/20 p-3">
 					<img
 						src={ensureDataUri(item.thumbnail_base64)}
-						alt="Document preview"
+						alt={previewAlt}
 						className="mx-auto w-full max-w-2xl rounded-xl object-cover"
 					/>
 				</div>
@@ -375,6 +382,7 @@ export function UnifiedViewerModal({
 	onDelete,
 	onContentUpdated,
 }: UnifiedViewerModalProps) {
+	const { locale, t } = useI18n();
 	const router = useRouter();
 	const utils = trpc.useUtils();
 	const [currentIndex, setCurrentIndex] = useState(0);
@@ -423,7 +431,9 @@ export function UnifiedViewerModal({
 		() => (currentItem.type === "link" ? parseLinkContent(currentItem.content) : null),
 		[currentItem.content, currentItem.type]
 	);
-	const readingTime = useMemo(() => getReadingTime(currentItem, linkContent), [currentItem, linkContent]);
+	const readingTime = useMemo(() => {
+		return localizeReadingTime(getReadingTime(currentItem, linkContent, t("viewer.minutes")), t);
+	}, [currentItem, linkContent, t]);
 	const mediaData = useMemo(
 		() => (currentItem.type === "media" ? (parseMediaJson(currentItem.content)?.media ?? null) : null),
 		[currentItem.content, currentItem.type]
@@ -468,6 +478,18 @@ export function UnifiedViewerModal({
 	]);
 
 	const downloadUrl = currentItem.type === "media" ? mediaUrl : currentItem.type === "audio" ? audioUrl : "";
+	const contentTypeLabel =
+		currentItem.type === "audio"
+			? t("audio")
+			: currentItem.type === "media"
+				? t("media")
+				: currentItem.type === "note"
+					? t("note")
+					: currentItem.type === "todo"
+						? t("todo")
+						: currentItem.type === "link"
+							? t("link")
+							: t("documents");
 
 	useEffect(() => {
 		setUpdatedItems({});
@@ -706,9 +728,9 @@ export function UnifiedViewerModal({
 		try {
 			const updatedTags = [...new Set([...(currentItem.tags || []), tag])];
 			await updateContentMutation.mutateAsync({ id: currentItem.id, tags: updatedTags });
-			showToast.success("Тег добавлен");
+			showToast.success(t("viewer.tagAdded"));
 		} catch {
-			showToast.error("Ошибка при добавлении тега");
+			showToast.error(t("viewer.tagAddError"));
 		}
 	};
 
@@ -716,9 +738,9 @@ export function UnifiedViewerModal({
 		try {
 			const updatedTags = currentItem.tags.filter((value) => value !== tag);
 			await updateContentMutation.mutateAsync({ id: currentItem.id, tags: updatedTags });
-			showToast.success("Тег удален");
+			showToast.success(t("viewer.tagRemoved"));
 		} catch {
-			showToast.error("Ошибка при удалении тега");
+			showToast.error(t("viewer.tagRemoveError"));
 		}
 	};
 
@@ -728,14 +750,14 @@ export function UnifiedViewerModal({
 			const updatedTags = [...new Set([...(currentItem.tags || []), ...names])];
 			await updateContentMutation.mutateAsync({ id: currentItem.id, tags: updatedTags });
 		} catch {
-			showToast.error("Ошибка при добавлении тегов");
+			showToast.error(t("viewer.tagsError"));
 		}
 	};
 
 	const handleEdit = () => {
 		if (currentItem.type === "note") {
 			if (!currentDetailQuery.data && currentDetailQuery.isFetching) {
-				showToast.info("Загружаем полную заметку");
+				showToast.info(t("viewer.loadingNote"));
 				return;
 			}
 
@@ -767,7 +789,7 @@ export function UnifiedViewerModal({
 			link.remove();
 			window.URL.revokeObjectURL(objectUrl);
 		} catch {
-			showToast.error("Не удалось скачать файл");
+			showToast.error(t("viewer.downloadError"));
 		} finally {
 			setIsDownloading(false);
 		}
@@ -778,13 +800,13 @@ export function UnifiedViewerModal({
 			if (onDelete) {
 				await onDelete(currentItem.id);
 				onOpenChange(false);
-				showToast.success("Контент удален");
+				showToast.success(t("viewer.contentDeleted"));
 				return;
 			}
 			await deleteContentMutation.mutateAsync({ id: currentItem.id });
-			showToast.success("Контент удален");
+			showToast.success(t("viewer.contentDeleted"));
 		} catch {
-			showToast.error("Ошибка при удалении");
+			showToast.error(t("viewer.deleteError"));
 		}
 	};
 
@@ -810,14 +832,14 @@ export function UnifiedViewerModal({
 		const actions: ViewerOverlayAction[] = [
 			{
 				icon: Info,
-				label: showDetails ? "Скрыть" : "Детали",
+				label: showDetails ? t("position.collapse") : t("details"),
 				onClick: () => setShowDetails((current) => !current),
 			},
 		];
 		if (downloadUrl) {
 			actions.push({
 				icon: Download,
-				label: isDownloading ? "Скачивание..." : "Скачать",
+				label: isDownloading ? t("viewer.downloading") : t("viewer.download"),
 				onClick: handleDownload,
 				disabled: isDownloading,
 			});
@@ -825,7 +847,7 @@ export function UnifiedViewerModal({
 		if (currentItem.type === "note" || onEdit) {
 			actions.push({
 				icon: Edit2,
-				label: currentItem.type === "note" && currentDetailQuery.isFetching ? "Загрузка..." : "Редактировать",
+				label: currentItem.type === "note" && currentDetailQuery.isFetching ? t("viewer.loading") : t("edit"),
 				onClick: handleEdit,
 				disabled: currentItem.type === "note" && !currentDetailQuery.data && currentDetailQuery.isFetching,
 			});
@@ -833,7 +855,7 @@ export function UnifiedViewerModal({
 		if (onDelete) {
 			actions.push({
 				icon: Trash2,
-				label: "Удалить",
+				label: t("delete"),
 				onClick: () => setShowDeleteConfirm(true),
 				destructive: true,
 			});
@@ -873,7 +895,7 @@ export function UnifiedViewerModal({
 			return (
 				<img
 					src={mediaUrl}
-					alt={currentItem.title || "media"}
+					alt={currentItem.title || t("viewer.mediaAlt")}
 					className="max-h-full max-w-full object-contain"
 					draggable={false}
 				/>
@@ -890,14 +912,14 @@ export function UnifiedViewerModal({
 							<>
 								<Image
 									src={coverUrl}
-									alt={audioData?.track?.title || currentItem.title || "cover"}
+									alt={audioData?.track?.title || currentItem.title || t("viewer.coverAlt")}
 									fill
 									unoptimized
 									className="absolute inset-0 scale-105 object-cover opacity-35 blur-2xl"
 								/>
 								<Image
 									src={coverUrl}
-									alt={audioData?.track?.title || currentItem.title || "cover"}
+									alt={audioData?.track?.title || currentItem.title || t("viewer.coverAlt")}
 									fill
 									unoptimized
 									className="relative z-10 object-cover"
@@ -905,14 +927,14 @@ export function UnifiedViewerModal({
 							</>
 						) : (
 							<div className="flex h-full w-full items-center justify-center bg-white/5 text-sm text-white/50">
-								Нет обложки
+								{t("viewer.noCover")}
 							</div>
 						)}
 					</div>
 
 					<div className="space-y-1 text-center text-white">
 						<p className="text-xl font-medium leading-tight">
-							{audioData?.track?.title || currentItem.title || "Аудио"}
+							{audioData?.track?.title || currentItem.title || t("audio")}
 						</p>
 						{(audioData?.track?.artist || audioData?.track?.album) && (
 							<p className="text-sm text-white/60">
@@ -1008,7 +1030,7 @@ export function UnifiedViewerModal({
 						className="relative z-10 mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
 						<header className="mb-8 border-b border-border pb-7">
 							<h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
-								{currentItem.title || "Без названия"}
+								{currentItem.title || t("untitled")}
 							</h1>
 							{currentItem.tags.length > 0 && (
 								<div className="mt-5 flex flex-wrap gap-2">
@@ -1031,7 +1053,7 @@ export function UnifiedViewerModal({
 				<div className="h-full w-full max-w-5xl overflow-hidden rounded-[30px] border border-white/10 bg-[rgba(16,16,16,0.82)]">
 					<div className="h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
 						<div className="mx-auto w-full max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-6">
-							<TodoRenderer content={currentItem.content} />
+							<TodoRenderer content={currentItem.content} emptyLabel={t("viewer.emptyTasks")} />
 						</div>
 					</div>
 				</div>
@@ -1055,7 +1077,7 @@ export function UnifiedViewerModal({
 				<div className="h-full w-full max-w-5xl overflow-hidden rounded-[30px] border border-white/10 bg-[rgba(16,16,16,0.82)]">
 					<div className="h-full overflow-y-auto px-5 py-6 sm:px-8 sm:py-8">
 						<div className="mx-auto w-full max-w-3xl rounded-2xl border border-border bg-card p-5 sm:p-6">
-							<DocumentRenderer item={currentItem} />
+							<DocumentRenderer item={currentItem} previewAlt={t("viewer.documentPreviewAlt")} />
 						</div>
 					</div>
 				</div>
@@ -1139,8 +1161,8 @@ export function UnifiedViewerModal({
 										className={cn(
 											"flex w-full items-center justify-center",
 											isViewportFitType(currentItem.type)
-												? "h-[100svh] min-h-[100svh] max-h-[100svh] px-4 py-10 sm:px-6"
-												: "min-h-[100svh]"
+												? "h-svh min-h-svh max-h-svh px-4 py-10 sm:px-6"
+												: "min-h-svh"
 										)}>
 										{renderContent()}
 									</div>
@@ -1170,6 +1192,9 @@ export function UnifiedViewerModal({
 						onPrevious={goToPrevious}
 						onNext={goToNext}
 						onClose={() => onOpenChange(false)}
+						closeLabel={t("viewer.close")}
+						nextLabel={t("viewer.next")}
+						previousLabel={t("viewer.previous")}
 					/>
 
 					<AnimatePresence initial={false}>
@@ -1194,39 +1219,39 @@ export function UnifiedViewerModal({
 											) : (
 												<FileText className="size-4" />
 											)}
-											<span>{currentItem.type.toUpperCase()}</span>
+											<span>{contentTypeLabel}</span>
 										</div>
-										<p className="text-base font-medium text-white">{currentItem.title || "Без названия"}</p>
+										<p className="text-base font-medium text-white">{currentItem.title || t("untitled")}</p>
 									</div>
 
 									<div className="space-y-2 text-sm text-white/65">
 										<div className="flex items-center gap-2">
 											<Calendar className="size-4" />
-											Создано {formatDate(currentItem.created_at)}
+											{t("viewer.created", { date: formatDate(currentItem.created_at, locale) })}
 										</div>
 										{readingTime && <p>{readingTime}</p>}
 										{currentItem.updated_at !== currentItem.created_at && (
-											<p>Обновлено {formatDate(currentItem.updated_at)}</p>
+											<p>{t("viewer.updated", { date: formatDate(currentItem.updated_at, locale) })}</p>
 										)}
 										{currentItem.type === "link" && linkContent?.metadata.author && (
-											<p>Автор: {linkContent.metadata.author}</p>
+											<p>{t("viewer.author", { author: linkContent.metadata.author })}</p>
 										)}
 										{currentItem.type === "audio" && audioData?.track?.artist && (
-											<p>Исполнитель: {audioData.track.artist}</p>
+											<p>{t("viewer.artist", { artist: audioData.track.artist })}</p>
 										)}
 									</div>
 
 									<div className="space-y-2">
 										<div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-white/45">
 											<Tag className="size-3.5" />
-											Теги
+											{t("tags")}
 										</div>
 										<TagManager
 											tags={currentItem.tags}
 											tagIds={currentItem.tag_ids}
 											onAddTag={handleAddTag}
 											onRemoveTag={handleRemoveTag}
-											inputPlaceholder="Добавить тег..."
+											inputPlaceholder={t("viewer.addTag")}
 										/>
 										<GenerateTagsButton
 											mode="existing"
@@ -1262,10 +1287,10 @@ export function UnifiedViewerModal({
 			<ConfirmDialog
 				open={showDeleteConfirm}
 				onOpenChange={setShowDeleteConfirm}
-				title="Удалить контент?"
-				description="Это действие нельзя отменить. Элемент будет удалён навсегда."
-				confirmText="Удалить"
-				cancelText="Отмена"
+				title={t("viewer.deleteTitle")}
+				description={t("viewer.deleteDescription")}
+				confirmText={t("delete")}
+				cancelText={t("cancel")}
 				variant="destructive"
 				onConfirm={confirmDelete}
 			/>
