@@ -27,6 +27,8 @@ const imagePaths = [
 type JsonObject = Record<string, unknown>;
 type StepSample = { durations: number[]; successCount: number; errorCount: number };
 type StepSamples = Record<string, StepSample>;
+type SmokeRun = Record<string, unknown>;
+type SmokeHistory = Record<string, SmokeRun[]>;
 
 async function gitInfo() {
 	const process = Bun.spawn(["git", "log", "-1", "--pretty=%H%x09%s"], { stdout: "pipe", stderr: "ignore" });
@@ -214,15 +216,22 @@ const system = {
 	rssMb: Math.round((memory.rss / 1024 / 1024) * 100) / 100,
 	heapUsedMb: Math.round((memory.heapUsed / 1024 / 1024) * 100) / 100,
 };
-let history: Record<string, unknown> = {};
+let history: SmokeHistory = {};
 try {
-	history = JSON.parse(await readFile(statisticsPath, "utf8")) as Record<string, unknown>;
+	const saved = JSON.parse(await readFile(statisticsPath, "utf8")) as Record<string, unknown>;
+	history = Object.fromEntries(
+		Object.entries(saved).map(([savedDate, value]) => [
+			savedDate,
+			Array.isArray(value) ? value : [value as SmokeRun],
+		])
+	);
 } catch {
 	// The first run creates the history file.
 }
 
 const date = new Date().toISOString().slice(0, 10);
-history[date] = { commit: await gitInfo(), runs, steps, system };
+const run = { runAt: new Date().toISOString(), commit: await gitInfo(), runs, steps, system };
+history[date] = [...(history[date] ?? []), run];
 await mkdir(dirname(statisticsPath), { recursive: true });
 await Bun.write(statisticsPath, `${JSON.stringify(history)}\n`);
 console.log(`Saved ${statisticsPath}`);

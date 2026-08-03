@@ -284,11 +284,15 @@
 			};
 			const $ = (id) => document.getElementById(id);
 			const format = (value) => (typeof value === "number" ? value.toFixed(2) : "—");
+			const runsForDate = (date) =>
+				(Array.isArray(state.history[date]) ? state.history[date] : [state.history[date]]).filter(Boolean);
+			const latestRun = (date) => runsForDate(date).at(-1) || {};
 
 			function draw() {
 				const metric = metricLabels[state.metric];
-				const values = state.dates
-					.map((date) => state.history[date]?.steps?.[state.step]?.[state.metric])
+				const chartEntries = state.dates.flatMap((date) => runsForDate(date).map((run) => ({ date, run })));
+				const values = chartEntries
+					.map((entry) => entry.run?.steps?.[state.step]?.[state.metric])
 					.filter((value) => typeof value === "number");
 				$("chart-title").textContent = `${state.step} · ${metric[0]}`;
 				$("chart-unit").textContent = metric[1];
@@ -304,9 +308,9 @@
 					range = max - min || 1;
 				const x = (index) =>
 					left +
-					(state.dates.length === 1
+					(chartEntries.length === 1
 						? (width - left - right) / 2
-						: (index * (width - left - right)) / (state.dates.length - 1));
+						: (index * (width - left - right)) / (chartEntries.length - 1));
 				const y = (value) => top + ((max - value) * (height - top - bottom)) / range;
 				let markup = "";
 				for (let index = 0; index < 5; index += 1) {
@@ -314,20 +318,25 @@
 					const yy = y(value);
 					markup += `<line class="grid" x1="${left}" y1="${yy}" x2="${width - right}" y2="${yy}"/><text class="axis" x="${left - 10}" y="${yy + 4}" text-anchor="end">${format(value)}</text>`;
 				}
-				const points = state.dates.map((date, index) => [
+				const points = chartEntries.map((entry, index) => [
 					x(index),
-					y(state.history[date]?.steps?.[state.step]?.[state.metric] ?? min),
-					date,
+					y(entry.run?.steps?.[state.step]?.[state.metric] ?? min),
+					entry,
 				]);
 				if (points.length > 1)
 					markup += `<polyline class="trace" points="${points.map(([px, py]) => `${px},${py}`).join(" ")}"/>`;
-				for (const [px, py, date] of points)
-					markup += `<circle class="point" cx="${px}" cy="${py}" r="4"><title>${date}: ${format(state.history[date]?.steps?.[state.step]?.[state.metric])} ${metric[1]}</title></circle>`;
-				for (const [index, date] of state.dates.entries())
-					markup += `<text class="axis" x="${x(index)}" y="${height - 12}" text-anchor="middle">${date.slice(5)}</text>`;
+				for (const [px, py, entry] of points) {
+					const label = entry.run.runAt ? entry.run.runAt.replace("T", " ").slice(5, 16) : entry.date;
+					markup += `<circle class="point" cx="${px}" cy="${py}" r="4"><title>${label}: ${format(entry.run?.steps?.[state.step]?.[state.metric])} ${metric[1]}</title></circle>`;
+				}
+				for (const [index, entry] of chartEntries.entries()) {
+					const label = entry.run.runAt ? entry.run.runAt.slice(11, 16) : entry.date.slice(5);
+					markup += `<text class="axis" x="${x(index)}" y="${height - 12}" text-anchor="middle">${label}</text>`;
+				}
 				svg.innerHTML = markup;
 
-				const latest = state.history[state.dates[state.dates.length - 1]]?.steps?.[state.step] || {};
+				const latestEntry = latestRun(state.dates[state.dates.length - 1]);
+				const latest = latestEntry.steps?.[state.step] || {};
 				$("cards").innerHTML = [
 					["avgMs", "Среднее"],
 					["medianMs", "Медиана"],
@@ -350,7 +359,7 @@
 				]
 					.map(([key, label]) => `<tr><th>${label}</th><td>${format(latest[key])}</td></tr>`)
 					.join("");
-				const system = state.history[state.dates[state.dates.length - 1]]?.system || {};
+				const system = latestEntry.system || {};
 				$("system").innerHTML = [
 					["cpuPercent", "CPU процесса, %"],
 					["rssMb", "RSS, MB"],
@@ -358,12 +367,11 @@
 					["runs", "Сценариев"],
 				]
 					.map(
-						([key, label]) =>
-							`<tr><th>${label}</th><td>${format(system[key] ?? state.history[state.dates[state.dates.length - 1]]?.runs)}</td></tr>`
+						([key, label]) => `<tr><th>${label}</th><td>${format(system[key] ?? latestEntry.runs)}</td></tr>`
 					)
 					.join("");
 				$("status").innerHTML =
-					`Последний запуск: <strong>${state.dates[state.dates.length - 1]}</strong> · commit <strong>${state.history[state.dates[state.dates.length - 1]]?.commit?.message || "—"}</strong>`;
+					`Последний запуск: <strong>${latestEntry.runAt || state.dates[state.dates.length - 1]}</strong> · запусков за дату: <strong>${runsForDate(state.dates[state.dates.length - 1]).length}</strong> · commit <strong>${latestEntry.commit?.message || "—"}</strong>`;
 			}
 
 			async function loadHistory() {
@@ -384,7 +392,7 @@
 			async function init() {
 				state.history = await loadHistory();
 				state.dates = Object.keys(state.history).sort();
-				const steps = Object.keys(state.history[state.dates[state.dates.length - 1]]?.steps || {});
+				const steps = Object.keys(latestRun(state.dates[state.dates.length - 1]).steps || {});
 				state.step = steps[0] || "—";
 				$("step").innerHTML = steps.map((step) => `<option value="${step}">${step}</option>`).join("");
 				$("step").onchange = (event) => {

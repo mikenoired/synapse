@@ -12,17 +12,6 @@ export default class AuthRepository {
 
 	async registerUser(email: string, password: string) {
 		try {
-			const existingUser = await this.ctx.db.query.users.findFirst({
-				where: eq(users.email, email),
-			});
-
-			if (existingUser) {
-				throw new TRPCError({
-					code: "BAD_REQUEST",
-					message: "User with current E-Mail already exist",
-				});
-			}
-
 			const passwordHash = await Bun.password.hash(password, { algorithm: "bcrypt", cost: 10 });
 
 			const [user] = await this.ctx.db
@@ -64,6 +53,13 @@ export default class AuthRepository {
 			};
 		} catch (error) {
 			if (error instanceof TRPCError) throw error;
+			const databaseError = error as { code?: string; cause?: { code?: string } };
+			if (databaseError.code === "23505" || databaseError.cause?.code === "23505") {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "User with current E-Mail already exist",
+				});
+			}
 
 			throw new TRPCError({
 				code: "INTERNAL_SERVER_ERROR",
