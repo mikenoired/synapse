@@ -1,7 +1,5 @@
 "use client";
 
-import { cn } from "@synapse/ui/cn";
-import { prose } from "@synapse/ui/prose";
 import type { JSONContent } from "@tiptap/core";
 
 import { Editor } from "./editor";
@@ -14,7 +12,7 @@ export function EditorRenderer({ data }: EditorRendererProps) {
 	if (!data || !data.content) return null;
 
 	return (
-		<div className={cn("synapse-editor-content max-w-none", prose)}>
+		<div className="synapse-editor-content">
 			<Editor data={data} readOnly />
 		</div>
 	);

@@ -10,7 +10,6 @@ import {
 	SelectContent,
 	SelectItem,
 } from "@synapse/ui/components";
-import { prose } from "@synapse/ui/prose";
 import { Extension, type Editor as TiptapEditor } from "@tiptap/core";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import Image from "@tiptap/extension-image";
@@ -50,6 +49,39 @@ import { EditableTaskItemView, ReadonlyTaskItemView, TaskListView } from "./read
 import { SlashMenu } from "./slash-menu";
 
 const lowlight = createLowlight(common);
+
+const editorTextSpacing = [
+	"[&_p]:!mt-0",
+	"[&_p]:!mb-4",
+	"[&_h1]:!mt-8",
+	"[&_h1]:!mb-4",
+	"[&_h2]:!mt-7",
+	"[&_h2]:!mb-3",
+	"[&_h3]:!mt-6",
+	"[&_h3]:!mb-2",
+	"[&_ul]:!mt-3",
+	"[&_ul]:!mb-4",
+	"[&_ol]:!mt-3",
+	"[&_ol]:!mb-4",
+	"[&_li+li]:!mt-1.5",
+	"[&_blockquote]:!my-5",
+	"[&_pre]:!my-5",
+	"[&_table]:!my-5",
+	"[&_hr]:!my-8",
+	"[&_img]:!my-5",
+	"[&_figure]:!my-5",
+	"[&>:first-child]:!mt-0",
+] as const;
+
+const editorContentClassName = cn(
+	"synapse-editor-content prose max-w-none min-h-[420px] px-1 py-5 text-base leading-7 outline-none",
+	editorTextSpacing,
+	"[&_p.is-editor-empty:first-child::before]:pointer-events-none",
+	"[&_p.is-editor-empty:first-child::before]:float-left",
+	"[&_p.is-editor-empty:first-child::before]:h-0",
+	"[&_p.is-editor-empty:first-child::before]:text-muted-foreground/60",
+	"[&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]"
+);
 
 function editLink(editor: TiptapEditor): boolean {
 	const current = String(editor.getAttributes("link").href ?? "");
@@ -197,8 +229,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 		editorProps: {
 			attributes: {
 				"aria-label": t("editor.noteContent"),
-				"class":
-					"synapse-editor-content min-h-[420px] px-1 py-5 text-base leading-7 outline-none [&_p.is-editor-empty:first-child::before]:pointer-events-none [&_p.is-editor-empty:first-child::before]:float-left [&_p.is-editor-empty:first-child::before]:h-0 [&_p.is-editor-empty:first-child::before]:text-muted-foreground/60 [&_p.is-editor-empty:first-child::before]:content-[attr(data-placeholder)]",
+				"class": editorContentClassName,
 				"role": "textbox",
 			},
 			handleDrop(view, event, moved) {
@@ -412,7 +443,7 @@ export function Editor({ data, onChange, readOnly = false }: EditorProps) {
 					<SlashMenu editor={editor} onImage={openImagePicker} />
 				</>
 			)}
-			<EditorContent className={cn("max-w-none", prose)} editor={editor} />
+			<EditorContent editor={editor} />
 		</div>
 	);
 }
