@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@synapse/ui/components";
 import { Sparkles } from "lucide-react";
 import toast from "react-hot-toast";

@@ -1,5 +1,3 @@
-"use client";
-
 import type { DragEvent } from "react";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -279,10 +277,10 @@ export default function DashboardClient({
 	};
 
 	return (
-		<div className="flex min-w-0 flex-col h-full relative">
+		<div className="relative flex h-full min-w-0 flex-col">
 			{dragActive && (
 				<div
-					className="fixed inset-0 z-[100] bg-black/60 flex flex-col items-center justify-center pointer-events-auto select-none transition-all animate-in fade-in-0"
+					className="pointer-events-auto fixed inset-0 z-100 flex animate-in flex-col items-center justify-center bg-black/60 transition-all fade-in-0 select-none"
 					style={{ backdropFilter: "blur(2px)" }}>
 					<div className="flex flex-col items-center gap-4">
 						<svg
@@ -291,7 +289,7 @@ export default function DashboardClient({
 							fill="none"
 							viewBox="0 0 24 24"
 							stroke="currentColor"
-							className="text-primary animate-bounce">
+							className="animate-bounce text-primary">
 							<path
 								strokeLinecap="round"
 								strokeLinejoin="round"
@@ -299,16 +297,16 @@ export default function DashboardClient({
 								d="M12 19V6m0 0l-5 5m5-5l5 5"
 							/>
 						</svg>
-						<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0 text-center">
+						<div className="animate-in rounded-xl border-2 border-primary bg-white/90 px-8 py-6 text-center text-2xl font-semibold shadow-xl fade-in-0">
 							{t("dashboard.drop.title")}
-							<div className="text-base font-normal mt-2 text-muted-foreground">
+							<div className="mt-2 text-base font-normal text-muted-foreground">
 								{t("dashboard.drop.subtitle")}
 							</div>
 						</div>
 					</div>
 				</div>
 			)}
-			<main className="min-w-0 flex-1 overflow-y-auto relative">
+			<main className="relative min-w-0 flex-1 overflow-y-auto">
 				<Suspense fallback={null}>
 					<ContentFilter
 						searchQuery={searchQuery}

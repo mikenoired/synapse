@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
 import Item from "@/entities/item/ui/item";
@@ -169,12 +167,12 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
 	}, [hoverState, previewSize]);
 
 	return (
-		<div className="h-[calc(100vh-6rem)] w-full p-4 overflow-hidden">
+		<div className="h-[calc(100vh-6rem)] w-full overflow-hidden p-4">
 			<div ref={graphRef} className="h-full w-full overflow-hidden rounded border bg-background" />
 			{hoverState && previewPosition && (
 				<div
 					ref={previewRef}
-					className="fixed z-50 box-border max-h-[calc(100vh-1rem)] w-80 min-w-80 max-w-80 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg pointer-events-none"
+					className="pointer-events-none fixed z-50 box-border max-h-[calc(100vh-1rem)] w-80 max-w-80 min-w-80 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg"
 					style={{ left: previewPosition.x, top: previewPosition.y }}>
 					{hoveredItem ? (
 						<div
@@ -185,7 +183,7 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
 						</div>
 					) : (
 						<div className="rounded-lg bg-popover p-4">
-							<h3 className="font-semibold text-base">{hoverState.node.content || "Без названия"}</h3>
+							<h3 className="text-base font-semibold">{hoverState.node.content || "Без названия"}</h3>
 							<p className="text-sm text-muted-foreground">{getTypeLabel(hoverState.node.type)}</p>
 						</div>
 					)}

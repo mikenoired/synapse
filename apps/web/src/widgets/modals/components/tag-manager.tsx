@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { PlusIcon } from "lucide-react";
 import { type ReactNode, useState } from "react";
@@ -53,14 +51,14 @@ export function TagManager({
 		<div className={className}>
 			{/* Existing tags */}
 			{tags.length > 0 && (
-				<div className="flex flex-wrap gap-2 mb-3">
+				<div className="mb-3 flex flex-wrap gap-2">
 					{tags.map((tag, tagIndex) => (
 						<ContentTag
 							key={tag}
 							tag={tag}
 							tagId={editable ? undefined : tagIds?.[tagIndex]}
 							onRemove={editable ? onRemoveTag : undefined}
-							className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+							className="bg-muted/60 px-2 py-1 text-xs hover:bg-muted"
 						/>
 					))}
 				</div>

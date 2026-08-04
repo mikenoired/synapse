@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { Button } from "@synapse/ui/components";
 import type { LucideIcon } from "lucide-react";
@@ -20,7 +18,7 @@ export function ModalHeader({ children, className, sticky = true, bordered = tru
 	return (
 		<div
 			className={cn(
-				"flex-shrink-0 bg-background/95 backdrop-blur",
+				"shrink-0 bg-background/95 backdrop-blur",
 				sticky && "sticky top-0 z-20",
 				bordered && "border-b border-border",
 				className
@@ -98,7 +96,7 @@ function ModalHeaderTags({ tags, tagIds, className }: ModalHeaderTagsProps) {
 					key={tag}
 					tag={tag}
 					tagId={tagIds?.[tagIndex]}
-					className="text-xs px-2 py-1 bg-muted/60 hover:bg-muted"
+					className="bg-muted/60 px-2 py-1 text-xs hover:bg-muted"
 				/>
 			))}
 		</div>
@@ -117,7 +115,7 @@ function ModalHeaderActions({ onClose, children, className }: ModalHeaderActions
 			{children}
 			{onClose && (
 				<Button variant="ghost" size="sm" onClick={onClose} className="h-8 w-8 p-0">
-					<X className="w-4 h-4" />
+					<X className="h-4 w-4" />
 				</Button>
 			)}
 		</div>

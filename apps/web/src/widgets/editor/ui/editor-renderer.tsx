@@ -1,5 +1,3 @@
-"use client";
-
 import type { JSONContent } from "@tiptap/core";
 
 import { Editor } from "./editor";

@@ -1,5 +1,3 @@
-"use client";
-
 import { CheckboxGroup, EditableCheckboxItem, ReadonlyCheckboxItem } from "@synapse/ui/components";
 import { NodeViewContent, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 

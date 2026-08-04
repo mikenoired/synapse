@@ -22,5 +22,10 @@
 		"**/coverage"
 	],
 	"endOfLine": "lf",
-	"jsxBracketSameLine": true
+	"jsxBracketSameLine": true,
+	"sortTailwindcss": {
+		"stylesheet": "./apps/web/src/app/globals.css",
+		"functions": ["clsx", "cn"],
+		"preserveWhitespace": true
+	}
 }

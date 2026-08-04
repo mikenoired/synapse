@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import type { ReactNode } from "react";
 
@@ -17,7 +15,7 @@ export function ModalBody({ children, className, scrollable = true, noPadding = 
 		<div
 			className={cn(
 				"flex-1",
-				scrollable && "overflow-y-auto overflow-x-hidden",
+				scrollable && "overflow-x-hidden overflow-y-auto",
 				!noPadding && "p-6",
 				className
 			)}

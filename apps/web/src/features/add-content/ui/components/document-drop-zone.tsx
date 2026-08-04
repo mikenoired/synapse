@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { FileText, Upload, X } from "lucide-react";
 import type { DragEvent } from "react";
@@ -78,9 +76,9 @@ export function DocumentDropZone({
 	return (
 		<div className="space-y-4">
 			<div
-				className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
+				className={`rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200 ${
 					dragActive
-						? "border-primary bg-primary/10 scale-[1.02]"
+						? "scale-[1.02] border-primary bg-primary/10"
 						: "border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20"
 				}`}
 				onDragEnter={handleDrag}
@@ -89,7 +87,7 @@ export function DocumentDropZone({
 				onDrop={handleDrop}>
 				<div className="space-y-4">
 					<div className={`transition-transform duration-200 ${dragActive ? "scale-110" : ""}`}>
-						<FileText className="w-12 h-12 mx-auto text-muted-foreground" />
+						<FileText className="mx-auto h-12 w-12 text-muted-foreground" />
 					</div>
 					<div className="space-y-2">
 						<p className="text-sm font-medium text-foreground">Перетащите документы сюда</p>
@@ -113,8 +111,8 @@ export function DocumentDropZone({
 						size="sm"
 						disabled={isLoading}
 						onClick={() => document.getElementById("document-upload")?.click()}
-						className="mt-3 hover:bg-primary hover:text-primary-foreground transition-colors">
-						<Upload className="w-4 h-4 mr-2" />
+						className="mt-3 transition-colors hover:bg-primary hover:text-primary-foreground">
+						<Upload className="mr-2 h-4 w-4" />
 						Выбрать документы
 					</Button>
 				</div>
@@ -127,11 +125,11 @@ export function DocumentDropZone({
 						{selectedFiles.map((file, index) => (
 							<div
 								key={index}
-								className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border">
+								className="flex items-center justify-between rounded-lg border bg-muted/50 p-3">
 								<div className="flex items-center space-x-3">
 									<span className="text-2xl">{getFileIcon(file.name)}</span>
-									<div className="flex-1 min-w-0">
-										<p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+									<div className="min-w-0 flex-1">
+										<p className="truncate text-sm font-medium text-foreground">{file.name}</p>
 										<p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
 									</div>
 								</div>
@@ -142,7 +140,7 @@ export function DocumentDropZone({
 									onClick={() => onRemoveFile(index)}
 									disabled={isLoading}
 									className="h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground">
-									<X className="w-4 h-4" />
+									<X className="h-4 w-4" />
 								</Button>
 							</div>
 						))}

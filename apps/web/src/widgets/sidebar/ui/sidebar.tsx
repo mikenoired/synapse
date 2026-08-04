@@ -1,5 +1,3 @@
-"use client";
-
 import type { LucideProps } from "lucide-react";
 import { Home, Network, Plus, Settings, Tag } from "lucide-react";
 import type { ForwardRefExoticComponent, RefAttributes } from "react";

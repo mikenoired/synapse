@@ -1,5 +1,3 @@
-"use client";
-
 import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import {
@@ -92,8 +90,8 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
 				};
 
 		const itemClassName = cn(
-			`relative z-10 flex h-9 items-center gap-2 ${shape.item} px-2 cursor-pointer outline-none`,
-			disabled && "opacity-50 pointer-events-none",
+			`relative z-10 flex h-9 items-center gap-2 ${shape.item} cursor-pointer px-2 outline-none`,
+			disabled && "pointer-events-none opacity-50",
 			className
 		);
 
@@ -101,7 +99,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
 			<>
 				{Icon && (
 					<span className="inline-grid">
-						<span className="col-start-1 row-start-1 invisible">
+						<span className="invisible col-start-1 row-start-1">
 							<Icon size={16} strokeWidth={2} />
 						</span>
 						<Icon
@@ -116,7 +114,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
 				)}
 				<span className="inline-grid flex-1 text-[13px]">
 					<span
-						className="col-start-1 row-start-1 invisible [text-box:trim-both_cap_alphabetic]"
+						className="invisible col-start-1 row-start-1 [text-box:trim-both_cap_alphabetic]"
 						style={{ fontVariationSettings: fontWeights.semibold }}
 						aria-hidden="true">
 						{label}
@@ -144,7 +142,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
 							strokeWidth={2}
 							strokeLinecap="round"
 							strokeLinejoin="round"
-							className="text-foreground shrink-0"
+							className="shrink-0 text-foreground"
 							initial={{ opacity: 1 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 1 }}>

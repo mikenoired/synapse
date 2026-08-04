@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge, Button } from "@synapse/ui/components";
 import { Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -151,11 +149,11 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col h-full">
+		<form onSubmit={handleSubmit} className="flex h-full flex-col">
 			<ModalBody scrollable>
 				<div className="space-y-4">
-					<div className="bg-muted/50 border border-border rounded-lg p-4">
-						<h3 className="text-sm font-medium mb-2">Поддерживаемые форматы</h3>
+					<div className="rounded-lg border border-border bg-muted/50 p-4">
+						<h3 className="mb-2 text-sm font-medium">Поддерживаемые форматы</h3>
 						<div className="flex flex-wrap gap-2">
 							{Object.values(SUPPORTED_FORMATS).map((format, idx) => (
 								<Badge key={idx} variant="solid" className="text-xs">
@@ -172,14 +170,14 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 							onDragLeave={handleDrag}
 							onDragOver={handleDrag}
 							onDrop={handleDrop}
-							className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+							className={`rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
 								dragActive ? "border-primary bg-primary/5" : "border-border"
 							}`}>
-							<Upload className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-							<p className="text-sm text-muted-foreground mb-2">Перетащите документы сюда</p>
-							<p className="text-xs text-muted-foreground mb-4">или</p>
+							<Upload className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+							<p className="mb-2 text-sm text-muted-foreground">Перетащите документы сюда</p>
+							<p className="mb-4 text-xs text-muted-foreground">или</p>
 							<label className="cursor-pointer">
-								<span className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors inline-block">
+								<span className="inline-block rounded-md bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90">
 									Выбрать файлы
 								</span>
 								<input
@@ -194,15 +192,15 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 						</div>
 
 						{selectedFiles.length > 0 && (
-							<div className="space-y-2 mt-4">
+							<div className="mt-4 space-y-2">
 								{selectedFiles.map((file, index) => {
 									const fileInfo = getFileInfo(file);
 									return (
-										<div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-											<div className="flex items-center gap-3 flex-1 min-w-0">
+										<div key={index} className="flex items-center justify-between rounded-lg bg-muted p-3">
+											<div className="flex min-w-0 flex-1 items-center gap-3">
 												<div className="text-2xl">{fileInfo.icon}</div>
-												<div className="flex-1 min-w-0">
-													<p className="text-sm font-medium truncate">{file.name}</p>
+												<div className="min-w-0 flex-1">
+													<p className="truncate text-sm font-medium">{file.name}</p>
 													<div className="flex items-center gap-2 text-xs text-muted-foreground">
 														<span>{fileInfo.ext}</span>
 														<span>•</span>
@@ -213,9 +211,9 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 											<button
 												type="button"
 												onClick={() => handleRemoveFile(index)}
-												className="p-1 hover:bg-destructive/20 rounded transition-colors"
+												className="rounded p-1 transition-colors hover:bg-destructive/20"
 												disabled={isLoading}>
-												<X className="w-4 h-4" />
+												<X className="h-4 w-4" />
 											</button>
 										</div>
 									);
@@ -226,7 +224,7 @@ export function AddDocumentForm({ initialTags = [], onSuccess, preloadedFiles = 
 				</div>
 			</ModalBody>
 
-			<div className="p-6 pt-4 border-t bg-background shrink-0">
+			<div className="shrink-0 border-t bg-background p-6 pt-4">
 				<ModalActions position="right">
 					<Button type="button" variant="tertiary" onClick={() => onSuccess()} disabled={isLoading}>
 						Отмена

@@ -1,5 +1,3 @@
-"use client";
-
 import { Badge } from "@synapse/ui/components";
 import { motion } from "framer-motion";
 import { Calendar, Clock } from "lucide-react";
@@ -88,53 +86,53 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 						<img
 							src={ensureDataUri(item.thumbnail_base64)}
 							alt="Document thumbnail"
-							className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+							className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
 						/>
 					</div>
 				)}
 
-				<div className="p-4 space-y-3">
+				<div className="space-y-3 p-4">
 					<div className="flex items-start gap-3">
-						<div className="text-2xl flex-shrink-0 mt-0.5">{getDocumentIcon(item.type)}</div>
-						<div className="flex-1 min-w-0">
-							<h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm leading-tight line-clamp-2">
+						<div className="mt-0.5 shrink-0 text-2xl">{getDocumentIcon(item.type)}</div>
+						<div className="min-w-0 flex-1">
+							<h3 className="line-clamp-2 text-sm leading-tight font-semibold text-slate-900 dark:text-slate-100">
 								{item.title || "Untitled Document"}
 							</h3>
-							<p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+							<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
 								{getDocumentTypeName(item.type)}
 							</p>
 						</div>
 					</div>
 
-					<div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-3 leading-relaxed">
+					<div className="line-clamp-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
 						{textPreview}
 					</div>
 
 					<div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
 						<div className="flex items-center gap-3">
 							<div className="flex items-center gap-1">
-								<Calendar className="w-3 h-3" />
+								<Calendar className="h-3 w-3" />
 								<span>{formatDate(item.created_at)}</span>
 							</div>
 							<div className="flex items-center gap-1">
-								<Clock className="w-3 h-3" />
+								<Clock className="h-3 w-3" />
 								<span>{readingTime}</span>
 							</div>
 						</div>
 					</div>
 
 					{item.tags.length > 0 && (
-						<div className="flex flex-wrap gap-1 pt-2 border-t border-slate-200 dark:border-slate-700">
+						<div className="flex flex-wrap gap-1 border-t border-slate-200 pt-2 dark:border-slate-700">
 							{item.tags.slice(0, 3).map((tag: string, tagIndex) => (
 								<ContentTag
 									key={tag}
 									tag={tag}
 									tagId={item.tag_ids[tagIndex]}
-									className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60 hover:bg-slate-300/60 dark:hover:bg-slate-600/60"
+									className="bg-slate-200/60 px-2 py-1 text-xs hover:bg-slate-300/60 dark:bg-slate-700/60 dark:hover:bg-slate-600/60"
 								/>
 							))}
 							{item.tags.length > 3 && (
-								<Badge variant="solid" className="text-xs px-2 py-1 bg-slate-200/60 dark:bg-slate-700/60">
+								<Badge variant="solid" className="bg-slate-200/60 px-2 py-1 text-xs dark:bg-slate-700/60">
 									+{item.tags.length - 3}
 								</Badge>
 							)}

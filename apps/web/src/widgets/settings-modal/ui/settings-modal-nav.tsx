@@ -1,5 +1,3 @@
-"use client";
-
 import { TabItem, Tabs, TabsList } from "@synapse/ui/components";
 
 import { getSettingsHref } from "@/features/settings/lib/settings-modal-url";

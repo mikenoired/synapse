@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import type { HTMLMotionProps } from "motion/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -119,7 +117,7 @@ export function Modal({
 							opacity: { duration: 0.2, delay: 0.05 },
 						}}
 						className={cn(
-							"relative z-10 max-w-4xl max-h-[95vh] m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg",
+							"relative z-10 m-4 flex max-h-[95vh] max-w-4xl flex-col overflow-hidden rounded-lg border border-border bg-background shadow-2xl",
 							className
 						)}
 						onClick={(e) => e.stopPropagation()}>

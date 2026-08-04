@@ -152,9 +152,9 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
 			<div
 				ref={ref}
 				className={cn(
-					"relative z-10 flex items-center cursor-pointer select-none touch-none",
+					"relative z-10 flex cursor-pointer touch-none items-center select-none",
 					label ? "gap-2.5 px-3 py-2" : "p-2",
-					disabled && "opacity-50 pointer-events-none",
+					disabled && "pointer-events-none opacity-50",
 					className
 				)}
 				onPointerEnter={(e) => {
@@ -183,9 +183,9 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
 					disabled={disabled}
 					tabIndex={0}
 					className={cn(
-						"relative shrink-0 rounded-full outline-none cursor-pointer",
+						"relative shrink-0 cursor-pointer rounded-full outline-none",
 						"transition-colors duration-80",
-						"focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+						"focus-visible:ring-1 focus-visible:ring-(--focus-ring,#6B97FF) focus-visible:ring-offset-2 focus-visible:ring-offset-background"
 					)}
 					style={{
 						width: TRACK_WIDTH,
@@ -238,7 +238,7 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
 						className={cn(
 							// text-box trim recenters the letterforms against the track; the
 							// 20px track is taller than the label, so layout doesn't change.
-							"text-[13px] [text-box:trim-both_cap_alphabetic] transition-[color] duration-80",
+							"text-[13px] transition-[color] duration-80 [text-box:trim-both_cap_alphabetic]",
 							checked ? "text-foreground" : "text-muted-foreground"
 						)}>
 						{label}

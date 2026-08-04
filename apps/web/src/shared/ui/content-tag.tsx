@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { Badge } from "@synapse/ui/components";
 import { X } from "lucide-react";
@@ -48,7 +46,7 @@ export function ContentTag({
 	const colorStyle = getTagColorStyle(resolvedColor);
 	const badgeStyle = { ...colorStyle, ...style };
 	const colorDot = resolvedColor > 0 && (
-		<span className="size-1.5 shrink-0 rounded-full bg-[var(--tag-color)]" aria-hidden="true" />
+		<span className="size-1.5 shrink-0 rounded-full bg-(--tag-color)" aria-hidden="true" />
 	);
 
 	if (onRemove) {
@@ -65,7 +63,7 @@ export function ContentTag({
 					className="ml-1 rounded-full p-0.5 hover:bg-destructive/20"
 					disabled={disabled}
 					aria-label={`Удалить тег ${tag}`}>
-					<X className="w-3 h-3" />
+					<X className="h-3 w-3" />
 				</button>
 			</Badge>
 		);

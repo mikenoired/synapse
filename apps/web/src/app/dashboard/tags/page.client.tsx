@@ -1,5 +1,3 @@
-"use client";
-
 import { Skeleton } from "@synapse/ui/components";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -112,8 +110,8 @@ export default function TagsClient({
 	if (isLoading) {
 		return (
 			<div className="p-6">
-				<h1 className="text-2xl font-semibold mb-6">Tags</h1>
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+				<h1 className="mb-6 text-2xl font-semibold">Tags</h1>
+				<div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 					{Array.from({ length: 6 }).map((_, i) => (
 						<div key={i} className="space-y-4">
 							<Skeleton className="h-6 w-1/3 rounded-md" />
@@ -128,19 +126,19 @@ export default function TagsClient({
 	if (tagsWithContent.length === 0) {
 		return (
 			<div
-				className="p-6 text-center h-full"
+				className="h-full p-6 text-center"
 				onDragEnter={handleDragEnter}
 				onDragOver={handleDragOver}
 				onDragLeave={handleDragLeave}
 				onDrop={handleDrop}>
 				{dragActive && (
-					<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
-						<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
+					<div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/40 select-none">
+						<div className="animate-in rounded-xl border-2 border-primary bg-white/90 px-8 py-6 text-2xl font-semibold shadow-xl fade-in-0">
 							Drop files to add content
 						</div>
 					</div>
 				)}
-				<h1 className="text-2xl font-semibold mb-4">Tags</h1>
+				<h1 className="mb-4 text-2xl font-semibold">Tags</h1>
 				<p className="text-muted-foreground">You don't have any tags. Create new one.</p>
 			</div>
 		);
@@ -148,20 +146,20 @@ export default function TagsClient({
 
 	return (
 		<div
-			className="p-6 h-full"
+			className="h-full p-6"
 			onDragEnter={handleDragEnter}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}>
 			{dragActive && (
-				<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
-					<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
+				<div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/40 select-none">
+					<div className="animate-in rounded-xl border-2 border-primary bg-white/90 px-8 py-6 text-2xl font-semibold shadow-xl fade-in-0">
 						Drop files to add content
 					</div>
 				</div>
 			)}
-			<h1 className="text-2xl font-semibold mb-8">Tags</h1>
-			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-x-6 gap-y-12 pb-6">
+			<h1 className="mb-8 text-2xl font-semibold">Tags</h1>
+			<div className="grid grid-cols-1 gap-x-6 gap-y-12 pb-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
 				{tagsWithContent.map(({ color, id, title, items }) => {
 					const currentColor = currentColorByTagId.get(id) ?? color;
 					return (
@@ -171,7 +169,7 @@ export default function TagsClient({
 									className="inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-transform group-hover:translate-x-0.5"
 									style={getTagColorStyle(currentColor)}>
 									{getTagColor(currentColor) && (
-										<span className="size-2 rounded-full bg-[var(--tag-color)]" aria-hidden="true" />
+										<span className="size-2 rounded-full bg-(--tag-color)" aria-hidden="true" />
 									)}
 									{title}
 								</span>

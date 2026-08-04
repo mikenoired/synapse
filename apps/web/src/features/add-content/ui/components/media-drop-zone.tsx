@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { Plus, Upload, X } from "lucide-react";
 import type { DragEvent } from "react";
@@ -32,9 +30,9 @@ export function MediaDropZone({
 	return (
 		<div className="space-y-4">
 			<div
-				className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-200 ${
+				className={`rounded-xl border-2 border-dashed p-8 text-center transition-all duration-200 ${
 					dragActive
-						? "border-primary bg-primary/10 scale-[1.02]"
+						? "scale-[1.02] border-primary bg-primary/10"
 						: "border-muted-foreground/25 hover:border-muted-foreground/50 hover:bg-muted/20"
 				}`}
 				onDragEnter={onDrag}
@@ -43,7 +41,7 @@ export function MediaDropZone({
 				onDrop={onDrop}>
 				<div className="space-y-4">
 					<div className={`transition-transform duration-200 ${dragActive ? "scale-110" : ""}`}>
-						<Upload className="w-12 h-12 mx-auto text-muted-foreground" />
+						<Upload className="mx-auto h-12 w-12 text-muted-foreground" />
 					</div>
 					<div className="space-y-2">
 						<p className="text-sm font-medium text-foreground">Drag files there</p>
@@ -70,8 +68,8 @@ export function MediaDropZone({
 						size="sm"
 						disabled={isLoading}
 						onClick={() => document.getElementById("file-upload")?.click()}
-						className="mt-3 hover:bg-primary hover:text-primary-foreground transition-colors">
-						<Plus className="w-4 h-4 mr-2" />
+						className="mt-3 transition-colors hover:bg-primary hover:text-primary-foreground">
+						<Plus className="mr-2 h-4 w-4" />
 						Select files
 					</Button>
 				</div>
@@ -80,13 +78,13 @@ export function MediaDropZone({
 			{selectedFiles.length > 0 && (
 				<div>
 					{selectedFiles.length > 1 && (
-						<p className="text-xs text-muted-foreground mb-2">Drag images to change placing</p>
+						<p className="mb-2 text-xs text-muted-foreground">Drag images to change placing</p>
 					)}
-					<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+					<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
 						{previewUrls.map((url, index) => (
 							<div
 								key={index}
-								className="relative group cursor-move"
+								className="group relative cursor-move"
 								draggable={selectedFiles.length > 1}
 								onDragStart={(e) => {
 									e.dataTransfer.setData("text/plain", index.toString());
@@ -103,20 +101,20 @@ export function MediaDropZone({
 									onMoveFile(fromIndex, toIndex);
 								}}>
 								{selectedFiles[index].type.startsWith("audio/") ? (
-									<div className="w-full aspect-square rounded-lg border flex items-center justify-center text-xs text-muted-foreground">
+									<div className="flex aspect-square w-full items-center justify-center rounded-lg border text-xs text-muted-foreground">
 										{selectedFiles[index].name}
 									</div>
 								) : (
 									<Image
 										src={url}
 										alt={`Preview ${index + 1}`}
-										className="w-full aspect-square object-cover rounded-lg border"
+										className="aspect-square w-full rounded-lg border object-cover"
 										width={200}
 										height={200}
 									/>
 								)}
 								{selectedFiles.length > 1 && (
-									<div className="absolute top-1 left-1 w-5 h-5 bg-black/70 text-white rounded-full flex items-center justify-center text-xs font-medium">
+									<div className="absolute top-1 left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-xs font-medium text-white">
 										{index + 1}
 									</div>
 								)}
@@ -124,11 +122,11 @@ export function MediaDropZone({
 									type="button"
 									onClick={() => onRemoveFile(index)}
 									disabled={isLoading}
-									className="absolute top-1 right-1 w-6 h-6 bg-black/70 hover:bg-black/90 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-									<X className="w-3 h-3" />
+									className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/70 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/90">
+									<X className="h-3 w-3" />
 								</button>
-								<div className="absolute bottom-1 left-1 right-1">
-									<div className="bg-black/70 text-white text-xs px-1 py-0.5 rounded truncate">
+								<div className="absolute right-1 bottom-1 left-1">
+									<div className="truncate rounded bg-black/70 px-1 py-0.5 text-xs text-white">
 										{selectedFiles[index].name}
 									</div>
 								</div>

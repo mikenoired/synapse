@@ -1,5 +1,3 @@
-"use client";
-
 import { Skeleton } from "@synapse/ui/components";
 import { Activity, Bot, CircleDollarSign, Gauge, Timer } from "lucide-react";
 

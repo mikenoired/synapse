@@ -166,7 +166,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 
 	return (
 		<div
-			className={`relative w-full h-full flex flex-col justify-center items-center bg-black rounded-lg overflow-hidden ${className}`}>
+			className={`relative flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-lg bg-black ${className}`}>
 			<video
 				ref={videoRef}
 				src={src}
@@ -178,15 +178,15 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 				onTouchStart={isMobile ? handleTouchStart : undefined}
 				onTouchMove={isMobile ? handleTouchMove : undefined}
 				onTouchEnd={isMobile ? handleTouchEnd : undefined}
-				className="w-full h-full object-contain cursor-pointer"
+				className="h-full w-full cursor-pointer object-contain"
 				playsInline
 				controls={false}
 			/>
-			<div className="absolute bottom-0 left-0 right-0 flex flex-col gap-1 p-3 bg-gradient-to-t from-black/70 to-transparent">
-				<div className="relative w-full h-2 flex items-center group">
-					<div className="absolute left-0 top-0 h-2 bg-white/30 rounded w-full" />
+			<div className="absolute right-0 bottom-0 left-0 flex flex-col gap-1 bg-linear-to-t from-black/70 to-transparent p-3">
+				<div className="group relative flex h-2 w-full items-center">
+					<div className="absolute top-0 left-0 h-2 w-full rounded bg-white/30" />
 					<div
-						className="absolute left-0 top-0 h-2 bg-white/60 rounded"
+						className="absolute top-0 left-0 h-2 rounded bg-white/60"
 						style={{ width: `${(buffered / duration) * 100 || 0}%` }}
 					/>
 					<input
@@ -197,7 +197,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 						step={0.1}
 						defaultValue={0}
 						onChange={handleSeek}
-						className="w-full h-2 bg-transparent appearance-none cursor-pointer z-10"
+						className="z-10 h-2 w-full cursor-pointer appearance-none bg-transparent"
 						style={{
 							background: "none",
 						}}
@@ -205,10 +205,10 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 						onMouseUp={() => setIsSeeking(false)}
 					/>
 				</div>
-				<div className="flex items-center justify-between w-full mt-1">
+				<div className="mt-1 flex w-full items-center justify-between">
 					<button
 						onClick={togglePlay}
-						className="text-white bg-black/40 rounded p-1 hover:bg-white/20 transition"
+						className="rounded bg-black/40 p-1 text-white transition hover:bg-white/20"
 						aria-label={isPlaying ? "Pause" : "Play"}>
 						{isPlaying ? (
 							<svg width="24" height="24" fill="none" viewBox="0 0 24 24">
@@ -221,7 +221,7 @@ export function CustomVideoPlayer({ src, poster, autoPlay = false, className = "
 							</svg>
 						)}
 					</button>
-					<span className="text-xs text-white/80 font-mono select-none">
+					<span className="font-mono text-xs text-white/80 select-none">
 						{formatTime(currentTime)} /{formatTime(duration)}
 					</span>
 				</div>

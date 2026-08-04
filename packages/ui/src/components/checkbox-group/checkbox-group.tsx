@@ -174,7 +174,7 @@ const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
 						}
 					}}
 					role="group"
-					className={cn("relative flex flex-col w-72 max-w-full select-none", className)}
+					className={cn("relative flex w-72 max-w-full flex-col select-none", className)}
 					{...props}>
 					{/* Selected backgrounds (merged for contiguous checked items).
               A run is normally one block; mid merge/split it is drawn as two
@@ -298,7 +298,7 @@ const CheckboxItem = forwardRef<HTMLDivElement, CheckboxItemProps>(
 				className={cn(
 					// Fixed height (was py-1.5 around a 19.5px line box ≈ 31.5px) so the
 					// text-box trim on the label doesn't shrink the row.
-					`relative z-10 flex h-8 items-center gap-2.5 ${shape.item} px-3 cursor-pointer outline-none`,
+					`relative z-10 flex h-8 items-center gap-2.5 ${shape.item} cursor-pointer px-3 outline-none`,
 					className
 				)}
 				{...props}>
@@ -308,7 +308,7 @@ const CheckboxItem = forwardRef<HTMLDivElement, CheckboxItemProps>(
 					onCheckedChange={() => onToggle()}
 					tabIndex={-1}
 					aria-hidden
-					className="relative w-[15px] h-[15px] shrink-0 appearance-none bg-transparent p-0 border-0 outline-none cursor-pointer"
+					className="relative h-[15px] w-[15px] shrink-0 cursor-pointer appearance-none border-0 bg-transparent p-0 outline-none"
 					onClick={(e) => e.stopPropagation()}>
 					{/* Border */}
 					<div
@@ -348,7 +348,7 @@ const CheckboxItem = forwardRef<HTMLDivElement, CheckboxItemProps>(
 											strokeWidth={2}
 											strokeLinecap="round"
 											strokeLinejoin="round"
-											className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground"
+											className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground"
 											initial={{ opacity: 1 }}
 											animate={{ opacity: 1 }}
 											exit={{ opacity: 1 }}>
@@ -377,7 +377,7 @@ const CheckboxItem = forwardRef<HTMLDivElement, CheckboxItemProps>(
             sizer and the visible label keep identical boxes. */}
 				<span className="inline-grid text-[13px]">
 					<span
-						className="col-start-1 row-start-1 invisible [text-box:trim-both_cap_alphabetic]"
+						className="invisible col-start-1 row-start-1 [text-box:trim-both_cap_alphabetic]"
 						style={{ fontVariationSettings: fontWeights.semibold }}
 						aria-hidden="true">
 						{label}
@@ -413,7 +413,7 @@ function EditableCheckboxItem({
 		<div
 			aria-checked={checked}
 			className={cn(
-				`relative z-10 flex h-8 items-center gap-2.5 ${shape.item} px-3 cursor-pointer outline-none transition-colors duration-80`,
+				`relative z-10 flex h-8 items-center gap-2.5 ${shape.item} cursor-pointer px-3 transition-colors duration-80 outline-none`,
 				className
 			)}
 			data-checkbox-item
@@ -434,7 +434,7 @@ function EditableCheckboxItem({
 				checked={checked}
 				onCheckedChange={onToggle}
 				tabIndex={-1}
-				className="relative grid size-[15px] shrink-0 place-items-center rounded-[5px] border-[1.5px] border-border bg-transparent p-0 text-foreground outline-none transition-colors duration-80 data-checked:border-transparent"
+				className="relative grid size-[15px] shrink-0 place-items-center rounded-[5px] border-[1.5px] border-border bg-transparent p-0 text-foreground transition-colors duration-80 outline-none data-checked:border-transparent"
 				onClick={(event) => event.stopPropagation()}>
 				<AnimatePresence>
 					{checked && (
@@ -462,7 +462,7 @@ function EditableCheckboxItem({
 										strokeWidth={2}
 										strokeLinecap="round"
 										strokeLinejoin="round"
-										className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground"
+										className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-foreground"
 										initial={{ opacity: 1 }}
 										animate={{ opacity: 1 }}
 										exit={{ opacity: 1 }}>
@@ -531,7 +531,7 @@ function AnimatedCheck({ checked }: { checked: boolean }) {
 						strokeWidth={2}
 						strokeLinecap="round"
 						strokeLinejoin="round"
-						className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+						className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
 						initial={{ opacity: 1 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 1 }}>

@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import {
 	FileText,
@@ -56,7 +54,7 @@ export function ContentTypeSelector({
 	}, [type]);
 
 	return (
-		<div className="p-4 border-b flex flex-row items-center justify-between">
+		<div className="flex flex-row items-center justify-between border-b p-4">
 			<div className="relative flex items-center">
 				<div className="flex items-center">
 					{contentTypes.map(({ key, icon: Icon, label }) => (
@@ -67,18 +65,18 @@ export function ContentTypeSelector({
 							onClick={() => onTypeChange(key)}
 							className={cn(
 								"flex items-center transition-colors duration-200",
-								"hover:bg-muted/50 gap-1 rounded-lg px-3 overflow-auto py-2",
+								"gap-1 overflow-auto rounded-lg px-3 py-2 hover:bg-muted/50",
 								type === key && "text-primary"
 							)}>
-							<Icon className="w-4 h-4" />
-							<span className="hidden sm:inline text-sm font-medium">{label}</span>
+							<Icon className="h-4 w-4" />
+							<span className="hidden text-sm font-medium sm:inline">{label}</span>
 						</button>
 					))}
 				</div>
 
 				<div
 					aria-hidden
-					className="clip-path-container absolute inset-0 flex items-center pointer-events-none"
+					className="clip-path-container pointer-events-none absolute inset-0 flex items-center"
 					ref={containerRef}
 					style={{
 						transform: "translateZ(0)",
@@ -90,12 +88,12 @@ export function ContentTypeSelector({
 								onClick={() => onTypeChange(key)}
 								className={cn(
 									"button flex items-center px-3 py-2",
-									"bg-primary gap-1 text-primary-foreground",
+									"gap-1 bg-primary text-primary-foreground",
 									"transition-colors duration-200"
 								)}
 								tabIndex={-1}>
-								<Icon className="w-4 h-4" />
-								<span className="hidden sm:inline text-sm font-medium">{label}</span>
+								<Icon className="h-4 w-4" />
+								<span className="hidden text-sm font-medium sm:inline">{label}</span>
 							</button>
 						</div>
 					))}
@@ -105,7 +103,7 @@ export function ContentTypeSelector({
 			{type === "note" && (
 				<div className="flex items-center gap-2">
 					<button onClick={onToggleFullScreen} className="text-muted-foreground hover:text-foreground">
-						{isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+						{isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
 					</button>
 				</div>
 			)}

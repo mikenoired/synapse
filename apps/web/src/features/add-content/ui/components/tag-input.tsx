@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input, Label } from "@synapse/ui/components";
 
 import type { Content } from "@/shared/lib/schemas";

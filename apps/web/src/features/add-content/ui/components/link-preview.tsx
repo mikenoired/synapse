@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { Clock, ExternalLink, Globe, X } from "lucide-react";
 
@@ -44,10 +42,10 @@ export function LinkPreview({
 						size="sm"
 						className="min-w-24">
 						{linkParsing ? (
-							<Clock className="w-4 h-4 animate-spin" />
+							<Clock className="h-4 w-4 animate-spin" />
 						) : (
 							<>
-								<Globe className="w-4 h-4 mr-1" />
+								<Globe className="mr-1 h-4 w-4" />
 								Parse
 							</>
 						)}
@@ -55,24 +53,24 @@ export function LinkPreview({
 				</div>
 
 				{parsedLinkData && (
-					<div className="border p-4 bg-muted/20 space-y-3">
+					<div className="space-y-3 border bg-muted/20 p-4">
 						<div className="flex items-start gap-3">
 							{parsedLinkData.metadata.favicon && (
 								<img
 									src={parsedLinkData.metadata.favicon}
 									alt=""
-									className="w-4 h-4 mt-1 flex-shrink-0"
+									className="mt-1 h-4 w-4 shrink-0"
 									onError={(e) => {
 										e.currentTarget.style.display = "none";
 									}}
 								/>
 							)}
-							<div className="flex-1 min-w-0">
-								<h3 className="font-medium text-sm leading-tight mb-1">{parsedLinkData.title}</h3>
+							<div className="min-w-0 flex-1">
+								<h3 className="mb-1 text-sm leading-tight font-medium">{parsedLinkData.title}</h3>
 								{parsedLinkData.description && (
-									<p className="text-xs text-muted-foreground line-clamp-2">{parsedLinkData.description}</p>
+									<p className="line-clamp-2 text-xs text-muted-foreground">{parsedLinkData.description}</p>
 								)}
-								<div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+								<div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
 									{parsedLinkData.metadata.siteName && <span>{parsedLinkData.metadata.siteName}</span>}
 									{parsedLinkData.metadata.author && (
 										<span>
@@ -91,8 +89,8 @@ export function LinkPreview({
 								variant="ghost"
 								size="sm"
 								onClick={onClearParsedData}
-								className="p-1 h-auto">
-								<X className="w-3 h-3" />
+								className="h-auto p-1">
+								<X className="h-3 w-3" />
 							</Button>
 						</div>
 
@@ -101,7 +99,7 @@ export function LinkPreview({
 								<img
 									src={parsedLinkData.metadata.image}
 									alt=""
-									className="w-full h-32 object-cover rounded border"
+									className="h-32 w-full rounded border object-cover"
 									onError={(e) => {
 										e.currentTarget.style.display = "none";
 									}}
@@ -110,8 +108,8 @@ export function LinkPreview({
 						)}
 
 						{parsedLinkData.rawText && (
-							<div className="text-xs text-muted-foreground bg-muted/30 p-3 rounded border">
-								<div className="font-medium mb-1">Parsed content:</div>
+							<div className="rounded border bg-muted/30 p-3 text-xs text-muted-foreground">
+								<div className="mb-1 font-medium">Parsed content:</div>
 								<p className="line-clamp-3">
 									{parsedLinkData.rawText.substring(0, 200)}
 									{parsedLinkData.rawText.length > 200 ? "..." : ""}
@@ -119,9 +117,9 @@ export function LinkPreview({
 							</div>
 						)}
 
-						<div className="flex items-center gap-2 pt-2 border-t">
-							<ExternalLink className="w-3 h-3 text-muted-foreground" />
-							<span className="text-xs text-muted-foreground font-mono truncate">{content}</span>
+						<div className="flex items-center gap-2 border-t pt-2">
+							<ExternalLink className="h-3 w-3 text-muted-foreground" />
+							<span className="truncate font-mono text-xs text-muted-foreground">{content}</span>
 						</div>
 					</div>
 				)}

@@ -180,16 +180,16 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 	if (!open) return null;
 
 	const renderTodoForm = () => (
-		<div className="flex flex-col h-full">
-			<div className="p-6 pb-4 border-b">
-				<div className="max-w-[700px] mx-auto w-full">
+		<div className="flex h-full flex-col">
+			<div className="border-b p-6 pb-4">
+				<div className="mx-auto w-full max-w-[700px]">
 					<Input
 						id="title"
 						placeholder="Title (optional)..."
 						value={title}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
 						disabled={updateContentMutation.isPending}
-						className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+						className="h-auto border-none bg-transparent! px-0 text-2xl! font-bold shadow-none focus-visible:ring-0"
 					/>
 					<div className="mt-3">
 						<TagEditor
@@ -207,8 +207,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 					</div>
 				</div>
 			</div>
-			<div className="flex-1 p-6 pt-2 overflow-y-auto">
-				<div className="max-w-[700px] mx-auto w-full flex flex-col gap-4">
+			<div className="flex-1 overflow-y-auto p-6 pt-2">
+				<div className="mx-auto flex w-full max-w-[700px] flex-col gap-4">
 					<div className="flex gap-2">
 						<Input
 							placeholder="Add item..."
@@ -225,19 +225,19 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 							onClick={handleAddTodo}
 							disabled={!todoInput.trim() || updateContentMutation.isPending}
 							size="sm">
-							<Plus className="w-4 h-4 mr-1" />
+							<Plus className="mr-1 h-4 w-4" />
 							Add
 						</Button>
 					</div>
 					<div className="flex flex-col gap-2">
-						{todoItems.length === 0 && <div className="text-muted-foreground text-sm">There's no items</div>}
+						{todoItems.length === 0 && <div className="text-sm text-muted-foreground">There's no items</div>}
 						{todoItems.map((item, idx) => (
-							<div key={idx} className="flex items-center gap-2 group">
+							<div key={idx} className="group flex items-center gap-2">
 								<Input
 									type="checkbox"
 									checked={item.marked}
 									onChange={() => handleToggleTodo(idx)}
-									className="w-5 h-5 cursor-pointer"
+									className="h-5 w-5 cursor-pointer"
 									disabled={updateContentMutation.isPending}
 								/>
 								<Input
@@ -250,8 +250,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 									type="button"
 									onClick={() => handleRemoveTodo(idx)}
 									disabled={updateContentMutation.isPending}
-									className="opacity-0 group-hover:opacity-100 transition-opacity">
-									<X className="w-4 h-4 text-destructive" />
+									className="opacity-0 transition-opacity group-hover:opacity-100">
+									<X className="h-4 w-4 text-destructive" />
 								</button>
 							</div>
 						))}
@@ -263,39 +263,39 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 
 	return (
 		<div
-			className={`fixed inset-0 z-50 bg-black/50 backdrop-blur-md flex items-center justify-center animate-in fade-in-0 transition-all duration-300 ease-in-out ${isFullScreen ? "p-5" : ""}`}
+			className={`fixed inset-0 z-50 flex animate-in items-center justify-center bg-black/50 backdrop-blur-md transition-all duration-300 ease-in-out fade-in-0 ${isFullScreen ? "p-5" : ""}`}
 			onClick={handleClose}>
 			<div
-				className={`bg-background shadow-lg relative ${isFullScreen ? "w-full h-full max-w-none rounded-none" : "max-w-5xl w-[95vw] h-[min(840px,calc(100vh-2rem))] rounded-lg"} p-0 gap-0 flex flex-col transition-all duration-300 ease-in-out animate-in fade-in-0 zoom-in-95`}
+				className={`relative bg-background shadow-lg ${isFullScreen ? "h-full w-full max-w-none rounded-none" : "h-[min(840px,calc(100vh-2rem))] w-[95vw] max-w-5xl rounded-lg"} flex animate-in flex-col gap-0 p-0 transition-all duration-300 ease-in-out fade-in-0 zoom-in-95`}
 				onClick={(e) => e.stopPropagation()}
 				onTouchStart={handleTouchStart}
 				onTouchMove={handleTouchMove}
 				onTouchEnd={handleTouchEnd}>
-				<div className="p-4 border-b flex flex-row items-center justify-between">
+				<div className="flex flex-row items-center justify-between border-b p-4">
 					<div className="text-lg font-semibold">{content.type === "todo" ? "Edit list" : "Edit note"}</div>
 					<div className="flex items-center gap-2">
 						<Button variant="ghost" size="sm" onClick={() => setIsFullScreen(!isFullScreen)}>
-							{isFullScreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+							{isFullScreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
 						</Button>
 						<Button variant="ghost" size="sm" onClick={handleClose}>
-							<X className="w-4 h-4" />
+							<X className="h-4 w-4" />
 						</Button>
 					</div>
 				</div>
-				<form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+				<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
 					{content.type === "todo" ? (
 						renderTodoForm()
 					) : (
-						<div className="flex flex-col h-full">
+						<div className="flex h-full flex-col">
 							<div className="px-6 pt-8 pb-4">
-								<div className="max-w-3xl mx-auto w-full">
+								<div className="mx-auto w-full max-w-3xl">
 									<Input
 										id="title"
 										placeholder="Заголовок заметки"
 										value={title}
 										onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
 										disabled={updateContentMutation.isPending}
-										className="!text-3xl font-semibold tracking-tight border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+										className="h-auto border-none bg-transparent! px-0 text-3xl! font-semibold tracking-tight shadow-none focus-visible:ring-0"
 									/>
 									<div className="mt-3">
 										<TagEditor
@@ -313,8 +313,8 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 									</div>
 								</div>
 							</div>
-							<div className="flex-1 px-6 pb-8 overflow-y-auto">
-								<div className="max-w-3xl mx-auto w-full">
+							<div className="flex-1 overflow-y-auto px-6 pb-8">
+								<div className="mx-auto w-full max-w-3xl">
 									<Editor
 										data={editorData}
 										onChange={setEditorData}
@@ -324,7 +324,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 							</div>
 						</div>
 					)}
-					<div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
+					<div className="sticky bottom-0 z-10 mt-auto border-t bg-background p-6 pt-4">
 						<div className="flex justify-end gap-3">
 							<Button
 								type="button"
@@ -349,7 +349,7 @@ export function EditContentDialog({ open, onOpenChange, content, onContentUpdate
 			</div>
 			{showUnsavedModal && (
 				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-					<div className="bg-background rounded-lg shadow-lg p-6 w-full max-w-sm">
+					<div className="w-full max-w-sm rounded-lg bg-background p-6 shadow-lg">
 						<div className="mb-4 text-lg font-semibold">Unsaved changes</div>
 						<div className="mb-6 text-sm text-muted-foreground">
 							You have unsaved changes. Save or discard changes?

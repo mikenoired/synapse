@@ -1,5 +1,3 @@
-"use client";
-
 import { Check, Palette, Slash } from "lucide-react";
 import type { DragEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -202,14 +200,14 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 
 	return (
 		<div
-			className="flex flex-col h-full relative"
+			className="relative flex h-full flex-col"
 			onDragEnter={handleDragEnter}
 			onDragOver={handleDragOver}
 			onDragLeave={handleDragLeave}
 			onDrop={handleDrop}>
 			{dragActive && (
-				<div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center pointer-events-none select-none">
-					<div className="bg-white/90 rounded-xl px-8 py-6 text-2xl font-semibold shadow-xl border-2 border-primary animate-in fade-in-0">
+				<div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-black/40 select-none">
+					<div className="animate-in rounded-xl border-2 border-primary bg-white/90 px-8 py-6 text-2xl font-semibold shadow-xl fade-in-0">
 						Drop files to add content
 					</div>
 				</div>
@@ -226,11 +224,11 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 						aria-expanded={paletteOpen}
 						aria-label={t("tagColor.picker")}
 						onClick={() => setPaletteOpen((open) => !open)}
-						className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+						className="flex size-9 items-center justify-center rounded-full border border-border text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
 						<Palette className="size-4" style={{ color: getTagColor(tagColor) }} />
 					</button>
 					{paletteOpen && (
-						<div className="absolute left-0 top-11 z-30 w-56 rounded-3xl border border-border bg-background p-3 shadow-xl">
+						<div className="absolute top-11 left-0 z-30 w-56 rounded-3xl border border-border bg-background p-3 shadow-xl">
 							<p className="mb-2 px-1 text-xs font-medium text-muted-foreground">{t("tagColor.picker")}</p>
 							<div className="grid grid-cols-7 gap-1.5">
 								<button
@@ -238,10 +236,10 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 									aria-label={t("tagColor.none")}
 									aria-pressed={tagColor === 0}
 									onClick={() => updateTagColorMutation.mutate({ id: tagId, color: 0 })}
-									className="relative flex size-6 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+									className="relative flex size-6 items-center justify-center rounded-full border border-border bg-muted text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
 									<Slash className="size-3" />
 									{tagColor === 0 && (
-										<Check className="absolute -right-1 -top-1 size-3 rounded-full bg-foreground p-0.5 text-background" />
+										<Check className="absolute -top-1 -right-1 size-3 rounded-full bg-foreground p-0.5 text-background" />
 									)}
 								</button>
 								{TAG_COLOR_PALETTE.map((color, index) => {
@@ -254,7 +252,7 @@ export default function TagClient({ tagId, tagTitle, initialColor, initial }: Pr
 											aria-pressed={tagColor === value}
 											disabled={updateTagColorMutation.isPending}
 											onClick={() => updateTagColorMutation.mutate({ id: tagId, color: value })}
-											className="relative size-6 rounded-full ring-offset-2 ring-offset-background transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+											className="relative size-6 rounded-full ring-offset-2 ring-offset-background transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
 											style={{ backgroundColor: color }}>
 											{tagColor === value && (
 												<Check className="absolute inset-1 size-4 text-white drop-shadow-sm" />

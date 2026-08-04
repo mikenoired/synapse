@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
@@ -46,19 +44,19 @@ export function TodoList({
 					className="flex-1"
 				/>
 				<Button type="button" onClick={handleAddTodo} disabled={!todoInput.trim() || isLoading} size="sm">
-					<Plus className="w-4 h-4 mr-1" />
+					<Plus className="mr-1 h-4 w-4" />
 					Add
 				</Button>
 			</div>
 			<div className="flex flex-col gap-2">
-				{items.length === 0 && <div className="text-muted-foreground text-sm">There's no items</div>}
+				{items.length === 0 && <div className="text-sm text-muted-foreground">There's no items</div>}
 				{items.map((item, idx) => (
-					<div key={idx} className="flex items-center gap-2 group">
+					<div key={idx} className="group flex items-center gap-2">
 						<Input
 							type="checkbox"
 							checked={item.marked}
 							onChange={() => onToggleTodo(idx)}
-							className="w-5 h-5 cursor-pointer"
+							className="h-5 w-5 cursor-pointer"
 							disabled={isLoading}
 						/>
 						<Input
@@ -71,8 +69,8 @@ export function TodoList({
 							type="button"
 							onClick={() => onRemoveTodo(idx)}
 							disabled={isLoading}
-							className="opacity-0 group-hover:opacity-100 transition-opacity">
-							<X className="w-4 h-4 text-destructive" />
+							className="opacity-0 transition-opacity group-hover:opacity-100">
+							<X className="h-4 w-4 text-destructive" />
 						</button>
 					</div>
 				))}

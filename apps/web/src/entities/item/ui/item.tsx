@@ -150,8 +150,8 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 		const done = todos.filter((t) => t.marked).length;
 		return (
 			<div className="flex flex-col gap-2">
-				<div className="flex items-center gap-2 mb-1 text-xs text-muted-foreground">
-					<ListChecks className="w-4 h-4" />
+				<div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+					<ListChecks className="h-4 w-4" />
 					{done} /{todos.length} {t("done")}
 				</div>
 				<CheckboxGroup className="gap-1">
@@ -166,7 +166,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 					</div>
 				)}
 				{item.tags && (
-					<div className="flex flex-wrap gap-1 mt-3">
+					<div className="mt-3 flex flex-wrap gap-1">
 						{item.tags.map((tag: string, tagIndex) => (
 							<ContentTag
 								key={tag}
@@ -197,7 +197,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 							href={item.content}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="text-sm text-blue-600 dark:text-blue-400 hover:underline break-all">
+							className="text-sm break-all text-blue-600 hover:underline dark:text-blue-400">
 							{item.content}
 						</a>
 					</div>
@@ -210,15 +210,15 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 
 		return (
 			<div className="space-y-3">
-				<h3 className="font-semibold text-base leading-tight line-clamp-2">
+				<h3 className="line-clamp-2 text-base leading-tight font-semibold">
 					{linkContent.title || item.title || t("untitled")}
 				</h3>
 
 				{previewText && (
-					<p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">{previewText}</p>
+					<p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{previewText}</p>
 				)}
 
-				<div className="text-xs text-blue-600 dark:text-blue-400 truncate">{linkContent.url}</div>
+				<div className="truncate text-xs text-blue-600 dark:text-blue-400">{linkContent.url}</div>
 			</div>
 		);
 	};
@@ -230,7 +230,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 			transition={disableAnimation ? undefined : { duration: 0.2 }}
 			className="group">
 			<div
-				className={`cursor-pointer overflow-hidden relative transition-all ${
+				className={`relative cursor-pointer overflow-hidden transition-all ${
 					item.type === "note" ? "min-h-44 rounded-xl bg-card text-card-foreground" : "hover:shadow-lg"
 				}`}>
 				<div
@@ -253,7 +253,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 						<>
 							{renderLinkPreview()}
 							{item.tags.length > 0 && (
-								<div className="flex flex-wrap gap-1 mt-3">
+								<div className="mt-3 flex flex-wrap gap-1">
 									{item.tags.map((tag: string, tagIndex) => (
 										<ContentTag
 											key={tag}
@@ -270,10 +270,10 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 						renderTodoPreview()
 					) : (
 						<>
-							<h3 className="line-clamp-2 text-lg font-semibold leading-snug tracking-tight text-foreground">
+							<h3 className="line-clamp-2 text-lg leading-snug font-semibold tracking-tight text-foreground">
 								{item.title || t("untitled")}
 							</h3>
-							<p className="mt-3 line-clamp-5 whitespace-pre-wrap wrap-break-words text-sm leading-6 text-muted-foreground">
+							<p className="wrap-break-words mt-3 line-clamp-5 text-sm leading-6 whitespace-pre-wrap text-muted-foreground">
 								{notePreview || t("emptyNote")}
 							</p>
 							<div className="mt-auto flex flex-wrap gap-1 pt-5">

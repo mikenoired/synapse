@@ -1,5 +1,3 @@
-"use client";
-
 import { Switch } from "@synapse/ui/components";
 import { HardDrive, PlayCircle } from "lucide-react";
 

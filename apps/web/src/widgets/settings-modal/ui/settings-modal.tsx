@@ -1,5 +1,3 @@
-"use client";
-
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
@@ -109,7 +107,7 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 						<Link
 							href={closeHref}
 							scroll={false}
-							className="absolute right-3 top-3 z-20 flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+							className="absolute top-3 right-3 z-20 flex size-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
 							aria-label={t("settings.close")}>
 							<X className="size-4.5" />
 						</Link>
@@ -122,7 +120,7 @@ export function SettingsModal({ activeTab, closeHref, open, onClose }: SettingsM
 							<SettingsModalNav activeTab={activeTab} pathname={pathname} search={searchParams.toString()} />
 						</div>
 						<div className="min-h-0 overflow-hidden">
-							<div className="h-full overflow-y-auto px-4 pb-4 pt-3 md:px-6 md:pb-6 md:pt-6">
+							<div className="h-full overflow-y-auto px-4 pt-3 pb-4 md:px-6 md:pt-6 md:pb-6">
 								<AnimatePresence mode="wait">
 									<motion.div
 										key={activeTab}

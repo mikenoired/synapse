@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { Skeleton } from "@synapse/ui/components";
 import { motion } from "framer-motion";
@@ -97,8 +95,8 @@ export function ContentSuggestions({
 				className={cn(
 					"pointer-events-none absolute -top-28 h-28 w-full",
 					dark
-						? "bg-gradient-to-b from-transparent via-[#11110f]/55 to-[#11110f]"
-						: "bg-gradient-to-b from-transparent via-background/65 to-background"
+						? "bg-linear-to-b from-transparent via-[#11110f]/55 to-[#11110f]"
+						: "bg-linear-to-b from-transparent via-background/65 to-background"
 				)}
 			/>
 
@@ -107,10 +105,10 @@ export function ContentSuggestions({
 					initial={{ opacity: 0, y: 36 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
-					className="mx-auto w-full max-w-[1800px] px-4 pb-20 pt-10 sm:px-6 lg:px-8">
+					className="mx-auto w-full max-w-[1800px] px-4 pt-10 pb-20 sm:px-6 lg:px-8">
 					<header className="mb-10 border-b border-current/10 pb-5">
 						<div>
-							<p className="mb-2 text-xs font-medium uppercase tracking-[0.16em] opacity-45">
+							<p className="mb-2 text-xs font-medium tracking-[0.16em] uppercase opacity-45">
 								Продолжить исследование
 							</p>
 							<h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Рядом по смыслу</h2>
@@ -130,10 +128,10 @@ export function ContentSuggestions({
 									<div className="mb-4 flex items-center gap-2">
 										<h3
 											id={`suggestion-tag-${group.tag.id}`}
-											className="text-sm font-medium capitalize tracking-wide">
+											className="text-sm font-medium tracking-wide capitalize">
 											<Link
 												href={`/dashboard/tag/${group.tag.id}`}
-												className="group/tag inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current/40"
+												className="group/tag inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-current/40 focus-visible:outline-none"
 												style={getTagColorStyle(group.tag.color)}>
 												<Hash className="size-4 opacity-55 transition-transform group-hover/tag:-rotate-6" />
 												{group.tag.title}
@@ -159,7 +157,7 @@ export function ContentSuggestions({
 					{query.hasNextPage && (
 						<div ref={paginationRef} aria-hidden className="flex h-24 items-end justify-center">
 							{query.isFetchingNextPage && (
-								<span className="text-xs uppercase tracking-[0.14em] opacity-40">Ищем дальше</span>
+								<span className="text-xs tracking-[0.14em] uppercase opacity-40">Ищем дальше</span>
 							)}
 						</div>
 					)}

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@synapse/ui/components";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -55,7 +53,7 @@ export function ViewerOverlayControls({
 						animate={{ opacity: 1, filter: "blur(0px)", x: 0 }}
 						exit={{ opacity: 0, filter: "blur(0px)", x: -16 }}
 						transition={{ duration: 0.16 }}
-						className="absolute left-5 top-1/2 z-20">
+						className="absolute top-1/2 left-5 z-20">
 						<Button
 							onClick={onPrevious}
 							aria-label={previousLabel}
@@ -75,7 +73,7 @@ export function ViewerOverlayControls({
 						animate={{ opacity: 1, filter: "blur(0px)", x: 0 }}
 						exit={{ opacity: 0, filter: "blur(0px)", x: 16 }}
 						transition={{ duration: 0.16 }}
-						className="absolute right-5 top-1/2 z-20">
+						className="absolute top-1/2 right-5 z-20">
 						<Button
 							onClick={onNext}
 							aria-label={nextLabel}
@@ -95,7 +93,7 @@ export function ViewerOverlayControls({
 						animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
 						exit={{ opacity: 0, y: 16, filter: "blur(10px)" }}
 						transition={{ duration: 0.18 }}
-						className="absolute bottom-6 right-6 z-20 flex flex-wrap items-center gap-2">
+						className="absolute right-6 bottom-6 z-20 flex flex-wrap items-center gap-2">
 						{actions.map((action) => (
 							<Button
 								key={action.label}
@@ -119,7 +117,7 @@ export function ViewerOverlayControls({
 						animate={{ opacity: 1, x: 0, y: 0, filter: "blur(0px)" }}
 						exit={{ opacity: 0, x: 16, y: -16, filter: "blur(10px)" }}
 						transition={{ duration: 0.16 }}
-						className="absolute right-6 top-6 z-20">
+						className="absolute top-6 right-6 z-20">
 						<Button
 							variant="secondary"
 							size="icon"

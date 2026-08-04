@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { Switch } from "@synapse/ui/components";
 import { motion } from "framer-motion";
@@ -110,7 +108,7 @@ export default function AppearanceTab() {
 								aria-label={t(labelKey)}
 								title={t(labelKey)}
 								onClick={() => setTheme(value)}
-								className="group relative flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:z-10 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 aria-checked:text-foreground">
+								className="group relative flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground focus-visible:z-10 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none aria-checked:text-foreground">
 								{selected && (
 									<motion.span
 										layoutId="appearance-theme-selection"

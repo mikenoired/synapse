@@ -1,5 +1,3 @@
-"use client";
-
 import type { LucideIcon } from "lucide-react";
 import { Info, X } from "lucide-react";
 
@@ -62,16 +60,16 @@ export function ConfirmDialog({
 			closeOnEscape={!loading}>
 			<ModalHeader bordered={false}>
 				<div className="flex items-start gap-4">
-					<div className={`p-3 rounded-full bg-muted/50 ${getIconColor()}`}>
-						<Icon className="w-6 h-6" />
+					<div className={`rounded-full bg-muted/50 p-3 ${getIconColor()}`}>
+						<Icon className="h-6 w-6" />
 					</div>
-					<div className="flex-1 min-w-0">
-						<h2 className="text-xl font-semibold text-foreground mb-2">{title}</h2>
-						{description && <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>}
+					<div className="min-w-0 flex-1">
+						<h2 className="mb-2 text-xl font-semibold text-foreground">{title}</h2>
+						{description && <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>}
 					</div>
 					{!loading && (
-						<button onClick={handleCancel} className="p-1 hover:bg-muted rounded transition-colors">
-							<X className="w-5 h-5 text-muted-foreground" />
+						<button onClick={handleCancel} className="rounded p-1 transition-colors hover:bg-muted">
+							<X className="h-5 w-5 text-muted-foreground" />
 						</button>
 					)}
 				</div>

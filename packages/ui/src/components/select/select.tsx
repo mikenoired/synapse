@@ -1,5 +1,3 @@
-"use client";
-
 import { Select as SelectPrimitive } from "@base-ui/react/select";
 import { cva, type VariantProps } from "class-variance-authority";
 import { motion, AnimatePresence } from "framer-motion";
@@ -192,7 +190,7 @@ const triggerVariants = cva(
 		"text-[13px] h-9 px-3 min-w-[160px]",
 		"transition-all duration-80",
 		"disabled:opacity-50 disabled:pointer-events-none",
-		"focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring,#6B97FF)]",
+		"focus-visible:ring-1 focus-visible:ring-(--focus-ring,#6B97FF)",
 	],
 	{
 		variants: {
@@ -230,12 +228,12 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
 						className
 					)}
 					{...props}>
-					<span className="flex items-center gap-2 min-w-0 flex-1">
+					<span className="flex min-w-0 flex-1 items-center gap-2">
 						{Icon && (
 							<Icon
 								size={16}
 								strokeWidth={1.5}
-								className="shrink-0 text-muted-foreground transition-[color,stroke-width] duration-80 group-hover:text-foreground group-hover:stroke-[2]"
+								className="shrink-0 text-muted-foreground transition-[color,stroke-width] duration-80 group-hover:stroke-2 group-hover:text-foreground"
 							/>
 						)}
 						<SelectPrimitive.Value
@@ -244,7 +242,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
 							// box, and the trimmed box excludes ascenders/descenders — the
 							// padding gives glyphs room while the negative margin keeps the
 							// trimmed layout box.
-							className="min-w-0 flex-1 text-left truncate [text-box:trim-both_cap_alphabetic] py-1 -my-1 data-[placeholder]:text-muted-foreground"
+							className="-my-1 min-w-0 flex-1 truncate py-1 text-left [text-box:trim-both_cap_alphabetic] data-placeholder:text-muted-foreground"
 						/>
 					</span>
 
@@ -261,7 +259,7 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
 						<path d="M6 9l6 6 6-6" />
 					</svg>
 				</SelectPrimitive.Trigger>
-				{error && <span className="text-[12px] text-destructive pl-3">{error}</span>}
+				{error && <span className="pl-3 text-[12px] text-destructive">{error}</span>}
 			</div>
 		);
 	}
@@ -423,7 +421,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(({ classNam
 							className={cn(
 								// min-w tracks the trigger via the Positioner's --anchor-width
 								// var, matching the pre-migration minWidth: triggerRect.width.
-								`relative flex flex-col gap-0.5 min-w-[var(--anchor-width)] max-h-[min(300px,var(--available-height))] overflow-y-auto ${shape.container} p-1 select-none outline-none`,
+								`relative flex max-h-[min(300px,var(--available-height))] min-w-(--anchor-width) flex-col gap-0.5 overflow-y-auto ${shape.container} p-1 outline-none select-none`,
 								className
 							)}>
 							{/* The three overlays are torn down as the close begins rather
@@ -498,7 +496,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(({ classNam
 								<AnimatePresence>
 									{focusRect && (
 										<motion.div
-											className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-[color:var(--focus-ring,#6B97FF)]`}
+											className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
 											initial={false}
 											animate={{
 												left: focusRect.left - 2,
@@ -585,10 +583,10 @@ const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
 							// the text-box trim on the item text doesn't shrink the row.
 							// shrink-0: the popup is a max-height flex column, so without it
 							// a long list compresses rows to fit instead of scrolling.
-							`relative z-10 flex h-9 shrink-0 items-center gap-2 ${shape.item} px-2 text-[13px] cursor-pointer outline-none select-none`,
+							`relative z-10 flex h-9 shrink-0 items-center gap-2 ${shape.item} cursor-pointer px-2 text-[13px] outline-none select-none`,
 							"transition-[color] duration-80",
 							isActive || isChecked ? "text-foreground" : "text-muted-foreground",
-							disabled && "opacity-50 pointer-events-none",
+							disabled && "pointer-events-none opacity-50",
 							className
 						)}
 						{...props}
@@ -606,7 +604,7 @@ const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
 					// py-1/-my-1 keeps truncate's overflow:hidden from clipping
 					// ascenders/descenders outside the trimmed box.
 					render={
-						<span className="flex-1 min-w-0 truncate [text-box:trim-both_cap_alphabetic] py-1 -my-1" />
+						<span className="-my-1 min-w-0 flex-1 truncate py-1 [text-box:trim-both_cap_alphabetic]" />
 					}>
 					{children}
 				</SelectPrimitive.ItemText>
@@ -614,7 +612,7 @@ const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
 				{/* Always-rendered fixed slot so the check appearing/disappearing
             never changes the row's intrinsic width — without it the whole
             popup resizes when a selection lands. */}
-				<span aria-hidden className="shrink-0 w-4 h-4">
+				<span aria-hidden className="h-4 w-4 shrink-0">
 					<AnimatePresence>
 						{isChecked && (
 							<motion.svg
@@ -672,7 +670,7 @@ const SelectLabel = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
 	({ className, ...props }, ref) => (
 		<div
 			ref={ref}
-			className={cn("px-2 py-1.5 shrink-0 text-[11px] text-muted-foreground", className)}
+			className={cn("shrink-0 px-2 py-1.5 text-[11px] text-muted-foreground", className)}
 			{...props}
 		/>
 	)
@@ -685,7 +683,7 @@ const SelectSeparator = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement
 		<div
 			ref={ref}
 			role="separator"
-			className={cn("my-1 -mx-1 h-px shrink-0 bg-border/60", className)}
+			className={cn("-mx-1 my-1 h-px shrink-0 bg-border/60", className)}
 			{...props}
 		/>
 	)

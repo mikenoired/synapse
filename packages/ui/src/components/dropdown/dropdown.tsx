@@ -1,5 +1,3 @@
-"use client";
-
 import { Menu } from "@base-ui/react/menu";
 import type { MenuTriggerProps } from "@base-ui/react/menu";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,7 +125,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
 					}}
 					role="group"
 					className={cn(
-						`relative flex flex-col gap-0.5 w-72 max-w-full ${shape.container} p-1 select-none bg-background shadow`,
+						`relative flex w-72 max-w-full flex-col gap-0.5 ${shape.container} bg-background p-1 shadow select-none`,
 						className
 					)}
 					{...props}>
@@ -186,7 +184,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
 					<AnimatePresence>
 						{focusRect && (
 							<motion.div
-								className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-[color:var(--focus-ring,#6B97FF)]`}
+								className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
 								initial={false}
 								animate={{
 									left: focusRect.left - 2,
@@ -448,7 +446,7 @@ const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
 								className={cn(
 									// min-w tracks the trigger via the Positioner's
 									// --anchor-width var.
-									`relative flex flex-col gap-0.5 w-72 max-w-full min-w-(--anchor-width) max-h-[min(480px,var(--available-height))] overflow-y-auto ${shape.container} p-1 select-none outline-none`,
+									`relative flex max-h-[min(480px,var(--available-height))] w-72 max-w-full min-w-(--anchor-width) flex-col gap-0.5 overflow-y-auto ${shape.container} p-1 outline-none select-none`,
 									className
 								)}>
 								{/* Selected background */}
@@ -548,7 +546,7 @@ const DropdownLabel = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>
 	({ className, ...props }, ref) => (
 		<div
 			ref={ref}
-			className={cn("px-2 py-1.5 shrink-0 text-[11px] text-muted-foreground", className)}
+			className={cn("shrink-0 px-2 py-1.5 text-[11px] text-muted-foreground", className)}
 			{...props}
 		/>
 	)
@@ -565,7 +563,7 @@ const DropdownSeparator = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
 		<div
 			ref={ref}
 			role="separator"
-			className={cn("my-1 -mx-1 h-px shrink-0 bg-border/60", className)}
+			className={cn("-mx-1 my-1 h-px shrink-0 bg-border/60", className)}
 			{...props}
 		/>
 	)

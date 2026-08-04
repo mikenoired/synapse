@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { AnimatePresence, motion } from "framer-motion";
 import type { ReactNode } from "react";
@@ -108,8 +106,8 @@ export function BaseModal({
 						exit={animation.exit}
 						transition={animation.transition}
 						className={cn(
-							"relative z-10 m-4 bg-background border border-border shadow-2xl overflow-hidden flex flex-col rounded-lg",
-							variant === "fullscreen" && "w-screen h-screen rounded-none m-0",
+							"relative z-10 m-4 flex flex-col overflow-hidden rounded-lg border border-border bg-background shadow-2xl",
+							variant === "fullscreen" && "m-0 h-screen w-screen rounded-none",
 							variant === "drawer" && "w-full max-w-lg",
 							variant === "default" && sizeClasses[size],
 							variant === "default" && "max-h-[95vh]",

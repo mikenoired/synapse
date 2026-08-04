@@ -1,5 +1,3 @@
-"use client";
-
 import { Tabs as TabsPrimitive } from "@base-ui-components/react/tabs";
 import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -134,13 +132,13 @@ const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
 							setHoveredIndex(null);
 						}}
 						className={cn(
-							"relative flex items-center gap-0.5 select-none overflow-x-auto max-w-full scrollbar-hide -mx-1 px-1 -my-1 py-1",
+							"scrollbar-hide relative -mx-1 -my-1 flex max-w-full items-center gap-0.5 overflow-x-auto px-1 py-1 select-none",
 							className
 						)}
 						{...props}>
 						{selectedRect && (
 							<motion.div
-								className={cn("absolute bg-muted pointer-events-none", shape.bg)}
+								className={cn("pointer-events-none absolute bg-muted", shape.bg)}
 								initial={false}
 								animate={{
 									left: selectedRect.left,
@@ -159,7 +157,7 @@ const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
 						<AnimatePresence>
 							{hoverRect && !isHoveringSelected && selectedRect && (
 								<motion.div
-									className={cn("absolute bg-muted pointer-events-none", shape.bg)}
+									className={cn("pointer-events-none absolute bg-muted", shape.bg)}
 									initial={{
 										left: selectedRect.left,
 										width: selectedRect.width,
@@ -200,7 +198,7 @@ const TabsSubtle = forwardRef<HTMLDivElement, TabsSubtleProps>(
 						<AnimatePresence>
 							{focusRect && (
 								<motion.div
-									className={cn("absolute pointer-events-none z-20 border border-ring", shape.focusRing)}
+									className={cn("pointer-events-none absolute z-20 border border-ring", shape.focusRing)}
 									initial={false}
 									animate={{
 										left: focusRect.left - 2,
@@ -251,7 +249,7 @@ const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
 		const labelContent = (
 			<span className="inline-grid text-[13px] whitespace-nowrap">
 				<span
-					className="col-start-1 row-start-1 invisible [text-box:trim-both_cap_alphabetic]"
+					className="invisible col-start-1 row-start-1 [text-box:trim-both_cap_alphabetic]"
 					style={{ fontVariationSettings: fontWeights.semibold }}
 					aria-hidden="true">
 					{label}
@@ -282,7 +280,7 @@ const TabsSubtleItem = forwardRef<HTMLButtonElement, TabsSubtleItemProps>(
 				aria-controls={idPrefix ? `${idPrefix}-panel-${index}` : undefined}
 				aria-label={collapseLabel && !showLabel ? label : undefined}
 				className={cn(
-					"relative z-10 flex items-center px-3 cursor-pointer bg-transparent border-none outline-none",
+					"relative z-10 flex cursor-pointer items-center border-none bg-transparent px-3 outline-none",
 					collapseLabel ? "h-8" : "h-9 gap-2",
 					shape.bg,
 					className

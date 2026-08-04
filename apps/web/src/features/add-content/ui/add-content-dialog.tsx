@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input, Label, Modal } from "@synapse/ui/components";
 import type { Transition } from "framer-motion";
 import { AnimatePresence, motion } from "framer-motion";
@@ -225,7 +223,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 					onToggleFullScreen={context.toggleFullScreen}
 				/>
 
-				<form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+				<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
 					<AnimatePresence mode="wait" initial={false}>
 						{type === "note" ? (
 							<motion.div
@@ -257,7 +255,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 								exit={{ opacity: 0, height: 0 }}
 								transition={baseTransition}
 								style={{ overflow: "hidden" }}
-								className="flex-1 p-6 space-y-4 overflow-y-auto">
+								className="flex-1 space-y-4 overflow-y-auto p-6">
 								<div className="space-y-2">
 									<Label htmlFor="title">Title (optional)</Label>
 									<Input
@@ -301,7 +299,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 								exit={{ opacity: 0, height: 0 }}
 								transition={baseTransition}
 								style={{ overflow: "hidden" }}
-								className="flex-1 p-6 space-y-4 overflow-y-auto">
+								className="flex-1 space-y-4 overflow-y-auto p-6">
 								<div className="space-y-2">
 									<Label htmlFor="title">Title (optional)</Label>
 									<Input
@@ -351,7 +349,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 												className="space-y-4">
 												{/* Document Drop Zone */}
 												<div>
-													<h3 className="text-sm font-medium text-foreground mb-2">Documents</h3>
+													<h3 className="mb-2 text-sm font-medium text-foreground">Documents</h3>
 													<DocumentDropZone
 														dragActive={documentUpload.dragActive}
 														isLoading={documentUpload.isLoading}
@@ -365,7 +363,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 
 												{/* Media Drop Zone */}
 												<div>
-													<h3 className="text-sm font-medium text-foreground mb-2">Images & Videos</h3>
+													<h3 className="mb-2 text-sm font-medium text-foreground">Images & Videos</h3>
 													<MediaDropZone
 														dragActive={context.dragActive}
 														isLoading={isLoading}
@@ -419,7 +417,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 													<input
 														id="makeTrack"
 														type="checkbox"
-														className="w-4 h-4"
+														className="h-4 w-4"
 														checked={makeTrack}
 														onChange={(e) => setMakeTrack(e.target.checked)}
 													/>
@@ -456,7 +454,7 @@ function AddContentDialogContent({ onOpenChange, onContentAdded, open }: AddCont
 						)}
 					</AnimatePresence>
 
-					<div className="p-6 pt-4 border-t bg-background mt-auto sticky bottom-0 z-10">
+					<div className="sticky bottom-0 z-10 mt-auto border-t bg-background p-6 pt-4">
 						<div className="flex justify-end gap-3">
 							<Button
 								type="button"

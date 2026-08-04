@@ -1,5 +1,3 @@
-"use client";
-
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
@@ -9,9 +7,9 @@ interface DashboardContentProps {
 
 export default function DashboardContent({ children }: DashboardContentProps) {
 	return (
-		<motion.main className="flex-1 min-w-0 h-screen min-h-0 p-4 pl-0">
+		<motion.main className="h-screen min-h-0 min-w-0 flex-1 p-4 pl-0">
 			<div
-				className="w-full min-w-0 pb-20 sm:pb-0 overflow-y-auto overflow-x-hidden flex-1 rounded-lg shadow-sm h-full dark:bg-background bg-muted/50"
+				className="h-full w-full min-w-0 flex-1 overflow-x-hidden overflow-y-auto rounded-lg bg-muted/50 pb-20 shadow-sm sm:pb-0 dark:bg-background"
 				style={{ maxHeight: "100vh", height: "100%" }}>
 				{children}
 			</div>

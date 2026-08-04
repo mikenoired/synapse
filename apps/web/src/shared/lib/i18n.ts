@@ -1,5 +1,3 @@
-"use client";
-
 import { useCallback, useEffect, useState } from "react";
 
 import { en, searchPlaceholders as enSearchPlaceholders } from "./locale/en";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input, Label, Modal } from "@synapse/ui/components";
 import { X } from "lucide-react";
 import { useState } from "react";
@@ -54,15 +52,15 @@ export function AuthDialog({ open, onOpenChange, mode, onModeChange }: AuthDialo
 			open={open}
 			onOpenChange={onOpenChange}
 			ariaLabel={mode === "login" ? "Вход в Synapse" : "Создание аккаунта"}
-			className="p-5 w-full max-w-md">
+			className="w-full max-w-md p-5">
 			<button
 				type="button"
 				onClick={() => onOpenChange(false)}
 				aria-label="Закрыть"
-				className="absolute right-3 top-3 flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+				className="absolute top-3 right-3 flex size-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
 				<X className="size-5" />
 			</button>
-			<div className="space-y-1 mb-4">
+			<div className="mb-4 space-y-1">
 				<h1 className="pr-10 text-2xl font-bold">{mode === "login" ? "Вход" : "Создание аккаунта"}</h1>
 				<div className="text-muted-foreground">
 					{mode === "login" ? "Введите данные аккаунта" : "Укажите почту и придумайте пароль"}

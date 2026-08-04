@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { Dropdown, useDropdown } from "@synapse/ui/components";
 import { motion } from "framer-motion";
@@ -98,7 +96,7 @@ export function ViewerDetails({
 			animate={{ opacity: 1, y: 0, scale: 1 }}
 			exit={{ opacity: 0, y: 8, scale: 0.98 }}
 			transition={{ type: "spring", duration: 0.16, bounce: 0 }}
-			className="absolute bottom-20 right-6 z-20 w-[min(360px,calc(100vw-48px))] origin-bottom-right text-foreground">
+			className="absolute right-6 bottom-20 z-20 w-[min(360px,calc(100vw-48px))] origin-bottom-right text-foreground">
 			<Dropdown
 				aria-label="Content details"
 				className="w-full border border-border/80 bg-background/95 p-1.5 shadow-xl shadow-black/15 backdrop-blur-md">
@@ -107,7 +105,7 @@ export function ViewerDetails({
 						<Icon className="size-3.5" />
 						<span>{contentTypeLabel}</span>
 					</div>
-					<p className="mt-1.5 line-clamp-2 text-sm font-semibold leading-5 text-foreground">{title}</p>
+					<p className="mt-1.5 line-clamp-2 text-sm leading-5 font-semibold text-foreground">{title}</p>
 				</DetailsSection>
 
 				<DetailsSection index={1} label="Metadata">
@@ -122,7 +120,7 @@ export function ViewerDetails({
 				</DetailsSection>
 
 				<DetailsSection index={2} label={tagsLabel}>
-					<div className="mb-2 flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+					<div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-[0.08em] text-muted-foreground uppercase">
 						<Tag className="size-3.5" />
 						{tagsLabel}
 					</div>

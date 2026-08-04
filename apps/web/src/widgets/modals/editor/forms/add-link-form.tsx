@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
@@ -92,7 +90,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col h-full">
+		<form onSubmit={handleSubmit} className="flex h-full flex-col">
 			<ModalBody scrollable>
 				<div className="space-y-4">
 					<div className="space-y-2">
@@ -149,7 +147,7 @@ export function AddLinkForm({ initialTags = [], onSuccess }: AddLinkFormProps) {
 				</div>
 			</ModalBody>
 
-			<div className="p-6 pt-4 border-t bg-background flex-shrink-0">
+			<div className="shrink-0 border-t bg-background p-6 pt-4">
 				<ModalActions position="right">
 					<Button variant="tertiary" onClick={() => onSuccess()} disabled={createMutation.isPending}>
 						Отмена

@@ -42,13 +42,13 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
 
 	return (
 		<div
-			className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden rounded-md"
+			className="relative w-full overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800"
 			style={{ aspectRatio }}>
 			{blurThumb && (
 				<Image
 					src={ensureDataUri(blurThumb)}
 					alt="blur preview"
-					className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-200 ease-in-out z-0"
+					className="absolute inset-0 z-0 h-full w-full scale-105 object-cover blur-lg transition-opacity duration-200 ease-in-out"
 					style={{ opacity: loaded && !errored ? 0 : 1 }}
 					draggable={false}
 					fill
@@ -59,7 +59,7 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
 				<Image
 					src={resolvedImageUrl}
 					alt={title || "Image"}
-					className="w-full h-full object-cover relative z-10 transition-opacity duration-200 ease-in-out"
+					className="relative z-10 h-full w-full object-cover transition-opacity duration-200 ease-in-out"
 					style={{ opacity: loaded ? 1 : 0 }}
 					onLoad={() => setLoaded(true)}
 					onError={() => {
@@ -99,7 +99,7 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 
 		if (isTrack && coverUrl) {
 			return (
-				<div className="relative group" onClick={() => onItemClick?.(item)}>
+				<div className="group relative" onClick={() => onItemClick?.(item)}>
 					<RenderImage
 						imageUrl={coverUrl}
 						title={item.title || null}
@@ -107,12 +107,12 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 						savedWidth={audioData?.cover?.width}
 						savedHeight={audioData?.cover?.height}
 					/>
-					<div className="absolute bottom-0 left-0 right-0 p-2 pt-3 bg-gradient-to-t from-black/70 to-transparent text-white z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-						<div className="text-sm font-medium truncate">
+					<div className="absolute right-0 bottom-0 left-0 z-10 bg-linear-to-t from-black/70 to-transparent p-2 pt-3 text-white opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+						<div className="truncate text-sm font-medium">
 							{audioData?.track?.title || item.title || fileName}
 						</div>
 						{(audioData?.track?.artist || audioData?.track?.album) && (
-							<div className="text-xs opacity-80 truncate">
+							<div className="truncate text-xs opacity-80">
 								{[audioData?.track?.artist, audioData?.track?.album].filter(Boolean).join(" • ")}
 							</div>
 						)}
@@ -123,10 +123,10 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 
 		return (
 			<div className="flex flex-col" onClick={() => onItemClick?.(item)}>
-				<div className="w-full aspect-square rounded-lg border flex items-center justify-center bg-muted/40">
-					<Music2 className="w-10 h-10 text-muted-foreground" />
+				<div className="flex aspect-square w-full items-center justify-center rounded-lg border bg-muted/40">
+					<Music2 className="h-10 w-10 text-muted-foreground" />
 				</div>
-				<div className="mt-2 text-xs text-muted-foreground truncate">{fileName}</div>
+				<div className="mt-2 truncate text-xs text-muted-foreground">{fileName}</div>
 			</div>
 		);
 	}
@@ -135,13 +135,13 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 		<div className="relative" onClick={() => onItemClick?.(item)}>
 			{isVideo ? (
 				<div
-					className="relative w-full bg-gray-100 dark:bg-gray-800 overflow-hidden"
+					className="relative w-full overflow-hidden bg-gray-100 dark:bg-gray-800"
 					style={{ aspectRatio: videoAspectRatio }}>
 					{blurThumb && (
 						<Image
 							src={ensureDataUri(blurThumb)}
 							alt="blur preview"
-							className="absolute inset-0 w-full h-full object-cover blur-lg scale-105 transition-opacity duration-500 ease-in-out z-0"
+							className="absolute inset-0 z-0 h-full w-full scale-105 object-cover blur-lg transition-opacity duration-500 ease-in-out"
 							style={{ opacity: mainSrc ? 0 : 1 }}
 							draggable={false}
 							fill
@@ -152,7 +152,7 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 						<Image
 							src={mainSrc}
 							alt={item.title || "Video"}
-							className="w-full h-full object-cover relative z-10 transition-opacity duration-500 ease-in-out"
+							className="relative z-10 h-full w-full object-cover transition-opacity duration-500 ease-in-out"
 							style={{ opacity: 1 }}
 							draggable={false}
 							fill
@@ -160,14 +160,14 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 							sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, (max-width: 1920px) 25vw, 20vw"
 						/>
 					)}
-					<div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+					<div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
 						<svg
 							width="64"
 							height="64"
 							viewBox="0 0 64 64"
 							fill="none"
 							xmlns="http://www.w3.org/2000/svg"
-							className="w-16 h-16 drop-shadow-lg">
+							className="h-16 w-16 drop-shadow-lg">
 							<path
 								d="M20 16C20 13.7909 22.2386 12.5532 24.0711 13.7574L50.1421 31.7574C51.8579 32.8921 51.8579 35.1079 50.1421 36.2426L24.0711 54.2426C22.2386 55.4468 20 54.2091 20 52V16Z"
 								fill="white"
@@ -186,7 +186,7 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 				/>
 			) : null}
 			{item.tags.length > 0 && (
-				<div className="absolute bottom-0 left-0 right-0 p-3 bg-linear-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+				<div className="absolute right-0 bottom-0 left-0 z-10 bg-linear-to-t from-black/80 to-transparent p-3 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
 					<div className="flex flex-wrap gap-1">
 						{item.tags.map((tag: string, tagIndex) => (
 							<ContentTag
@@ -194,7 +194,7 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 								tag={tag}
 								tagId={item.tag_ids[tagIndex]}
 								variant="solid"
-								className="text-xs bg-white/20 border-white/30 text-white"
+								className="border-white/30 bg-white/20 text-xs text-white"
 							/>
 						))}
 					</div>

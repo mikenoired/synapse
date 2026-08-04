@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { X } from "lucide-react";
 import { type ChangeEvent, type FocusEvent, useEffect, useRef, useState } from "react";
@@ -52,7 +50,7 @@ export function ContentFilter({
 			onMouseLeave={() => setFiltersOpen(false)}
 			onFocus={() => setFiltersOpen(true)}
 			onBlur={handleBlur}>
-			<div className="relative border border-transparent border-b-border transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--ring)_18%,transparent)] mb-0">
+			<div className="relative mb-0 border border-transparent border-b-border transition-[border-color,box-shadow] duration-150 focus-within:border-ring focus-within:shadow-[0_0_0_3px_color-mix(in_oklch,var(--ring)_18%,transparent)]">
 				<input
 					ref={searchInputRef}
 					id="search"
@@ -74,7 +72,7 @@ export function ContentFilter({
 						: "grid-rows-[0fr] opacity-0"
 				)}>
 				<div className="overflow-hidden">
-					<div className="flex items-center gap-2 overflow-x-auto px-4 py-2 bg-muted/50">
+					<div className="flex items-center gap-2 overflow-x-auto bg-muted/50 px-4 py-2">
 						{availableOptions.map(({ key, icon: Icon, label, labelKey }) => {
 							const selected = selectedContentTypes.includes(key);
 
@@ -85,7 +83,7 @@ export function ContentFilter({
 									aria-pressed={selected}
 									onClick={() => onToggleContentType(key)}
 									className={cn(
-										"flex h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+										"flex h-9 shrink-0 items-center gap-2 rounded-full border px-3 text-sm font-medium transition-all duration-150 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
 										selected
 											? "border-primary/50 bg-primary/10 text-primary"
 											: "border-border bg-background text-muted-foreground hover:border-foreground/20 hover:bg-muted hover:text-foreground"
@@ -100,7 +98,7 @@ export function ContentFilter({
 							<button
 								type="button"
 								onClick={onClearContentTypes}
-								className="flex h-9 shrink-0 animate-in items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 text-sm font-medium text-destructive fade-in-0 slide-in-from-left-2 duration-200 hover:bg-destructive/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+								className="flex h-9 shrink-0 animate-in items-center gap-2 rounded-full border border-destructive/20 bg-destructive/10 px-3 text-sm font-medium text-destructive duration-200 fade-in-0 slide-in-from-left-2 hover:bg-destructive/15 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none">
 								<X className="size-4" />
 								<span>{t("clearFilters")}</span>
 							</button>

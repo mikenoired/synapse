@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import type { ComponentPropsWithoutRef } from "react";
 

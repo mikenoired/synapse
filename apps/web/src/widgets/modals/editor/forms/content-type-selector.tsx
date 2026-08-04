@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { Button } from "@synapse/ui/components";
 import { ArrowLeft, Maximize, Minimize } from "lucide-react";

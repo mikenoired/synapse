@@ -1,5 +1,3 @@
-"use client";
-
 import { Skeleton } from "@synapse/ui/components";
 import { lazy, memo } from "react";
 import Masonry from "react-masonry-css";
@@ -61,7 +59,7 @@ export const ContentMasonry = memo(
 				: items.map((item, index) => (
 						<div
 							key={item.id}
-							className={`animate-in fade-in-0 duration-300 rounded-xl shadow`}
+							className={`animate-in rounded-xl shadow duration-300 fade-in-0`}
 							onMouseEnter={onItemHover}>
 							<Item
 								item={item}

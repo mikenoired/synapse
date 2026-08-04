@@ -1,5 +1,3 @@
-"use client";
-
 import { Input } from "@synapse/ui/components";
 import { useId, useState } from "react";
 
@@ -113,7 +111,7 @@ export function TagEditor({
 						addTag();
 					}
 				}}
-				className={inputClassName ?? "flex-1 min-w-[120px]"}
+				className={inputClassName ?? "min-w-[120px] flex-1"}
 				disabled={disabled}
 			/>
 			<datalist id={listId}>

@@ -29,9 +29,9 @@ export default function DesktopSidebar({ navItems }: { navItems: NavItem[] }) {
 				animate={{ width: isSidebarExpanded ? 256 : 64 }}
 				initial={false}
 				transition={SIDEBAR_ANIMATION}
-				className="h-screen hidden shrink-0 flex-col sm:flex relative">
+				className="relative hidden h-screen shrink-0 flex-col sm:flex">
 				<div className="flex h-full flex-col">
-					<nav className="flex-1 overflow-y-auto py-4 px-3">
+					<nav className="flex-1 overflow-y-auto px-3 py-4">
 						<SidebarButtonGroup selectedIndex={selectedIndex}>
 							<SidebarToggle
 								label={sidebarToggleLabel}
@@ -124,7 +124,7 @@ function SidebarButtonGroup({
 				<AnimatePresence>
 					{pressedRect && (
 						<motion.div
-							className="pointer-events-none absolute inset-x-0 z-[2] rounded-lg bg-accent"
+							className="pointer-events-none absolute inset-x-0 z-2 rounded-lg bg-accent"
 							initial={{ top: pressedRect.top, height: pressedRect.height, opacity: 0 }}
 							animate={verticalRect(pressedRect)}
 							exit={{ opacity: 0, transition: { duration: 0.08 } }}
@@ -178,7 +178,7 @@ function SidebarToggle({
 								animate={{ opacity: 1, width: "100%" }}
 								exit={{ opacity: 0, width: 0 }}
 								transition={SIDEBAR_ANIMATION}
-								className="ml-3 overflow-hidden whitespace-nowrap text-left text-sm font-medium">
+								className="ml-3 overflow-hidden text-left text-sm font-medium whitespace-nowrap">
 								{label}
 							</motion.span>
 						)}
@@ -206,7 +206,7 @@ function SidebarItem({
 	const isActionButton = !item.href;
 
 	const buttonContent = (
-		<div className="flex items-center h-10 overflow-hidden w-full">
+		<div className="flex h-10 w-full items-center overflow-hidden">
 			<item.icon className="size-5 shrink-0" aria-hidden="true" />
 			<AnimatePresence mode="wait">
 				{isExpanded && (
@@ -215,7 +215,7 @@ function SidebarItem({
 						animate={{ opacity: 1, width: "100%" }}
 						exit={{ opacity: 0, width: 0 }}
 						transition={SIDEBAR_ANIMATION}
-						className="ml-3 text-sm font-medium whitespace-nowrap overflow-hidden text-left">
+						className="ml-3 overflow-hidden text-left text-sm font-medium whitespace-nowrap">
 						{item.label}
 					</motion.span>
 				)}
@@ -226,7 +226,7 @@ function SidebarItem({
 	const buttonClassName = cn(
 		"relative z-10 flex h-10 w-full items-center justify-start rounded-lg pl-2.5 transition-colors",
 		isActive
-			? "text-primary-foreground pointer-events-none font-semibold"
+			? "pointer-events-none font-semibold text-primary-foreground"
 			: isActionButton
 				? "border border-primary/20 bg-primary/10 pl-[0.55rem] font-semibold text-primary hover:text-primary"
 				: "text-muted-foreground hover:text-foreground"

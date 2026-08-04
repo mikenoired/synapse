@@ -1,5 +1,3 @@
-"use client";
-
 import { Input } from "@synapse/ui/components";
 
 import { TagEditor } from "@/shared/ui/tag-editor";
@@ -22,16 +20,16 @@ export default function AddTodoView() {
 	} = useAddContent();
 
 	return (
-		<div className="flex flex-col h-full">
-			<div className="p-6 pb-4 border-b">
-				<div className="max-w-[700px] mx-auto w-full">
+		<div className="flex h-full flex-col">
+			<div className="border-b p-6 pb-4">
+				<div className="mx-auto w-full max-w-[700px]">
 					<Input
 						id="title"
 						placeholder="Title (optional)..."
 						value={title}
 						onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateTitle(e.target.value)}
 						disabled={isSubmitting}
-						className="!text-2xl font-bold border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+						className="h-auto border-none bg-transparent! px-0 text-2xl! font-bold shadow-none focus-visible:ring-0"
 					/>
 					<div className="mt-3">
 						<TagEditor
@@ -51,8 +49,8 @@ export default function AddTodoView() {
 					</div>
 				</div>
 			</div>
-			<div className="flex-1 p-6 pt-2 overflow-y-auto">
-				<div className="max-w-[700px] mx-auto w-full">
+			<div className="flex-1 overflow-y-auto p-6 pt-2">
+				<div className="mx-auto w-full max-w-[700px]">
 					<TodoList
 						items={todoItems}
 						isLoading={isSubmitting}

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Skeleton } from "@synapse/ui/components";
 import { CalendarDays, LogOutIcon, Mail } from "lucide-react";
 import { useState } from "react";
@@ -54,7 +52,7 @@ export default function GeneralTab() {
 	return (
 		<div className="space-y-5 py-1">
 			<div className="flex flex-wrap gap-3">
-				<div className="inline-flex items-center gap-3 rounded-full bg-muted px-3 py-2 text-sm text-foreground align-middle">
+				<div className="inline-flex items-center gap-3 rounded-full bg-muted px-3 py-2 align-middle text-sm text-foreground">
 					<Mail className="size-4" />
 					<span className="truncate text-sm font-medium text-foreground">{user?.email}</span>
 				</div>

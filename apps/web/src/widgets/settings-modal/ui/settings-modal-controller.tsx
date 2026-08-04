@@ -1,5 +1,3 @@
-"use client";
-
 import { getSettingsCloseHref } from "@/features/settings/lib/settings-modal-url";
 import {
 	LEGACY_SETTINGS_QUERY_PARAM,

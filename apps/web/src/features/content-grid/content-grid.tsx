@@ -1,5 +1,3 @@
-"use client";
-
 import { Button } from "@synapse/ui/components";
 import { FileText, Search } from "lucide-react";
 import { memo } from "react";
@@ -66,12 +64,12 @@ export const ContentGrid = memo(
 
 		if (showEmptyState) {
 			return (
-				<div className="flex flex-col items-center justify-center h-full text-center py-12">
-					<div className="w-full max-w-md p-8 space-y-4">
-						<FileText className="w-16 h-16 mx-auto text-muted-foreground opacity-50" />
+				<div className="flex h-full flex-col items-center justify-center py-12 text-center">
+					<div className="w-full max-w-md space-y-4 p-8">
+						<FileText className="mx-auto h-16 w-16 text-muted-foreground opacity-50" />
 						<div>
-							<h3 className="text-xl font-semibold mb-2">{t("empty.title")}</h3>
-							<p className="text-muted-foreground mb-6">{t("empty.description")}</p>
+							<h3 className="mb-2 text-xl font-semibold">{t("empty.title")}</h3>
+							<p className="mb-6 text-muted-foreground">{t("empty.description")}</p>
 							{onAddContent && <Button onClick={onAddContent}>{t("addContent")}</Button>}
 						</div>
 					</div>
@@ -81,10 +79,10 @@ export const ContentGrid = memo(
 
 		if (showNotFoundState) {
 			return (
-				<div className="text-center py-12">
+				<div className="py-12 text-center">
 					<div className="text-muted-foreground">
-						<Search className="w-12 h-12 mx-auto mb-4 opacity-50" />
-						<p className="text-lg mb-2">{t("notFound.title")}</p>
+						<Search className="mx-auto mb-4 h-12 w-12 opacity-50" />
+						<p className="mb-2 text-lg">{t("notFound.title")}</p>
 						<p className="text-sm">{t("notFound.description")}</p>
 						{onClearFilters && (
 							<Button variant="tertiary" onClick={onClearFilters} className="mt-4">

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { Plus, X } from "lucide-react";
 import { useState } from "react";
@@ -68,7 +66,7 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 	};
 
 	return (
-		<form onSubmit={handleSubmit} className="flex flex-col h-full">
+		<form onSubmit={handleSubmit} className="flex h-full flex-col">
 			<ModalBody scrollable>
 				<div className="space-y-4">
 					<div className="space-y-2">
@@ -101,9 +99,9 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 								<button
 									type="button"
 									onClick={() => handleRemoveTodo(index)}
-									className="p-2 hover:bg-destructive/20 rounded transition-colors"
+									className="rounded p-2 transition-colors hover:bg-destructive/20"
 									disabled={createMutation.isPending}>
-									<X className="w-4 h-4" />
+									<X className="h-4 w-4" />
 								</button>
 							</div>
 						))}
@@ -125,7 +123,7 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 								onClick={handleAddTodo}
 								disabled={!currentTodo.trim() || createMutation.isPending}
 								variant="tertiary">
-								<Plus className="w-4 h-4" />
+								<Plus className="h-4 w-4" />
 							</Button>
 						</div>
 					</div>
@@ -148,7 +146,7 @@ export function AddTodoForm({ initialTags = [], onSuccess }: AddTodoFormProps) {
 				</div>
 			</ModalBody>
 
-			<div className="p-6 pt-4 border-t bg-background flex-shrink-0">
+			<div className="shrink-0 border-t bg-background p-6 pt-4">
 				<ModalActions position="right">
 					<Button
 						type="button"

@@ -1,5 +1,3 @@
-"use client";
-
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { forwardRef, useState, useEffect, type HTMLAttributes } from "react";
 
@@ -52,7 +50,7 @@ const ThinkingIndicator = forwardRef<HTMLDivElement, ThinkingIndicatorProps>(
 						strokeWidth={1.5}
 						strokeLinecap="round"
 						strokeLinejoin="round"
-						className="text-muted-foreground shrink-0">
+						className="shrink-0 text-muted-foreground">
 						{reduceMotion ? (
 							<path d={infinity} />
 						) : (
@@ -74,18 +72,18 @@ const ThinkingIndicator = forwardRef<HTMLDivElement, ThinkingIndicatorProps>(
 				)}
 				<span
 					aria-hidden="true"
-					className="inline-grid text-[13px] overflow-hidden"
+					className="inline-grid overflow-hidden text-[13px]"
 					style={{ fontVariationSettings: fontWeights.medium }}>
-					<span className="col-start-1 row-start-1 invisible shimmer-text">
+					<span className="shimmer-text invisible col-start-1 row-start-1">
 						{words.reduce((a, b) => (a.length >= b.length ? a : b))}
 					</span>
 					{reduceMotion ? (
-						<span className="col-start-1 row-start-1 shimmer-text">{words[0]}</span>
+						<span className="shimmer-text col-start-1 row-start-1">{words[0]}</span>
 					) : (
 						<AnimatePresence mode="popLayout" initial={false}>
 							<motion.span
 								key={words[index]}
-								className="col-start-1 row-start-1 shimmer-text"
+								className="shimmer-text col-start-1 row-start-1"
 								initial={{ y: "80%", opacity: 0 }}
 								animate={{
 									y: 0,

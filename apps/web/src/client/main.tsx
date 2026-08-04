@@ -67,7 +67,7 @@ function DashboardShell() {
 	if (loading || !user) return null;
 	return (
 		<DashboardProvider>
-			<div className="h-screen min-h-0 flex w-full dark:bg-muted bg-background overflow-hidden">
+			<div className="flex h-screen min-h-0 w-full overflow-hidden bg-background dark:bg-muted">
 				<Sidebar />
 				<DashboardContent>
 					<Outlet />

@@ -1,5 +1,3 @@
-"use client";
-
 import { Collapsible } from "@base-ui-components/react/collapsible";
 import { ChevronRight, Dot, type LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -47,7 +45,7 @@ const TriggerRow = forwardRef<HTMLButtonElement, TriggerRowProps>(
 				<AnimatePresence>
 					{isHovered && (
 						<motion.div
-							className={`absolute inset-0 ${shape.bg} bg-muted pointer-events-none`}
+							className={`absolute inset-0 ${shape.bg} pointer-events-none bg-muted`}
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0, transition: spring.fast.exit }}
@@ -58,14 +56,14 @@ const TriggerRow = forwardRef<HTMLButtonElement, TriggerRowProps>(
 				<Collapsible.Trigger
 					ref={ref}
 					className={cn(
-						`relative z-10 flex items-center gap-2.5 ${shape.item} px-3 py-2 cursor-pointer outline-none select-none`,
+						`relative z-10 flex items-center gap-2.5 ${shape.item} cursor-pointer px-3 py-2 outline-none select-none`,
 						"focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-0",
 						className
 					)}
 					{...(props as React.ButtonHTMLAttributes<HTMLButtonElement>)}>
-					<span className="inline-grid text-[13px] text-left">
+					<span className="inline-grid text-left text-[13px]">
 						<span
-							className="col-start-1 row-start-1 invisible"
+							className="invisible col-start-1 row-start-1"
 							style={{ fontVariationSettings: fontWeights.semibold }}
 							aria-hidden="true">
 							{children}
@@ -83,7 +81,7 @@ const TriggerRow = forwardRef<HTMLButtonElement, TriggerRowProps>(
 					</span>
 
 					<motion.span
-						className="shrink-0 inline-flex items-center justify-center"
+						className="inline-flex shrink-0 items-center justify-center"
 						animate={{ rotate: open ? 90 : 0 }}
 						transition={spring.fast}>
 						<ChevronRight
@@ -152,7 +150,7 @@ function CollapsePanel({ open, children }: CollapsePanelProps) {
 					onAnimationComplete={() => {
 						if (!open) setExitComplete(true);
 					}}>
-					<div ref={measureRef} className="px-3 pb-3 pt-1 text-[13px] text-muted-foreground">
+					<div ref={measureRef} className="px-3 pt-1 pb-3 text-[13px] text-muted-foreground">
 						{children}
 					</div>
 				</motion.div>
@@ -272,20 +270,20 @@ function ThinkingStep({
 				animate={{ opacity: 1 }}
 				transition={{ duration: 0.24, delay, ease: "easeOut" }}>
 				<div className={cn("flex gap-2.5 px-2 py-1.5", shape.item)}>
-					<div className="flex flex-col items-center shrink-0 w-3.5">
+					<div className="flex w-3.5 shrink-0 flex-col items-center">
 						<div className="pt-0.5">
 							{showIcon ? (
 								<Icon size={14} strokeWidth={1.5} className="text-muted-foreground" />
 							) : (
-								<div className="w-3.5 h-3.5 flex items-center justify-center">
-									<div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/60" />
+								<div className="flex h-3.5 w-3.5 items-center justify-center">
+									<div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
 								</div>
 							)}
 						</div>
-						{!isLast && <div className="flex-1 w-px bg-border/60 mt-1" />}
+						{!isLast && <div className="mt-1 w-px flex-1 bg-border/60" />}
 					</div>
 
-					<div className="flex-1 flex flex-col gap-1 min-w-0">
+					<div className="flex min-w-0 flex-1 flex-col gap-1">
 						<span
 							className={cn("text-[13px] leading-tight text-foreground", isActive && "shimmer-text")}
 							style={{ fontVariationSettings: fontWeights.medium }}>
@@ -293,7 +291,7 @@ function ThinkingStep({
 							{isActive && "…"}
 						</span>
 						{description && (
-							<span className="text-[13px] text-muted-foreground leading-snug">{description}</span>
+							<span className="text-[13px] leading-snug text-muted-foreground">{description}</span>
 						)}
 						{children}
 					</div>
@@ -324,13 +322,13 @@ function ThinkingStepDetails({
 
 	return (
 		<Collapsible.Root open={open} onOpenChange={setOpen} className={cn("mt-1 -ml-3", className)}>
-			<TriggerRow open={open} className="py-1 px-3 gap-1.5">
+			<TriggerRow open={open} className="gap-1.5 px-3 py-1">
 				{summary}
 			</TriggerRow>
 			<CollapsePanel open={open}>
 				<div className="flex flex-col gap-0.5 pt-0.5">
 					{details?.map((item, i) => (
-						<span key={i} className="text-[12px] text-muted-foreground leading-snug">
+						<span key={i} className="text-[12px] leading-snug text-muted-foreground">
 							{item}
 						</span>
 					))}
@@ -350,7 +348,7 @@ interface ThinkingStepSourcesProps extends HTMLAttributes<HTMLDivElement> {
 const ThinkingStepSources = forwardRef<HTMLDivElement, ThinkingStepSourcesProps>(
 	({ children, className, ...props }, ref) => {
 		return (
-			<div ref={ref} className={cn("flex flex-wrap gap-1.5 mt-1", className)} {...props}>
+			<div ref={ref} className={cn("mt-1 flex flex-wrap gap-1.5", className)} {...props}>
 				{children}
 			</div>
 		);
@@ -405,7 +403,7 @@ function ThinkingStepImage({ src, alt = "", caption, delay = 0, className }: Thi
 				filter: { duration: 0.15, delay },
 			}}>
 			<img src={src} alt={alt} className={cn("w-full max-w-50 object-cover", shape.container)} />
-			{caption && <span className="text-[11px] text-muted-foreground mt-1 block">{caption}</span>}
+			{caption && <span className="mt-1 block text-[11px] text-muted-foreground">{caption}</span>}
 		</motion.div>
 	);
 }

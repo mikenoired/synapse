@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import { prose } from "@synapse/ui/prose";
 import DOMPurify from "dompurify";
@@ -115,36 +113,36 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 					const level = Math.min(block.attrs?.level || 1, 6);
 					if (level === 1)
 						return (
-							<h1 key={index} className="mb-4 mt-6 text-3xl font-semibold text-foreground first:mt-0">
+							<h1 key={index} className="mt-6 mb-4 text-3xl font-semibold text-foreground first:mt-0">
 								{block.content}
 							</h1>
 						);
 					if (level === 2)
 						return (
-							<h2 key={index} className="mb-4 mt-6 text-2xl font-semibold text-foreground first:mt-0">
+							<h2 key={index} className="mt-6 mb-4 text-2xl font-semibold text-foreground first:mt-0">
 								{block.content}
 							</h2>
 						);
 					if (level === 3)
 						return (
-							<h3 key={index} className="mb-4 mt-6 text-xl font-semibold text-foreground first:mt-0">
+							<h3 key={index} className="mt-6 mb-4 text-xl font-semibold text-foreground first:mt-0">
 								{block.content}
 							</h3>
 						);
 					if (level === 4)
 						return (
-							<h4 key={index} className="mb-4 mt-6 text-lg font-semibold text-foreground first:mt-0">
+							<h4 key={index} className="mt-6 mb-4 text-lg font-semibold text-foreground first:mt-0">
 								{block.content}
 							</h4>
 						);
 					if (level === 5)
 						return (
-							<h5 key={index} className="mb-4 mt-6 text-base font-semibold text-foreground first:mt-0">
+							<h5 key={index} className="mt-6 mb-4 text-base font-semibold text-foreground first:mt-0">
 								{block.content}
 							</h5>
 						);
 					return (
-						<h6 key={index} className="mb-4 mt-6 text-sm font-semibold text-foreground first:mt-0">
+						<h6 key={index} className="mt-6 mb-4 text-sm font-semibold text-foreground first:mt-0">
 							{block.content}
 						</h6>
 					);
@@ -163,7 +161,7 @@ function StructuredContentRenderer({ content }: { content: LinkContent["content"
 						<blockquote
 							key={index}
 							className="my-5 rounded-r-md border-l-4 border-primary bg-muted/40 px-4 py-3">
-							<p className="mb-0 italic text-foreground/80">{block.content}</p>
+							<p className="mb-0 text-foreground/80 italic">{block.content}</p>
 						</blockquote>
 					);
 				}
@@ -263,7 +261,7 @@ function NoteRenderer({ item }: { item: Content }) {
 		return <EditorRenderer key={item.content} data={parsed} />;
 	}
 
-	return <pre className="whitespace-pre-wrap font-sans leading-7 text-foreground/90">{item.content}</pre>;
+	return <pre className="font-sans leading-7 whitespace-pre-wrap text-foreground/90">{item.content}</pre>;
 }
 
 function LinkRenderer({ item, linkContent }: { item: Content; linkContent: LinkContent | null }) {
@@ -280,12 +278,12 @@ function LinkRenderer({ item, linkContent }: { item: Content; linkContent: LinkC
 			<div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
 				<div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1">
 					<Globe className="size-4" />
-					<span className="truncate max-w-[220px]">{new URL(linkContent.url).hostname}</span>
+					<span className="max-w-55 truncate">{new URL(linkContent.url).hostname}</span>
 				</div>
 				{linkContent.metadata.author && (
 					<div className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1">
 						<User className="size-4" />
-						<span className="truncate max-w-[220px]">{linkContent.metadata.author}</span>
+						<span className="max-w-55 truncate">{linkContent.metadata.author}</span>
 					</div>
 				)}
 			</div>
@@ -330,7 +328,7 @@ function DocumentRenderer({ item, previewAlt }: { item: Content; previewAlt: str
 				{hasHtml ? (
 					<div dangerouslySetInnerHTML={{ __html: sanitized }} />
 				) : (
-					<div className="whitespace-pre-wrap leading-7 text-foreground/90">{item.content}</div>
+					<div className="leading-7 whitespace-pre-wrap text-foreground/90">{item.content}</div>
 				)}
 			</div>
 		</div>
@@ -893,9 +891,9 @@ export function UnifiedViewerModal({
 		if (currentItem.type === "audio") {
 			const progress = audioState.duration > 0 ? (audioState.currentTime / audioState.duration) * 100 : 0;
 			return (
-				<div className="flex max-h-full w-full max-w-[min(88vw,720px)] flex-col items-center gap-6 overflow-y-auto rounded-[32px] border border-white/10 bg-[rgba(18,18,18,0.58)] px-5 py-6 sm:px-7 sm:py-8">
+				<div className="flex max-h-full w-full max-w-[min(88vw,720px)] flex-col items-center gap-6 overflow-y-auto rounded-4xl border border-white/10 bg-[rgba(18,18,18,0.58)] px-5 py-6 sm:px-7 sm:py-8">
 					<audio ref={audioRef} src={audioUrl} className="hidden" />
-					<div className="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-[28px] border border-white/10 bg-white/5 sm:max-w-[360px]">
+					<div className="relative aspect-square w-full max-w-[320px] overflow-hidden rounded-[28px] border border-white/10 bg-white/5 sm:max-w-90">
 						{coverUrl ? (
 							<>
 								<Image
@@ -921,7 +919,7 @@ export function UnifiedViewerModal({
 					</div>
 
 					<div className="space-y-1 text-center text-white">
-						<p className="text-xl font-medium leading-tight">
+						<p className="text-xl leading-tight font-medium">
 							{audioData?.track?.title || currentItem.title || t("audio")}
 						</p>
 						{(audioData?.track?.artist || audioData?.track?.album) && (
@@ -931,7 +929,7 @@ export function UnifiedViewerModal({
 						)}
 					</div>
 
-					<div className="w-full max-w-[560px] rounded-[28px] border border-white/10 bg-black/48 px-4 py-4 text-white sm:px-5">
+					<div className="w-full max-w-140 rounded-[28px] border border-white/10 bg-black/48 px-4 py-4 text-white sm:px-5">
 						<div className="flex flex-col gap-4">
 							<div className="flex items-center justify-center">
 								<button
@@ -942,7 +940,7 @@ export function UnifiedViewerModal({
 								</button>
 							</div>
 							<div className="flex items-center gap-3">
-								<div className="w-11 text-right text-xs tabular-nums text-white/60">
+								<div className="w-11 text-right text-xs text-white/60 tabular-nums">
 									{formatDuration(audioState.currentTime)}
 								</div>
 								<input
@@ -977,7 +975,7 @@ export function UnifiedViewerModal({
 									}}
 									className="flex-1 cursor-pointer"
 								/>
-								<div className="w-11 text-xs tabular-nums text-white/60">
+								<div className="w-11 text-xs text-white/60 tabular-nums">
 									{formatDuration(audioState.duration)}
 								</div>
 							</div>
@@ -1017,7 +1015,7 @@ export function UnifiedViewerModal({
 						ref={setNoteArticle}
 						className="relative z-10 mx-auto w-full max-w-3xl px-5 py-16 sm:px-8 sm:py-20">
 						<header className="mb-8 border-b border-border pb-7">
-							<h1 className="text-3xl font-semibold leading-tight tracking-tight text-foreground sm:text-4xl">
+							<h1 className="text-3xl leading-tight font-semibold tracking-tight text-foreground sm:text-4xl">
 								{currentItem.title || t("untitled")}
 							</h1>
 							{currentItem.tags.length > 0 && (
@@ -1149,7 +1147,7 @@ export function UnifiedViewerModal({
 										className={cn(
 											"flex w-full items-center justify-center",
 											isViewportFitType(currentItem.type)
-												? "h-svh min-h-svh max-h-svh px-4 py-10 sm:px-6"
+												? "h-svh max-h-svh min-h-svh px-4 py-10 sm:px-6"
 												: "min-h-svh"
 										)}>
 										{renderContent()}

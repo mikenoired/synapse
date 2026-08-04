@@ -1,5 +1,3 @@
-"use client";
-
 import dynamic from "@/shared/router/dynamic";
 
 import { useModal } from "./modal-context";

@@ -1,5 +1,3 @@
-"use client";
-
 import { Button, Input } from "@synapse/ui/components";
 import { useState } from "react";
 
@@ -57,15 +55,15 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 
 	return (
 		<form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-			<div className={`px-6 pt-8 pb-4 flex-shrink-0 ${isFullScreen ? "bg-background" : ""}`}>
-				<div className="max-w-3xl mx-auto w-full">
+			<div className={`shrink-0 px-6 pt-8 pb-4 ${isFullScreen ? "bg-background" : ""}`}>
+				<div className="mx-auto w-full max-w-3xl">
 					<Input
 						id="title"
 						placeholder="Заголовок заметки"
 						value={title}
 						onChange={(e) => setTitle(e.target.value)}
 						disabled={createMutation.isPending}
-						className="!text-3xl font-semibold tracking-tight border-none shadow-none !bg-transparent focus-visible:ring-0 h-auto px-0"
+						className="h-auto border-none bg-transparent! px-0 text-3xl! font-semibold tracking-tight shadow-none focus-visible:ring-0"
 					/>
 					<div className="mt-3">
 						<TagEditor
@@ -87,13 +85,13 @@ export function AddNoteForm({ initialTags = [], onSuccess, isFullScreen }: AddNo
 
 			<ModalBody scrollable noPadding className="min-h-0">
 				<div className="px-6 pb-8">
-					<div className="max-w-3xl mx-auto w-full">
+					<div className="mx-auto w-full max-w-3xl">
 						<Editor data={editorData} onChange={setEditorData} readOnly={createMutation.isPending} />
 					</div>
 				</div>
 			</ModalBody>
 
-			<div className="p-6 pt-4 border-t bg-background flex-shrink-0">
+			<div className="shrink-0 border-t bg-background p-6 pt-4">
 				<ModalActions position="right">
 					<Button
 						type="button"

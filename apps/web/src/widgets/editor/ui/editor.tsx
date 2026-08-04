@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@synapse/ui/cn";
 import {
 	Button,
@@ -51,30 +49,30 @@ import { SlashMenu } from "./slash-menu";
 const lowlight = createLowlight(common);
 
 const editorTextSpacing = [
-	"[&_p]:!mt-0",
-	"[&_p]:!mb-4",
-	"[&_h1]:!mt-8",
-	"[&_h1]:!mb-4",
-	"[&_h2]:!mt-7",
-	"[&_h2]:!mb-3",
-	"[&_h3]:!mt-6",
-	"[&_h3]:!mb-2",
-	"[&_ul]:!mt-3",
-	"[&_ul]:!mb-4",
-	"[&_ol]:!mt-3",
-	"[&_ol]:!mb-4",
-	"[&_li+li]:!mt-1.5",
-	"[&_blockquote]:!my-5",
-	"[&_pre]:!my-5",
-	"[&_table]:!my-5",
-	"[&_hr]:!my-8",
-	"[&_img]:!my-5",
-	"[&_figure]:!my-5",
-	"[&>:first-child]:!mt-0",
+	"[&_p]:mt-0!",
+	"[&_p]:mb-4!",
+	"[&_h1]:mt-8!",
+	"[&_h1]:mb-4!",
+	"[&_h2]:mt-7!",
+	"[&_h2]:mb-3!",
+	"[&_h3]:mt-6!",
+	"[&_h3]:mb-2!",
+	"[&_ul]:mt-3!",
+	"[&_ul]:mb-4!",
+	"[&_ol]:mt-3!",
+	"[&_ol]:mb-4!",
+	"[&_li+li]:mt-1.5!",
+	"[&_blockquote]:my-5!",
+	"[&_pre]:my-5!",
+	"[&_table]:my-5!",
+	"[&_hr]:my-8!",
+	"[&_img]:my-5!",
+	"[&_figure]:my-5!",
+	"*:first:mt-0!",
 ] as const;
 
 const editorContentClassName = cn(
-	"synapse-editor-content synapse-prose max-w-none min-h-[420px] px-1 py-5 text-base leading-7 outline-none",
+	"synapse-editor-content synapse-prose min-h-[420px] max-w-none px-1 py-5 text-base leading-7 outline-none",
 	editorTextSpacing,
 	"[&_p.is-editor-empty:first-child::before]:pointer-events-none",
 	"[&_p.is-editor-empty:first-child::before]:float-left",

@@ -1,5 +1,3 @@
-"use client";
-
 import { Tabs as TabsPrimitive } from "@base-ui-components/react/tabs";
 import type { LucideIcon } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
@@ -223,7 +221,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 						setHoveredIndex(null);
 					}}
 					className={cn(
-						"relative p-1 select-none bg-muted",
+						"relative bg-muted p-1 select-none",
 						orientation === "vertical"
 							? "flex flex-col items-stretch gap-0.5"
 							: "inline-flex items-center gap-0.5",
@@ -233,7 +231,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 					{...props}>
 					{selectedRect && (
 						<motion.div
-							className={cn("absolute pointer-events-none bg-background shadow-sm", shape.bg)}
+							className={cn("pointer-events-none absolute bg-background shadow-sm", shape.bg)}
 							initial={false}
 							animate={{
 								left: selectedRect.left,
@@ -252,7 +250,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 					<AnimatePresence>
 						{hoverRect && !isHoveringSelected && selectedRect && (
 							<motion.div
-								className={cn("absolute pointer-events-none bg-foreground/10", shape.bg)}
+								className={cn("pointer-events-none absolute bg-foreground/10", shape.bg)}
 								initial={{
 									left: selectedRect.left,
 									width: selectedRect.width,
@@ -293,7 +291,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 					<AnimatePresence>
 						{focusRect && (
 							<motion.div
-								className={cn("absolute pointer-events-none z-20 border border-ring", shape.focusRing)}
+								className={cn("pointer-events-none absolute z-20 border border-ring", shape.focusRing)}
 								initial={false}
 								animate={{
 									left: focusRect.left - 2,
@@ -354,7 +352,7 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 				value={value}
 				data-proximity-index={_index}
 				className={cn(
-					"relative z-10 flex h-8 items-center gap-2 px-3 cursor-pointer bg-transparent border-none outline-none",
+					"relative z-10 flex h-8 cursor-pointer items-center gap-2 border-none bg-transparent px-3 outline-none",
 					className
 				)}
 				{...props}>
@@ -370,7 +368,7 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 				)}
 				<span className="inline-grid text-[13px] whitespace-nowrap">
 					<span
-						className="col-start-1 row-start-1 invisible [text-box:trim-both_cap_alphabetic]"
+						className="invisible col-start-1 row-start-1 [text-box:trim-both_cap_alphabetic]"
 						style={{ fontVariationSettings: fontWeights.semibold }}
 						aria-hidden="true">
 						{label}
