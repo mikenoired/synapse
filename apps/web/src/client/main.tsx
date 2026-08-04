@@ -6,15 +6,15 @@ import {
 	lazyRouteComponent,
 	Outlet,
 	RouterProvider,
-	useNavigate,
 	useParams,
 } from "@tanstack/react-router";
 import { ThemeProvider } from "next-themes";
-import { StrictMode, useEffect } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Toaster } from "react-hot-toast";
 
 import DashboardContent from "@/app/dashboard/dashboard-content";
+import HomePage from "@/app/page";
 import { apiClient, unwrap } from "@/shared/api/client";
 import type { ContentTags, Graph } from "@/shared/api/contracts";
 import { AuthProvider, useAuth } from "@/shared/lib/auth-context";
@@ -27,7 +27,6 @@ import Sidebar from "@/widgets/sidebar/ui/sidebar";
 
 import "@/app/globals.css";
 
-const HomePage = lazyRouteComponent(() => import("@/app/page"));
 const DashboardClient = lazyRouteComponent(() => import("@/app/dashboard/page.client"));
 const GraphClient = lazyRouteComponent(() => import("@/app/dashboard/graph/pageClient"));
 const TagClient = lazyRouteComponent(() => import("@/app/dashboard/tag/[id]/page.client"));
@@ -60,11 +59,8 @@ function Root() {
 
 function DashboardShell() {
 	const { user, loading } = useAuth();
-	const navigate = useNavigate();
-	useEffect(() => {
-		if (!loading && !user) void navigate({ to: "/", replace: true });
-	}, [loading, navigate, user]);
-	if (loading || !user) return null;
+	if (loading) return null;
+	if (!user) return <HomePage />;
 	return (
 		<DashboardProvider>
 			<div className="flex h-screen min-h-0 w-full overflow-hidden bg-background dark:bg-muted">
@@ -89,7 +85,7 @@ function TagsRoute() {
 }
 
 function TagRoute() {
-	const { id } = useParams({ from: "/dashboard/tag/$id" });
+	const { id } = useParams({ from: "/dashboard-shell/tags/$id" });
 	const tags = useQuery({
 		queryKey: ["content", "tags"],
 		queryFn: () => unwrap<ContentTags>(apiClient.content.tags.$get()),
@@ -101,10 +97,9 @@ function TagRoute() {
 }
 
 const rootRoute = createRootRoute({ component: Root });
-const homeRoute = createRoute({ getParentRoute: () => rootRoute, path: "/", component: HomePage });
 const dashboardRoute = createRoute({
 	getParentRoute: () => rootRoute,
-	path: "dashboard",
+	id: "dashboard-shell",
 	component: DashboardShell,
 });
 const dashboardIndexRoute = createRoute({
@@ -113,14 +108,13 @@ const dashboardIndexRoute = createRoute({
 	component: () => <DashboardClient initial={undefined} />,
 });
 const tagsRoute = createRoute({ getParentRoute: () => dashboardRoute, path: "tags", component: TagsRoute });
-const tagRoute = createRoute({ getParentRoute: () => dashboardRoute, path: "tag/$id", component: TagRoute });
+const tagRoute = createRoute({ getParentRoute: () => dashboardRoute, path: "tags/$id", component: TagRoute });
 const graphRoute = createRoute({
 	getParentRoute: () => dashboardRoute,
 	path: "graph",
 	component: GraphRoute,
 });
 const routeTree = rootRoute.addChildren([
-	homeRoute,
 	dashboardRoute.addChildren([dashboardIndexRoute, tagsRoute, tagRoute, graphRoute]),
 ]);
 const router = createRouter({ routeTree, context: {} });

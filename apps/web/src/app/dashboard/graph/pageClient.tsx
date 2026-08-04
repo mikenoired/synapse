@@ -54,7 +54,7 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
 			if (node?.metadata && typeof node.metadata === "object" && "tag_id" in node.metadata) {
 				const tagId = node.metadata.tag_id;
 				if (typeof tagId === "string") {
-					window.location.href = `/dashboard/tag/${tagId}`;
+					window.location.href = `/tags/${tagId}`;
 				}
 			}
 		} else {
@@ -292,5 +292,5 @@ function getTagId(node: Node) {
 
 function getTagHref(node: Node) {
 	const tagId = getTagId(node);
-	return tagId ? `/dashboard/tag/${tagId}` : undefined;
+	return tagId ? `/tags/${tagId}` : undefined;
 }

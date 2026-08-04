@@ -47,9 +47,14 @@ export default function Sidebar() {
 			label: t("add"),
 			onMouseEnter: preloadAddContentDialog,
 		},
-		{ href: "/dashboard", icon: Home, label: t("home") },
-		{ href: "/dashboard/tags", icon: Tag, label: t("tags") },
-		{ href: "/dashboard/graph", icon: Network, label: t("graph") },
+		{ href: "/", icon: Home, label: t("home"), isActive: pathname === "/" },
+		{
+			href: "/tags",
+			icon: Tag,
+			label: t("tags"),
+			isActive: pathname === "/tags" || pathname.startsWith("/tags/"),
+		},
+		{ href: "/graph", icon: Network, label: t("graph"), isActive: pathname === "/graph" },
 		{
 			href: getSettingsHref(pathname, searchParams, DEFAULT_SETTINGS_TAB),
 			icon: Settings,

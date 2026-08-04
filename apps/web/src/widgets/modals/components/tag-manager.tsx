@@ -13,6 +13,7 @@ interface TagManagerProps {
 	className?: string;
 	inputPlaceholder?: string;
 	additionalAction?: ReactNode;
+	onTagNavigate?: () => void;
 }
 
 export function TagManager({
@@ -24,6 +25,7 @@ export function TagManager({
 	className,
 	inputPlaceholder = "Добавить тег...",
 	additionalAction,
+	onTagNavigate,
 }: TagManagerProps) {
 	const [newTag, setNewTag] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
@@ -58,6 +60,7 @@ export function TagManager({
 							tag={tag}
 							tagId={editable ? undefined : tagIds?.[tagIndex]}
 							onRemove={editable ? onRemoveTag : undefined}
+							onNavigate={onTagNavigate}
 							className="bg-muted/60 px-2 py-1 text-xs hover:bg-muted"
 						/>
 					))}

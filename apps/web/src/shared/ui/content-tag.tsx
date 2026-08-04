@@ -19,6 +19,7 @@ interface ContentTagProps {
 	children?: ReactNode;
 	color?: number;
 	style?: CSSProperties;
+	onNavigate?: () => void;
 }
 
 export function ContentTag({
@@ -31,6 +32,7 @@ export function ContentTag({
 	children,
 	color,
 	style,
+	onNavigate,
 }: ContentTagProps) {
 	const stop = (event: MouseEvent) => event.stopPropagation();
 	const { data: knownTags = [] } = api.content.getTags.useQuery(undefined, {
@@ -72,7 +74,12 @@ export function ContentTag({
 	if (tagId) {
 		return (
 			<Badge variant={variant} className={cn("cursor-pointer", className)} style={badgeStyle}>
-				<Link href={`/dashboard/tag/${tagId}`} onClick={stop}>
+				<Link
+					href={`/tags/${tagId}`}
+					onClick={(event) => {
+						stop(event);
+						onNavigate?.();
+					}}>
 					{colorDot}
 					{children ?? tag}
 				</Link>

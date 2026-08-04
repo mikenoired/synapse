@@ -111,7 +111,7 @@ export function AuthProvider({
 			}
 
 			setUser({ id: data.user!.id, email: data.user!.email });
-			router.push("/dashboard");
+			router.push("/");
 			return { error: null };
 		} catch (error) {
 			return { error: { message: error instanceof Error ? error.message : "Register error" } };
@@ -162,7 +162,7 @@ export function AuthProvider({
 			}
 
 			setUser({ id: data.user!.id, email: data.user!.email });
-			router.push("/dashboard");
+			router.push("/");
 			return { error: null };
 		} catch (error) {
 			return { error: { message: error instanceof Error ? error.message : "Login error" } };

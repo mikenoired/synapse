@@ -163,7 +163,7 @@ export default function TagsClient({
 				{tagsWithContent.map(({ color, id, title, items }) => {
 					const currentColor = currentColorByTagId.get(id) ?? color;
 					return (
-						<Link key={id} href={`/dashboard/tag/${id}`} className="group">
+						<Link key={id} href={`/tags/${id}`} className="group">
 							<h2 className="mb-3 flex items-center text-lg font-medium capitalize">
 								<span
 									className="inline-flex items-center gap-2 rounded-full border border-transparent px-2.5 py-1 transition-transform group-hover:translate-x-0.5"

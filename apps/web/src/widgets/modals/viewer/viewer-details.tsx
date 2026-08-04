@@ -31,6 +31,7 @@ interface ViewerDetailsProps {
 	onAddTag: (tag: string) => void | Promise<void>;
 	onRemoveTag: (tag: string) => void | Promise<void>;
 	additionalTagAction?: ReactNode;
+	onTagNavigate?: () => void;
 }
 
 interface DetailsSectionProps {
@@ -84,6 +85,7 @@ export function ViewerDetails({
 	onAddTag,
 	onRemoveTag,
 	additionalTagAction,
+	onTagNavigate,
 }: ViewerDetailsProps) {
 	const Icon = getContentIcon(item.type);
 	const metadata = [createdLabel, readingTime, updatedLabel, authorLabel, artistLabel].filter(
@@ -131,6 +133,7 @@ export function ViewerDetails({
 						onRemoveTag={onRemoveTag}
 						inputPlaceholder={addTagPlaceholder}
 						additionalAction={additionalTagAction}
+						onTagNavigate={onTagNavigate}
 					/>
 				</DetailsSection>
 			</Dropdown>

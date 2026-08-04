@@ -43,6 +43,8 @@ interface UnifiedViewerModalProps {
 	onEdit?: (id: string) => void;
 	onDelete?: (id: string) => void | Promise<void>;
 	onContentUpdated?: (content: Content) => void;
+	onTagNavigate?: () => void;
+	onViewerNavigate?: (item: Content) => void;
 }
 
 function ensureDataUri(base64: string): string {
@@ -367,6 +369,8 @@ export function UnifiedViewerModal({
 	onEdit,
 	onDelete,
 	onContentUpdated,
+	onTagNavigate,
+	onViewerNavigate,
 }: UnifiedViewerModalProps) {
 	const { locale, t } = useI18n();
 	const router = useRouter();
@@ -653,6 +657,7 @@ export function UnifiedViewerModal({
 		setDirection(nextIndex > currentIndex ? 1 : -1);
 		setCurrentIndex(nextIndex);
 		setShowDetails(false);
+		onViewerNavigate?.(normalizedItems[nextIndex]!);
 	};
 
 	const goToNext = () => {
@@ -670,6 +675,7 @@ export function UnifiedViewerModal({
 			return;
 		}
 
+		onViewerNavigate?.(suggestedItem);
 		setDiscoveredItems((current) => [...current, suggestedItem]);
 		setDirection(1);
 		setCurrentIndex(normalizedItems.length);
@@ -678,14 +684,7 @@ export function UnifiedViewerModal({
 
 	useModalKeyboard({
 		enabled: open && !editOpen,
-		onEscape: () => {
-			if (showDetails) {
-				setShowDetails(false);
-				return;
-			}
-
-			onOpenChange(false);
-		},
+		onEscape: () => onOpenChange(false),
 		shortcuts: [
 			{ key: "ArrowLeft", handler: goToPrevious, preventDefault: true },
 			{ key: "ArrowRight", handler: goToNext, preventDefault: true },
@@ -1021,7 +1020,12 @@ export function UnifiedViewerModal({
 							{currentItem.tags.length > 0 && (
 								<div className="mt-5 flex flex-wrap gap-2">
 									{currentItem.tags.map((tag, tagIndex) => (
-										<ContentTag key={tag} tag={tag} tagId={currentItem.tag_ids[tagIndex]} />
+										<ContentTag
+											key={tag}
+											tag={tag}
+											tagId={currentItem.tag_ids[tagIndex]}
+											onNavigate={onTagNavigate}
+										/>
 									))}
 								</div>
 							)}
@@ -1155,6 +1159,7 @@ export function UnifiedViewerModal({
 									<ContentSuggestions
 										item={currentItem}
 										onItemClick={openSuggestedItem}
+										onTagNavigate={onTagNavigate}
 										onContentUpdated={(updatedContent) => {
 											setUpdatedItems((current) => ({
 												...current,
@@ -1210,6 +1215,7 @@ export function UnifiedViewerModal({
 								addTagPlaceholder={t("viewer.addTag")}
 								onAddTag={handleAddTag}
 								onRemoveTag={handleRemoveTag}
+								onTagNavigate={onTagNavigate}
 								additionalTagAction={
 									<GenerateTagsButton
 										mode="existing"

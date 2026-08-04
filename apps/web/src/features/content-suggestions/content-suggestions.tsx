@@ -17,6 +17,7 @@ interface ContentSuggestionsProps {
 	onContentUpdated?: (content: Content) => void;
 	onContentDeleted?: (contentId: string) => void;
 	dark?: boolean;
+	onTagNavigate?: () => void;
 }
 
 export function ContentSuggestions({
@@ -25,6 +26,7 @@ export function ContentSuggestions({
 	onContentUpdated,
 	onContentDeleted,
 	dark = false,
+	onTagNavigate,
 }: ContentSuggestionsProps) {
 	const [enabled, setEnabled] = useState(false);
 	const { data: currentTags = [] } = api.content.getTags.useQuery(undefined, {
@@ -130,7 +132,8 @@ export function ContentSuggestions({
 											id={`suggestion-tag-${group.tag.id}`}
 											className="text-sm font-medium tracking-wide capitalize">
 											<Link
-												href={`/dashboard/tag/${group.tag.id}`}
+												href={`/tags/${group.tag.id}`}
+												onClick={onTagNavigate}
 												className="group/tag inline-flex items-center gap-1 rounded-full border border-transparent px-2 py-1 opacity-80 transition-opacity hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-current/40 focus-visible:outline-none"
 												style={getTagColorStyle(group.tag.color)}>
 												<Hash className="size-4 opacity-55 transition-transform group-hover/tag:-rotate-6" />

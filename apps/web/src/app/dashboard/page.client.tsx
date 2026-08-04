@@ -267,7 +267,7 @@ export default function DashboardClient({
 		setSearchQuery("");
 		setSelectedTags([]);
 		setSelectedContentTypes([]);
-		router.push("/dashboard");
+		router.push("/");
 	};
 
 	const toggleContentType = (type: Content["type"]) => {

@@ -1,11 +1,10 @@
 import { Button } from "@synapse/ui/components";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { AuthDialog } from "@/features/auth-dialog/ui/auth-dialog";
 import { useAuth } from "@/shared/lib/auth-context";
 import Image from "@/shared/router/image";
-import { useRouter } from "@/shared/router/navigation";
 
 interface FeatureHighlightProps {
 	title: string;
@@ -72,11 +71,6 @@ export default function HomePage() {
 	const [authDialogOpen, setAuthDialogOpen] = useState(false);
 	const [authMode, setAuthMode] = useState<"login" | "register">("login");
 	const { user, loading } = useAuth();
-	const router = useRouter();
-
-	useEffect(() => {
-		if (!loading && user) router.push("/dashboard");
-	}, [user, loading, router]);
 
 	const handleAuthClick = (mode: "login" | "register") => {
 		setAuthMode(mode);
