@@ -272,7 +272,10 @@ function NoteRenderer({ item }: { item: Content }) {
 	}, [item.content, item.type]);
 
 	if (parsed?.type === "doc") {
-		return <EditorRenderer data={parsed} />;
+		// Tiptap reads the initial `content` only when the editor is created.
+		// Remount the read-only renderer after an edit so the viewer shows the
+		// saved note immediately.
+		return <EditorRenderer key={item.content} data={parsed} />;
 	}
 
 	return <pre className="whitespace-pre-wrap font-sans leading-7 text-foreground/90">{item.content}</pre>;

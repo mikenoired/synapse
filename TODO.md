@@ -8,4 +8,3 @@
 - [ ] Code preview for note items
 - [ ] Plan cards & switching on the main settings view
 - [ ] Plan pricing, payment & limit tuning
-- [ ] Fix: update note on front after edit update
