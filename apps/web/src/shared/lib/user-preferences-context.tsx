@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 
 import { api } from "@/shared/api/hooks";
@@ -10,16 +10,13 @@ import {
 	isColorPalette,
 	type ColorPalette,
 	type InterfaceLanguage,
+	type UserPreferences,
+	type UserPreferencesInput,
 	normalizeUserPreferences,
 } from "./user-preferences";
 
-interface UserPreferencesContextValue {
-	autoTagColorEnabled: boolean;
-	colorPalette: ColorPalette;
-	interfaceLanguage: InterfaceLanguage;
+interface UserPreferencesContextValue extends UserPreferences {
 	isReady: boolean;
-	mediaAutoplayEnabled: boolean;
-	noteSparklesEnabled: boolean;
 	setAutoTagColorEnabled: (value: boolean) => void;
 	setColorPalette: (value: ColorPalette) => void;
 	setInterfaceLanguage: (value: InterfaceLanguage) => void;
@@ -30,12 +27,11 @@ interface UserPreferencesContextValue {
 const UserPreferencesContext = createContext<UserPreferencesContextValue | undefined>(undefined);
 const languageStorageKey = "synapse-interface-language";
 const paletteStorageKey = "synapse-color-palette";
+const preferencesSaveDelay = 750;
 
-function getStoredInterfaceLanguage() {
+function getStoredInterfaceLanguage(): InterfaceLanguage {
 	if (typeof window === "undefined") return DEFAULT_USER_PREFERENCES.interfaceLanguage;
-
 	const storedLanguage = window.localStorage.getItem(languageStorageKey);
-
 	return storedLanguage === "en" || storedLanguage === "ru"
 		? storedLanguage
 		: DEFAULT_USER_PREFERENCES.interfaceLanguage;
@@ -47,23 +43,21 @@ function getStoredColorPalette(): ColorPalette {
 	return isColorPalette(storedPalette) ? storedPalette : DEFAULT_USER_PREFERENCES.colorPalette;
 }
 
+function getGuestPreferences(): UserPreferences {
+	return normalizeUserPreferences({
+		...DEFAULT_USER_PREFERENCES,
+		colorPalette: getStoredColorPalette(),
+		interfaceLanguage: getStoredInterfaceLanguage(),
+	});
+}
+
 export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 	const utils = api.useUtils();
 	const { user } = useAuth();
 	const [isReady, setIsReady] = useState(false);
-	const [autoTagColorEnabled, setAutoTagColorEnabledState] = useState(
-		DEFAULT_USER_PREFERENCES.autoTagColorEnabled
-	);
-	const [colorPalette, setColorPaletteState] = useState<ColorPalette>(DEFAULT_USER_PREFERENCES.colorPalette);
-	const [interfaceLanguage, setInterfaceLanguageState] = useState<InterfaceLanguage>(
-		DEFAULT_USER_PREFERENCES.interfaceLanguage
-	);
-	const [mediaAutoplayEnabled, setMediaAutoplayEnabledState] = useState(
-		DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled
-	);
-	const [noteSparklesEnabled, setNoteSparklesEnabledState] = useState(
-		DEFAULT_USER_PREFERENCES.noteSparklesEnabled
-	);
+	const [preferences, setPreferences] = useState<UserPreferences>(DEFAULT_USER_PREFERENCES);
+	const preferencesRef = useRef(preferences);
+	const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
 	const preferencesQuery = api.user.getPreferences.useQuery(undefined, {
 		enabled: Boolean(user),
@@ -71,331 +65,122 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 		staleTime: Number.POSITIVE_INFINITY,
 		refetchOnWindowFocus: false,
 	});
+	const updatePreferencesMutation = api.user.updatePreferences.useMutation({ retry: false });
 
-	const updatePreferencesMutation = api.user.updatePreferences.useMutation();
+	const applyPreferences = useCallback((nextPreferences: UserPreferences) => {
+		preferencesRef.current = nextPreferences;
+		setPreferences(nextPreferences);
+	}, []);
 
 	useEffect(() => {
 		if (!user) {
-			setAutoTagColorEnabledState(DEFAULT_USER_PREFERENCES.autoTagColorEnabled);
-			setColorPaletteState(getStoredColorPalette());
-			setInterfaceLanguageState(getStoredInterfaceLanguage());
-			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
-			setNoteSparklesEnabledState(DEFAULT_USER_PREFERENCES.noteSparklesEnabled);
+			applyPreferences(getGuestPreferences());
 			setIsReady(true);
 			return;
 		}
 
 		if (preferencesQuery.data) {
-			const preferences = normalizeUserPreferences(preferencesQuery.data);
-			setAutoTagColorEnabledState(preferences.autoTagColorEnabled);
-			setColorPaletteState(preferences.colorPalette);
-			setInterfaceLanguageState(preferences.interfaceLanguage);
-			setMediaAutoplayEnabledState(preferences.mediaAutoplayEnabled);
-			setNoteSparklesEnabledState(preferences.noteSparklesEnabled);
+			applyPreferences(normalizeUserPreferences(preferencesQuery.data));
 			setIsReady(true);
 			return;
 		}
 
 		if (preferencesQuery.error) {
-			setAutoTagColorEnabledState(DEFAULT_USER_PREFERENCES.autoTagColorEnabled);
-			setColorPaletteState(getStoredColorPalette());
-			setInterfaceLanguageState(getStoredInterfaceLanguage());
-			setMediaAutoplayEnabledState(DEFAULT_USER_PREFERENCES.mediaAutoplayEnabled);
-			setNoteSparklesEnabledState(DEFAULT_USER_PREFERENCES.noteSparklesEnabled);
+			applyPreferences(getGuestPreferences());
 			setIsReady(true);
 			return;
 		}
 
 		setIsReady(false);
-	}, [preferencesQuery.data, preferencesQuery.error, user]);
+	}, [applyPreferences, preferencesQuery.data, preferencesQuery.error, user]);
 
 	useEffect(() => {
-		document.documentElement.lang = interfaceLanguage;
-		window.localStorage.setItem(languageStorageKey, interfaceLanguage);
-	}, [interfaceLanguage]);
+		document.documentElement.lang = preferences.interfaceLanguage;
+		window.localStorage.setItem(languageStorageKey, preferences.interfaceLanguage);
+	}, [preferences.interfaceLanguage]);
 
 	useEffect(() => {
-		document.documentElement.dataset.palette = colorPalette;
-		window.localStorage.setItem(paletteStorageKey, colorPalette);
-	}, [colorPalette]);
+		document.documentElement.dataset.palette = preferences.colorPalette;
+		window.localStorage.setItem(paletteStorageKey, preferences.colorPalette);
+	}, [preferences.colorPalette]);
 
-	const setColorPalette = useCallback(
-		(value: ColorPalette) => {
-			const previousPreferences = normalizeUserPreferences({
-				autoTagColorEnabled,
-				colorPalette,
-				interfaceLanguage,
-				mediaAutoplayEnabled,
-				noteSparklesEnabled,
-			});
-			setColorPaletteState(value);
-
-			if (!user) return;
-
-			const nextPreferences = normalizeUserPreferences({ ...previousPreferences, colorPalette: value });
-			utils.user.getPreferences.setData(undefined, nextPreferences);
-			updatePreferencesMutation.mutate(
-				{ colorPalette: value },
-				{
-					onError: () => {
-						setColorPaletteState(previousPreferences.colorPalette);
-						utils.user.getPreferences.setData(undefined, previousPreferences);
-						toast.error(
-							interfaceLanguage === "ru" ? "Не удалось сохранить палитру" : "Failed to save color palette"
-						);
-					},
-					onSuccess: (preferences) => {
-						const normalizedPreferences = normalizeUserPreferences(preferences);
-						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
-						setColorPaletteState(normalizedPreferences.colorPalette);
-						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
-						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
-						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
-						utils.user.getPreferences.setData(undefined, normalizedPreferences);
-					},
-				}
-			);
+	useEffect(
+		() => () => {
+			if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
 		},
-		[
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
-			updatePreferencesMutation,
-			user,
-			utils,
-		]
+		[]
 	);
 
-	const setInterfaceLanguage = useCallback(
-		(value: InterfaceLanguage) => {
-			const previousPreferences = normalizeUserPreferences({
-				autoTagColorEnabled,
-				colorPalette,
-				interfaceLanguage,
-				mediaAutoplayEnabled,
-				noteSparklesEnabled,
+	const scheduleSave = useCallback(() => {
+		if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+
+		saveTimerRef.current = setTimeout(() => {
+			saveTimerRef.current = undefined;
+			const preferencesToSave = preferencesRef.current;
+
+			updatePreferencesMutation.mutate(preferencesToSave, {
+				onError: () => {
+					// The interface stays optimistic; the next user action will try again.
+					utils.user.getPreferences.setData(undefined, preferencesRef.current);
+					toast.error(
+						preferencesRef.current.interfaceLanguage === "ru"
+							? "Не удалось сохранить настройки"
+							: "Failed to save preferences"
+					);
+				},
+				onSuccess: (savedPreferences) => {
+					const saved = normalizeUserPreferences(savedPreferences);
+					const localChangedWhileSaving =
+						JSON.stringify(preferencesRef.current) !== JSON.stringify(preferencesToSave);
+
+					if (!localChangedWhileSaving) applyPreferences(saved);
+					utils.user.getPreferences.setData(
+						undefined,
+						localChangedWhileSaving ? preferencesRef.current : saved
+					);
+				},
 			});
-			const nextPreferences = normalizeUserPreferences({ ...previousPreferences, interfaceLanguage: value });
-			setInterfaceLanguageState(nextPreferences.interfaceLanguage);
+		}, preferencesSaveDelay);
+	}, [applyPreferences, updatePreferencesMutation, utils]);
 
-			if (!user) {
-				return;
-			}
-
-			utils.user.getPreferences.setData(undefined, nextPreferences);
-
-			updatePreferencesMutation.mutate(
-				{ interfaceLanguage: value },
-				{
-					onError: () => {
-						setInterfaceLanguageState(previousPreferences.interfaceLanguage);
-						utils.user.getPreferences.setData(undefined, previousPreferences);
-						toast.error(
-							previousPreferences.interfaceLanguage === "ru"
-								? "Не удалось сохранить язык интерфейса"
-								: "Failed to save interface language"
-						);
-					},
-					onSuccess: (preferences) => {
-						const normalizedPreferences = normalizeUserPreferences(preferences);
-						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
-						setColorPaletteState(normalizedPreferences.colorPalette);
-						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
-						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
-						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
-						utils.user.getPreferences.setData(undefined, normalizedPreferences);
-					},
-				}
-			);
-		},
-		[
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
-			updatePreferencesMutation,
-			user,
-			utils,
-		]
-	);
-
-	const setMediaAutoplayEnabled = useCallback(
-		(value: boolean) => {
-			const previousPreferences = normalizeUserPreferences({
-				autoTagColorEnabled,
-				colorPalette,
-				interfaceLanguage,
-				mediaAutoplayEnabled,
-				noteSparklesEnabled,
-			});
-			const nextPreferences = normalizeUserPreferences({
-				...previousPreferences,
-				mediaAutoplayEnabled: value,
-			});
-			setMediaAutoplayEnabledState(nextPreferences.mediaAutoplayEnabled);
-
-			if (!user) {
-				return;
-			}
-
-			utils.user.getPreferences.setData(undefined, nextPreferences);
-
-			updatePreferencesMutation.mutate(
-				{ mediaAutoplayEnabled: value },
-				{
-					onError: () => {
-						setMediaAutoplayEnabledState(previousPreferences.mediaAutoplayEnabled);
-						utils.user.getPreferences.setData(undefined, previousPreferences);
-						toast.error(
-							interfaceLanguage === "ru"
-								? "Не удалось сохранить настройку автоплея"
-								: "Failed to save autoplay setting"
-						);
-					},
-					onSuccess: (preferences) => {
-						const normalizedPreferences = normalizeUserPreferences(preferences);
-						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
-						setColorPaletteState(normalizedPreferences.colorPalette);
-						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
-						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
-						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
-						utils.user.getPreferences.setData(undefined, normalizedPreferences);
-					},
-				}
-			);
-		},
-		[
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
-			updatePreferencesMutation,
-			user,
-			utils,
-		]
-	);
-
-	const setNoteSparklesEnabled = useCallback(
-		(value: boolean) => {
-			const previousPreferences = normalizeUserPreferences({
-				autoTagColorEnabled,
-				colorPalette,
-				interfaceLanguage,
-				mediaAutoplayEnabled,
-				noteSparklesEnabled,
-			});
-			const nextPreferences = normalizeUserPreferences({
-				...previousPreferences,
-				noteSparklesEnabled: value,
-			});
-			setNoteSparklesEnabledState(nextPreferences.noteSparklesEnabled);
+	const updatePreferences = useCallback(
+		(changes: UserPreferencesInput) => {
+			const nextPreferences = normalizeUserPreferences({ ...preferencesRef.current, ...changes });
+			applyPreferences(nextPreferences);
 
 			if (!user) return;
 
 			utils.user.getPreferences.setData(undefined, nextPreferences);
-
-			updatePreferencesMutation.mutate(
-				{ noteSparklesEnabled: value },
-				{
-					onError: () => {
-						setNoteSparklesEnabledState(previousPreferences.noteSparklesEnabled);
-						utils.user.getPreferences.setData(undefined, previousPreferences);
-						toast.error(
-							interfaceLanguage === "ru"
-								? "Не удалось сохранить настройку эффекта заметок"
-								: "Failed to save note effect setting"
-						);
-					},
-					onSuccess: (preferences) => {
-						const normalizedPreferences = normalizeUserPreferences(preferences);
-						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
-						setColorPaletteState(normalizedPreferences.colorPalette);
-						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
-						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
-						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
-						utils.user.getPreferences.setData(undefined, normalizedPreferences);
-					},
-				}
-			);
+			scheduleSave();
 		},
-		[
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
-			updatePreferencesMutation,
-			user,
-			utils,
-		]
+		[applyPreferences, scheduleSave, user, utils]
 	);
 
 	const setAutoTagColorEnabled = useCallback(
-		(value: boolean) => {
-			const previousPreferences = normalizeUserPreferences({
-				autoTagColorEnabled,
-				colorPalette,
-				interfaceLanguage,
-				mediaAutoplayEnabled,
-				noteSparklesEnabled,
-			});
-			const nextPreferences = normalizeUserPreferences({
-				...previousPreferences,
-				autoTagColorEnabled: value,
-			});
-			setAutoTagColorEnabledState(value);
-
-			if (!user) return;
-
-			utils.user.getPreferences.setData(undefined, nextPreferences);
-			updatePreferencesMutation.mutate(
-				{ autoTagColorEnabled: value },
-				{
-					onError: () => {
-						setAutoTagColorEnabledState(previousPreferences.autoTagColorEnabled);
-						utils.user.getPreferences.setData(undefined, previousPreferences);
-						toast.error(
-							interfaceLanguage === "ru"
-								? "Не удалось сохранить настройку цветов тегов"
-								: "Failed to save tag color setting"
-						);
-					},
-					onSuccess: (preferences) => {
-						const normalizedPreferences = normalizeUserPreferences(preferences);
-						setAutoTagColorEnabledState(normalizedPreferences.autoTagColorEnabled);
-						setColorPaletteState(normalizedPreferences.colorPalette);
-						setInterfaceLanguageState(normalizedPreferences.interfaceLanguage);
-						setMediaAutoplayEnabledState(normalizedPreferences.mediaAutoplayEnabled);
-						setNoteSparklesEnabledState(normalizedPreferences.noteSparklesEnabled);
-						utils.user.getPreferences.setData(undefined, normalizedPreferences);
-					},
-				}
-			);
-		},
-		[
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
-			updatePreferencesMutation,
-			user,
-			utils,
-		]
+		(value: boolean) => updatePreferences({ autoTagColorEnabled: value }),
+		[updatePreferences]
+	);
+	const setColorPalette = useCallback(
+		(value: ColorPalette) => updatePreferences({ colorPalette: value }),
+		[updatePreferences]
+	);
+	const setInterfaceLanguage = useCallback(
+		(value: InterfaceLanguage) => updatePreferences({ interfaceLanguage: value }),
+		[updatePreferences]
+	);
+	const setMediaAutoplayEnabled = useCallback(
+		(value: boolean) => updatePreferences({ mediaAutoplayEnabled: value }),
+		[updatePreferences]
+	);
+	const setNoteSparklesEnabled = useCallback(
+		(value: boolean) => updatePreferences({ noteSparklesEnabled: value }),
+		[updatePreferences]
 	);
 
 	const value = useMemo(
 		() => ({
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
+			...preferences,
 			isReady,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
 			setAutoTagColorEnabled,
 			setColorPalette,
 			setInterfaceLanguage,
@@ -403,12 +188,8 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 			setNoteSparklesEnabled,
 		}),
 		[
-			autoTagColorEnabled,
-			colorPalette,
-			interfaceLanguage,
 			isReady,
-			mediaAutoplayEnabled,
-			noteSparklesEnabled,
+			preferences,
 			setAutoTagColorEnabled,
 			setColorPalette,
 			setInterfaceLanguage,
@@ -422,10 +203,6 @@ export function UserPreferencesProvider({ children }: { children: ReactNode }) {
 
 export function useUserPreferences() {
 	const context = useContext(UserPreferencesContext);
-
-	if (!context) {
-		throw new Error("useUserPreferences must be used within a UserPreferencesProvider");
-	}
-
+	if (!context) throw new Error("useUserPreferences must be used within a UserPreferencesProvider");
 	return context;
 }
