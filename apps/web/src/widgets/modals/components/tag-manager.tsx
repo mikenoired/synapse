@@ -1,8 +1,8 @@
 "use client";
 
 import { Button, Input } from "@synapse/ui/components";
-import { Plus } from "lucide-react";
-import { useState } from "react";
+import { PlusIcon } from "lucide-react";
+import { type ReactNode, useState } from "react";
 
 import { ContentTag } from "@/shared/ui/content-tag";
 
@@ -14,6 +14,7 @@ interface TagManagerProps {
 	editable?: boolean;
 	className?: string;
 	inputPlaceholder?: string;
+	additionalAction?: ReactNode;
 }
 
 export function TagManager({
@@ -24,6 +25,7 @@ export function TagManager({
 	editable = true,
 	className,
 	inputPlaceholder = "Добавить тег...",
+	additionalAction,
 }: TagManagerProps) {
 	const [newTag, setNewTag] = useState("");
 	const [isAdding, setIsAdding] = useState(false);
@@ -66,23 +68,26 @@ export function TagManager({
 
 			{/* Add new tag */}
 			{editable && onAddTag && (
-				<div className="flex gap-2">
-					<Input
-						placeholder={inputPlaceholder}
-						value={newTag}
-						onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTag(e.target.value)}
-						onKeyDown={handleKeyDown}
-						disabled={isAdding}
-						className="flex-1"
-					/>
-					<Button
-						type="button"
-						onClick={handleAddTag}
-						disabled={!newTag.trim() || isAdding}
-						size="sm"
-						variant="tertiary">
-						<Plus className="w-4 h-4" />
-					</Button>
+				<div className="flex min-w-0 flex-nowrap items-center gap-2">
+					{additionalAction && <div className="shrink-0 whitespace-nowrap">{additionalAction}</div>}
+					<div className="flex min-w-0 flex-1 overflow-hidden rounded-lg border border-input focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+						<Input
+							placeholder={inputPlaceholder}
+							value={newTag}
+							onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewTag(e.target.value)}
+							onKeyDown={handleKeyDown}
+							disabled={isAdding}
+							className="h-8 min-w-0 flex-1 rounded-none border-0 focus-visible:border-transparent focus-visible:ring-0"
+						/>
+						<Button
+							onClick={handleAddTag}
+							disabled={!newTag.trim() || isAdding}
+							size="icon-sm"
+							variant="primary"
+							className="shrink-0 rounded-none">
+							<PlusIcon />
+						</Button>
+					</div>
 				</div>
 			)}
 		</div>

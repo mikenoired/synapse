@@ -74,7 +74,7 @@ const editorTextSpacing = [
 ] as const;
 
 const editorContentClassName = cn(
-	"synapse-editor-content prose max-w-none min-h-[420px] px-1 py-5 text-base leading-7 outline-none",
+	"synapse-editor-content synapse-prose max-w-none min-h-[420px] px-1 py-5 text-base leading-7 outline-none",
 	editorTextSpacing,
 	"[&_p.is-editor-empty:first-child::before]:pointer-events-none",
 	"[&_p.is-editor-empty:first-child::before]:float-left",

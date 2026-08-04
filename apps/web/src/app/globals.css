@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@plugin "@tailwindcss/typography";
 @source "../../../../packages/ui/src";
 
 @custom-variant dark (&:is(.dark *));
@@ -65,6 +64,28 @@
 	--fw-bold: "wght" 700, "opsz" 25;
 	--tracking-normal: 0em;
 	--spacing: 0.25rem;
+	/* Warm prose palette. Keep these here so rendered and edited content use
+	 * the same colors as the rest of the application in every theme. */
+	--prose-body: oklch(0.38 0.025 45);
+	--prose-headings: oklch(0.26 0.04 45);
+	--prose-lead: oklch(0.46 0.025 45);
+	--prose-links: oklch(0.4341 0.0392 41.9938);
+	--prose-bold: oklch(0.3 0.04 42);
+	--prose-counters: oklch(0.5 0.02 45);
+	--prose-bullets: oklch(0.64 0.08 68);
+	--prose-hr: oklch(0.88 0.025 75);
+	--prose-quotes: oklch(0.45 0.03 45);
+	--prose-quote-borders: oklch(0.82 0.08 74);
+	--prose-captions: oklch(0.5 0.02 45);
+	--prose-code: oklch(0.35 0.035 42);
+	--prose-pre-code: oklch(0.34 0.03 42);
+	--prose-pre-bg: oklch(0.95 0.018 74);
+	--prose-quote-bg: oklch(0.96 0.018 74);
+	--prose-code-bg: oklch(0.94 0.025 74);
+	--prose-th-borders: oklch(0.82 0.04 70);
+	--prose-td-borders: oklch(0.9 0.02 75);
+	--prose-kbd: oklch(0.35 0.035 42);
+	--prose-kbd-shadows: oklch(0.7 0.04 70);
 }
 
 .dark {
@@ -121,6 +142,26 @@
 	--button-primary-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1);
 	--button-secondary-border: rgb(255 255 255 / 0.1);
 	--button-secondary-shadow: 0 7px 3px rgb(0 0 0 / 0.03), inset 0 1px 0 0 rgb(255 255 255 / 0.08);
+	--prose-body: oklch(0.88 0.025 75);
+	--prose-headings: oklch(0.96 0.025 80);
+	--prose-lead: oklch(0.76 0.03 70);
+	--prose-links: oklch(0.9247 0.0524 66.1732);
+	--prose-bold: oklch(0.95 0.03 78);
+	--prose-counters: oklch(0.72 0.04 70);
+	--prose-bullets: oklch(0.76 0.08 68);
+	--prose-hr: oklch(0.34 0.035 65);
+	--prose-quotes: oklch(0.78 0.03 75);
+	--prose-quote-borders: oklch(0.56 0.1 55);
+	--prose-captions: oklch(0.67 0.035 70);
+	--prose-code: oklch(0.9 0.03 78);
+	--prose-pre-code: oklch(0.88 0.025 75);
+	--prose-pre-bg: oklch(0.23 0.025 60);
+	--prose-quote-bg: oklch(0.24 0.025 60);
+	--prose-code-bg: oklch(0.28 0.035 60);
+	--prose-th-borders: oklch(0.42 0.04 65);
+	--prose-td-borders: oklch(0.31 0.025 65);
+	--prose-kbd: oklch(0.9 0.03 78);
+	--prose-kbd-shadows: oklch(0.45 0.05 60);
 }
 
 @theme inline {
@@ -174,6 +215,170 @@
 	--shadow-lg: var(--shadow-lg);
 	--shadow-xl: var(--shadow-xl);
 	--shadow-2xl: var(--shadow-2xl);
+}
+
+@layer components {
+	.synapse-prose {
+		max-width: 65ch;
+		color: var(--prose-body);
+		font-size: 1rem;
+		line-height: 1.75;
+
+		& > :first-child {
+			margin-top: 0;
+		}
+
+		& p {
+			margin-block: 1.25em;
+		}
+
+		& a {
+			color: var(--prose-links);
+			text-decoration-color: color-mix(in oklch, var(--prose-links) 50%, transparent);
+			text-underline-offset: 4px;
+		}
+
+		& strong,
+		& b {
+			color: var(--prose-bold);
+			font-weight: 600;
+		}
+
+		& h1,
+		& h2,
+		& h3,
+		& h4,
+		& h5,
+		& h6 {
+			color: var(--prose-headings);
+			font-weight: 600;
+			letter-spacing: -0.025em;
+		}
+
+		& h1 {
+			margin-block: 0 0.8889em;
+			font-size: 2.25em;
+			line-height: 1.1111;
+		}
+
+		& h2 {
+			margin-block: 2em 1em;
+			font-size: 1.5em;
+			line-height: 1.3333;
+		}
+
+		& h3 {
+			margin-block: 1.6em 0.6em;
+			font-size: 1.25em;
+			line-height: 1.6;
+		}
+
+		& h4,
+		& h5,
+		& h6 {
+			margin-block: 1.5em 0.5em;
+			line-height: 1.5;
+		}
+
+		& ul,
+		& ol {
+			margin-block: 1.25em;
+			padding-inline-start: 1.625em;
+		}
+
+		& ul {
+			list-style-position: outside;
+			list-style-type: disc;
+		}
+
+		& ol {
+			list-style-position: outside;
+			list-style-type: decimal;
+		}
+
+		& li::marker {
+			color: var(--prose-bullets);
+		}
+
+		& ol li::marker {
+			color: var(--prose-counters);
+		}
+
+		& hr {
+			margin-block: 3em;
+			border-color: var(--prose-hr);
+			border-top-width: 1px;
+		}
+
+		& blockquote {
+			margin-block: 1.6em;
+			border-inline-start: 0.25rem solid var(--prose-quote-borders);
+			border-radius: 0 0.375rem 0.375rem 0;
+			background: var(--prose-quote-bg);
+			color: var(--prose-quotes);
+			padding: 0.5rem 1rem;
+			font-style: italic;
+		}
+
+		& code {
+			border-radius: 0.375rem;
+			background: var(--prose-code-bg);
+			color: var(--prose-code);
+			padding: 0.125rem 0.375rem;
+			font-size: 0.875em;
+			font-weight: 600;
+		}
+
+		& code::before,
+		& code::after {
+			content: none;
+		}
+
+		& pre {
+			margin-block: 1.714em;
+			border: 1px solid var(--prose-th-borders);
+			border-radius: var(--radius);
+			background: var(--prose-pre-bg);
+			color: var(--prose-pre-code);
+			padding: 1rem;
+			overflow-x: auto;
+		}
+
+		& pre code {
+			background: transparent;
+			padding: 0;
+			font-size: 0.875em;
+			font-weight: 400;
+		}
+
+		& img {
+			border: 1px solid var(--prose-td-borders);
+			border-radius: var(--radius);
+		}
+
+		& figcaption {
+			color: var(--prose-captions);
+			font-size: 0.875em;
+		}
+
+		& table {
+			width: 100%;
+			border-collapse: collapse;
+		}
+
+		& th,
+		& td {
+			border: 1px solid var(--prose-td-borders);
+			padding: 0.5rem 0.75rem;
+			text-align: left;
+		}
+
+		& th {
+			border-color: var(--prose-th-borders);
+			color: var(--prose-headings);
+			font-weight: 600;
+		}
+	}
 }
 
 @layer base {

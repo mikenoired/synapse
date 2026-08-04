@@ -4,23 +4,7 @@ import { cn } from "@synapse/ui/cn";
 import { prose } from "@synapse/ui/prose";
 import DOMPurify from "dompurify";
 import { AnimatePresence, motion } from "framer-motion";
-import {
-	Calendar,
-	Download,
-	Edit2,
-	FileText,
-	Globe,
-	Image as ImageIcon,
-	Info,
-	ListChecks,
-	Pause,
-	Play,
-	Tag,
-	Trash2,
-	User,
-	Volume2,
-	VolumeX,
-} from "lucide-react";
+import { Download, Edit2, Globe, Info, Pause, Play, Trash2, User, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ContentSuggestions } from "@/features/content-suggestions/content-suggestions";
@@ -47,10 +31,11 @@ import { CustomVideoPlayer } from "@/widgets/content-viewer/ui/custom-video-play
 import { EditorRenderer } from "@/widgets/editor/ui/editor-renderer";
 
 import { BaseModal } from "../base";
-import { TagManager, ViewerOverlayControls, type ViewerOverlayAction } from "../components";
+import { ViewerOverlayControls, type ViewerOverlayAction } from "../components";
 import { ConfirmDialog } from "../dialogs";
 import { useModalGestures, useModalKeyboard } from "../hooks";
 import { showToast } from "../utils";
+import { ViewerDetails } from "./viewer-details";
 
 interface UnifiedViewerModalProps {
 	open: boolean;
@@ -1202,74 +1187,45 @@ export function UnifiedViewerModal({
 
 					<AnimatePresence initial={false}>
 						{showDetails && (
-							<motion.div
-								initial={{ opacity: 0, y: 16 }}
-								animate={{ opacity: 1, y: 0 }}
-								exit={{ opacity: 0, y: 16 }}
-								transition={{ duration: 0.18 }}
-								className="absolute bottom-20 right-6 z-20 w-[min(360px,calc(100vw-48px))] overflow-hidden rounded-3xl border border-white/10 bg-black/78 p-4 text-white">
-								<div className="space-y-4">
-									<div className="space-y-2">
-										<div className="flex items-center gap-2 text-sm text-white/70">
-											{currentItem.type === "media" ? (
-												<ImageIcon className="size-4" />
-											) : currentItem.type === "audio" ? (
-												<Play className="size-4" />
-											) : currentItem.type === "link" ? (
-												<Globe className="size-4" />
-											) : currentItem.type === "todo" ? (
-												<ListChecks className="size-4" />
-											) : (
-												<FileText className="size-4" />
-											)}
-											<span>{contentTypeLabel}</span>
-										</div>
-										<p className="text-base font-medium text-white">{currentItem.title || t("untitled")}</p>
-									</div>
-
-									<div className="space-y-2 text-sm text-white/65">
-										<div className="flex items-center gap-2">
-											<Calendar className="size-4" />
-											{t("viewer.created", { date: formatDate(currentItem.created_at, locale) })}
-										</div>
-										{readingTime && <p>{readingTime}</p>}
-										{currentItem.updated_at !== currentItem.created_at && (
-											<p>{t("viewer.updated", { date: formatDate(currentItem.updated_at, locale) })}</p>
-										)}
-										{currentItem.type === "link" && linkContent?.metadata.author && (
-											<p>{t("viewer.author", { author: linkContent.metadata.author })}</p>
-										)}
-										{currentItem.type === "audio" && audioData?.track?.artist && (
-											<p>{t("viewer.artist", { artist: audioData.track.artist })}</p>
-										)}
-									</div>
-
-									<div className="space-y-2">
-										<div className="flex items-center gap-2 text-xs font-medium uppercase tracking-[0.08em] text-white/45">
-											<Tag className="size-3.5" />
-											{t("tags")}
-										</div>
-										<TagManager
-											tags={currentItem.tags}
-											tagIds={currentItem.tag_ids}
-											onAddTag={handleAddTag}
-											onRemoveTag={handleRemoveTag}
-											inputPlaceholder={t("viewer.addTag")}
-										/>
-										<GenerateTagsButton
-											mode="existing"
-											contentId={currentItem.id}
-											disabled={
-												updateContentMutation.isPending ||
-												currentItem.type === "audio" ||
-												(currentItem.type === "media" && mediaData?.type !== "image")
-											}
-											onResult={handleAiTags}
-											className="mt-2"
-										/>
-									</div>
-								</div>
-							</motion.div>
+							<ViewerDetails
+								item={currentItem}
+								contentTypeLabel={contentTypeLabel}
+								title={currentItem.title || t("untitled")}
+								createdLabel={t("viewer.created", { date: formatDate(currentItem.created_at, locale) })}
+								updatedLabel={
+									currentItem.updated_at !== currentItem.created_at
+										? t("viewer.updated", { date: formatDate(currentItem.updated_at, locale) })
+										: undefined
+								}
+								readingTime={readingTime}
+								authorLabel={
+									currentItem.type === "link" && linkContent?.metadata.author
+										? t("viewer.author", { author: linkContent.metadata.author })
+										: undefined
+								}
+								artistLabel={
+									currentItem.type === "audio" && audioData?.track?.artist
+										? t("viewer.artist", { artist: audioData.track.artist })
+										: undefined
+								}
+								tagsLabel={t("tags")}
+								addTagPlaceholder={t("viewer.addTag")}
+								onAddTag={handleAddTag}
+								onRemoveTag={handleRemoveTag}
+								additionalTagAction={
+									<GenerateTagsButton
+										mode="existing"
+										contentId={currentItem.id}
+										disabled={
+											updateContentMutation.isPending ||
+											currentItem.type === "audio" ||
+											(currentItem.type === "media" && mediaData?.type !== "image")
+										}
+										onResult={handleAiTags}
+										className="shrink-0 whitespace-nowrap"
+									/>
+								}
+							/>
 						)}
 					</AnimatePresence>
 				</div>
