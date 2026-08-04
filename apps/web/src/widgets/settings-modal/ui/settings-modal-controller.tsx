@@ -4,9 +4,12 @@ import {
 	getSettingsTab,
 	SETTINGS_QUERY_PARAM,
 } from "@/features/settings/model/settings-tabs";
+import dynamic from "@/shared/router/dynamic";
 import { usePathname, useRouter, useSearchParams } from "@/shared/router/navigation";
 
-import { SettingsModal } from "./settings-modal";
+const SettingsModal = dynamic(() =>
+	import("./settings-modal").then((mod) => ({ default: mod.SettingsModal }))
+);
 
 export function SettingsModalController() {
 	const pathname = usePathname();
@@ -20,6 +23,8 @@ export function SettingsModalController() {
 	const handleClose = () => {
 		router.replace(closeHref, { scroll: false });
 	};
+
+	if (!isOpen) return null;
 
 	return <SettingsModal activeTab={activeTab} closeHref={closeHref} open={isOpen} onClose={handleClose} />;
 }

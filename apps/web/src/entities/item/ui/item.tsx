@@ -8,10 +8,9 @@ import {
 } from "@synapse/ui/components";
 import { motion } from "framer-motion";
 import { ListChecks } from "lucide-react";
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 
-import { EditContentDialog } from "@/features/edit-content/ui/edit-content-dialog";
 import { api } from "@/shared/api/hooks";
 import { useI18n } from "@/shared/lib/i18n";
 import type { Content, LinkContent } from "@/shared/lib/schemas";
@@ -20,6 +19,10 @@ import { ContentTag } from "@/shared/ui/content-tag";
 
 import DocumentItem from "./document-item";
 import MediaItem from "./media-item";
+
+const EditContentDialog = lazy(() =>
+	import("@/features/edit-content/ui/edit-content-dialog").then((mod) => ({ default: mod.EditContentDialog }))
+);
 
 function getNotePreview(content: string, maxLength: number = 280): string {
 	try {
@@ -127,12 +130,14 @@ export default function Item({
 				</ContextMenuContent>
 			</ContextMenu>
 			{editOpen && item.type === "note" && (
-				<EditContentDialog
-					open={editOpen}
-					onOpenChange={setEditOpen}
-					content={item}
-					onContentUpdated={onContentUpdated}
-				/>
+				<Suspense fallback={null}>
+					<EditContentDialog
+						open={editOpen}
+						onOpenChange={setEditOpen}
+						content={item}
+						onContentUpdated={onContentUpdated}
+					/>
+				</Suspense>
 			)}
 		</>
 	);

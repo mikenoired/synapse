@@ -25,7 +25,10 @@
 		"build:client": "vite build",
 		"api:dev": "bun --watch src/server/index.ts",
 		"api:start": "bun src/server/index.ts",
-		"test": "bun test src/server",
+		"test": "bun run test:server && bun run test:api",
+		"test:server": "bun test src/server --path-ignore-patterns '**/*.integration.test.ts'",
+		"test:api": "JWT_SECRET=test-access-secret JWT_REFRESH_SECRET=test-refresh-secret API_RATE_LIMIT_MUTATION=1000 bun test src/server --test-name-pattern 'API integration'",
+		"test:coverage": "JWT_SECRET=test-access-secret JWT_REFRESH_SECRET=test-refresh-secret API_RATE_LIMIT_MUTATION=1000 bun test src/server --coverage --coverage-reporter=lcov --coverage-dir=../../coverage/server",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {

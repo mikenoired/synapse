@@ -1,11 +1,12 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 
-import Item from "@/entities/item/ui/item";
 import { api } from "@/shared/api/hooks";
 import type { Content } from "@/shared/lib/schemas";
 import { useModal } from "@/widgets/modals/context/modal-context";
 
 import { createGraph, type GraphInput } from "./graph";
+
+const ItemPreview = lazy(() => import("@/entities/item/ui/item"));
 
 interface Node {
 	color: number;
@@ -179,7 +180,9 @@ export default function GraphClient({ nodes, edges }: { nodes: Node[]; edges: Ed
 							className={`${
 								hoveredItem.type === "note" ? "rounded-xl" : "rounded-sm shadow-sm"
 							} pointer-events-none`}>
-							<Item item={hoveredItem} index={0} onItemClick={() => {}} disableAnimation />
+							<Suspense fallback={<div className="h-30" aria-busy="true" />}>
+								<ItemPreview item={hoveredItem} index={0} onItemClick={() => {}} disableAnimation />
+							</Suspense>
 						</div>
 					) : (
 						<div className="rounded-lg bg-popover p-4">

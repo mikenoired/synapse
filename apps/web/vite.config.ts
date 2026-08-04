@@ -13,14 +13,5 @@ export default defineConfig({
 	build: {
 		outDir: "dist",
 		sourcemap: true,
-		rolldownOptions: {
-			output: {
-				manualChunks(id) {
-					if (id.includes("node_modules/@tiptap/")) return "editor-vendor";
-					if (id.includes("node_modules/@tanstack/") || id.includes("node_modules/react"))
-						return "react-vendor";
-				},
-			},
-		},
 	},
 });

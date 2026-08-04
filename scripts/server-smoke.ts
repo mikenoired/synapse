@@ -17,11 +17,11 @@ const { users } = await import("../apps/web/src/server/db/schema");
 const { deleteUserFiles } = await import("../apps/web/src/shared/api/minio");
 
 const statisticsPath = join(import.meta.dir, "..", "docs", "performance", "server-smoke.json");
-const parseCount = (value: string | undefined, fallback: number) => {
+const parseCount = (value: string | undefined, fallback: number, minimum = 1) => {
 	const parsed = Number(value);
-	return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
+	return Number.isInteger(parsed) && parsed >= minimum ? parsed : fallback;
 };
-const warmupRuns = parseCount(process.env.SMOKE_WARMUP_RUNS, 10);
+const warmupRuns = parseCount(process.env.SMOKE_WARMUP_RUNS, 10, 0);
 const runs = parseCount(process.env.SMOKE_RUNS, 30);
 const imagePaths = [
 	join(import.meta.dir, "..", "test", "assets", "test-image.jpeg"),
@@ -122,6 +122,16 @@ async function runScenario(run: number, samples: StepSamples) {
 
 	let scenarioError: unknown;
 	try {
+		await measure("api.health", async () => {
+			const result = await request("GET", "/health");
+			if (result.ok !== true) throw new Error("Health check did not return ok");
+		});
+
+		await measure("api.openapi", async () => {
+			const result = await request("GET", "/openapi.json");
+			if (result.openapi !== "3.1.0") throw new Error("OpenAPI document is unavailable");
+		});
+
 		const account = await measure("account.create", async () => {
 			const result = await request("POST", "/auth/register", undefined, { email, password });
 			token = result.token as string;
@@ -135,6 +145,7 @@ async function runScenario(run: number, samples: StepSamples) {
 			const result = await request("POST", "/content", token, {
 				type: "note",
 				title: `Smoke post ${run}`,
+				tags: ["smoke"],
 				content: JSON.stringify({
 					type: "doc",
 					content: [{ type: "paragraph", content: [{ type: "text", text: "smoke" }] }],
@@ -142,6 +153,29 @@ async function runScenario(run: number, samples: StepSamples) {
 			});
 			if (!result.id) throw new Error("Post creation returned no id");
 			return result;
+		});
+
+		await measure("post.search", async () => {
+			const result = await request(
+				"GET",
+				`/content?search=${encodeURIComponent(`Smoke post ${run}`)}`,
+				token
+			);
+			const items = result.items as JsonObject[] | undefined;
+			if (!items?.some((item) => item.id === post.id))
+				throw new Error("Created post was not found by search");
+		});
+
+		await measure("graph.read", async () => {
+			const result = await request("GET", "/graph", token);
+			const nodes = result.nodes as JsonObject[] | undefined;
+			if (!nodes?.some((node) => (node.metadata as JsonObject | null)?.content_id === post.id))
+				throw new Error("Content node was not found in graph");
+		});
+
+		await measure("preferences.update", async () => {
+			const result = await request("PATCH", "/user/preferences", token, { interfaceLanguage: "en" });
+			if (result.interfaceLanguage !== "en") throw new Error("Preference update was not persisted");
 		});
 
 		await measure("post.update", async () => {

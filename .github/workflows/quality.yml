@@ -43,3 +43,13 @@ jobs:
 
       - name: Check
         run: bun run check
+
+      - name: Generate server coverage
+        run: bun run test:coverage
+
+      - name: Upload server coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-coverage
+          path: coverage/server/lcov.info
+          if-no-files-found: error

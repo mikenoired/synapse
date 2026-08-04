@@ -313,9 +313,13 @@ export const api = new Hono()
 	.post("/content", requireAuth, protectMutation, rateLimit("mutation"), async (c) =>
 		c.json(await new ContentService(c.get("apiContext")).create(await body(c.req.raw, createContentSchema)))
 	)
-	.patch("/content/:id", requireAuth, protectMutation, rateLimit("mutation"), async (c) =>
-		c.json(await new ContentService(c.get("apiContext")).update(await body(c.req.raw, updateContentSchema)))
-	)
+	.patch("/content/:id", requireAuth, protectMutation, rateLimit("mutation"), async (c) => {
+		const input = await body(c.req.raw, updateContentSchema);
+		if (input.id !== c.req.param("id")) {
+			throw new ApiError("BAD_REQUEST", "Content ID must match the request path");
+		}
+		return c.json(await new ContentService(c.get("apiContext")).update(input));
+	})
 	.delete("/content/:id", requireAuth, protectMutation, rateLimit("mutation"), async (c) =>
 		c.json(await new ContentService(c.get("apiContext")).delete(c.req.param("id")))
 	)
