@@ -231,7 +231,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
 					{...props}>
 					{selectedRect && (
 						<motion.div
-							className={cn("pointer-events-none absolute bg-background shadow-sm", shape.bg)}
+							className={cn("pointer-events-none absolute bg-primary/12 shadow-sm", shape.bg)}
 							initial={false}
 							animate={{
 								left: selectedRect.left,
@@ -362,7 +362,7 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 						strokeWidth={isActive ? 2 : 1.5}
 						className={cn(
 							"transition-[color,stroke-width] duration-80",
-							isActive ? "text-foreground" : "text-muted-foreground"
+							isSelected ? "text-primary" : isActive ? "text-foreground" : "text-muted-foreground"
 						)}
 					/>
 				)}
@@ -376,7 +376,7 @@ const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
 					<span
 						className={cn(
 							"col-start-1 row-start-1 transition-[color,font-variation-settings] duration-80 [text-box:trim-both_cap_alphabetic]",
-							isActive ? "text-foreground" : "text-muted-foreground"
+							isSelected ? "text-primary" : isActive ? "text-foreground" : "text-muted-foreground"
 						)}
 						style={{
 							fontVariationSettings: isSelected ? fontWeights.semibold : fontWeights.normal,

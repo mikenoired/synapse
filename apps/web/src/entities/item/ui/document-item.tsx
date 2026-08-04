@@ -95,20 +95,16 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 					<div className="flex items-start gap-3">
 						<div className="mt-0.5 shrink-0 text-2xl">{getDocumentIcon(item.type)}</div>
 						<div className="min-w-0 flex-1">
-							<h3 className="line-clamp-2 text-sm leading-tight font-semibold text-slate-900 dark:text-slate-100">
+							<h3 className="line-clamp-2 text-sm leading-tight font-semibold text-foreground">
 								{item.title || "Untitled Document"}
 							</h3>
-							<p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-								{getDocumentTypeName(item.type)}
-							</p>
+							<p className="mt-1 text-xs text-muted-foreground">{getDocumentTypeName(item.type)}</p>
 						</div>
 					</div>
 
-					<div className="line-clamp-3 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-						{textPreview}
-					</div>
+					<div className="line-clamp-3 text-xs leading-relaxed text-muted-foreground">{textPreview}</div>
 
-					<div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+					<div className="flex items-center justify-between text-xs text-muted-foreground">
 						<div className="flex items-center gap-3">
 							<div className="flex items-center gap-1">
 								<Calendar className="h-3 w-3" />
@@ -122,17 +118,17 @@ export default function DocumentItem({ item, index, onItemClick }: DocumentItemP
 					</div>
 
 					{item.tags.length > 0 && (
-						<div className="flex flex-wrap gap-1 border-t border-slate-200 pt-2 dark:border-slate-700">
+						<div className="flex flex-wrap gap-1 border-t border-border pt-2">
 							{item.tags.slice(0, 3).map((tag: string, tagIndex) => (
 								<ContentTag
 									key={tag}
 									tag={tag}
 									tagId={item.tag_ids[tagIndex]}
-									className="bg-slate-200/60 px-2 py-1 text-xs hover:bg-slate-300/60 dark:bg-slate-700/60 dark:hover:bg-slate-600/60"
+									className="hover:bg-hover bg-muted px-2 py-1 text-xs"
 								/>
 							))}
 							{item.tags.length > 3 && (
-								<Badge variant="solid" className="bg-slate-200/60 px-2 py-1 text-xs dark:bg-slate-700/60">
+								<Badge variant="solid" className="bg-muted px-2 py-1 text-xs">
 									+{item.tags.length - 3}
 								</Badge>
 							)}

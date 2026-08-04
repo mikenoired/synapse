@@ -36,9 +36,9 @@ function UsageBar({
 					{formatCompact(value, locale)} {unlimited ? "∞" : `/ ${formatCompact(limit, locale)}`}
 				</span>
 			</div>
-			<div className="h-2 overflow-hidden rounded-full bg-background">
+			<div className="h-2 overflow-hidden rounded-full bg-primary/15">
 				<div
-					className="h-full rounded-full bg-foreground transition-[width]"
+					className="h-full rounded-full bg-primary transition-[width]"
 					style={{ width: `${unlimited ? 12 : Math.max(value ? 2 : 0, percent)}%` }}
 				/>
 			</div>
@@ -85,12 +85,12 @@ export default function AiTab() {
 
 	return (
 		<div className="space-y-4 py-1">
-			<section className="relative overflow-hidden rounded-[1.75rem] bg-foreground p-5 text-background">
+			<section className="relative overflow-hidden rounded-[1.75rem] bg-primary p-5 text-primary-foreground">
 				<PixelSparkles className="opacity-90" pixelSize={5} speed={0.4} fireSpeed={1.8} density={1.1} />
 				<div className="relative z-10 flex items-start justify-between gap-4">
 					<div>
 						<h2 className="text-2xl font-semibold tracking-tight">{data.planLabel}</h2>
-						<p className="mt-1 text-sm text-background/65">{t("aiUsage.planDescription")}</p>
+						<p className="mt-1 text-sm text-primary-foreground/65">{t("aiUsage.planDescription")}</p>
 					</div>
 				</div>
 			</section>

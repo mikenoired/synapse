@@ -81,20 +81,20 @@
 	--destructive-foreground: oklch(1 0 0);
 	--border: oklch(0.8822 0 0);
 	--input: oklch(0.8822 0 0);
-	--ring: oklch(0.4341 0.0392 41.9938);
-	--chart-1: oklch(0.4341 0.0392 41.9938);
-	--chart-2: oklch(0.92 0.0651 74.3695);
-	--chart-3: oklch(0.931 0 0);
-	--chart-4: oklch(0.9367 0.0523 75.5009);
-	--chart-5: oklch(0.4338 0.0437 41.6746);
-	--sidebar: oklch(0.9881 0 0);
-	--sidebar-foreground: oklch(0.2645 0 0);
-	--sidebar-primary: oklch(0.325 0 0);
-	--sidebar-primary-foreground: oklch(0.9881 0 0);
-	--sidebar-accent: oklch(0.9761 0 0);
-	--sidebar-accent-foreground: oklch(0.325 0 0);
-	--sidebar-border: oklch(0.9401 0 0);
-	--sidebar-ring: oklch(0.7731 0 0);
+	--ring: var(--primary);
+	--chart-1: var(--primary);
+	--chart-2: var(--secondary-foreground);
+	--chart-3: var(--muted-foreground);
+	--chart-4: color-mix(in oklch, var(--primary) 55%, var(--secondary));
+	--chart-5: color-mix(in oklch, var(--primary) 70%, var(--foreground));
+	--sidebar: var(--card);
+	--sidebar-foreground: var(--foreground);
+	--sidebar-primary: var(--primary);
+	--sidebar-primary-foreground: var(--primary-foreground);
+	--sidebar-accent: var(--accent);
+	--sidebar-accent-foreground: var(--accent-foreground);
+	--sidebar-border: var(--border);
+	--sidebar-ring: var(--ring);
 	--hover: color-mix(in oklch, var(--primary) 7%, var(--accent));
 	--active: color-mix(in oklch, var(--primary) 13%, var(--accent));
 	--media-placeholder: var(--muted);
@@ -125,28 +125,26 @@
 	--fw-bold: "wght" 700, "opsz" 25;
 	--tracking-normal: 0em;
 	--spacing: 0.25rem;
-	/* Warm prose palette. Keep these here so rendered and edited content use
-	 * the same colors as the rest of the application in every theme. */
-	--prose-body: oklch(0.38 0.025 45);
-	--prose-headings: oklch(0.26 0.04 45);
-	--prose-lead: oklch(0.46 0.025 45);
-	--prose-links: oklch(0.4341 0.0392 41.9938);
-	--prose-bold: oklch(0.3 0.04 42);
-	--prose-counters: oklch(0.5 0.02 45);
-	--prose-bullets: oklch(0.64 0.08 68);
-	--prose-hr: oklch(0.88 0.025 75);
-	--prose-quotes: oklch(0.45 0.03 45);
-	--prose-quote-borders: oklch(0.82 0.08 74);
-	--prose-captions: oklch(0.5 0.02 45);
-	--prose-code: oklch(0.35 0.035 42);
-	--prose-pre-code: oklch(0.34 0.03 42);
-	--prose-pre-bg: oklch(0.95 0.018 74);
-	--prose-quote-bg: oklch(0.96 0.018 74);
-	--prose-code-bg: oklch(0.94 0.025 74);
-	--prose-th-borders: oklch(0.82 0.04 70);
-	--prose-td-borders: oklch(0.9 0.02 75);
-	--prose-kbd: oklch(0.35 0.035 42);
-	--prose-kbd-shadows: oklch(0.7 0.04 70);
+	--prose-body: color-mix(in oklch, var(--foreground) 82%, var(--background));
+	--prose-headings: var(--foreground);
+	--prose-lead: color-mix(in oklch, var(--foreground) 65%, var(--background));
+	--prose-links: var(--link);
+	--prose-bold: var(--foreground);
+	--prose-counters: var(--muted-foreground);
+	--prose-bullets: var(--primary);
+	--prose-hr: var(--border);
+	--prose-quotes: color-mix(in oklch, var(--foreground) 72%, var(--background));
+	--prose-quote-borders: var(--primary);
+	--prose-captions: var(--muted-foreground);
+	--prose-code: var(--foreground);
+	--prose-pre-code: var(--foreground);
+	--prose-pre-bg: color-mix(in oklch, var(--primary) 6%, var(--muted));
+	--prose-quote-bg: color-mix(in oklch, var(--primary) 5%, var(--muted));
+	--prose-code-bg: color-mix(in oklch, var(--primary) 8%, var(--muted));
+	--prose-th-borders: var(--border);
+	--prose-td-borders: var(--border);
+	--prose-kbd: var(--foreground);
+	--prose-kbd-shadows: var(--border);
 }
 
 .dark {
@@ -172,20 +170,20 @@
 	--destructive-foreground: oklch(1 0 0);
 	--border: oklch(0.2351 0.0115 91.7467);
 	--input: oklch(0.4017 0 0);
-	--ring: oklch(0.9247 0.0524 66.1732);
-	--chart-1: oklch(0.9247 0.0524 66.1732);
-	--chart-2: oklch(0.3163 0.019 63.6992);
-	--chart-3: oklch(0.285 0 0);
-	--chart-4: oklch(0.3481 0.0219 67.0001);
-	--chart-5: oklch(0.9245 0.0533 67.0855);
-	--sidebar: oklch(0.2103 0.0059 285.8852);
-	--sidebar-foreground: oklch(0.9674 0.0013 286.3752);
-	--sidebar-primary: oklch(0.4882 0.2172 264.3763);
-	--sidebar-primary-foreground: oklch(1 0 0);
-	--sidebar-accent: oklch(0.2739 0.0055 286.0326);
-	--sidebar-accent-foreground: oklch(0.9674 0.0013 286.3752);
-	--sidebar-border: oklch(0.2739 0.0055 286.0326);
-	--sidebar-ring: oklch(0.8711 0.0055 286.286);
+	--ring: var(--primary);
+	--chart-1: var(--primary);
+	--chart-2: var(--secondary-foreground);
+	--chart-3: var(--muted-foreground);
+	--chart-4: color-mix(in oklch, var(--primary) 55%, var(--secondary));
+	--chart-5: color-mix(in oklch, var(--primary) 70%, var(--foreground));
+	--sidebar: var(--card);
+	--sidebar-foreground: var(--foreground);
+	--sidebar-primary: var(--primary);
+	--sidebar-primary-foreground: var(--primary-foreground);
+	--sidebar-accent: var(--accent);
+	--sidebar-accent-foreground: var(--accent-foreground);
+	--sidebar-border: var(--border);
+	--sidebar-ring: var(--ring);
 	--hover: color-mix(in oklch, var(--primary) 9%, var(--accent));
 	--active: color-mix(in oklch, var(--primary) 16%, var(--accent));
 	--media-placeholder: var(--muted);
@@ -210,31 +208,38 @@
 	--button-primary-shadow: inset 0 1px 0 0 rgb(255 255 255 / 0.1);
 	--button-secondary-border: rgb(255 255 255 / 0.1);
 	--button-secondary-shadow: 0 7px 3px rgb(0 0 0 / 0.03), inset 0 1px 0 0 rgb(255 255 255 / 0.08);
-	--prose-body: oklch(0.88 0.025 75);
-	--prose-headings: oklch(0.96 0.025 80);
-	--prose-lead: oklch(0.76 0.03 70);
-	--prose-links: oklch(0.9247 0.0524 66.1732);
-	--prose-bold: oklch(0.95 0.03 78);
-	--prose-counters: oklch(0.72 0.04 70);
-	--prose-bullets: oklch(0.76 0.08 68);
-	--prose-hr: oklch(0.34 0.035 65);
-	--prose-quotes: oklch(0.78 0.03 75);
-	--prose-quote-borders: oklch(0.56 0.1 55);
-	--prose-captions: oklch(0.67 0.035 70);
-	--prose-code: oklch(0.9 0.03 78);
-	--prose-pre-code: oklch(0.88 0.025 75);
-	--prose-pre-bg: oklch(0.23 0.025 60);
-	--prose-quote-bg: oklch(0.24 0.025 60);
-	--prose-code-bg: oklch(0.28 0.035 60);
-	--prose-th-borders: oklch(0.42 0.04 65);
-	--prose-td-borders: oklch(0.31 0.025 65);
-	--prose-kbd: oklch(0.9 0.03 78);
-	--prose-kbd-shadows: oklch(0.45 0.05 60);
+	--prose-body: color-mix(in oklch, var(--foreground) 82%, var(--background));
+	--prose-headings: var(--foreground);
+	--prose-lead: color-mix(in oklch, var(--foreground) 65%, var(--background));
+	--prose-links: var(--link);
+	--prose-bold: var(--foreground);
+	--prose-counters: var(--muted-foreground);
+	--prose-bullets: var(--primary);
+	--prose-hr: var(--border);
+	--prose-quotes: color-mix(in oklch, var(--foreground) 72%, var(--background));
+	--prose-quote-borders: var(--primary);
+	--prose-captions: var(--muted-foreground);
+	--prose-code: var(--foreground);
+	--prose-pre-code: var(--foreground);
+	--prose-pre-bg: color-mix(in oklch, var(--primary) 8%, var(--muted));
+	--prose-quote-bg: color-mix(in oklch, var(--primary) 7%, var(--muted));
+	--prose-code-bg: color-mix(in oklch, var(--primary) 10%, var(--muted));
+	--prose-th-borders: var(--border);
+	--prose-td-borders: var(--border);
+	--prose-kbd: var(--foreground);
+	--prose-kbd-shadows: var(--border);
 }
 
 /* Palettes intentionally own accents. Surface shifts are low-chroma so the
  * interface keeps its familiar hierarchy in either luminosity mode. */
 :root {
+	/* These low-chroma values drive all supporting surfaces for the selected
+	 * landscape. A new palette normally needs only its hue, surface intensity,
+	 * and primary/secondary accent definitions below. */
+	--palette-hue: 42;
+	--palette-surface-chroma: 0.012;
+	--palette-muted-chroma: 0.018;
+	--palette-text-chroma: 0.022;
 	--palette-desert: oklch(0.4341 0.0392 41.9938);
 	--palette-twilight: oklch(0.47 0.105 210);
 	--palette-arctic: oklch(0.51 0.085 245);
@@ -423,6 +428,85 @@ html.dark[data-palette="sakura"] {
 	--border: oklch(0.3 0.018 5);
 	--sidebar: oklch(0.21 0.015 5);
 	--sidebar-primary: var(--primary);
+}
+
+html[data-palette="desert"] {
+	--palette-hue: 42;
+	--palette-surface-chroma: 0.012;
+	--palette-muted-chroma: 0.018;
+}
+
+html[data-palette="twilight"] {
+	--palette-hue: 205;
+	--palette-surface-chroma: 0.02;
+	--palette-muted-chroma: 0.028;
+}
+
+html[data-palette="arctic"] {
+	--palette-hue: 245;
+	--palette-surface-chroma: 0.016;
+	--palette-muted-chroma: 0.024;
+}
+
+html[data-palette="noir"] {
+	--palette-hue: 0;
+	--palette-surface-chroma: 0;
+	--palette-muted-chroma: 0;
+	--palette-text-chroma: 0;
+}
+
+html[data-palette="forest"] {
+	--palette-hue: 155;
+	--palette-surface-chroma: 0.02;
+	--palette-muted-chroma: 0.028;
+}
+
+html[data-palette="ember"] {
+	--palette-hue: 42;
+	--palette-surface-chroma: 0.016;
+	--palette-muted-chroma: 0.024;
+}
+
+html[data-palette="slate"] {
+	--palette-hue: 275;
+	--palette-surface-chroma: 0.014;
+	--palette-muted-chroma: 0.022;
+}
+
+html[data-palette="sakura"] {
+	--palette-hue: 5;
+	--palette-surface-chroma: 0.018;
+	--palette-muted-chroma: 0.028;
+}
+
+/* A palette tints support tokens just enough to belong together without
+ * changing the app's information hierarchy. Accent tokens remain above. */
+html[data-palette] {
+	--background: oklch(0.982 var(--palette-surface-chroma) var(--palette-hue));
+	--card: oklch(0.991 var(--palette-surface-chroma) var(--palette-hue));
+	--popover: var(--card);
+	--muted: oklch(0.952 var(--palette-muted-chroma) var(--palette-hue));
+	--muted-foreground: oklch(0.503 var(--palette-text-chroma) var(--palette-hue));
+	--accent: oklch(0.931 var(--palette-muted-chroma) var(--palette-hue));
+	--border: oklch(0.882 var(--palette-surface-chroma) var(--palette-hue));
+	--input: var(--border);
+	--sidebar: oklch(0.988 var(--palette-surface-chroma) var(--palette-hue));
+	--sidebar-accent: var(--accent);
+	--sidebar-border: var(--border);
+}
+
+html.dark[data-palette] {
+	--background: oklch(0.178 var(--palette-surface-chroma) var(--palette-hue));
+	--card: oklch(0.213 var(--palette-surface-chroma) var(--palette-hue));
+	--popover: var(--card);
+	--muted: oklch(0.252 var(--palette-muted-chroma) var(--palette-hue));
+	--muted-foreground: oklch(0.77 var(--palette-text-chroma) var(--palette-hue));
+	--accent: oklch(0.285 var(--palette-muted-chroma) var(--palette-hue));
+	--border: oklch(0.235 var(--palette-surface-chroma) var(--palette-hue));
+	--input: oklch(0.402 var(--palette-surface-chroma) var(--palette-hue));
+	--sidebar: oklch(0.21 var(--palette-surface-chroma) var(--palette-hue));
+	--sidebar-accent: var(--accent);
+	--sidebar-border: var(--border);
 }
 
 ::selection {
