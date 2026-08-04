@@ -49,14 +49,14 @@ export const content = pgTable(
 		updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	},
-	(table) => ({
-		userIdIdx: index("content_user_id_idx").on(table.userId),
-		typeIdx: index("content_type_idx").on(table.type),
-		createdAtIdx: index("content_created_at_idx").on(table.createdAt),
-		userIdTypeIdx: index("content_user_id_type_idx").on(table.userId, table.type),
-		userIdCreatedAtIdx: index("content_user_id_created_at_idx").on(table.userId, table.createdAt),
-		searchVectorIdx: index("content_search_vector_idx").using("gin", table.searchVector),
-	})
+	(table) => [
+		index("content_user_id_idx").on(table.userId),
+		index("content_type_idx").on(table.type),
+		index("content_created_at_idx").on(table.createdAt),
+		index("content_user_id_type_idx").on(table.userId, table.type),
+		index("content_user_id_created_at_idx").on(table.userId, table.createdAt),
+		index("content_search_vector_idx").using("gin", table.searchVector),
+	]
 );
 
 export const tags = pgTable(
@@ -67,12 +67,12 @@ export const tags = pgTable(
 		title: text("title").notNull(),
 		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	},
-	(table) => ({
-		colorRangeChk: check("tags_color_range_chk", sql`${table.color} between 0 and 255`),
-		userIdIdx: index("tags_user_id_idx").on(table.userId),
-		titleIdx: index("tags_title_idx").on(table.title),
-		userIdTitleIdx: index("tags_user_id_title_idx").on(table.userId, table.title),
-	})
+	(table) => [
+		check("tags_color_range_chk", sql`${table.color} between 0 and 255`),
+		index("tags_user_id_idx").on(table.userId),
+		index("tags_title_idx").on(table.title),
+		index("tags_user_id_title_idx").on(table.userId, table.title),
+	]
 );
 
 export const contentTags = pgTable(
@@ -86,12 +86,12 @@ export const contentTags = pgTable(
 			.references(() => tags.id, { onDelete: "cascade" }),
 		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	},
-	(table) => ({
-		contentIdIdx: index("content_tags_content_id_idx").on(table.contentId),
-		tagIdIdx: index("content_tags_tag_id_idx").on(table.tagId),
-		userIdIdx: index("content_tags_user_id_idx").on(table.userId),
-		contentIdTagIdIdx: index("content_tags_content_id_tag_id_idx").on(table.contentId, table.tagId),
-	})
+	(table) => [
+		index("content_tags_content_id_idx").on(table.contentId),
+		index("content_tags_tag_id_idx").on(table.tagId),
+		index("content_tags_user_id_idx").on(table.userId),
+		index("content_tags_content_id_tag_id_idx").on(table.contentId, table.tagId),
+	]
 );
 
 export const nodes = pgTable(
@@ -103,10 +103,7 @@ export const nodes = pgTable(
 		metadata: jsonb("metadata"),
 		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	},
-	(table) => ({
-		userIdIdx: index("nodes_user_id_idx").on(table.userId),
-		typeIdx: index("nodes_type_idx").on(table.type),
-	})
+	(table) => [index("nodes_user_id_idx").on(table.userId), index("nodes_type_idx").on(table.type)]
 );
 
 export const edges = pgTable(
@@ -118,12 +115,12 @@ export const edges = pgTable(
 		relationType: text("relation_type").notNull(),
 		userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
 	},
-	(table) => ({
-		fromNodeIdx: index("edges_from_node_idx").on(table.fromNode),
-		toNodeIdx: index("edges_to_node_idx").on(table.toNode),
-		userIdIdx: index("edges_user_id_idx").on(table.userId),
-		fromNodeToNodeIdx: index("edges_from_node_to_node_idx").on(table.fromNode, table.toNode),
-	})
+	(table) => [
+		index("edges_from_node_idx").on(table.fromNode),
+		index("edges_to_node_idx").on(table.toNode),
+		index("edges_user_id_idx").on(table.userId),
+		index("edges_from_node_to_node_idx").on(table.fromNode, table.toNode),
+	]
 );
 
 export const aiUsage = pgTable(
@@ -147,18 +144,11 @@ export const aiUsage = pgTable(
 		contentId: uuid("content_id"),
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 	},
-	(table) => ({
-		userIdCreatedAtIdx: index("ai_usage_user_id_created_at_idx").on(table.userId, table.createdAt),
-		userIdFeatureCreatedAtIdx: index("ai_usage_user_id_feature_created_at_idx").on(
-			table.userId,
-			table.feature,
-			table.createdAt
-		),
-		successTokensChk: check(
-			"ai_usage_success_tokens_chk",
-			sql`success = true OR (input_tokens = 0 AND output_tokens = 0)`
-		),
-	})
+	(table) => [
+		index("ai_usage_user_id_created_at_idx").on(table.userId, table.createdAt),
+		index("ai_usage_user_id_feature_created_at_idx").on(table.userId, table.feature, table.createdAt),
+		check("ai_usage_success_tokens_chk", sql`success = true OR (input_tokens = 0 AND output_tokens = 0)`),
+	]
 );
 
 export const usersRelations = relations(users, ({ many }) => ({

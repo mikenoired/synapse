@@ -112,9 +112,7 @@ export async function getFileMetadata(objectName: string) {
 }
 
 export async function deleteFile(objectName: string): Promise<void> {
-	try {
-		await minioClient.removeObject(bucketName, objectName);
-	} catch {}
+	await minioClient.removeObject(bucketName, objectName);
 }
 
 export async function deleteUserFiles(userId: string): Promise<void> {

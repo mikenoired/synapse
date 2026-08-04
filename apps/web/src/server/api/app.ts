@@ -16,7 +16,7 @@ import {
 } from "@/shared/lib/schemas";
 
 import type { Context } from "../context";
-import { ApiError } from "../lib/api-error";
+import { ApiError, STATUS_CODES } from "../lib/api-error";
 import { getUserFromTokens } from "../lib/auth-session";
 import { signRefreshToken, signToken, verifyRefreshToken, verifyToken } from "../lib/jwt";
 import { log, logError } from "../lib/logger";
@@ -102,22 +102,28 @@ async function getPerformanceStats() {
 	for (const path of performanceStatsPaths) {
 		try {
 			return JSON.parse(await readFile(path, "utf8")) as Record<string, unknown>;
-		} catch {}
+		} catch (error) {
+			if (isFileNotFoundError(error)) continue;
+			throw error;
+		}
 	}
 	return {};
 }
 
+function isFileNotFoundError(error: unknown): error is NodeJS.ErrnoException {
+	return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
+
 async function body<T extends z.ZodType>(request: Request, schema: T): Promise<z.output<T>> {
 	const result = schema.safeParse(await request.json());
-	if (!result.success)
-		throw new ApiError("BAD_REQUEST", "Invalid request", result.error.flatten().fieldErrors);
+	if (!result.success) throw new ApiError("BAD_REQUEST", "Invalid request", z.treeifyError(result.error));
 	return result.data;
 }
 
 function query<T extends z.ZodType>(schema: T, value: unknown): z.output<T> {
 	const result = schema.safeParse(value);
 	if (!result.success)
-		throw new ApiError("BAD_REQUEST", "Invalid query parameters", result.error.flatten().fieldErrors);
+		throw new ApiError("BAD_REQUEST", "Invalid query parameters", z.treeifyError(result.error));
 	return result.data;
 }
 
@@ -148,7 +154,7 @@ export const api = new Hono()
 				code: error.code,
 			});
 			return new Response(
-				JSON.stringify({ error: error.message, code: error.code, fieldErrors: error.fieldErrors ?? null }),
+				JSON.stringify({ error: error.message, code: error.code, fieldErrors: error.treeifyErrors ?? null }),
 				{
 					status: error.status,
 					headers: { "Content-Type": "application/json" },
@@ -162,20 +168,7 @@ export const api = new Hono()
 		});
 		const apiError = error as { code?: string; message?: string };
 		const code = apiError.code as ApiError["code"] | undefined;
-		const status =
-			code === "UNAUTHORIZED"
-				? 401
-				: code === "FORBIDDEN"
-					? 403
-					: code === "NOT_FOUND"
-						? 404
-						: code === "CONFLICT"
-							? 409
-							: code === "TOO_MANY_REQUESTS"
-								? 429
-								: code === "BAD_REQUEST"
-									? 400
-									: 500;
+		const status = code ? (STATUS_CODES[code] ?? 500) : 500;
 		return c.json(
 			{
 				error: apiError.message || "Internal server error",

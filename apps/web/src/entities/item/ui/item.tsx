@@ -48,6 +48,26 @@ interface ItemProps {
 	disableAnimation?: boolean;
 }
 
+type Todo = { marked: boolean; text: string };
+
+function parseTodos(content: string): Todo[] {
+	try {
+		const parsed: unknown = JSON.parse(content);
+		if (!Array.isArray(parsed)) return [];
+		return parsed.filter(
+			(todo): todo is Todo =>
+				typeof todo === "object" &&
+				todo !== null &&
+				"text" in todo &&
+				"marked" in todo &&
+				typeof todo.text === "string" &&
+				typeof todo.marked === "boolean"
+		);
+	} catch {
+		return [];
+	}
+}
+
 export default function Item({
 	item,
 	index,
@@ -126,10 +146,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 	}, [item.content, item.type]);
 
 	const renderTodoPreview = () => {
-		let todos: { text: string; marked: boolean }[] = [];
-		try {
-			todos = JSON.parse(item.content);
-		} catch {}
+		const todos = parseTodos(item.content);
 		const done = todos.filter((t) => t.marked).length;
 		return (
 			<div className="flex flex-col gap-2">

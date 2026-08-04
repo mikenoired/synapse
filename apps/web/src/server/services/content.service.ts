@@ -414,14 +414,10 @@ export default class ContentService {
 			const mainObject = mediaJson?.media?.object || this.extractObjectNameFromApiUrl(mediaJson?.media?.url);
 			const thumbObject = this.extractObjectNameFromApiUrl(mediaJson?.media?.thumbnailUrl);
 
-			try {
-				if (mainObject) {
-					const metadata = await getFileMetadata(mainObject);
-					if (metadata?.size) totalFileSize += metadata.size;
-					await deleteFile(mainObject);
-				}
-			} catch {
-				/* ignore */
+			if (mainObject) {
+				const metadata = await getFileMetadata(mainObject);
+				if (metadata?.size) totalFileSize += metadata.size;
+				await deleteFile(mainObject);
 			}
 
 			if (mediaJson?.media?.type === "image") {
@@ -430,40 +426,32 @@ export default class ContentService {
 					totalFileSize += thumbnailBase64.length;
 				}
 			} else {
-				try {
-					if (thumbObject) {
-						const metadata = await getFileMetadata(thumbObject);
-						if (metadata?.size) totalFileSize += metadata.size;
-						await deleteFile(thumbObject);
-					}
-				} catch {
-					/* ignore */
+				if (thumbObject) {
+					const metadata = await getFileMetadata(thumbObject);
+					if (metadata?.size) totalFileSize += metadata.size;
+					await deleteFile(thumbObject);
 				}
 			}
 		} else if (content.type === "audio") {
-			try {
-				const audioJson = parseAudioJson(content.content);
-				const audioObj = audioJson?.audio?.object || this.extractObjectNameFromApiUrl(audioJson?.audio?.url);
-				const coverObj = audioJson?.cover?.object || this.extractObjectNameFromApiUrl(audioJson?.cover?.url);
+			const audioJson = parseAudioJson(content.content);
+			const audioObj = audioJson?.audio?.object || this.extractObjectNameFromApiUrl(audioJson?.audio?.url);
+			const coverObj = audioJson?.cover?.object || this.extractObjectNameFromApiUrl(audioJson?.cover?.url);
 
-				if (audioJson?.audio?.sizeBytes) {
-					totalFileSize += audioJson.audio.sizeBytes;
-				} else if (audioObj) {
-					const metadata = await getFileMetadata(audioObj);
-					if (metadata?.size) totalFileSize += metadata.size;
-				}
+			if (audioJson?.audio?.sizeBytes) {
+				totalFileSize += audioJson.audio.sizeBytes;
+			} else if (audioObj) {
+				const metadata = await getFileMetadata(audioObj);
+				if (metadata?.size) totalFileSize += metadata.size;
+			}
 
-				if (audioObj) await deleteFile(audioObj);
+			if (audioObj) await deleteFile(audioObj);
 
-				if (coverObj) {
-					const metadata = await getFileMetadata(coverObj);
-					if (metadata?.size) totalFileSize += metadata.size;
-					await deleteFile(coverObj);
-				} else if (audioJson?.cover?.thumbnailBase64) {
-					totalFileSize += audioJson.cover.thumbnailBase64.length;
-				}
-			} catch {
-				// ignore
+			if (coverObj) {
+				const metadata = await getFileMetadata(coverObj);
+				if (metadata?.size) totalFileSize += metadata.size;
+				await deleteFile(coverObj);
+			} else if (audioJson?.cover?.thumbnailBase64) {
+				totalFileSize += audioJson.cover.thumbnailBase64.length;
 			}
 		}
 
@@ -809,14 +797,10 @@ export default class ContentService {
 	}
 
 	private async trackAddedNoteImages(images: { size: number }[]) {
-		try {
-			await Promise.all(images.map((image) => this.ctx.cache.addFile(this.ctx.user!.id, image.size)));
-		} catch {}
+		await Promise.all(images.map((image) => this.ctx.cache.addFile(this.ctx.user!.id, image.size)));
 	}
 
 	private async trackRemovedNoteImages(sizes: number[]) {
-		try {
-			await Promise.all(sizes.map((size) => this.ctx.cache.removeFile(this.ctx.user!.id, size)));
-		} catch {}
+		await Promise.all(sizes.map((size) => this.ctx.cache.removeFile(this.ctx.user!.id, size)));
 	}
 }

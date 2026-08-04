@@ -125,13 +125,11 @@ export default class UploadService {
 	}
 
 	private async trackStorage(userId: string, deltas: { size: number; updateFileCount?: boolean }[]) {
-		try {
-			await Promise.all(
-				deltas
-					.filter((delta) => delta.size > 0)
-					.map((delta) => this.ctx.cache.addFile(userId, delta.size, delta.updateFileCount ?? true))
-			);
-		} catch {}
+		await Promise.all(
+			deltas
+				.filter((delta) => delta.size > 0)
+				.map((delta) => this.ctx.cache.addFile(userId, delta.size, delta.updateFileCount ?? true))
+		);
 	}
 
 	private normalizeTags(tags?: string[] | null): string[] {
