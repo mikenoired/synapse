@@ -184,7 +184,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
 					<AnimatePresence>
 						{focusRect && (
 							<motion.div
-								className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
+								className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring)`}
 								initial={false}
 								animate={{
 									left: focusRect.left - 2,
@@ -504,7 +504,7 @@ const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
 								<AnimatePresence>
 									{focusRect && (
 										<motion.div
-											className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
+											className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring)`}
 											initial={false}
 											animate={{
 												left: focusRect.left - 2,

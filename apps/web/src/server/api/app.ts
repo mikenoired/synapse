@@ -68,6 +68,9 @@ const uploadInput = z
 const preferencesInput = z
 	.object({
 		autoTagColorEnabled: z.boolean().optional(),
+		colorPalette: z
+			.enum(["desert", "twilight", "arctic", "noir", "forest", "ember", "slate", "sakura"])
+			.optional(),
 		interfaceLanguage: z.enum(["ru", "en"]).optional(),
 		mediaAutoplayEnabled: z.boolean().optional(),
 		noteSparklesEnabled: z.boolean().optional(),

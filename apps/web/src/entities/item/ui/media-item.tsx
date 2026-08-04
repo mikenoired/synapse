@@ -42,7 +42,7 @@ function RenderImage({ imageUrl, title, blurThumb, savedWidth, savedHeight }: Re
 
 	return (
 		<div
-			className="relative w-full overflow-hidden rounded-md bg-gray-100 dark:bg-gray-800"
+			className="relative w-full overflow-hidden rounded-md bg-(--media-placeholder)"
 			style={{ aspectRatio }}>
 			{blurThumb && (
 				<Image
@@ -135,7 +135,7 @@ export default function MediaItem({ item, onItemClick }: MediaItemProps) {
 		<div className="relative" onClick={() => onItemClick?.(item)}>
 			{isVideo ? (
 				<div
-					className="relative w-full overflow-hidden bg-gray-100 dark:bg-gray-800"
+					className="relative w-full overflow-hidden bg-(--media-placeholder)"
 					style={{ aspectRatio: videoAspectRatio }}>
 					{blurThumb && (
 						<Image

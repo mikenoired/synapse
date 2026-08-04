@@ -156,11 +156,15 @@ describe.serial("API integration", () => {
 		expect(mismatchedId.body.code).toBe("BAD_REQUEST");
 
 		const preferences = await request("PATCH", "/user/preferences", {
-			body: { interfaceLanguage: "en", mediaAutoplayEnabled: false },
+			body: { colorPalette: "forest", interfaceLanguage: "en", mediaAutoplayEnabled: false },
 			token: owner.token,
 		});
 		expect(preferences.response.status).toBe(200);
-		expect(preferences.body).toMatchObject({ interfaceLanguage: "en", mediaAutoplayEnabled: false });
+		expect(preferences.body).toMatchObject({
+			colorPalette: "forest",
+			interfaceLanguage: "en",
+			mediaAutoplayEnabled: false,
+		});
 
 		const deleted = await request("DELETE", `/content/${item.id}`, { token: owner.token });
 		expect(deleted.response.status).toBe(200);

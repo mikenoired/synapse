@@ -87,7 +87,7 @@ export function ContentSuggestions({
 			aria-label="Похожие материалы"
 			className={cn(
 				"relative z-10 min-h-24 w-full",
-				dark ? "bg-[#11110f] text-white" : "bg-background text-foreground"
+				dark ? "bg-background text-foreground" : "bg-background text-foreground"
 			)}>
 			<div
 				ref={activationRef}
@@ -95,7 +95,7 @@ export function ContentSuggestions({
 				className={cn(
 					"pointer-events-none absolute -top-28 h-28 w-full",
 					dark
-						? "bg-linear-to-b from-transparent via-[#11110f]/55 to-[#11110f]"
+						? "bg-linear-to-b from-transparent via-background/55 to-background"
 						: "bg-linear-to-b from-transparent via-background/65 to-background"
 				)}
 			/>

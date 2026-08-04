@@ -26,7 +26,7 @@ interface ViewerOverlayControlsProps {
 
 function getActionClassName(action: ViewerOverlayAction) {
 	if (action.destructive) {
-		return "h-10 rounded-full px-4 text-red-500 cursor-pointer";
+		return "h-10 rounded-full px-4 text-destructive cursor-pointer";
 	}
 
 	return "h-10 rounded-full px-4 cursor-pointer";

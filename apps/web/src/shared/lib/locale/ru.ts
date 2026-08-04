@@ -17,6 +17,17 @@ export const ru: TranslationMap = {
 	"appearance.theme.system": "Системная",
 	"appearance.theme.light": "Светлая",
 	"appearance.theme.dark": "Тёмная",
+	"appearance.palette.title": "Цветовая палитра",
+	"appearance.palette.description":
+		"Задаёт характер акцентам, сохраняя спокойные и привычные поверхности интерфейса.",
+	"appearance.palette.desert": "🏜️ Desert",
+	"appearance.palette.twilight": "🌌 Twilight",
+	"appearance.palette.arctic": "❄️ Arctic",
+	"appearance.palette.noir": "⚫ Noir",
+	"appearance.palette.forest": "🌲 Forest",
+	"appearance.palette.ember": "🌋 Ember",
+	"appearance.palette.slate": "🪨 Slate",
+	"appearance.palette.sakura": "🌸 Sakura",
 	"appearance.noteSparkles.title": "Атмосфера заметок",
 	"appearance.noteSparkles.description":
 		"Показывает мягкое пиксельное свечение по бокам заметки через некоторое время просмотра.",

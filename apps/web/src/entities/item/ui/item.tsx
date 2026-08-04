@@ -202,7 +202,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 							href={item.content}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="text-sm break-all text-blue-600 hover:underline dark:text-blue-400">
+							className="text-sm break-all text-(--link) hover:underline">
 							{item.content}
 						</a>
 					</div>
@@ -223,7 +223,7 @@ function ItemContent({ item, index, onItemClick, disableAnimation }: ItemProps) 
 					<p className="line-clamp-3 text-sm leading-relaxed text-muted-foreground">{previewText}</p>
 				)}
 
-				<div className="truncate text-xs text-blue-600 dark:text-blue-400">{linkContent.url}</div>
+				<div className="truncate text-xs text-(--link)">{linkContent.url}</div>
 			</div>
 		);
 	};

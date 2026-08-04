@@ -1,13 +1,28 @@
 import { cn } from "@synapse/ui/cn";
 import { Switch } from "@synapse/ui/components";
 import { motion } from "framer-motion";
-import { Monitor, Moon, Palette, Sparkles, Sun, Languages } from "lucide-react";
+import {
+	Circle,
+	Flame,
+	Flower2,
+	Languages,
+	Monitor,
+	Moon,
+	Palette,
+	Snowflake,
+	Sparkles,
+	Sprout,
+	Sun,
+	Sunset,
+	Waves,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
 import { SIDEBAR_ANIMATION } from "@/shared/config/animations";
 import { useI18n } from "@/shared/lib/i18n";
-import type { InterfaceLanguage } from "@/shared/lib/user-preferences";
+import type { KeysWithoutParams } from "@/shared/lib/i18n";
+import type { ColorPalette, InterfaceLanguage } from "@/shared/lib/user-preferences";
 import { useUserPreferences } from "@/shared/lib/user-preferences-context";
 
 const themeOptions = [
@@ -27,6 +42,32 @@ const themeOptions = [
 		labelKey: "appearance.theme.dark",
 	},
 ] as const;
+
+const paletteOptions: {
+	icon: typeof Palette;
+	preview: string;
+	value: ColorPalette;
+	labelKey: KeysWithoutParams;
+}[] = [
+	{ value: "desert", icon: Sunset, preview: "var(--palette-desert)", labelKey: "appearance.palette.desert" },
+	{
+		value: "twilight",
+		icon: Waves,
+		preview: "var(--palette-twilight)",
+		labelKey: "appearance.palette.twilight",
+	},
+	{
+		value: "arctic",
+		icon: Snowflake,
+		preview: "var(--palette-arctic)",
+		labelKey: "appearance.palette.arctic",
+	},
+	{ value: "noir", icon: Circle, preview: "var(--palette-noir)", labelKey: "appearance.palette.noir" },
+	{ value: "forest", icon: Sprout, preview: "var(--palette-forest)", labelKey: "appearance.palette.forest" },
+	{ value: "ember", icon: Flame, preview: "var(--palette-ember)", labelKey: "appearance.palette.ember" },
+	{ value: "slate", icon: Palette, preview: "var(--palette-slate)", labelKey: "appearance.palette.slate" },
+	{ value: "sakura", icon: Flower2, preview: "var(--palette-sakura)", labelKey: "appearance.palette.sakura" },
+];
 
 function LanguagePreference() {
 	const { interfaceLanguage, isReady, setInterfaceLanguage } = useUserPreferences();
@@ -72,9 +113,11 @@ export default function AppearanceTab() {
 	const { t } = useI18n();
 	const {
 		autoTagColorEnabled,
+		colorPalette,
 		isReady,
 		noteSparklesEnabled,
 		setAutoTagColorEnabled,
+		setColorPalette,
 		setNoteSparklesEnabled,
 	} = useUserPreferences();
 	const [mounted, setMounted] = useState(false);
@@ -118,6 +161,40 @@ export default function AppearanceTab() {
 									/>
 								)}
 								<Icon className="relative z-10 size-4 transition-colors" />
+							</button>
+						);
+					})}
+				</div>
+			</fieldset>
+
+			<fieldset className="space-y-3" disabled={!isReady}>
+				<legend className="text-sm font-medium">{t("appearance.palette.title")}</legend>
+				<p className="text-sm leading-5 text-muted-foreground">{t("appearance.palette.description")}</p>
+				<div
+					className="grid grid-cols-2 gap-2 sm:grid-cols-4"
+					role="radiogroup"
+					aria-label={t("appearance.palette.title")}>
+					{paletteOptions.map(({ icon: Icon, labelKey, preview, value }) => {
+						const selected = colorPalette === value;
+						return (
+							<button
+								key={value}
+								type="button"
+								role="radio"
+								aria-checked={selected}
+								onClick={() => setColorPalette(value)}
+								className={cn(
+									"group flex min-h-20 flex-col justify-between rounded-xl border p-3 text-left transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+									selected ? "border-primary bg-primary/10" : "hover:bg-hover border-border bg-card"
+								)}>
+								<div className="flex items-center justify-between">
+									<Icon className="size-4 text-muted-foreground" />
+									<span
+										className="size-3 rounded-full ring-1 ring-black/10 dark:ring-white/15"
+										style={{ backgroundColor: preview }}
+									/>
+								</div>
+								<span className="text-sm font-medium text-foreground">{t(labelKey)}</span>
 							</button>
 						);
 					})}

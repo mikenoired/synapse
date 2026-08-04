@@ -190,7 +190,7 @@ const triggerVariants = cva(
 		"text-[13px] h-9 px-3 min-w-[160px]",
 		"transition-all duration-80",
 		"disabled:opacity-50 disabled:pointer-events-none",
-		"focus-visible:ring-1 focus-visible:ring-(--focus-ring,#6B97FF)",
+		"focus-visible:ring-1 focus-visible:ring-(--focus-ring)",
 	],
 	{
 		variants: {
@@ -496,7 +496,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(({ classNam
 								<AnimatePresence>
 									{focusRect && (
 										<motion.div
-											className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
+											className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring)`}
 											initial={false}
 											animate={{
 												left: focusRect.left - 2,

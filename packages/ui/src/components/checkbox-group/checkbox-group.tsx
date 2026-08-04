@@ -214,7 +214,7 @@ const CheckboxGroup = forwardRef<HTMLDivElement, CheckboxGroupProps>(
 					<AnimatePresence>
 						{focusRect && (
 							<motion.div
-								className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring,#6B97FF)`}
+								className={`absolute ${shape.focusRing} pointer-events-none z-20 border border-(--focus-ring)`}
 								initial={false}
 								animate={{
 									left: focusRect.left - 2,
@@ -317,7 +317,7 @@ const CheckboxItem = forwardRef<HTMLDivElement, CheckboxItemProps>(
 							checked
 								? "border-[1.5px] border-transparent"
 								: isActive
-									? "border-[1.5px] border-neutral-400 dark:border-neutral-500"
+									? "border-[1.5px] border-border"
 									: "border-[1.5px] border-border"
 						)}
 					/>

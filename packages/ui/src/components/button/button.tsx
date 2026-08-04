@@ -18,12 +18,12 @@ const buttonVariants = cva(
 		"group relative isolate inline-flex items-center justify-center outline-none cursor-pointer",
 		"transition-colors duration-80",
 		"disabled:opacity-50 disabled:pointer-events-none",
-		"focus-visible:ring-1 focus-visible:ring-(--focus-ring,#6B97FF)",
+		"focus-visible:ring-1 focus-visible:ring-(--focus-ring)",
 	],
 	{
 		variants: {
 			variant: {
-				primary: "text-background",
+				primary: "text-primary-foreground",
 				secondary: "text-foreground",
 				tertiary: "text-foreground",
 				ghost: "text-muted-foreground hover:text-foreground",
@@ -67,14 +67,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>, VariantPr
 }
 
 const bgVariants: Record<string, string> = {
-	primary: "bg-foreground group-hover:bg-foreground/90 group-active:bg-foreground/80",
+	primary: "bg-primary group-hover:bg-(--primary-hover) group-active:bg-(--primary-hover)",
 	secondary: "bg-accent group-hover:bg-accent/80 group-active:bg-accent",
 	tertiary: "border border-border bg-transparent group-hover:bg-hover group-active:bg-active",
 	ghost: "bg-transparent group-hover:bg-hover group-active:bg-active",
 };
 
 const activeBgVariants: Record<string, string> = {
-	primary: "bg-foreground/80",
+	primary: "bg-(--primary-hover)",
 	secondary: "bg-accent",
 	tertiary: "border border-border bg-active",
 	ghost: "bg-active",
