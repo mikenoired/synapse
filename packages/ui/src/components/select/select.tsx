@@ -19,7 +19,6 @@ import {
 } from "react";
 
 import { cn } from "../../cn";
-import { Elevated } from "../../lib/elevated";
 import type { IconComponent } from "../../lib/icon-context";
 import { useShape } from "../../lib/shape";
 import { spring, exitFallbackMs } from "../../lib/springs";
@@ -391,9 +390,8 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(({ classNam
 					<SelectContentContext.Provider value={contentCtx}>
 						<SelectPrimitive.Popup
 							render={
-								<Elevated
-									offset={2}
-									shadowLevel={3}
+								<div
+									className="bg-background shadow"
 									ref={(node: HTMLDivElement | null) => {
 										(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
 										if (typeof ref === "function") ref(node);

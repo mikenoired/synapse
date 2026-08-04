@@ -18,7 +18,6 @@ import {
 } from "react";
 
 import { cn } from "../../cn";
-import { Elevated } from "../../lib/elevated";
 import { shapeMap } from "../../lib/shape";
 import { spring, exitFallbackMs } from "../../lib/springs";
 import { useProximityHover } from "../../lib/use-proximity-hover";
@@ -30,7 +29,7 @@ import {
 	type MenuItemRenderOptions,
 } from "./menu-item";
 
-// Dropdown opts out of the global pill/rounded shape context — popover surfaces
+// Dropdown opts out of the global pill/rounded shape context — popup panels
 // look cleaner with the smaller "rounded" radii regardless of how the rest of
 // the UI is shaped (the heavy pill bubbling distorts perceived padding at this
 // scale and produces the corner-shadow asymmetry).
@@ -81,13 +80,11 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
 		const focusRect = focusedIndex !== null ? itemRects[focusedIndex] : null;
 		return (
 			<DropdownContext.Provider value={{ registerItem, activeIndex, checkedIndex }}>
-				<Elevated
-					offset={2}
-					shadowLevel={3}
+				<div
 					ref={(node) => {
-						(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+						(containerRef as React.RefObject<HTMLDivElement | null>).current = node;
 						if (typeof ref === "function") ref(node);
-						else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+						else if (ref) (ref as React.RefObject<HTMLDivElement | null>).current = node;
 					}}
 					onMouseEnter={handlers.onMouseEnter}
 					onMouseMove={handlers.onMouseMove}
@@ -130,7 +127,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
 					}}
 					role="group"
 					className={cn(
-						`relative flex flex-col gap-0.5 w-72 max-w-full ${shape.container} p-1 select-none`,
+						`relative flex flex-col gap-0.5 w-72 max-w-full ${shape.container} p-1 select-none bg-background shadow`,
 						className
 					)}
 					{...props}>
@@ -207,7 +204,7 @@ const Dropdown = forwardRef<HTMLDivElement, DropdownProps>(
 					</AnimatePresence>
 
 					{children}
-				</Elevated>
+				</div>
 			</DropdownContext.Provider>
 		);
 	}
@@ -308,8 +305,8 @@ const DropdownTrigger = Menu.Trigger;
 // DropdownContent (popup panel)
 //
 // Portal > Positioner > Popup carrying the exact inline-panel visuals:
-// Elevated surface, proximity-hover overlays, animated selected background,
-// and animated focus ring. Children are wrapped in a Menu.RadioGroup so
+// proximity-hover overlays, animated selected background, and animated focus
+// ring. Children are wrapped in a Menu.RadioGroup so
 // radio-style MenuItems (boolean `checked`) get correct aria-checked from
 // `checkedIndex`.
 // ---------------------------------------------------------------------------
@@ -418,13 +415,12 @@ const DropdownContent = forwardRef<HTMLDivElement, DropdownContentProps>(
 						<DropdownContext.Provider value={contentCtx}>
 							<Menu.Popup
 								render={
-									<Elevated
-										offset={2}
-										shadowLevel={3}
+									<div
+										className="bg-background shadow"
 										ref={(node: HTMLDivElement | null) => {
-											(containerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+											(containerRef as React.RefObject<HTMLDivElement | null>).current = node;
 											if (typeof ref === "function") ref(node);
-											else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+											else if (ref) (ref as React.RefObject<HTMLDivElement | null>).current = node;
 										}}
 									/>
 								}
